@@ -2,66 +2,32 @@ Exuberant Ctags
 ===============
 Author: Darren Hiebert (darren@hiebert.com, http://darren.hiebert.com)
 
-This is a reimplementation of the much underused ctags(1) program and is
-intended to be the mother of all ctags programs. I was motivated to write
-this because no currently available ctags program supported generation of
-tags for all possible tag candidates, and because most were easily fooled
-by a number of contruct
+Exuberant Ctags is a multi-language reimplementation of the much-underused
+ctags(1) program and is intended to be the mother of all ctags programs. It
+generates indexes of source code definitions which are used by a number of
+editors and tools. The motivation which drove the development of Exuberant
+Ctags was the need for a ctags program which supported generation of tags
+for all possible C language constructs (which no other ctags offers), and
+because most were easily fooled by a number of preprocessor contructs.
 
 
-What makes this ctags desirable?
+Exuberant Ctags offers the following features:
 
-1.  It supports C, C++, Eiffel, Fortran, and Java.
+1.  It supports the following languages: Assembler, AWK, BETA, Bourne Shell,
+    C, C++, COBOL, Eiffel, Fortran, Java, Lisp, Perl, Python, Scheme, Tcl,
+    and Vim.
 
-2.  It is capable of generating tags for all of the following language
-    constructs:
+2.  It is capable of generating tags for virtually all language constructs.
 
-        C/C++:
-            macros
-            enumerators
-            function definitions, prototypes and declarations
-            class, enum, struct, and union names
-            class, struct, and union members
-            namespaces
-            typedefs
-            variable definitions and extern declarations
+3.  It is very robust in parsing code. In particular, the C and C++ parsers
+    are far less easily fooled by code containing #if preprocessor
+    conditional constructs, using a conditional path selection algorithm to
+    resolve complicated situations, and a fall-back algorithm when this one
+    fails.
 
-        Eiffel:
-            classes
-            features
-            local entities
+4.  Supports output of Emacs-style TAGS files (i.e. "etags").
 
-        Fortran
-            block data
-            common blocks
-            entry points
-            functions
-            interfaces
-            lables
-            modules
-            namelists
-            programs
-            subroutines
-            derived types
-
-        Java:
-            classes
-            fields
-            interfaces
-            methods
-            packages
-
-3.  It is very robust in parsing code and is far less easily fooled by code
-    containing #if preprocessor conditional constructs, using a conditional
-    path selection algorithm to resolve complicated choices, and a fall-back
-    algorithm when this one fails.
-
-4.  Can also be used to print out a human-readable list of selected objects
-    found in source files.
-
-5.  Supports output of Emacs-style TAGS files ("etags").
-
-6.  Supports UNIX, MSDOS, Windows 95/NT, OS/2, QNX, Amiga, QDOS, VMS, and
+5.  Supports UNIX, MSDOS, Windows 95/NT, OS/2, QNX, Amiga, QDOS, VMS, and
     Cray. Some pre-compiled binaries are available on the web site.
 
 

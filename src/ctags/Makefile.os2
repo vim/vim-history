@@ -1,3 +1,5 @@
+# $Id$
+#
 # A Makefile for OS/2 using gcc (EMX 0.9)
 # You may want to use the OS/2 port of autoconf to create
 # and outcomment the according statement below
@@ -48,11 +50,7 @@ DEFINES=-DOS2
 
 .SUFFIXES: .c .exe .h .o .obj
 
-SOURCES	= args.c eiffel.c entry.c fortran.c get.c keyword.c main.c \
-	options.c parse.c read.c sort.c strlist.c vstring.c
-OBJECTS	= args.o eiffel.o entry.o fortran.o get.o keyword.o main.o \
-	options.o parse.o read.o sort.o strlist.o vstring.o
-
+include source.mak
 
 ctags: ctags.exe
 etags: etags.exe

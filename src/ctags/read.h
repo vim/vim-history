@@ -1,7 +1,7 @@
 /*****************************************************************************
 *   $Id$
 *
-*   Copyright (c) 1998-1999, Darren Hiebert
+*   Copyright (c) 1998-2000, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -20,9 +20,12 @@
 /*============================================================================
 =   Include files
 ============================================================================*/
-#include "general.h"
+#include "general.h"	/* must always come first */
+
 #include <stdio.h>
-#include "ctags.h"
+#include <ctype.h>
+
+#include "parse.h"
 #include "vstring.h"
 
 /*============================================================================
@@ -36,9 +39,37 @@
 #define getFilePosition()	File.filePosition
 #define isHeaderFile()		File.source.isHeader
 
+/*  Is the character valid as a character of a C identifier?
+ */
+#define isident(c)	(isalnum(c) || (c) == '_')
+
+/*  Is the character valid as the first character of a C identifier?
+ */
+#define isident1(c)	(isalpha(c) || (c) == '_' || (c) == '~')
+
 /*============================================================================
 =   Data declarations
 ============================================================================*/
+
+enum eCharacters {
+    /*  White space characters.
+     */
+    SPACE	= ' ',
+    NEWLINE	= '\n',
+    CRETURN	= '\r',
+    FORMFEED	= '\f',
+    TAB		= '\t',
+    VTAB	= '\v',
+
+    /*  Some hard to read characters.
+     */
+    DOUBLE_QUOTE  = '"',
+    SINGLE_QUOTE  = '\'',
+    BACKSLASH	  = '\\',
+
+    STRING_SYMBOL = ('S' + 0x80),
+    CHAR_SYMBOL	  = ('C' + 0x80)
+};
 
 /*  Maintains the state of the current source file.
  */
@@ -49,6 +80,7 @@ typedef struct sInputFile {
     unsigned long lineNumber;	/* line number in the input file */
     fpos_t	filePosition;	/* file position of current line */
     int		ungetch;	/* a single character that was ungotten */
+    boolean	eof;		/* have we reached the end of file? */
     boolean	newLine;	/* will the next character begin a new line? */
     langType	language;	/* language of input file */
 
@@ -81,10 +113,12 @@ extern void freeSourceFileResources __ARGS((void));
 extern char *readLine __ARGS((vString *const vLine, FILE *const fp));
 extern void setSourceFileName __ARGS((vString *const fileName));
 extern void setSourceFileLine __ARGS((const long unsigned int lineNumber));
+extern boolean fileEOF __ARGS((void));
 extern boolean fileOpen __ARGS((const char *const fileName, const langType language));
 extern void fileClose __ARGS((void));
 extern int fileGetc __ARGS((void));
 extern void fileUngetc __ARGS((int c));
+extern char *fileReadLine __ARGS((vString *const vLine));
 extern char *readSourceLine __ARGS((vString *const vLine, fpos_t location, long *const pSeekValue));
 
 #endif	/* _READ_H */

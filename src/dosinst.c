@@ -9,7 +9,7 @@
 /*
  * install.c: Minimalistic install program for Vim on MS-DOS/Windows
  *
- * Compile with Makefile.w32, Makefile.bcc or Makefile.djg.
+ * Compile with Makefile.mvc, Makefile.bc3, Makefile.bc5 or Makefile.djg.
  */
 
 #include <io.h>

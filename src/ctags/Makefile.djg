@@ -1,7 +1,9 @@
+# $Id$
+#
 # The most simplistic Makefile, for DJGPP on MS-DOS
 
-SOURCES	= args.c eiffel.c entry.c fortran.c get.c keyword.c main.c \
-	options.c parse.c read.c sort.c strlist.c vstring.c
+include source.mak
+
 CFLAGS	= -O2 -Wall -DMSDOS
 
 ctags.exe: $(SOURCES)

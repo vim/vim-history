@@ -22,11 +22,14 @@ static void reset_last_sourcing __ARGS((void));
 static void add_msg_hist __ARGS((char_u *s, int len, int attr));
 static void hit_return_msg __ARGS((void));
 static void msg_home_replace_attr __ARGS((char_u *fname, int attr));
+#ifdef FEAT_MBYTE
+static char_u *screen_puts_mbyte __ARGS((char_u *s, int l, int attr));
+#endif
 static int  msg_use_printf __ARGS((void));
 static void msg_screen_putchar __ARGS((int c, int attr));
 static int  msg_check_screen __ARGS((void));
 static void redir_write __ARGS((char_u *s));
-#ifdef CON_DIALOG
+#ifdef FEAT_CON_DIALOG
 static char_u *msg_show_console_dialog __ARGS((char_u *message, char_u *buttons, int dfltbutton));
 static int msg_noquit_more = FALSE; /* quit not allowed at more prompt */
 #endif
@@ -82,8 +85,8 @@ static int msg_hist_off = FALSE;	/* don't add messages to history */
 msg(s)
     char_u	    *s;
 {
-#ifdef WANT_EVAL
-    set_vim_var_string(VV_STATUSMSG, s);
+#ifdef FEAT_EVAL
+    set_vim_var_string(VV_STATUSMSG, s, -1);
 #endif
     return msg_attr(s, 0);
 }
@@ -142,34 +145,79 @@ msg_strtrunc(s)
     int		room;
     int		half;
     int		i;
+    int		n;
 
     /* May truncate message to avoid a hit-return prompt */
     if (!msg_scroll && !need_wait_return && shortmess(SHM_TRUNCALL)
 							    && !exmode_active)
     {
 	len = vim_strsize(s);
-	room = (int)(Rows - cmdline_row - 1) * Columns + sc_col - 1;
+	room = (int)(Rows - cmdline_row - 1) * Columns + sc_col - 2;
 	if (len > room)
 	{
-	    buf = alloc(room + 1);
+#ifdef FEAT_MBYTE
+	    if (cc_utf8)
+		/* may have up to 18 bytes per cell (6 per char, up to two
+		 * composing chars) */
+		buf = alloc((room + 2) * 18);
+	    else
+#endif
+		buf = alloc(room + 2);
 	    if (buf != NULL)
 	    {
 		room -= 3;
 		half = room / 2;
 		len = 0;
+
+		/* First part: Start of the string. */
 		for (i = 0; len < half; ++i)
 		{
-		    len += charsize(s[i]);
+		    n = ptr2cells(s + i);
+		    if (len + n >= half)
+			break;
+		    len += n;
 		    buf[i] = s[i];
+#ifdef FEAT_MBYTE
+		    if (has_mbyte)
+			for (n = mb_ptr2len_check(s + i); --n > 0; ++i)
+			    buf[i] = s[i];
+#endif
 		}
-		--i;
-		len -= charsize(s[i]);
+
+		/* Middle: "..." */
 		STRCPY(buf + i, "...");
-		for (i = STRLEN(s) - 1; len < room; --i)
-		    len += charsize(s[i]);
-		if (len > room)
-		    ++i;
-		STRCAT(buf, s + i + 1);
+
+		/* Last part: End of the string. */
+#ifdef FEAT_MBYTE
+		if (cc_dbcs)
+		{
+		    /* For DBCS going backwards in a string is slow, but
+		     * computing the cell width isn't too slow: go forward
+		     * until the rest fits. */
+		    while (len + vim_strsize(s + i) >= room)
+			++i;
+		}
+		else if (cc_utf8)
+		{
+		    /* For UTF-8 we can go backwards easily. */
+		    for (i = STRLEN(s) - 1; len < room; --i)
+		    {
+			i -= mb_head_off(s, s + i);
+			n = ptr2cells(s + i);
+			if (len + n >= room)
+			    break;
+			len += n;
+		    }
+		}
+		else
+#endif
+		{
+		    for (i = STRLEN(s) - 1; len < room; --i)
+			len += ptr2cells(s + i);
+		    if (len > room)
+			++i;
+		}
+		STRCAT(buf, s + i);
 	    }
 	}
     }
@@ -205,8 +253,8 @@ smsg(s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
     long	a1, a2, a3, a4, a5, a6, a7, a8, a9, a10;
 {
     int ret = smsg_attr(0, s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
-#ifdef WANT_EVAL
-    set_vim_var_string(VV_STATUSMSG, IObuff);
+#ifdef FEAT_EVAL
+    set_vim_var_string(VV_STATUSMSG, IObuff, -1);
 #endif
     return ret;
 }
@@ -286,9 +334,23 @@ emsg(s)
     char_u	    *Buf;
     int		    attr;
     int		    other_sourcing_name;
+    char	    *p;
 
     if (emsg_off)		/* no error messages at the moment */
 	return TRUE;
+
+    /*
+     * When using ":silent! cmd" ignore error messsages.
+     * But do write it to the redirection file.
+     */
+    if (emsg_silent)
+    {
+	redir_write(s);
+	return TRUE;
+    }
+
+    /* Reset msg_silent, an error causes messages to be switched back on. */
+    msg_silent = 0;
 
     if (global_busy)		/* break :global command */
 	++global_busy;
@@ -299,8 +361,8 @@ emsg(s)
 	flush_buffers(FALSE);	/* flush internal buffers */
     did_emsg = TRUE;		/* flag for DoOneCmd() */
 
-#ifdef WANT_EVAL
-    set_vim_var_string(VV_ERRMSG, s);
+#ifdef FEAT_EVAL
+    set_vim_var_string(VV_ERRMSG, s, -1);
 #endif
 
 #ifdef VIMBUDDY
@@ -332,22 +394,23 @@ emsg(s)
     else
 	other_sourcing_name = FALSE;
 
+    p = _("Error detected while processing %s:");
     if (sourcing_name != NULL
 	    && (other_sourcing_name || sourcing_lnum != last_sourcing_lnum)
-	    && (Buf = alloc((unsigned)STRLEN(sourcing_name) + 35)) != NULL)
+	    && (Buf = alloc((unsigned)STRLEN(sourcing_name)
+							+ STRLEN(p))) != NULL)
     {
 	++no_wait_return;
 	if (other_sourcing_name)
 	{
-	    sprintf((char *)Buf, "Error detected while processing %s:",
-					    sourcing_name);
+	    sprintf((char *)Buf, p, sourcing_name);
 	    msg_attr(Buf, attr);
 	}
 	    /* lnum is 0 when executing a command from the command line
 	     * argument, we don't want a line number then */
 	if (sourcing_lnum != 0)
 	{
-	    sprintf((char *)Buf, "line %4ld:", (long)sourcing_lnum);
+	    sprintf((char *)Buf, _("line %4ld:"), (long)sourcing_lnum);
 	    msg_attr(Buf, hl_attr(HLF_N));
 	}
 	--no_wait_return;
@@ -381,7 +444,7 @@ emsg2(s, a1)
 	a1 = (char_u *)"[NULL]";
     /* Check for very long strings (can happen with ":help ^A<CR>") */
     if (STRLEN(s) + STRLEN(a1) >= (size_t)IOSIZE)
-	a1 = (char_u *)"[string too long]";
+	a1 = (char_u *)_("[string too long]");
     sprintf((char *)IObuff, (char *)s, (char *)a1);
     return emsg(IObuff);
 }
@@ -496,8 +559,10 @@ add_msg_hist(s, len, attr)
 /*
  * ":messages" command.
  */
+/*ARGSUSED*/
     void
-ex_messages()
+ex_messages(eap)
+    exarg_t	*eap;
 {
     struct msg_hist *p;
 
@@ -508,7 +573,7 @@ ex_messages()
     msg_hist_off = FALSE;
 }
 
-#if defined(CON_DIALOG) || defined(PROTO)
+#if defined(FEAT_CON_DIALOG) || defined(PROTO)
 static void msg_end_prompt __ARGS((void));
 
 /*
@@ -543,6 +608,11 @@ wait_return(redraw)
     if (redraw == TRUE)
 	must_redraw = CLEAR;
 
+    /* If using ":silent cmd", don't wait for a return.  Also don't set
+     * need_wait_return to do it later. */
+    if (msg_silent)
+	return;
+
 /*
  * With the global command (and some others) we only need one return at the
  * end. Adjust cmdline_row to avoid the next message overwriting the last one.
@@ -575,7 +645,7 @@ wait_return(redraw)
     else
     {
 	State = HITRETURN;
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 	setmouse();
 #endif
 #ifdef USE_ON_FLY_SCROLL
@@ -596,11 +666,11 @@ wait_return(redraw)
 	    c = safe_vgetc();
 	    if (!global_busy)
 		got_int = FALSE;
-	} while (c == Ctrl('C')
-#ifdef USE_GUI
-				|| c == K_SCROLLBAR || c == K_HORIZ_SCROLLBAR
+	} while (c == Ctrl_C
+#ifdef FEAT_GUI
+				|| c == K_VER_SCROLLBAR || c == K_HOR_SCROLLBAR
 #endif
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 				|| c == K_LEFTDRAG   || c == K_LEFTRELEASE
 				|| c == K_MIDDLEDRAG || c == K_MIDDLERELEASE
 				|| c == K_RIGHTDRAG  || c == K_RIGHTRELEASE
@@ -613,7 +683,7 @@ wait_return(redraw)
 #endif
 				);
 	ui_breakcheck();
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 	/*
 	 * Avoid that the mouse-up event causes visual mode to start.
 	 */
@@ -643,13 +713,14 @@ wait_return(redraw)
 	do_redraw = FALSE;
     }
 
-/*
- * If the window size changed set_winsize() will redraw the screen.
- * Otherwise the screen is only redrawn if 'redraw' is set and no ':' typed.
- */
+    /*
+     * If the window size changed set_shellsize() will redraw the screen.
+     * Otherwise the screen is only redrawn if 'redraw' is set and no ':'
+     * typed.
+     */
     tmpState = State;
-    State = oldState;		    /* restore State before set_winsize */
-#ifdef USE_MOUSE
+    State = oldState;		    /* restore State before set_shellsize */
+#ifdef FEAT_MOUSE
     setmouse();
 #endif
     msg_check();
@@ -674,12 +745,12 @@ wait_return(redraw)
     if (tmpState == SETWSIZE)	    /* got resize event while in vgetc() */
     {
 	starttermcap();		    /* start termcap before redrawing */
-	set_winsize(0, 0, FALSE);
+	shell_resized();
     }
     else if (!skip_redraw && (redraw == TRUE || (msg_scrolled && redraw != -1)))
     {
 	starttermcap();		    /* start termcap before redrawing */
-	update_screen(VALID);
+	redraw_later(VALID);
     }
 }
 
@@ -692,12 +763,12 @@ hit_return_msg()
     if (msg_didout)		    /* start on a new line */
 	msg_putchar('\n');
     if (got_int)
-	MSG_PUTS("Interrupt: ");
+	MSG_PUTS(_("Interrupt: "));
 
 #ifdef ORG_HITRETURN
-    MSG_PUTS_ATTR("Press RETURN to continue", hl_attr(HLF_R));
+    MSG_PUTS_ATTR(_("Press RETURN to continue"), hl_attr(HLF_R));
 #else
-    MSG_PUTS_ATTR("Press RETURN or enter command to continue", hl_attr(HLF_R));
+    MSG_PUTS_ATTR(_("Press RETURN or enter command to continue"), hl_attr(HLF_R));
 #endif
     if (!msg_use_printf())
 	msg_clr_eos();
@@ -711,8 +782,8 @@ msg_start()
 {
     int		did_return = FALSE;
 
-    keep_msg = NULL;			    /* don't display old message now */
-    if (!msg_scroll && full_screen)	    /* overwrite last message */
+    keep_msg = NULL;			/* don't display old message now */
+    if (!msg_scroll && full_screen)	/* overwrite last message */
     {
 	msg_row = cmdline_row;
 	msg_col = 0;
@@ -721,7 +792,7 @@ msg_start()
     {
 	msg_putchar('\n');
 	did_return = TRUE;
-	if (!exmode_active)
+	if (exmode_active != EXMODE_NORMAL)
 	    cmdline_row = msg_row;
     }
     if (!msg_didany)
@@ -790,7 +861,7 @@ msg_home_replace(fname)
     msg_home_replace_attr(fname, 0);
 }
 
-#if defined(FIND_IN_PATH) || defined(PROTO)
+#if defined(FEAT_FIND_ID) || defined(PROTO)
     void
 msg_home_replace_hl(fname)
     char_u	*fname;
@@ -840,13 +911,40 @@ msg_outtrans_len(str, len)
 {
     return msg_outtrans_len_attr(str, len, 0);
 }
+
+/*
+ * Output one character at "p".  Return pointer to the next character.
+ * Handles multi-byte characters.
+ */
+    char_u *
+msg_outtrans_one(p, attr)
+    char_u	*p;
+    int		attr;
+{
+#ifdef FEAT_MBYTE
+    int		l;
+
+    if (has_mbyte && (l = mb_ptr2len_check(p)) > 1)
+    {
+	msg_outtrans_len_attr(p, l, attr);
+	return p + l;
+    }
+#endif
+    msg_puts_attr(transchar(*p), attr);
+    return p + 1;
+}
+
     int
 msg_outtrans_len_attr(str, len, attr)
     char_u	*str;
     int		len;
     int		attr;
 {
-    int retval = 0;
+    int		retval = 0;
+#ifdef FEAT_MBYTE
+    int		n;
+    char_u	buf[MB_MAXBYTES + 1];
+#endif
 
     /* if MSG_HIST flag set, add message to history */
     if (attr & MSG_HIST)
@@ -857,29 +955,27 @@ msg_outtrans_len_attr(str, len, attr)
 
     while (--len >= 0)
     {
-#ifdef MULTI_BYTE
+#ifdef FEAT_MBYTE
 	/* check multibyte */
-	if (is_dbcs && len > 0 && IsLeadByte(*str))
+	if (has_mbyte && (n = mb_ptr2len_check(str)) > 1)
 	{
-	    char_u buf[3];
-
-	    buf[0] = *str++;
-	    buf[1] = *str++;
-	    buf[2] = NUL;
+	    mch_memmove(buf, str, (size_t)n);
+	    buf[n] = NUL;
 	    msg_puts_attr(buf, attr);
-	    retval += 2;
-	    --len;
+	    retval += mb_ptr2cells(str);
+	    len -= n - 1;
+	    str += n;
 	    continue;
 	}
 #endif
 	msg_puts_attr(transchar(*str), attr);
-	retval += charsize(*str);
+	retval += ptr2cells(str);
 	++str;
     }
     return retval;
 }
 
-#if defined(QUICKFIX) || defined(PROTO)
+#if defined(FEAT_QUICKFIX) || defined(PROTO)
     void
 msg_make(arg)
     char_u  *arg;
@@ -946,7 +1042,11 @@ str2special(sp, from)
     int		from;	/* TRUE for lhs of mapping */
 {
     int			c;
+#ifdef FEAT_MBYTE
+    static char_u	buf[MB_MAXBYTES + 1];
+#else
     static char_u	buf[2];
+#endif
     char_u		*str = *sp;
     int			modifiers = 0;
     int			special = FALSE;
@@ -970,11 +1070,27 @@ str2special(sp, from)
 	if (IS_SPECIAL(c) || modifiers)	/* special key */
 	    special = TRUE;
     }
+#ifdef FEAT_MBYTE
+    else if (has_mbyte)
+    {
+	int	n;
+
+	/* Return a multi-byte character unmodified. */
+	n = mb_ptr2len_check(str);
+	if (n > 1)
+	{
+	    mch_memmove(buf, str, n);
+	    buf[n] = NUL;
+	    *sp = str + n;
+	    return buf;
+	}
+    }
+#endif
     *sp = str + 1;
 
     /* Make unprintable characters in <> form, also <M-Space> and <Tab>.
      * Use <Space> only for lhs of a mapping. */
-    if (special || charsize(c) > 1 || (from && c == ' '))
+    if (special || char2cells(c) > 1 || (from && c == ' '))
 	return get_special_key_name(c, modifiers);
     buf[0] = c;
     buf[1] = NUL;
@@ -1017,6 +1133,9 @@ msg_prt_line(s)
     int		n;
     int		attr= 0;
     char_u	*trail = NULL;
+#ifdef FEAT_MBYTE
+    int		l;
+#endif
 
     /* find start of trailing whitespace */
     if (curwin->w_p_list && lcs_trail)
@@ -1041,6 +1160,13 @@ msg_prt_line(s)
 	    else
 		c = *p_extra++;
 	}
+#ifdef FEAT_MBYTE
+	else if (has_mbyte && (l = mb_ptr2len_check(s)) > 1)
+	{
+	    s = screen_puts_mbyte(s, l, attr);
+	    continue;
+	}
+#endif
 	else
 	{
 	    attr = 0;
@@ -1070,7 +1196,7 @@ msg_prt_line(s)
 		attr = hl_attr(HLF_AT);
 		--s;
 	    }
-	    else if (c != NUL && (n = charsize(c)) > 1)
+	    else if (c != NUL && (n = byte2cells(c)) > 1)
 	    {
 		n_extra = n - 1;
 		p_extra = transchar(c);
@@ -1093,6 +1219,40 @@ msg_prt_line(s)
     msg_clr_eos();
 }
 
+#ifdef FEAT_MBYTE
+/*
+ * Use screen_puts() to output one multi-byte character.
+ * Return the pointer "s" advanced to the next character.
+ */
+    static char_u *
+screen_puts_mbyte(s, l, attr)
+    char_u	*s;
+    int		l;
+    int		attr;
+{
+    int		cw;
+    char_u	buf[MB_MAXBYTES + 1];
+
+    cw = mb_ptr2cells(s);
+    if (cw > 1 && msg_col == Columns - 1)
+    {
+	/* Doesn't fit, print a highlighted '>' to fill it up. */
+	msg_screen_putchar('>', hl_attr(HLF_AT));
+	return s;
+    }
+
+    mch_memmove(buf, s, (size_t)l);
+    buf[l] = NUL;
+    screen_puts(buf, msg_row, msg_col, attr);
+    if ((msg_col += cw) >= Columns)
+    {
+	msg_col = 0;
+	++msg_row;
+    }
+    return s + l;
+}
+#endif
+
 /*
  * Output a string to the screen at position msg_row, msg_col.
  * Update msg_row and msg_col for the next message.
@@ -1111,7 +1271,7 @@ msg_puts_title(s)
     msg_puts_attr(s, hl_attr(HLF_T));
 }
 
-#if defined(USE_CSCOPE) || defined(PROTO)
+#if defined(FEAT_CSCOPE) || defined(PROTO)
 /*
  * if printing a string will exceed the screen width, print "..." in the
  * middle.
@@ -1166,11 +1326,20 @@ msg_puts_attr(s, attr)
     int		oldState;
     char_u	*p;
     char_u	buf[4];
+#ifdef FEAT_MBYTE
+    int		l;
+#endif
 
     /*
      * If redirection is on, also write to the redirection file.
      */
     redir_write(s);
+
+    /*
+     * Don't print anything when using ":silent cmd".
+     */
+    if (msg_silent)
+	return;
 
     /* if MSG_HIST flag set, add message to history */
     if (attr & MSG_HIST)
@@ -1248,10 +1417,11 @@ msg_puts_attr(s, attr)
 		&& (*s == '\n'
 		    || msg_col >= Columns - 1
 		    || (*s == TAB && msg_col >= ((Columns - 1) & ~7))
-#ifdef MULTI_BYTE
-		    || (is_dbcs && IsLeadByte(*s) && msg_col >= Columns - 2)
+#ifdef FEAT_MBYTE
+		    || (has_mbyte && mb_ptr2cells(s) > 1
+						    && msg_col >= Columns - 2)
 #endif
-		    ))
+			      ))
 	{
 	    /* When no more prompt an no more room, truncate here */
 	    if (msg_no_more && lines_left == 0)
@@ -1263,7 +1433,8 @@ msg_puts_attr(s, attr)
 
 	    ++msg_scrolled;
 	    need_wait_return = TRUE;	/* may need wait_return in main() */
-	    redraw_all_later(NOT_VALID);
+	    if (must_redraw < VALID)
+		must_redraw = VALID;
 	    redraw_cmdline = TRUE;
 	    if (cmdline_row > 0 && !exmode_active)
 		--cmdline_row;
@@ -1276,7 +1447,7 @@ msg_puts_attr(s, attr)
 	    {
 		oldState = State;
 		State = ASKMORE;
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 		setmouse();
 #endif
 		msg_moremsg(FALSE);
@@ -1311,9 +1482,9 @@ msg_puts_attr(s, attr)
 			need_wait_return = FALSE; /* don't wait in main() */
 			/*FALLTHROUGH*/
 		    case 'q':		/* quit */
-		    case Ctrl('C'):
+		    case Ctrl_C:
 		    case ESC:
-#ifdef CON_DIALOG
+#ifdef FEAT_CON_DIALOG
 			if (msg_noquit_more)
 			{
 			    /* When quitting is not possible, behave like
@@ -1361,7 +1532,7 @@ msg_puts_attr(s, attr)
 		screen_fill((int)Rows - 1, (int)Rows,
 						0, (int)Columns, ' ', ' ', 0);
 		State = oldState;
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 		setmouse();
 #endif
 		if (quit_more)
@@ -1394,30 +1565,9 @@ msg_puts_attr(s, attr)
 		msg_screen_putchar(' ', attr);
 	    while (msg_col & 7);
 	}
-#ifdef MULTI_BYTE
-	else if (is_dbcs && *(s + 1) != NUL && IsLeadByte(*s))
-	{
-	    if (msg_col % Columns == Columns - 1)
-	    {
-		msg_screen_putchar('>', hl_attr(HLF_AT));
-		continue;
-	    }
-	    else
-	    {
-		char_u mbyte[3]; /* only for dbcs */
-
-		mbyte[0] = *s;
-		mbyte[1] = *(s + 1);
-		mbyte[2] = NUL;
-		screen_puts(mbyte, msg_row, msg_col, attr);
-		if ((msg_col += 2) >= Columns)
-		{
-		    msg_col = 0;
-		    ++msg_row;
-		}
-		++s;
-	    }
-	}
+#ifdef FEAT_MBYTE
+	else if (has_mbyte && (l = mb_ptr2len_check(s)) > 1)
+	    s = screen_puts_mbyte(s, l, attr) - 1;
 #endif
 	else
 	    msg_screen_putchar(*s, attr);
@@ -1466,11 +1616,11 @@ msg_moremsg(full)
     int	    attr;
 
     attr = hl_attr(HLF_M);
-    screen_puts((char_u *)"-- More --", (int)Rows - 1, 0, attr);
+    screen_puts((char_u *)_("-- More --"), (int)Rows - 1, 0, attr);
     if (full)
 	screen_puts(more_back_used
-	    ? (char_u *)" (RET/BS: line, SPACE/b: page, d/u: half page, q: quit)"
-	    : (char_u *)" (RET: line, SPACE: page, d: half page, q: quit)",
+	    ? (char_u *)_(" (RET/BS: line, SPACE/b: page, d/u: half page, q: quit)")
+	    : (char_u *)_(" (RET: line, SPACE: page, d: half page, q: quit)"),
 	    (int)Rows - 1, 10, attr);
 }
 
@@ -1486,7 +1636,7 @@ repeat_message()
 	msg_moremsg(TRUE);	/* display --more-- message again */
 	msg_row = Rows - 1;
     }
-#ifdef CON_DIALOG
+#ifdef FEAT_CON_DIALOG
     else if (State == CONFIRM)
     {
 	display_confirm_msg();	/* display ":confirm" message again */
@@ -1611,7 +1761,7 @@ redir_write(s)
     static int	    cur_col = 0;
 
     if ((redir_fd != NULL
-#ifdef WANT_EVAL
+#ifdef FEAT_EVAL
 			  || redir_reg
 #endif
 				       ) && !redir_off)
@@ -1621,9 +1771,9 @@ redir_write(s)
 	{
 	    while (cur_col < msg_col)
 	    {
-#ifdef WANT_EVAL
+#ifdef FEAT_EVAL
 		if (redir_reg)
-		    write_reg_contents(redir_reg, (char_u *)" ");
+		    write_reg_contents(redir_reg, (char_u *)" ", TRUE);
 		else if (redir_fd)
 #endif
 		    fputs(" ", redir_fd);
@@ -1631,9 +1781,9 @@ redir_write(s)
 	    }
 	}
 
-#ifdef WANT_EVAL
+#ifdef FEAT_EVAL
 	if (redir_reg)
-	    write_reg_contents(redir_reg, s);
+	    write_reg_contents(redir_reg, s, TRUE);
 	else if (redir_fd)
 #endif
 	    fputs((char *)s, redir_fd);
@@ -1661,8 +1811,12 @@ give_warning(message, hl)
     char_u  *message;
     int	    hl;
 {
-#ifdef WANT_EVAL
-    set_vim_var_string(VV_WARNINGMSG, message);
+    /* Don't do this for ":silent". */
+    if (msg_silent)
+	return;
+
+#ifdef FEAT_EVAL
+    set_vim_var_string(VV_WARNINGMSG, message, -1);
 #endif
 #ifdef VIMBUDDY
     VimBuddyText(message, 1);
@@ -1693,7 +1847,7 @@ msg_advance(col)
 	msg_putchar(' ');
 }
 
-#if defined(CON_DIALOG) || defined(PROTO)
+#if defined(FEAT_CON_DIALOG) || defined(PROTO)
 /*
  * Used for "confirm()" function, and the :confirm command prefix.
  * Versions which haven't got flexible dialogs yet, and console
@@ -1732,7 +1886,7 @@ do_dialog(type, title, message, buttons, dfltbutton)
 	return dfltbutton;   /* return default option */
 #endif
 
-#ifdef GUI_DIALOG
+#ifdef FEAT_GUI_DIALOG
     /* When GUI is running, use the GUI dialog */
     if (gui.in_use)
     {
@@ -1744,7 +1898,7 @@ do_dialog(type, title, message, buttons, dfltbutton)
 
     oldState = State;
     State = CONFIRM;
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
     setmouse();
 #endif
 
@@ -1767,7 +1921,7 @@ do_dialog(type, title, message, buttons, dfltbutton)
 	    case NL:
 		retval = dfltbutton;
 		break;
-	    case Ctrl('C'):		/* User aborts/cancels */
+	    case Ctrl_C:		/* User aborts/cancels */
 	    case ESC:
 		retval = 0;
 		break;
@@ -1794,7 +1948,7 @@ do_dialog(type, title, message, buttons, dfltbutton)
     }
 
     State = oldState;
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
     setmouse();
 #endif
     --no_wait_return;
@@ -1926,9 +2080,9 @@ display_confirm_msg()
     --msg_noquit_more;
 }
 
-#endif /* CON_DIALOG */
+#endif /* FEAT_CON_DIALOG */
 
-#if defined(CON_DIALOG) || defined(GUI_DIALOG)
+#if defined(FEAT_CON_DIALOG) || defined(FEAT_GUI_DIALOG)
 
 /*
  * Various stock dialogs used throughout Vim when :confirm is used.
@@ -1972,9 +2126,9 @@ vim_dialog_yesno(type, title, message, dflt)
     int		dflt;
 {
     if (do_dialog(type,
-		title == NULL ? (char_u *)"Question" : title,
+		title == NULL ? (char_u *)_("Question") : title,
 		message,
-		(char_u *)"&Yes\n&No", dflt) == 1)
+		(char_u *)_("&Yes\n&No"), dflt) == 1)
 	return VIM_YES;
     return VIM_NO;
 }
@@ -1987,9 +2141,9 @@ vim_dialog_yesnocancel(type, title, message, dflt)
     int		dflt;
 {
     switch (do_dialog(type,
-		title == NULL ? (char_u *)"Question" : title,
+		title == NULL ? (char_u *)_("Question") : title,
 		message,
-		(char_u *)"&Yes\n&No\n&Cancel", dflt))
+		(char_u *)_("&Yes\n&No\n&Cancel"), dflt))
     {
 	case 1: return VIM_YES;
 	case 2: return VIM_NO;
@@ -2007,7 +2161,7 @@ vim_dialog_yesnoallcancel(type, title, message, dflt)
     switch (do_dialog(type,
 		title == NULL ? (char_u *)"Question" : title,
 		message,
-		(char_u *)"&Yes\n&No\nSave &All\n&Discard All\n&Cancel", dflt))
+		(char_u *)_("&Yes\n&No\nSave &All\n&Discard All\n&Cancel"), dflt))
     {
 	case 1: return VIM_YES;
 	case 2: return VIM_NO;
@@ -2017,9 +2171,9 @@ vim_dialog_yesnoallcancel(type, title, message, dflt)
     return VIM_CANCEL;
 }
 
-#endif /* GUI_DIALOG || CON_DIALOG */
+#endif /* FEAT_GUI_DIALOG || FEAT_CON_DIALOG */
 
-#if defined(USE_BROWSE) || defined(PROTO)
+#if defined(FEAT_BROWSE) || defined(PROTO)
 /*
  * Generic browse function.  Calls gui_mch_browse() when possible.
  * Later this may pop-up a non-GUI file selector (external command?).
@@ -2032,7 +2186,7 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
     char_u	*ext;		/* extension added */
     char_u	*initdir;	/* initial directory, NULL for current dir */
     char_u	*filter;	/* file name filter */
-    BUF		*buf;		/* buffer to read/write for */
+    buf_t	*buf;		/* buffer to read/write for */
 {
     char_u		*fname;
     static char_u	*last_dir = NULL;    /* last used directory */
@@ -2041,14 +2195,14 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
 
     /* Must turn off browse straight away, or :so autocommands will get the
      * flag too!  */
-    browse = FALSE;
+    cmdmod.browse = FALSE;
 
     if (title == NULL)
     {
 	if (saving)
-	    title = (char_u *)"Save File dialog";
+	    title = (char_u *)_("Save File dialog");
 	else
-	    title = (char_u *)"Open File dialog";
+	    title = (char_u *)_("Open File dialog");
     }
 
     /* When no directory specified, use buffer dir, last dir or current dir */
@@ -2072,7 +2226,7 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
 	 * default already, leave initdir empty. */
     }
 
-# ifdef USE_GUI
+# ifdef FEAT_GUI
     if (gui.in_use)		/* when this changes, also adjust f_has()! */
     {
 	fname = gui_mch_browse(saving, title, dflt, ext, initdir, filter);
@@ -2081,6 +2235,7 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
 # endif
     {
 	/* TODO: non-GUI file selector here */
+	EMSG(_("Sorry, no file browser in console mode"));
 	fname = NULL;
     }
 

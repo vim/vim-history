@@ -178,9 +178,8 @@
 #define AT_CURSOR 0
 
 /*
- * definitions for the window dependent functions (w_p_pers).
+ * definitions for the window dependent functions (w_farsi).
  */
-
 #define W_CONV 0x1
 #define W_R_L  0x2
 
@@ -200,7 +199,7 @@ void conv_to_pstd __ARGS((void));
 char_u *lrswap __ARGS((char_u *ibuf));
 char_u *lrFswap __ARGS((char_u *cmdbuf, int len));
 char_u *lrF_sub __ARGS((char_u *ibuf));
-void farsi_fkey __ARGS((int c));
+void farsi_fkey __ARGS((cmdarg_t *cap));
 
 /* special Farsi text messages */
 

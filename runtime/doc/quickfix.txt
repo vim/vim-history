@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 5.7.  Last change: 1999 Oct 28
+*quickfix.txt*  For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -125,6 +125,35 @@ The following commands can be used if you are in QuickFix mode:
 			comes from ":g/re/p", where "re" stands for Regular
 			Expression.]
 
+							*quickfix-window*
+							*:cw* *:cwindow*
+:cw[indow] [height]	Open a window to show the current list of errors.
+			When [height] is given, the window becomes that high
+			(if there is room).  Otherwise the window is made ten
+			lines high.
+			The window will contain a special buffer, with
+			'buftype' equal to "quickfix".  Don't change this!
+			If there already is a quickfix window, it will be made
+			the current window.  It is not possible to open a
+			second quickfix window.
+
+Normally the quickfix window is at the bottom of the screen.  Although you can
+move it around with |window-moving| commands, if you really want.  The window
+will mostly keep its height, ignoring 'winheight' and 'equalalways'.  You can
+change the height manually (e.g., by dragging the status line above it with
+the mouse).
+
+In the quickfix window, each line is one error.  The line number is equal to
+the error number.  You can use ":.cc" to jump to the error under the cursor.
+Double-clicking the mouse on a line has the same effect.  The file containing
+the error is opened in the window above the quickfix window.  If there already
+is a window for that file, it is used instead.  If the buffer in the used
+window has changed, and the error is in another file, jumping to the error
+will fail.  You will first have to make sure the window contains a buffer
+which can be abandoned.
+
+
+							*error-file-format*
 A template for the errorfile name can be set with the 'makeef' option.  If it
 includes "##", Vim will replace this with a number to make it a unique name.
 
@@ -152,6 +181,8 @@ Others are invalid.
 	%n		error number (finds a number)
 	%m		error message (finds a string)
 	%r		matches the "rest" of a single-line file message %O/P/Q
+	%p		pointer line (finds a sequence of '-' or ' ' and uses
+			the length for the column number)
 	%*{conv}	any scanf non-assignable conversion
 	%%		the single '%' character
 
@@ -172,6 +203,7 @@ ie. error strings that consume more than one line. Possible prefixes are:
 	%A		start of a multi-line message (unspecified type)
 	%E		start of a multi-line error message
 	%W		start of a multi-line warning message
+	%I		start of a multi-line informational message
 	%C		continuation of a multi-line message
 	%Z		end of a multi-line message
 	%G		global; useful only in conjunction with '+' or '-'
@@ -234,6 +266,15 @@ up to that character is included in the string.  Be careful: "%f%l" will
 include everything up to the first '%' in the file name.  If the "%f" or "%m"
 is at the end, everything up to the end of the line is included.
 
+The "%p" conversion is normally followed by a "^".  It's used for compilers
+that output a line like: >
+            ^
+or >
+   ---------^
+to indicate the column of the error.  This is to be used in a multi-line error
+message.  See |errorformat-javac| for a  useful example.
+
+
 When defining an "enter directory" or "leave directory" format, the "%D" or
 "%X" has to be given at the start of that substring. Vim tracks the directory
 changes and prepends the current directory to each erroneous file found with a
@@ -262,8 +303,8 @@ correct file.  You will have to do this by hand.
 If you have a compiler that produces error messages that do not fit in the
 format string, you could write a program that translates the error messages
 into this format.  You can use this program with the ":make" command by
-changing the 'makeprg' option.  For example:
->  :set mp=make\ \\\|&\ error_filter
+changing the 'makeprg' option.  For example: >
+   :set mp=make\ \\\|&\ error_filter
 The backslashes before the pipe character are required to avoid it to be
 recognized as a command separator.  The backslash before each space is
 required for the set command.
@@ -357,13 +398,13 @@ produces simple multi-line error messages when invoked with the option "+E".
 An 'errorformat' string matching the produced messages is shown below.
 The following lines can be placed in the user's |vimrc| to overwrite Vim's
 recognized default formats, or see |:set+=| how to install this format
-additionally to the default.
+additionally to the default. >
 
->set efm=%A%f:%l:%c:%*\\d:%*\\d:,
->	\%C%*\\s%trror:%m,
->	\%+C%*[^:]%trror:%m,
->	\%C%*\\s%tarning:%m,
->	\%C%m
+ :set efm=%A%f:%l:%c:%*\\d:%*\\d:,
+	\%C%*\\s%trror:%m,
+	\%+C%*[^:]%trror:%m,
+	\%C%*\\s%tarning:%m,
+	\%C%m
 
 Note: when copying the command from this help text, please do not forget to
 remove the leading '>' characters that mark examples.
@@ -385,40 +426,40 @@ remove the comment lines and also leading '>' characters.  For the '\' notation
 at the start of some lines see |line-continuation|.
 
 		First prepare 'makeprg' such that LaTeX will report multiple
-		errors; do not stop when the first error has occurred:
->set makeprg=latex\ \\\\nonstopmode\ \\\\input\\{$*}
-
-		Start of multi-line error messages:
->set efm=%E!\ LaTeX\ %trror:\ %m,
->	\%E!\ %m,
-		Start of multi-line warning messages; the first two also
+		errors; do not stop when the first error has occurred: >
+ :set makeprg=latex\ \\\\nonstopmode\ \\\\input\\{$*}
+<
+		Start of multi-line error messages: >
+ :set efm=%E!\ LaTeX\ %trror:\ %m,
+	\%E!\ %m,
+<		Start of multi-line warning messages; the first two also
 		include the line number. Meaning of some regular expressions:
 		  - "%.%#"  (".*")   matches a (possibly empty) string
-		  - "%*\\d" ("\d\+") matches a number
->	\%+WLaTeX\ %.%#Warning:\ %.%#line\ %l%.%#,
->	\%+W%.%#\ at\ lines\ %l--%*\\d,
->	\%WLaTeX\ %.%#Warning:\ %m,
-		Possible continuations of error/warning messages; the first
-		one also includes the line number:
->	\%Cl.%l\ %m,
->	\%+C\ \ %m.,
->	\%+C%.%#-%.%#,
->	\%+C%.%#[]%.%#,
->	\%+C[]%.%#,
->	\%+C%.%#%[{}\\]%.%#,
->	\%+C<%.%#>%.%#,
->	\%C\ \ %m,
-		Lines that match the following patterns do not contain any
-		important information; do not include them in messages:
->	\%-GSee\ the\ LaTeX%m,
->	\%-GType\ \ H\ <return>%m,
->	\%-G\ ...%.%#,
->	\%-G%.%#\ (C)\ %.%#,
->	\%-G(see\ the\ transcript%.%#),
-		Generally exclude any empty or whitespace-only line from
-		being displayed:
->	\%-G%*\\s,
-		The LaTeX output log does not specify the names of erroneous
+		  - "%*\\d" ("\d\+") matches a number >
+	\%+WLaTeX\ %.%#Warning:\ %.%#line\ %l%.%#,
+	\%+W%.%#\ at\ lines\ %l--%*\\d,
+	\%WLaTeX\ %.%#Warning:\ %m,
+<		Possible continuations of error/warning messages; the first
+		one also includes the line number: >
+	\%Cl.%l\ %m,
+	\%+C\ \ %m.,
+	\%+C%.%#-%.%#,
+	\%+C%.%#[]%.%#,
+	\%+C[]%.%#,
+	\%+C%.%#%[{}\\]%.%#,
+	\%+C<%.%#>%.%#,
+	\%C\ \ %m,
+<		Lines that match the following patterns do not contain any
+		important information; do not include them in messages: >
+	\%-GSee\ the\ LaTeX%m,
+	\%-GType\ \ H\ <return>%m,
+	\%-G\ ...%.%#,
+	\%-G%.%#\ (C)\ %.%#,
+	\%-G(see\ the\ transcript%.%#),
+<		Generally exclude any empty or whitespace-only line from
+		being displayed: >
+	\%-G%*\\s,
+<		The LaTeX output log does not specify the names of erroneous
 		source files per line; rather they are given globally,
 		enclosed in parentheses.
 		The following patterns try to match these names and store
@@ -429,17 +470,17 @@ at the start of some lines see |line-continuation|.
 
 		Overread a file name enclosed in '('...')'; do not push it
 		on a stack since the file apparently does not contain any
-		error:
->	\%+O(%f)%r,
-		Push a file name onto the stack. The name is given after '(':
->	\%+P(%f%r,
->	\%+P\ %\\=(%f%r,
->	\%+P%*[^()](%f%r,
->	\%+P[%\\d%[^()]%#(%f%r,
-		Pop the last stored file name when a ')' is scanned:
->	\%+Q)%r,
->	\%+Q%*[^()])%r,
->	\%+Q[%\\d%*[^()])%r
+		error: >
+	\%+O(%f)%r,
+<		Push a file name onto the stack. The name is given after '(': >
+	\%+P(%f%r,
+	\%+P\ %\\=(%f%r,
+	\%+P%*[^()](%f%r,
+	\%+P[%\\d%[^()]%#(%f%r,
+<		Pop the last stored file name when a ')' is scanned: >
+	\%+Q)%r,
+	\%+Q%*[^()])%r,
+	\%+Q[%\\d%*[^()])%r
 
 Note that in some cases file names in the LaTeX output log cannot be parsed
 properly.  The parser might have been messed up by unbalanced parentheses
@@ -454,6 +495,11 @@ However, to properly parse such a complex file, an external filter should
 be used.  See the description further above how to make such a filter known
 by Vim.
 
+						*errorformat-javac*
+This 'errorformat' has been reported to work well for javac, which outputs a
+line with "^" to indicated the column of the error: >
+  :set efm=%A%f:%l:\ %m,%-Z%p^,%-C%.%#
+<
 
 						*quickfix-error-lists*
 So far has been assumed that there is only one list of errors.  Actually the
@@ -484,8 +530,8 @@ option.  This works almost like typing
 {makeprg} is the string given with the 'makeprg' option.  Any command can be
 used, not just "make".  Characters '%' and '#' are expanded as usual on a
 command-line.  You can use "#<" to insert the current file name without
-extension, for example:
->  :set makeprg=make\ #<.o
+extension, for example: >
+   :set makeprg=make\ #<.o
 
 [arguments] is anything that is typed after ":make".
 {shellpipe} is the 'shellpipe' option.
@@ -493,12 +539,12 @@ extension, for example:
 
 The placeholder "$*" can be used for the argument list in {makeprog} if the
 command needs some additional characters after its arguments.  The $* is
-replaced then by all arguments.  Example:
->  :set makeprg=latex\ \\\\nonstopmode\ \\\\input\\{$*}
-or simpler
->  :let &mp = 'latex \\nonstopmode \\input\{$*}'
-"$*" can be given multiple times, for example:
->  :set makeprg=gcc\ -o\ $*\ $*
+replaced then by all arguments.  Example: >
+   :set makeprg=latex\ \\\\nonstopmode\ \\\\input\\{$*}
+or simpler >
+   :let &mp = 'latex \\nonstopmode \\input\{$*}'
+"$*" can be given multiple times, for example: >
+   :set makeprg=gcc\ -o\ $*\ $*
 
 The 'shellpipe' option defaults to ">" for the Amiga, MS-DOS and Win32.  This
 means that the output of the compiler is saved in a file and not shown on the
@@ -526,4 +572,4 @@ changed" is shown to warn you that the error location may not be correct.  If
 you quit Vim and start again the marks are lost and the error locations may
 not be correct anymore.
 
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

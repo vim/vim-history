@@ -1,0 +1,629 @@
+*version6.txt*  For Vim version 6.0d.  Last change: 2000 Jul 30
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+Welcome to Vim Version 6.0!
+
+	Vim 2001, a folding space odyssey
+	Where do you want to fold today?
+
+
+This document lists the differences between Vim 5.x and Vim 6.0.
+See |vi_diff.txt| for an overview of differences between Vi and Vim 5.0.
+See |version4.txt| for differences between Vim 3.0 and Vim 4.0.
+See |version5.txt| for differences between Vim 4.0 and Vim 5.0.
+
+INCOMPATIBLE CHANGES			|incompatible-6|
+Cursor position in Visual mode		|curpos-visual|
+CR in substitute command		|substitute-CR|
+'include' option local			|include-local|
+global option values used		|new-global-values|
+'fileencoding' obsolete			|fileencoding-obsolete|
+filetype detection changed		|filetypedetect-changed|
+CTRL-U in Command-line mode		|CTRL-U-changed|
+Documentation				|documentation-6|
+Small incompatibilities			|incomp-small-6|
+
+NEW FEATURES
+Folding					|new-folding|
+Vertically split windows		|new-vertsplit|
+Extended search patterns		|new-searchpat|
+UTF-8 support				|new-utf-8|
+Multi-language support			|new-multi-lang|
+Filetype settings			|new-filetype-settings|
+Cursor in virtual position		|new-virtedit|
+Debugger interface			|new-debug-itf|
+Buffer types				|new-buftype|
+Ports					|ports-6|
+Quickfix extended			|quickfix-6|
+Operator modifiers			|new-operator-mod|
+Search Path				|new-search-path|
+Various new items			|new-items-6|
+
+IMPROVEMENTS				|improvements-6|
+
+COMPILE TIME CHANGES			|compile-changes-6|
+
+BUG FIXES				|bug-fixes-6|
+
+==============================================================================
+INCOMPATIBLE CHANGES				*incompatible-6*
+
+These changes are incompatible with previous releases.  Check this list if you
+run into a problem when upgrading from Vim 5.x to 6.0
+
+
+Cursor position in Visual mode			*curpos-visual*
+------------------------------
+
+When going from one window to another window on the same buffer while in
+Visual mode, the cursor position of the other window is adjusted to keep the
+same Visual area.  This can be used to set the start of the Visual area in one
+window and the end in another.
+
+
+CR in substitute command			*substitute-CR*
+------------------------
+
+The substitute string has been made Vi compatible.  Previously a CTRL-V had a
+special meaning and could be used to prevent a <CR> to insert a line break.
+This made it impossible to insert a CTRL-V at the end of a line.  Now a
+backslash is used to prevent a <CR> to cause a line break.  Since the number
+of backslashes is halved, it is still possible to insert a line break at the
+end of the line.  This now works just like Vi, but it's not compatible with
+Vim versions before 6.0.
+
+
+'include' option local				*include-local*
+----------------------
+
+The 'include' option is now local to the buffer.  Each language may require
+another 'include' option value.  This only matters if you set the 'include'
+option and expect it to have the new value in other buffers too.
+
+
+Global option values used			*new-global-values*
+-------------------------
+
+There are now global values for options which are local to a buffer or window.
+Previously the local options were copied from one buffer to another.  When
+editing another file this could cause options set in a modeline to be used for
+the wrong file.  Now the global values are used when entering a buffer that
+has not been used before.  Also, when editing another buffer in a window, the
+local window options are reset to their global values.  The ":set" command
+sets both the local and global values, this is still compatible.  But a
+modeline only sets the local value, this is not backwards compatible.
+
+
+'fileencoding' obsolete				*fileencoding-obsolete*
+-----------------------
+
+'fileencoding' is no longer to be used.  It is now equivalent to the new
+'charcode' option, which is global.  'fileencoding' was local to a buffer, but
+it could never be different between buffers, because it changed the way text
+in all buffers was interpreted.  The FileEncoding autocommand now does the
+same as the new CharCode event.
+
+
+filetype detection changed			*filetypedetect-changed*
+--------------------------
+
+The filetype detection previously was using the "filetype" autocommand group.
+This caused confusion with the FileType event name.  The group is now called
+"filetypedetect".
+The support for 'runtimepath' has made the "myfiletypefile" mechanism
+obsolete.  It still works, but if the "filetype" group is used the
+autocommands will not be removed by ":filetype off".
+The connection between the FileType event and setting the 'syntax' option was
+previously in the "syntax" autocommand group.  That caused confusion with the
+Syntax event name.  The group is now called "syntaxset".
+
+
+CTRL-U in Command-line mode			*CTRL-U-changed*
+---------------------------
+
+CTRL-U in the command line cleared the whole line.  Most shells only delete
+the characters before the cursor.  Made it like that. (Steve Wall)
+You can get the old behavior with CTRL-E CTRL-U.
+
+
+Documentation					*documentation-6*
+-------------
+
+The documentation has been reorganised, an item may not be where you found it
+in Vim 5.x.
+- Split into a reference manual and a user manual.
+- Put the quick reference in a separate file (so that it can be printed).
+
+The examples in the documentation were previously marked with a ">" in the
+first column.  This made it difficult to copy/paste them.  There is now a
+single ">" before the example and it ends at a "<" or a non-blank in the first
+column.  This also looks better without highlighting.
+
+When syntax highlighting is not enabled, the characters in the help file which
+mark examples ('>' and '<') and header lines ('~') are replaced with a space.
+
+The help window now always appears at the top of the Vim window.  Previously
+it appeared above the current window.
+
+
+Small incompatibilities				*incomp-small-6*
+-----------------------
+
+Removed '_' from the 'breakat' default: It's commonly used in keywords.
+
+The default for 'mousehide' is on, because this works well form most people.
+
+The Amiga binary is now always compiled with 'big" features.  The "big" binary
+archive no longer exists.
+
+The items "[RO]", "[+]", "[help]", "[Preview]" and "[filetype]" in
+'statusline' no longer have a leading space.
+
+==============================================================================
+NEW FEATURES
+
+Folding							*new-folding*
+-------
+
+Vim can now display a buffer with text folded.  This allows overviewing the
+structure of a file quickly.  It is also possible to move folded text, for
+example to move a function to another position.
+See |folding|.
+
+
+Vertically split windows				*new-vertsplit*
+------------------------
+
+Windows can also be split vertically.  This makes it possible to have windows
+side by side.  One nice use for this is to compare two similar files.  The
+'scrollbind' option can be used to synchronize scrolling.
+
+A vertical split can be created with the commands:
+	:vsplit	  or  CTRL-W v  or CTRL-W CTRL-V	|:vsplit|
+	:vnew						|:vnew|
+	:vertical {cmd}					|:vertical|
+The last one is a modifier, which has a meaning for any command that splits a
+window.  For example: >
+	:vertical stag main
+Will vertically split the window and jump to the tag "main" in the new window.
+
+Moving from window to window horizontally can be done with the |CTRL-W_h| and
+|CTRL-W_l| commands.  The |CTRL-W_k| and |CTRL-W_j| commands have been changed
+to jump to the window above or below the cursor position.
+
+The vertical and horizontal splits can be mixed as you like.  Resizing windows
+is easy when using the mouse, just position the pointer on a status line or
+vertical separator and drag it.  In the GUI a special mouse pointer shape
+indicates where you can drag a status or separator line.
+
+To resize vertically split windows use the |CTRL-W_<| and |CTRL-W_>| commands.  To make a window the maximum width use the CTRL-W | command |CTRL-W_bar|.
+
+To force a new window to use the full width or height of the Vim window,
+these two modifiers are available:
+	:topleft {cmd}		New window appears at the top with full
+				width or at the left with full height.
+	:botright {cmd}		New window appears at the bottom with full
+				width or at the right with full height.
+This can be combined with ":vertical" to force a vertical split: >
+	:vert bot dsplit DEBUG
+This will open a window at the far right, occupying the full height of the Vim
+window, with the cursor on the first definition of "DEBUG".
+The help window is always opened at the top, like ":topleft" was used.
+
+A few options can be used to set the preferences for vertically split windows.
+They work similar to their existing horizontal equavalents:
+	horizontal	vertical ~
+	'splitbelow'	'splitright'
+	'winheight'	'winwidth'
+	'winminheight'	'winminwidth'
+It's possible to set 'winminwidth' to zero, so that temporarliy unused windows
+hardly take up space without closing them.
+
+The new 'eadirection' option tells where 'equalalways' applies:
+	:set eadirection=both		both directions
+	:set eadirection=ver		equalize window heights
+	:set eadirection=hor		equalize windows widths
+This can be used to avoid changing window sizes when you want to keep them.
+
+
+Extended search patterns				*new-searchpat*
+------------------------
+
+Multi-line patterns: (Loic Grenie)
+\n		match end-of-line, also in []
+\_[]		match characters in range and end-of-line
+\_x		match character class and end-of-line
+\_.		match any character or end-of-line
+
+\c		ignore case for the whole pattern
+\C		match case for the whole pattern
+\m		magic on for the following
+\M		magic off for the following
+
+\@!		don't match atom before it.
+		Example: "foo\(bar\)\@!" matches "foo " but not "foobar".
+\@=		match atom, resulting in  zero-width match
+		Example: "foo\(bar\)\@=" matches "foo" in "foobar".
+\@<!		don't match atom before it before the current position
+\@<=		match atom before it before current position
+\@>		match preceding atom as a subexpression
+
+\&		match only when branch before and after it match
+
+For syntax items:
+\z(...\)	external reference match set (in region start pattern)
+\z1 - \z9	external reference match use (in region skip or end pattern)
+	(Scott Bigham)
+
+\zs		use position as start of match
+\ze		use position as end of match
+
+Removed limit of matching only up to 32767 times with *, \+, etc.
+
+Added some support for double-byte characters. (Muraoka)
+
+
+UTF-8 support						*new-utf-8*
+-------------
+
+Vim can now edit files in UTF-8 encoding.  Up to 31 bit characters can be
+used, but only 16 bit characters are displayed.  Up to two combining
+characters are supported, they overprint the preceding character.
+Double-width characters are also supported.  See |UTF-8|.
+
+UCS-2 and UCS-4 encodings are supported too, they are converted to UTF-8
+internally.
+
+Multi-byte:
+- Added 'charcode' option: specifies character coding used inside Vim.
+- Added 'filecharcode' and 'filecharcodes': specify character coding in a
+  file.
+- Added 'charconvert' option: expression used to convert between character
+  encodings.
+- Added 'guifontwide' for double-width font.
+- Added Korean support for character class detection.  Also fix cls() in
+  search.c. (Chong-Dae Park)
+
+
+Multi-language support					*new-multi-lang*
+----------------------
+
+- Added +multi_lang feature.
+- Prepared for use of gettext() by putting translatable strings in _().
+  Added "po" directory with German and Polish translations.
+  (Marcin Dalecki)
+- Added v:lang variable to be able to get current language setting.
+  (Marcin Dalecki)
+- Added ":language" command to set the language (locale)
+- Added ":menutrans" to be able to translate menu paths.
+- Added German and Polish menu translations (Marcin Dalecki)
+- removed "broken locale" (Marcin Dalecki0.
+- don't user color names in icons, use RGB values.
+- Win32: Added global IME support (Muraoka)
+
+
+Filetype settings				*new-filetype-settings*
+-----------------
+
+A new group of files has been added to do settings for specific file types.
+These can be options and mappings which are specifically used for one value of
+'filetype'.
+
+The files are located in "$VIMRUNTIME/settings".  The 'runtimepath' option
+makes it possible to use several sets of settings files: Your own,
+system-wide, included in the Vim distribution, etc.
+
+To be able to make this work, several features were added:
+- Added the "s:" variables, local to a script.  Avoids name conflicts and
+  automatically deletes them when the script ends.
+- Added the global value for local options.  This value is used when opening
+  a new buffer or editing another file.  The option value specified in a
+  modeline or filetype setting is not carried over to another buffer.
+  ":set" sets both the local and the global value.
+  ":setlocal" sets the local option value only.
+  ":setglobal" displays the global value for a local option.  Setting only
+  the global value isn't implemented yet.
+- Added mappings and abbreviations local to a buffer: ":map <buffer>".
+  When the "localmapchar" variable has been set by the user, it will be
+  prepended to mappings in the settings file.
+
+
+Cursor in virtual position				*new-virtedit*
+--------------------------
+
+'virtualedit' option: Allow positioning the cursor where there is no actual
+character in Insert mode, Visual mode or allways. (Matthias Kramm)
+This is especially useful in Visual-block mode.  It allows positioning a
+corner of the area where there is no text character.
+
+
+Debugger interface					*new-debug-itf*
+------------------
+
+This was originally made to work with Sun Visual Workshop. (Gordon Prieur)
+- ":glyph", ":unglyph", ":glyphdef" and ":glyphs" commands: Add a small image
+  in front of a line.
+- ":sense" set menu sensitive on/off
+- ":wsverb"
+- Documentation: |debugger.txt|, |sign.txt|, |workshop.txt|
+- Balloon stuff: 'balloondelay' and 'ballooneval' options.
+
+
+Buffer types						*new-buftype*
+------------
+
+'buftype' option: special buffer type.  Currently 'quickfix' is allowed.
+
+
+Ports							*ports-6*
+-----
+
+Port to OS/390 Unix (Ralf Schandl)
+- A lot of changes to handle EBCDIC encoding.
+- Changed Ctrl('x') to Ctrl_x define.
+
+Included jsbmouse support. (Darren Garth)
+Support for dec mouse in Unix. (Steve Wall)
+
+
+Quickfix extended					*quickfix-6*
+-----------------
+
+- ":cwindow": open window to show list of quickfix errors.  Can be used to
+  scroll through the errors, and quickly jump to each of them.
+- Quickfix also knows "info", next to "warning" and "error" types. "%I" can be
+  used for the start of a multi-line informational message. (Tony Leneis)
+- The "%p" argument can be used in 'errorformat' to get the column number from
+  a line where "^" points to the column. (Stefan Roemer)
+
+
+Operator modifiers					*new-operator-mod*
+------------------
+
+Insert "v", "V" or CTRL-V between an operator and a motion command to force
+the operator to work characterwise, linewise or blockwise. |o_v|
+
+
+Search Path						*new-search-path*
+-----------
+
+- Support upward search for 'path', 'cdpath' and 'tags' options.  Also use
+  "**" for 'tags' option. (Ralf Schandl)
+- Added 'includeexpr', can be used to modify file name found by 'include'
+  option.
+- 'cdpath' option: Locations to find a ":cd" argument. (Raf)
+- Added 'suffixesadd', suffixes to be added to a file name when searching for
+  a file for the "gf", "[I", etc. commands.
+
+
+
+Various new items					*new-items-6*
+-----------------
+
+:silent[!] cmd
+		Execute a command silently.
+		RISCOS: Removed that "!~cmd" didn't output anything, and
+		didn't wait for <Return> afterwards.  Can use ":silent !cmd"
+		now.
+
+:finish		Finish sourcing a file.  Can be used to skip the rest of a Vim
+		script. |:finish|
+
+:enew		Edit a new, unnamed buffer.  This is needed, because ":edit"
+		re-edits the same file. (Wall)
+
+:quitall	Same as ":qall".
+
+:menu enable
+:menu disable	Commands to enable/disable menu entries without removing them.
+		(Monish Shah)
+
+:lcd and :lchdir
+		Set local directory for a window. (Benjie Chen)
+
+:hide {command}
+		Execute {command} with 'hidden' set.
+
+[', [`, ]' and ]`
+		move the cursor to the next/previous lowercase mark.
+
+g_		Go to last non-blank in line. (Steve Wall)
+
+New marks:
+'( and '): begin or end of current sentence.  Useful in Ex commands.
+'{ and '}: begin or end of current paragraph.  Useful in Ex commands.
+
+New functions:
+search()	Search for a pattern.
+
+==============================================================================
+IMPROVEMENTS						*improvements-6*
+
+Included Exuberant ctags 4.0. (Darren Hiebert)
+It now additionally supports Assembler, COBOL, LISP, PERL, Scheme, AWK, Bourne
+Shell, BETA, Python, TCL, and Vim scripts.
+
+Added "b:changedtick" variable.  Incremented at each change, also for undo.
+Can be used to take action only if the buffer has been changed.
+
+In the replacement string of a ":s" command "\=" can be used to replace with
+an expression.  The submatch() function can be used to access submatches.
+
+When dragging the status line or the vertical separator, mouse codes are
+skipped to avoid that the redrawing lags behind too much.
+
+Insert mode:
+"CTRL-G j" and "CTRL-G k" can be used to insert in another line in the same
+column.  Useful for editing a table.
+Thesaurus completion with CTRL-X CTRL-T. (Vince Negri)
+Added the 'thesaurus' option, to use instead of 'dictionary' for thesaurus
+completion.  Added 's' flag in 'complete'.
+
+Performance:
+- Made display updating more efficient.  Insert/delete lines may be used for
+  all changes, also for undo/redo.
+- Display is not redrawn when there is typeahead in Insert mode.  Speeds up
+  CTRL-R a lot.
+- Improved speed of screen output for 32 bit DOS version. (Vince Negri)
+- When dragging with the mouse, there is a lookahead to skip mouse codes when
+  there is another one next.  Makes dragging with the mouse a lot faster.
+
+Syntax highlighting:
+- Optimized by caching the state stack all over the file, not just the part
+  being displayed.  Required for folding.
+- Added ":syn sync fromstart": Always parse from the start of the file.
+- Added "display" argument: use this item only when displaying the result.
+  Can make parsing faster for text that isn't going to be displayed.
+- When using CTRL-L, the cached states are deleted, to force parsing the text
+  again.
+- Use elfhash algorithm for table of keywords.  This should give a better
+  distribution and speedup keyword lookup. (Campbell)
+- Also allow the "lc" leading context for skip and end patterns. (Scott
+  Bigham)
+
+Win32 console version: Includes the user and system name in the ":version"
+message, when available.  It generates a pathdef.c file for this.  (Jon Miner)
+
+Added keypad special keys <kEnter>, <k0> - <k9>.  When not mapped they behave
+like the ASCII equivalent. (Ivan Wellesz and Vince Negri)
+
+Autocommands:
+FileReadCmd, BufReadCmd, FileWriteCmd, BufWriteCmd, FileAppendCmd: use
+autocommands instead of normal file read/write.  Use this in netrw.vim to be
+able to edit files on a remote system. (Charles Campbell)
+FuncUndefined: When a user function is not defined. (Ron Aaron)
+
+TermReponse autocommand event and v:termreponse internal variable.  Can be
+used to react to the version of the terminal.  (Ronald Schild)
+
+GUI:
+- X11: When a color can't be allocated, use the nearest match from the
+  colormap.  This avoids that black is used for many things. (Monish Shah)
+  Also do this for the menu and scrollbar, to avoid that they become black.
+- Win32 and X11: Added 'mouseshape' option: Adjust the mouse pointer shape to
+  the current mode. (Vince Negri)
+- 'linespace' option: Insert a pixel line between lines. (Nam)
+- Allow non-Visual selection (without moving the cursor) by keeping CTRL and
+  SHIFT pressed. (Ivan Wellesz)
+- Motif: added toolbar. (Gordon Prieur)
+- Win32: Added "c" flag to 'guifont' to be able to specify the charset. (Artem
+  Khodush)
+
+GTK GUI: (partly by Marcin Dalecki)
+-   With some fonts the characters can be taller than ascent + descent.  E.g.,
+    "-misc-fixed-*-*-*-*-18-*-*-*-*-*-iso10646-1".  Add one to the character
+    cell height?
+-   Implement "no" value for 'winaltkeys': don't use Alt-Key as a menu
+    shortcut, when 'wak' changed after creating the menus.
+- recycle text GC's to reduce communication.
+- Adjust icon size to window manager.
+- Cleanup in font handling.
+- Setting 'wak' after the GUI started works.
+- replace XQueryColor with GDK calls.
+- Gnome support.  Detects Gnome in configure and uses different widgets.
+  Otherwise it's much like GTK. (Kahn)
+- Removed the special code to fork first and then start the GUI.  Now use
+  _exit() instead of exit() and works fine without other tricks.
+- Dialogs sometimes appeared a bit far away.  Position the dialogs inside
+  the gvim window. (Brent Verner)
+
+Command line completion:
+Complete environment variable names. (Mike Steed)
+For ":command", added a few completion methods: "mapping", "function",
+"expression" and "environment".
+
+Added "improved Ex mode".  Entered when Vim is started as "exim" or "vim -E",
+and with the "gQ" command.  Works like repeated use of ":", with full
+command-line editing and completion. (Ulf Carlsson)
+
+Redirect messages to the clipboard ":redir @*" and to the unnamed register
+":redir @"". (Wall)
+
+Expression evaluation:
+"? :" can be used like in C.
+col("$") returns the length of the cursor line. (Stephen P. Wall)
+getwinvar() gets the value of an option or local variable in a window
+getbufvar() gets the value of an option or local variable in a buffer
+indent()    gets the indent of a line
+setwinvar() sets an option or variable local to a window
+setbufvar() sets an option or variable local to a buffer
+    (Ron Aaron)
+libcall() for Unix (Neil Bird, Johannes Zellner, Stephen Wall)
+libcallnr() for Win32 and Unix
+
+Cscope: (kahn)
+cscope_connection() function.
+":cscope kill -1" kills all cscope connections.
+
+VMS: Command line arguments are always uppercase.  Interpret a "-X" argument
+as "-x" and "-/X" as "-X".
+
+Options:
+- When using set += or ^= , check for strings used twice.  Duplicates are
+  removed.  (Vince Negri)
+- When setting an option that is a list of flags, remove duplicate flags.
+- 'autoread' option: When detected that a file changed outside of Vim,
+  automatically read a buffer again when it's not changed.
+- If possible, use getrlimit() to set 'maxmemtot' and 'maxmem'. (Pina)
+- Added "alpha" to 'nrformats': increment or decrement an alphabetic character
+  with CTRL-A and CTRL-X.
+
+Internal changes:
+- Split line pointers in text part and attributes part.  Allows for future
+  change to make attribute more than one byte.
+- Provide a qsort() function for systems that don't have it.
+- Changed the big switch for Normal mode commands into a table.  This cleans
+  up the code considerably and avoids trouble for some optimizing compilers.
+- Support for editing Unicode and UTF-8 files.
+- Assigned a negative value to special keys, to avoid them being mixed up with
+  Unicode characters.
+
+Support for xterm with 88 or 256 colors.  The right color numbers will be used
+for the name used in a ":highlight" command. (Steve Wall)
+
+":browse set" now also works in the console mode.  ":browse edit" will give an
+error message.
+
+==============================================================================
+COMPILE TIME CHANGES					*compile-changes-6*
+
+All generated files have been moved out of the "src" directory.  This makes it
+easy to see which files are not edited by hand.  The files generated by
+configure are now in the "src/auto" directory.  For Unix, compiled object
+files go in the objects directory.
+
+Included features are now grouped in "tiny", "small", "normal", "big" and
+"huge".  This replaces "min-features" and "max-features".  Using "tiny"
+disables multiple window for a really small Vim.
+
+Removed GTK+ support for versions older than 1.1.16.
+
+The configure checks for using PTYs have been improved.  Code taken from a
+recent version of screen.
+
+==============================================================================
+BUG FIXES						*bug-fixes-6*
+
+When checking the command name for "gvim", "ex", etc. ignore case.  Required
+for systems where case is ignored in command names.
+
+Search pattern "[a-c-e]" also matched a 'd' and didn't match a '-'.
+
+When double-clicking in another window, wasn't recognized as double click,
+because topline is different.  Added set_mouse_topline().
+
+The BROKEN_LOCALE check was broken.  (Marcin Dalecki)
+
+When "t_Co" is set, the default colors remain the same, thus wrong.  Reset the
+colors after changing "t_Co". (Steve Wall)
+
+When exiting with ":wqall" the messages about writing files could overwrite
+eachother and be lost forever.
+
+When starting Vim with an extremely long file name (around 1024 characters) it
+would crash.  Added a few checks to avoid buffer overflows.
+
+ vim:tw=78:

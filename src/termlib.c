@@ -303,7 +303,7 @@ tgetstr(id, buf)
 			break;			/* shouldn't happen */
 		    case 'e':
 		    case 'E':			/* ESC */
-			*(*buf)++ = '\033';
+			*(*buf)++ = ESC;
 			break;
 		    case 'n':			/* \n */
 			*(*buf)++ = '\n';
@@ -342,7 +342,12 @@ tgetstr(id, buf)
 		    }
 		    break;
 		case '^':			/* control characters */
+#ifdef EBCDIC
+		    ++tmp;
+		    *(*buf)++ = Ctrl(*tmp);
+#else
 		    *(*buf)++ = *++tmp - '@';
+#endif
 		    break;
 		default:
 		    *(*buf)++ = *tmp;

@@ -1,7 +1,7 @@
 /*****************************************************************************
 *   $Id$
 *
-*   Copyright (c) 1999, Darren Hiebert
+*   Copyright (c) 1999-2000, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -12,12 +12,13 @@
 /*============================================================================
 =   Include files
 ============================================================================*/
-#include "general.h"
+#include "general.h"	/* must always come first */
 
 #include <string.h>
-#include "strlist.h"
-#include "main.h"
+
 #include "debug.h"
+#include "main.h"
+#include "strlist.h"
 
 /*============================================================================
 =   Function definitions
@@ -149,3 +150,5 @@ extern void stringListPrint( current )
     for (i = 0  ;  i < current->count  ;  ++i)
 	printf("%s%s", (i > 0) ? ", " : "", vStringValue(current->list[i]));
 }
+
+/* vi:set tabstop=8 shiftwidth=4: */

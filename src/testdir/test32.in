@@ -8,7 +8,7 @@ Test for insert expansion
 :se cpt=.,w,i
 * i-add-expands and switches to local
 * add-expands lines (it would end in an empty line if it didn't ignored it self)
-:se cpt=kMakefile
+:se cpt=kXtestfile
 * checks k-expansion, and file expansion
 :se cpt=w
 * checks make_cyclic in other window
@@ -39,7 +39,7 @@ unl
 :se cpt=t,d def=^\\k* tags=Xtestfile notagbsearch
 O
 a
-:!rm Xtestfile
+:"!rm Xtestfile
 :wq! test.out
 ENDTEST
 

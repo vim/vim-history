@@ -1,4 +1,4 @@
-*os_riscos.txt* For Vim version 5.7.  Last change: 1999 Sep 14
+*os_riscos.txt* For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Thomas Leonard
@@ -106,9 +106,9 @@ You can resize the window by dragging the lower-right corner, even though
 there is no icon shown there.
 
 You can use the --rows and --columns arguments to specifiy the initial size of
-the Vim window, like this:
+the Vim window, like this: >
 
-> *Vi -g --rows 20 --columns 80
+  *Vi -g --rows 20 --columns 80
 
 The global clipboard is supported, so you can select some text and then
 paste it directly into another application (provided it supports the
@@ -130,33 +130,33 @@ the file.
 :browse :e opens a directory viewer.
 
 For fonts, you have the choice of the system font, an outline font, the system
-font via ZapRedraw and any of the Zap fonts via ZapRedraw:
+font via ZapRedraw and any of the Zap fonts via ZapRedraw: >
 
-> :set guifont=
-			To use the system font via the VDU drivers. Supports
+  :set guifont=
+<			To use the system font via the VDU drivers. Supports
 			bold and underline.
-
-> :set guifont=Corpus.Medium
-			Use the named outline font. You can use any font, but
+>
+  :set guifont=Corpus.Medium
+<			Use the named outline font. You can use any font, but
 			only monospaced ones like Corpus look right.
-
-> :set guifont=Corpus.Medium:w8:h12:b:i
-			As before, but with size of 8 point by 12 point, and
+>
+  :set guifont=Corpus.Medium:w8:h12:b:i
+<			As before, but with size of 8 point by 12 point, and
 			in bold italic.
 			If only one of width and height is given then that
 			value is used for both. If neither is given then 10
 			point is used.
 
 Thanks to John Kortink, Vim can use the ZapRedraw module. Start the font name
-with '!' (or '!!' for double height), like this:
+with '!' (or '!!' for double height), like this: >
 
-> :set guifont=!!
-			Use the system font, but via ZapRedraw.  This gives a
+  :set guifont=!!
+<			Use the system font, but via ZapRedraw.  This gives a
 			faster redraw on StrongARM processors, but you can't
 			get bold or italic text. Double height.
-
-> :set guifont=!script
-			Uses the named Zap font (a directory in VimFont$Path).
+>
+  :set guifont=!script
+<			Uses the named Zap font (a directory in VimFont$Path).
 			The redraw is the same speed as for '!!', but you get
 			a nicer looking font.
 			Only the "man+" and "script" fonts are supplied
@@ -174,9 +174,9 @@ get Vim to display them by changing the 'isprint' option.
 If you find the scrolling is too slow on your machine, try experimenting
 with the 'scrolljump' and 'ttyscroll' options.
 
-In particular, StrongARM users may find that:
+In particular, StrongARM users may find that: >
 
-> :set ttyscroll=0
+  :set ttyscroll=0
 
 makes scrolling faster in high-color modes.
 
@@ -250,7 +250,7 @@ The system has changed from verson 5.3. The new sequence of events is:
 
 Some examples may make this clearer:
 
-> Kind of file loaded	osfiletype	filetype
+  Kind of file loaded	osfiletype	filetype ~
   C code 'c.hellow'	Text (&fff)	C
   LaTeX document	LaTeX (&2a8)	TeX
   Draw document		DrawFile (&aff)	(not changed)
@@ -310,13 +310,13 @@ Updating the run-time environment:
   new files.
 - Remove files in `doc' not ending in `/txt', except for `tags'.
 - Lose the extensions from the files in `doc'.
-- Edit the `doc.tags' file. Remove extensions from the second column:
-> :%s/^\(.[^\t]*\t.*\)\.txt\t/\1\t/
+- Edit the `doc.tags' file. Remove extensions from the second column: >
+	:%s/^\(.[^\t]*\t.*\)\.txt\t/\1\t/
 - Remove extensions from the syntax files. Split them into two directories
   to avoid the 77 entry limit on old ADFS filesystems.
 - Edit `Vim:FileType' to match `*.c.*' as well as `*/c' and so on.
   Add filetype checking too.
-- Edit `Vim:Menu' and remove all the keys from the menus:
-> :%s/<Tab>[^ \t]*//
-
- vim:ts=8:sw=8:tw=78:
+- Edit `Vim:Menu' and remove all the keys from the menus: >
+	:%s/<Tab>[^ \t]*//
+<
+ vim:tw=78:

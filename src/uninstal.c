@@ -10,7 +10,7 @@
  * uninstal.c:	Minimalistic uninstall program for Vim on MS-Windows
  *		Only removes the "Edit with Vim" popup menu entry.
  *
- * Compile with Makefile.w32.
+ * Compile with Makefile.mvc.
  */
 
 #include <stdio.h>

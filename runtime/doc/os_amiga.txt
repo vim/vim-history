@@ -1,4 +1,4 @@
-*os_amiga.txt*  For Vim version 5.7.  Last change: 1999 Sep 14
+*os_amiga.txt*  For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -52,27 +52,27 @@ Standard ANSI escape sequences are used. The codes are:
 
 The codes with '>' must be the last. The cell and background color should be
 the same. The codes can be combined by separating them with a semicolon. For
-example to get white text on a blue background:
->  :set t_me=^V<Esc>[0;32;43;>3m
->  :set t_se=^V<Esc>[0;32;43;>3m
->  :set t_ue=^V<Esc>[0;32;43;>3m
->  :set t_ZR=^V<Esc>[0;32;43;>3m
->  :set t_md=^V<Esc>[1;32;43;>3m
->  :set t_mr=^V<Esc>[7;32;43;>3m
->  :set t_so=^V<Esc>[0;31;43;>3m
->  :set t_us=^V<Esc>[4;32;43;>3m
->  :set t_ZH=^V<Esc>[3;32;43;>3m
+example to get white text on a blue background: >
+  :set t_me=^V<Esc>[0;32;43;>3m
+  :set t_se=^V<Esc>[0;32;43;>3m
+  :set t_ue=^V<Esc>[0;32;43;>3m
+  :set t_ZR=^V<Esc>[0;32;43;>3m
+  :set t_md=^V<Esc>[1;32;43;>3m
+  :set t_mr=^V<Esc>[7;32;43;>3m
+  :set t_so=^V<Esc>[0;31;43;>3m
+  :set t_us=^V<Esc>[4;32;43;>3m
+  :set t_ZH=^V<Esc>[3;32;43;>3m
 
-When using multiple commands with a filter command, e.g.
->  :r! echo this; echo that
+When using multiple commands with a filter command, e.g. >
+  :r! echo this; echo that
 Only the output of the last command is used. To fix this you have to group the
 commands. This depends on the shell you use (that is why it is not done
-automatically in Vim). Examples:
->  :r! (echo this; echo that)
->  :r! {echo this; echo that}
+automatically in Vim). Examples: >
+  :r! (echo this; echo that)
+  :r! {echo this; echo that}
 
 Commands that accept a single file name allow for embedded spaces in the file
 name. However, when using commands that accept several file names, embedded
 spaces need to be escaped with a backslash.
 
- vim:ts=8:sw=8:tw=78:
+ vim:tw=78:

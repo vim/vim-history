@@ -20,10 +20,7 @@
  *	native grade german too. I'm living in Göttingen.de.)
  *	--mdcki"
  *
- *
- * Although some #ifdefs suggest that GTK 1.0 is supported, it isn't.  The
- * code requires GTK version 1.1.16 or later.  Stuff for older versions will
- * be removed some time.
+ * This code requires GTK version 1.1.16 or later.
  */
 
 #include "gui_gtk_f.h"
@@ -37,7 +34,11 @@
 
 #include "vim.h"
 
-#ifdef GUI_DIALOG
+#ifdef FEAT_GUI_GNOME
+# include <gnome.h>
+#endif
+
+#if defined(FEAT_GUI_DIALOG) && !defined(FEAT_GUI_GNOME)
 # include "../pixmaps/alert.xpm"
 # include "../pixmaps/error.xpm"
 # include "../pixmaps/generic.xpm"
@@ -45,7 +46,7 @@
 # include "../pixmaps/quest.xpm"
 #endif
 
-#ifdef USE_TOOLBAR
+#ifdef FEAT_TOOLBAR
 /*
  * Icons used by the toolbar code.
  */
@@ -79,6 +80,9 @@
 #include "../pixmaps/tb_minimize.xpm"
 #include "../pixmaps/tb_shell.xpm"
 #include "../pixmaps/tb_replace.xpm"
+#include "../pixmaps/tb_vsplit.xpm"
+#include "../pixmaps/tb_maxwidth.xpm"
+#include "../pixmaps/tb_minwidth.xpm"
 #endif
 
 #include <gdk/gdkkeysyms.h>
@@ -104,7 +108,7 @@ static void find_replace_cb(GtkWidget *widget, unsigned int flags);
 static void exact_match_cb(GtkWidget *widget, gpointer data);
 static void repl_dir_cb(GtkWidget * widget, gpointer data);
 
-#ifdef USE_TOOLBAR
+#ifdef FEAT_TOOLBAR
 static void get_pixmap(char *menuname, GdkPixmap **pixmap, GdkBitmap **mask);
 static void pixmap_create_blank(GdkPixmap **pixmap, GdkBitmap **mask);
 static void pixmap_create_by_name(char *name, GdkPixmap **, GdkBitmap **mask);
@@ -112,7 +116,7 @@ static void pixmap_create_by_num(int pixmap_num, GdkPixmap **, GdkBitmap **);
 static void pixmap_create_by_dir(char *name, GdkPixmap **, GdkBitmap **mask);
 #endif
 
-#if defined(WANT_MENU) || defined(PROTO)
+#if defined(FEAT_MENU) || defined(PROTO)
 
 /*
  * Only use accelerators when gtk_menu_ensure_uline_accel_group() is
@@ -134,12 +138,11 @@ static void pixmap_create_by_dir(char *name, GdkPixmap **, GdkBitmap **mask);
  * not automatically parsed accellerator stuff right.
  */
 /*ARGSUSED*/
-static void
-menu_item_new(VimMenu *menu, GtkWidget *parent_widget, int sub_menu)
+    static void
+menu_item_new(vimmenu_t *menu, GtkWidget *parent_widget, int sub_menu)
 {
     char *name, *tmp;
     GtkWidget *widget;
-#ifdef GTK_HAVE_FEATURES_1_1_0
     GtkWidget *bin, *label;
     int num;
     guint accel_key;
@@ -160,6 +163,8 @@ menu_item_new(VimMenu *menu, GtkWidget *parent_widget, int sub_menu)
 			   "GtkAccelLabel::accel_widget", widget,
 			   "GtkMisc::xalign", 0.0,
 			   NULL);
+    menu->label = label;
+
     if (menu->actext)
 	gtk_widget_new(GTK_TYPE_LABEL,
 		       "GtkWidget::visible", TRUE,
@@ -172,9 +177,9 @@ menu_item_new(VimMenu *menu, GtkWidget *parent_widget, int sub_menu)
      * Translate VIM accelerator tagging into GTK+'s.  Note that since GTK uses
      * underscores as the accelerator key, we need to add an additional under-
      * score for each understore that appears in the menu name.
-     *
-     * First count how many underscore's are in the menu name.
      */
+
+    /* First count how many underscore's are in the menu name. */
     for (num = 0, tmp = (char *)menu->name; *tmp; tmp++)
 	if (*tmp == '_')
 	    num++;
@@ -184,21 +189,27 @@ menu_item_new(VimMenu *menu, GtkWidget *parent_widget, int sub_menu)
      * additional underscores.
      */
     name = g_new(char, strlen((char *)menu->name) + num + 1);
-    for (num = 0, tmp = (char *)menu->name; *tmp; ++tmp) {
+    for (num = 0, tmp = (char *)menu->name; *tmp; ++tmp)
+    {
 	/* actext has been added above, stop at the TAB */
 	if (*tmp == TAB)
 	    break;
-	if (*tmp == '&') {
+	if (*tmp == '&')
+	{
 # ifdef GTK_USE_ACCEL
-	    if (*p_wak != 'n') {
+	    if (*p_wak != 'n' || !GTK_IS_MENU_BAR(parent_widget))
+	    {
 		name[num] = '_';
 		num++;
 	    }
 # endif
-	} else {
+	}
+	else
+	{
 	    name[num] = *tmp;
 	    num++;
-	    if (*tmp == '_') {
+	    if (*tmp == '_')
+	    {
 		name[num] = '_';
 		num++;
 	    }
@@ -211,60 +222,46 @@ menu_item_new(VimMenu *menu, GtkWidget *parent_widget, int sub_menu)
     g_free(name);
 
 # ifdef GTK_USE_ACCEL
-    /* Don't add accelator if 'winaltkeys' is "no" */
-    if (accel_key != GDK_VoidSymbol && *p_wak != 'n') {
-	if (GTK_IS_MENU_BAR(parent_widget)) {
+    /* Don't add accelator if 'winaltkeys' is "no". */
+    if (accel_key != GDK_VoidSymbol)
+    {
+	if (GTK_IS_MENU_BAR(parent_widget))
+	{
+	    if (*p_wak != 'n')
+		gtk_widget_add_accelerator(widget,
+			"activate_item",
+			gui.accel_group,
+			accel_key, GDK_MOD1_MASK,
+			GTK_ACCEL_LOCKED);
+	}
+	else
+	{
 	    gtk_widget_add_accelerator(widget,
-				   "activate_item",
-				   gui.accel_group,
-				   accel_key, GDK_MOD1_MASK,
-				   GTK_ACCEL_LOCKED);
-	} else {
-	    gtk_widget_add_accelerator(widget,
-				   "activate_item",
-				   gtk_menu_ensure_uline_accel_group(GTK_MENU(parent_widget)),
-				   accel_key, 0,
-				   GTK_ACCEL_LOCKED);
+		    "activate_item",
+		    gtk_menu_ensure_uline_accel_group(GTK_MENU(parent_widget)),
+		    accel_key, 0,
+		    GTK_ACCEL_LOCKED);
 	}
     }
 # endif
 
     menu->id = widget;
-#else
-    char *tmp2;
-
-    /*
-     * gtk+-1.0.x does not have menu accelerators, so if we see a '&' in the
-     * vim menu, skip it.
-     */
-    name = g_strdup((const gchar *)(menu->name));
-    for (tmp = (char *)(menu->name), tmp2 = name; *tmp; tmp++) {
-	if (*tmp != '&') {
-	    *tmp2 = *tmp;
-	    tmp2++;
-	}
-    }
-    *tmp2 = '\0';
-    widget = gtk_menu_item_new_with_label(name);
-    g_free(name);
-    menu->id = widget;
-#endif
 }
 
 
 /*ARGSUSED*/
-void
-gui_mch_add_menu(VimMenu * menu, VimMenu * parent, int idx)
+    void
+gui_mch_add_menu(vimmenu_t * menu, vimmenu_t * parent, int idx)
 {
-    if (popup_menu(menu->name)) {
+    if (popup_menu(menu->name))
+    {
 	menu->submenu_id = gtk_menu_new();
 	return;
     }
 
-    if (menubar_menu(menu->name) == 0 ||
-	(parent != NULL && parent->submenu_id == 0)) {
+    if (menubar_menu(menu->name) == 0
+	    || (parent != NULL && parent->submenu_id == 0))
 	return;
-    }
 
     if (parent == NULL)
 	menu_item_new(menu, gui.menubar, TRUE);
@@ -276,39 +273,36 @@ gui_mch_add_menu(VimMenu * menu, VimMenu * parent, int idx)
 
     if (parent == NULL)
 	gtk_menu_bar_insert(GTK_MENU_BAR(gui.menubar), menu->id, idx);
-    else {
+    else
+    {
 	/* since the tearoff should always appear first, increment idx */
 	++idx;
 	gtk_menu_insert(GTK_MENU(parent->submenu_id), menu->id, idx);
     }
 
     /*
-     * The "Help" menu is a special case, and should be placed at the far right
-     * hand side of the menu-bar.
+     * The "Help" menu is a special case, and should be placed at the far
+     * right hand side of the menu-bar.  It's detected by its high priority.
      */
-    if (parent == NULL && STRCMP((char *) menu->dname, "Help") == 0)
+    if (parent == NULL && menu->priority >= 9999)
 	gtk_menu_item_right_justify(GTK_MENU_ITEM(menu->id));
 
     if ((menu->submenu_id = gtk_menu_new()) == NULL)	/* failed */
 	return;
 
-#ifdef GTK_HAVE_FEATURES_1_1_0
     gtk_menu_set_accel_group(GTK_MENU(menu->submenu_id), gui.accel_group);
-#endif
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->id), menu->submenu_id);
 
-#ifdef GTK_HAVE_FEATURES_1_1_0
     menu->tearoff_handle = gtk_tearoff_menu_item_new();
     gtk_widget_show(menu->tearoff_handle);
     gtk_menu_prepend(GTK_MENU(menu->submenu_id), menu->tearoff_handle);
-#endif
 }
 
 /*ARGSUSED*/
-static void
+    static void
 menu_item_activate(GtkWidget * widget, gpointer data)
 {
-    gui_menu_cb((VimMenu *) data);
+    gui_menu_cb((vimmenu_t *) data);
 
     /* make sure the menu action is taken immediately */
     if (gtk_main_level() > 0)
@@ -316,14 +310,18 @@ menu_item_activate(GtkWidget * widget, gpointer data)
 }
 
 /*ARGSUSED*/
-void
-gui_mch_add_menu_item(VimMenu * menu, VimMenu * parent, int idx)
+    void
+gui_mch_add_menu_item(vimmenu_t *menu, vimmenu_t *parent, int idx)
 {
-# ifdef USE_TOOLBAR
-    if (toolbar_menu(parent->name)) {
-	if (is_menu_separator(menu->name)) {
+# ifdef FEAT_TOOLBAR
+    if (toolbar_menu(parent->name))
+    {
+	if (is_menu_separator(menu->name))
+	{
 	    gtk_toolbar_insert_space(GTK_TOOLBAR(gui.toolbar), idx);
-	} else {
+	}
+	else
+	{
 	    GdkPixmap *pixmap;
 	    GdkBitmap *mask;
 
@@ -353,7 +351,8 @@ gui_mch_add_menu_item(VimMenu * menu, VimMenu * parent, int idx)
 
     /* make place for the possible tearoff handle item */
     ++idx;
-    if (is_menu_separator(menu->name)) {
+    if (is_menu_separator(menu->name))
+    {
 	/* Separator: Just add it */
 	menu->id = gtk_menu_item_new();
 	gtk_widget_show(menu->id);
@@ -374,11 +373,12 @@ gui_mch_add_menu_item(VimMenu * menu, VimMenu * parent, int idx)
 #endif
 
 
-#ifdef USE_TOOLBAR
+#ifdef FEAT_TOOLBAR
 /*
  * Those are the pixmaps used for the default buttons.
  */
-struct NameToPixmap {
+struct NameToPixmap
+{
     char *name;
     char **xpm;
 };
@@ -414,6 +414,9 @@ static const struct NameToPixmap built_in_pixmaps[] =
     {"TagJump", tb_jump_xpm},
     {"RunCtags", tb_ctags_xpm},
     {"Exit", tb_exit_xpm},
+    {"WinVSplit", tb_vsplit_xpm},
+    {"WinMaxWidth", tb_maxwidth_xpm},
+    {"WinMinWidth", tb_minwidth_xpm},
     { NULL, NULL} /* end tag */
 };
 
@@ -422,23 +425,30 @@ static const struct NameToPixmap built_in_pixmaps[] =
  * do ":h toolbar" for details on the order of things searched to
  * find the toolbar pixmap.
  */
-static void
+    static void
 get_pixmap(char *menuname, GdkPixmap **pixmap, GdkBitmap **mask)
 {
     int builtin_num;
 
     *pixmap = NULL;
     *mask = NULL;
-    if (strncmp(menuname, "BuiltIn", (size_t)7) == 0) {
-	if (isdigit((int)menuname[7]) && isdigit((int)menuname[8])) {
+    if (strncmp(menuname, "BuiltIn", (size_t)7) == 0)
+    {
+	if (isdigit((int)menuname[7]) && isdigit((int)menuname[8]))
+	{
 	    builtin_num = atoi(menuname + 7);
 	    pixmap_create_by_num(builtin_num, pixmap, mask);
-	} else {
+	}
+	else
+	{
 	    pixmap_create_blank(pixmap, mask);
 	}
-    } else {
+    }
+    else
+    {
 	pixmap_create_by_dir(menuname, pixmap, mask);
-	if (*pixmap == NULL) {
+	if (*pixmap == NULL)
+	{
 	    pixmap_create_by_name(menuname, pixmap, mask);
 	    if (*pixmap == NULL)
 		pixmap_create_blank(pixmap, mask);
@@ -450,65 +460,58 @@ get_pixmap(char *menuname, GdkPixmap **pixmap, GdkBitmap **mask)
 /*
  * creates a blank pixmap using tb_blank
  */
-static void
+    static void
 pixmap_create_blank(GdkPixmap **pixmap, GdkBitmap **mask)
 {
     *pixmap = gdk_pixmap_colormap_create_from_xpm_d(
-				    NULL,
-				    gtk_widget_get_colormap(gui.mainwin),
-				    mask,
-				    NULL,
-				    tb_blank_xpm);
+	    NULL,
+	    gtk_widget_get_colormap(gui.mainwin),
+	    mask,
+	    NULL,
+	    tb_blank_xpm);
 }
 
 
 /*
  * creates a pixmap using one of the built-in pixmap names
  */
-static void
+    static void
 pixmap_create_by_name(char *name, GdkPixmap **pixmap, GdkBitmap **mask)
 {
     const struct NameToPixmap *tmp = built_in_pixmaps;
 
     /* lookup if we have a corresponding build-in pixmap */
-    for (tmp = built_in_pixmaps; tmp->name; tmp++) {
+    for (tmp = built_in_pixmaps; tmp->name; tmp++)
 	if (!STRCMP(tmp->name, name))
 	    break;
-    }
 
     *pixmap = gdk_pixmap_colormap_create_from_xpm_d(
-				NULL,
-			        gtk_widget_get_colormap(gui.mainwin),
-				mask,
-				NULL,
-				(tmp->xpm) ? tmp->xpm : tb_blank_xpm);
+	    NULL,
+	    gtk_widget_get_colormap(gui.mainwin),
+	    mask,
+	    NULL,
+	    (tmp->xpm) ? tmp->xpm : tb_blank_xpm);
 }
 
 
 /*
  * creates a pixmap by using a built-in number
  */
-static void
+    static void
 pixmap_create_by_num(int pixmap_num, GdkPixmap **pixmap, GdkBitmap **mask)
 {
     int num_pixmaps;
 
     num_pixmaps = (sizeof(built_in_pixmaps) / sizeof(built_in_pixmaps[0])) - 1;
 
-    if (pixmap_num < 0 || pixmap_num >= num_pixmaps)
 	*pixmap = gdk_pixmap_colormap_create_from_xpm_d(
-				    NULL,
-				    gtk_widget_get_colormap(gui.mainwin),
-				    mask,
-				    NULL,
-				    tb_blank_xpm);
-    else
-	*pixmap = gdk_pixmap_colormap_create_from_xpm_d(
-				    NULL,
-				    gtk_widget_get_colormap(gui.mainwin),
-				    mask,
-				    NULL,
-				    built_in_pixmaps[pixmap_num].xpm);
+		NULL,
+		gtk_widget_get_colormap(gui.mainwin),
+		mask,
+		NULL,
+		(pixmap_num < 0 || pixmap_num >= num_pixmaps)
+		    ?  tb_blank_xpm
+		    : built_in_pixmaps[pixmap_num].xpm);
 }
 
 /*
@@ -518,14 +521,17 @@ pixmap_create_by_num(int pixmap_num, GdkPixmap **pixmap, GdkBitmap **mask)
  * the bitmap like the help documentation says so or leave it alone?  i think
  * it's user error if there is a bitmap of the wrong size.
  */
-static void
+    static void
 pixmap_create_by_dir(char *name, GdkPixmap **pixmap, GdkBitmap **mask)
 {
     char_u *full_pathname;
 
-    if ((full_pathname = (char_u *)alloc(MAXPATHL+1)) == NULL) {
+    if ((full_pathname = (char_u *)alloc(MAXPATHL+1)) == NULL)
+    {
 	pixmap_create_blank(pixmap, mask);
-    } else {
+    }
+    else
+    {
 	expand_env((char_u *)"$VIM/bitmaps/",
 		   full_pathname,
 		   (MAXPATHL + 1) - strlen(name) - 5);
@@ -547,40 +553,105 @@ pixmap_create_by_dir(char *name, GdkPixmap **pixmap, GdkBitmap **mask)
 #endif
 
 
-void
+    void
 gui_mch_set_text_area_pos(int x, int y, int w, int h)
 {
     gtk_form_move_resize(GTK_FORM(gui.formwin), gui.drawarea, x, y, w, h);
 }
 
 
-#if defined(WANT_MENU) || defined(PROTO)
+#if defined(FEAT_MENU) || defined(PROTO)
 /*
- * Enable or disable mnemonics for the toplevel menus.
+ * Enable or disable accelators for the toplevel menus.
  */
 /*ARGSUSED*/
-void
+    void
 gui_gtk_set_mnemonics(int enable)
 {
-#if 0
-    VimMenu *menu;
-    /*  FIXME: implement this later */
+    vimmenu_t	*menu;
+    guint	accel_key;
+    char	*accel;
+    char	*blank;
+    char	*tmp;
+    int		i;
+    int		j;
+
     for (menu = root_menu; menu != NULL; menu = menu->next)
-	if (menu->id != 0)
-	    XtVaSetValues(menu->id,
-		    XmNmnemonic, enable ? menu->mnemonic : NUL,
-		    NULL);
-#endif
+    {
+	if (menu->id == NULL)
+	    continue;
+
+	/* Reparse the accelerator information from the main engines menu
+	 * system.
+	 *
+	 * First count how many underscore's are in the menu name.
+	 */
+	for (i = 0, tmp = (char *)menu->name; *tmp; tmp++)
+	    if (*tmp == '_')
+		++i;
+
+	/* Now allocate a new buffer to hold all the menu name along with the
+	 * additional underscores.
+	 */
+	accel = g_new(char, strlen((char *)menu->name) + i + 1);
+	blank = g_new(char, strlen((char *)menu->name) + i + 1);
+	i = 0;
+	j = 0;
+	for (tmp = (char *)menu->name; *tmp; ++tmp)
+	{
+	    /* actext has been added above, stop at the TAB */
+	    if (*tmp == TAB)
+		break;
+	    if (*tmp == '&')
+	    {
+# ifdef GTK_USE_ACCEL
+		accel[i] = '_';
+		++i;
+# endif
+	    }
+	    else
+	    {
+		accel[i] = blank[j] = *tmp;
+		++i; ++j;
+		if (*tmp == '_')
+		{
+		    accel[i] =  blank[j] = '_';
+		    ++i; ++j;
+		}
+	    }
+	}
+	accel[i] = blank[j] = '\0';
+
+	/* let GTK do its thing */
+	accel_key = gtk_label_parse_uline(GTK_LABEL(menu->label), accel);
+	if (!enable)
+	    gtk_label_parse_uline(GTK_LABEL(menu->label), blank);
+	g_free(accel);
+	g_free(blank);
+
+	if (enable)
+	    gtk_widget_add_accelerator(menu->id,
+		    "activate_item",
+		    gui.accel_group,
+		    accel_key, GDK_MOD1_MASK,
+		    0);
+	else
+	    gtk_widget_remove_accelerator(menu->id,
+		    gui.accel_group,
+		    accel_key, GDK_MOD1_MASK);
+    }
 }
 
 
-static void
-recurse_tearoffs(VimMenu * menu, int val)
+    static void
+recurse_tearoffs(vimmenu_t *menu, int val)
 {
-#ifdef GTK_HAVE_FEATURES_1_1_0
-    while (menu != NULL) {
-	if (!popup_menu(menu->name)) {
-	    if (menu->submenu_id != 0) {
+    while (menu != NULL)
+    {
+	if (!popup_menu(menu->name))
+	{
+	    if (menu->submenu_id != 0)
+	    {
 		if (val)
 		    gtk_widget_show(menu->tearoff_handle);
 		else
@@ -590,11 +661,10 @@ recurse_tearoffs(VimMenu * menu, int val)
 	}
 	menu = menu->next;
     }
-#endif
 }
 
 
-void
+    void
 gui_mch_toggle_tearoffs(int enable)
 {
     recurse_tearoffs(root_menu, enable);
@@ -602,90 +672,94 @@ gui_mch_toggle_tearoffs(int enable)
 #endif
 
 
-#ifdef USE_TOOLBAR
+#ifdef FEAT_TOOLBAR
 
 /*
  * Seems like there's a hole in the GTK Toolbar API: there's no provision for
  * removing an item from the toolbar.  Therefore I need to resort to going
  * really deeply into the internal widget structures.
  */
-static void
+    static void
 toolbar_remove_item_by_text(GtkToolbar *tb, const char *text)
 {
-	GtkContainer *container;
-	GList *childl;
-	GtkToolbarChild *gtbc;
+    GtkContainer *container;
+    GList *childl;
+    GtkToolbarChild *gtbc;
 
-	g_return_if_fail(tb != NULL);
-	g_return_if_fail(GTK_IS_TOOLBAR(tb));
-	container = GTK_CONTAINER(&tb->container);
+    g_return_if_fail(tb != NULL);
+    g_return_if_fail(GTK_IS_TOOLBAR(tb));
+    container = GTK_CONTAINER(&tb->container);
 
-	for (childl = tb->children; childl; childl = childl->next) {
-		gtbc = (GtkToolbarChild *)childl->data;
+    for (childl = tb->children; childl; childl = childl->next)
+    {
+	gtbc = (GtkToolbarChild *)childl->data;
 
-		if (gtbc->type != GTK_TOOLBAR_CHILD_SPACE &&
-		    strcmp(GTK_LABEL(gtbc->label)->label, text) == 0) {
-			gboolean was_visible;
+	if (gtbc->type != GTK_TOOLBAR_CHILD_SPACE
+		&& strcmp(GTK_LABEL(gtbc->label)->label, text) == 0)
+	{
+	    gboolean was_visible;
 
-			was_visible = GTK_WIDGET_VISIBLE(gtbc->widget);
-			gtk_widget_unparent(gtbc->widget);
+	    was_visible = GTK_WIDGET_VISIBLE(gtbc->widget);
+	    gtk_widget_unparent(gtbc->widget);
 
-			tb->children = g_list_remove_link(tb->children, childl);
-			g_free(gtbc);
-			g_list_free(childl);
-			tb->num_children--;
+	    tb->children = g_list_remove_link(tb->children, childl);
+	    g_free(gtbc);
+	    g_list_free(childl);
+	    tb->num_children--;
 
-			if (was_visible && GTK_WIDGET_VISIBLE(container))
-				gtk_widget_queue_resize(GTK_WIDGET(container));
+	    if (was_visible && GTK_WIDGET_VISIBLE(container))
+		gtk_widget_queue_resize(GTK_WIDGET(container));
 
-			break;
-		}
+	    break;
 	}
+    }
 }
 #endif
 
-#if defined(WANT_MENU) || defined(PROTO)
+#if defined(FEAT_MENU) || defined(PROTO)
 /*
  * Destroy the machine specific menu widget.
  */
-void
-gui_mch_destroy_menu(VimMenu * menu)
+    void
+gui_mch_destroy_menu(vimmenu_t *menu)
 {
-#ifdef USE_TOOLBAR
-    if (menu->parent && toolbar_menu(menu->parent->name)) {
+#ifdef FEAT_TOOLBAR
+    if (menu->parent && toolbar_menu(menu->parent->name))
+    {
 	toolbar_remove_item_by_text(GTK_TOOLBAR(gui.toolbar),
 					    (const char *)menu->dname);
 	return;
     }
 #endif
 
-    if (menu->submenu_id != 0) {
+    if (menu->submenu_id != 0)
+    {
 	gtk_widget_destroy(menu->submenu_id);
 	menu->submenu_id = 0;
     }
-    if (menu->id != 0) {
+    if (menu->id != 0)
+    {
 	/* parent = gtk_widget_get_parent(menu->id); */
 	gtk_widget_destroy(menu->id);
 	menu->id = 0;
     }
 }
-#endif /* WANT_MENU */
+#endif /* FEAT_MENU */
 
 
 /*
  * Scrollbar stuff.
  */
 
-#ifdef GTK_HAVE_FEATURES_1_1_0
 /* This variable is set when we asked for a scrollbar change ourselves.  Don't
  * pass scrollbar changes on to the GUI code then. */
 static int did_ask_for_change = FALSE;
-#endif
 
-void
-gui_mch_set_scrollbar_thumb(GuiScrollbar * sb, int val, int size, int max)
+    void
+gui_mch_set_scrollbar_thumb(scrollbar_t * sb, long val, long size, long max)
 {
-    if (sb->id != 0) {
+    if (sb->id != 0)
+    {
 	GtkAdjustment *adjustment = GTK_RANGE(sb->id)->adjustment;
 	adjustment->lower = 0;
 	adjustment->value = val;
@@ -693,16 +767,14 @@ gui_mch_set_scrollbar_thumb(GuiScrollbar * sb, int val, int size, int max)
 	adjustment->page_size = size;
 	adjustment->page_increment = (size > 2 ? size - 2 : 1);
 	adjustment->step_increment = 1;
-#ifdef GTK_HAVE_FEATURES_1_1_0
 	did_ask_for_change = TRUE;
 	gtk_adjustment_changed(adjustment);
 	did_ask_for_change = FALSE;
-#endif
     }
 }
 
-void
-gui_mch_set_scrollbar_pos(GuiScrollbar * sb, int x, int y, int w, int h)
+    void
+gui_mch_set_scrollbar_pos(scrollbar_t * sb, int x, int y, int w, int h)
 {
     if (!sb->id)
 	return;
@@ -712,16 +784,14 @@ gui_mch_set_scrollbar_pos(GuiScrollbar * sb, int x, int y, int w, int h)
 /*
  * Take action upon scrollbar dragging.
  */
-static void
+    static void
 adjustment_value_changed(GtkAdjustment * adjustment, gpointer data)
 {
-    GuiScrollbar *sb;
-    long value;
+    scrollbar_t *sb;
+    long	value;
 
-#ifdef GTK_HAVE_FEATURES_1_1_0
     if (did_ask_for_change)
 	return;
-#endif
 
     sb = gui_find_scrollbar((long) data);
     value = adjustment->value;
@@ -736,22 +806,25 @@ adjustment_value_changed(GtkAdjustment * adjustment, gpointer data)
 }
 
 /* SBAR_VERT or SBAR_HORIZ */
-void
-gui_mch_create_scrollbar(GuiScrollbar * sb, int orient)
+    void
+gui_mch_create_scrollbar(scrollbar_t * sb, int orient)
 {
-    if (orient == SBAR_HORIZ) {
+    if (orient == SBAR_HORIZ)
+    {
 	sb->id = gtk_hscrollbar_new(NULL);
 	GTK_WIDGET_UNSET_FLAGS(sb->id, GTK_CAN_FOCUS);
 	gtk_widget_show(sb->id);
 	gtk_form_put(GTK_FORM(gui.formwin), sb->id, 0, 0);
     }
-    if (orient == SBAR_VERT) {
+    if (orient == SBAR_VERT)
+    {
 	sb->id = gtk_vscrollbar_new(NULL);
 	GTK_WIDGET_UNSET_FLAGS(sb->id, GTK_CAN_FOCUS);
 	gtk_widget_show(sb->id);
 	gtk_form_put(GTK_FORM(gui.formwin), sb->id, 0, 0);
     }
-    if (sb->id != NULL) {
+    if (sb->id != NULL)
+    {
 	GtkAdjustment *adjustment;
 
 	adjustment = gtk_range_get_adjustment(
@@ -763,26 +836,29 @@ gui_mch_create_scrollbar(GuiScrollbar * sb, int orient)
     gui_mch_update();
 }
 
-void
-gui_mch_destroy_scrollbar(GuiScrollbar * sb)
+#if defined(FEAT_WINDOWS) || defined(PROTO)
+    void
+gui_mch_destroy_scrollbar(scrollbar_t * sb)
 {
-    if (sb->id != 0) {
+    if (sb->id != 0)
+    {
 	gtk_widget_destroy(sb->id);
 	sb->id = 0;
     }
     gui_mch_update();
 }
+#endif
 
-#if defined(USE_BROWSE) || defined(PROTO)
+#if defined(FEAT_BROWSE) || defined(PROTO)
 /*
  * Implementation of the file selector related stuff
  */
 
 /*ARGSUSED*/
-static void
+    static void
 browse_ok_cb(GtkWidget *widget, gpointer cbdata)
 {
-    Gui *vw = (Gui *)cbdata;
+    gui_t *vw = (gui_t *)cbdata;
 
     if (vw->browse_fname != NULL)
 	g_free(vw->browse_fname);
@@ -795,10 +871,10 @@ browse_ok_cb(GtkWidget *widget, gpointer cbdata)
 }
 
 /*ARGSUSED*/
-static void
+    static void
 browse_cancel_cb(GtkWidget *widget, gpointer cbdata)
 {
-    Gui *vw = (Gui *)cbdata;
+    gui_t *vw = (gui_t *)cbdata;
 
     if (vw->browse_fname != NULL)
     {
@@ -811,7 +887,7 @@ browse_cancel_cb(GtkWidget *widget, gpointer cbdata)
 }
 
 /*ARGSUSED*/
-static gboolean
+    static gboolean
 browse_destroy_cb(GtkWidget * widget)
 {
     if (gui.browse_fname != NULL)
@@ -838,7 +914,7 @@ browse_destroy_cb(GtkWidget * widget)
  * filter			not used (file name filter)
  */
 /*ARGSUSED*/
-char_u *
+    char_u *
 gui_mch_browse(int saving,
 	       char_u * title,
 	       char_u * dflt,
@@ -852,11 +928,9 @@ gui_mch_browse(int saving,
     if (!gui.filedlg)
     {
 	gui.filedlg = gtk_file_selection_new((const gchar *)title);
-#ifdef GTK_HAVE_FEATURES_1_1_4
 	gtk_window_set_modal(GTK_WINDOW(gui.filedlg), TRUE);
 	gtk_window_set_transient_for(GTK_WINDOW(gui.filedlg),
 		GTK_WINDOW(gui.mainwin));
-#endif
 	fs = GTK_FILE_SELECTION(gui.filedlg);
 
 	gtk_container_border_width(GTK_CONTAINER(fs), 4);
@@ -885,7 +959,8 @@ gui_mch_browse(int saving,
     gtk_file_selection_set_filename(GTK_FILE_SELECTION(gui.filedlg),
 						      (const gchar *)initdir);
 
-    gtk_window_position(GTK_WINDOW(gui.filedlg), GTK_WIN_POS_MOUSE);
+    gui_gtk_position_in_parent(GTK_WIDGET(gui.mainwin),
+				       GTK_WIDGET(gui.filedlg), VW_POS_MOUSE);
 
     gtk_widget_show(gui.filedlg);
     while (gui.filedlg && GTK_WIDGET_VISIBLE(gui.filedlg))
@@ -896,23 +971,141 @@ gui_mch_browse(int saving,
     return vim_strsave(gui.browse_fname);
 }
 
-#endif	/* USE_BROWSE */
+#endif	/* FEAT_BROWSE */
 
-#ifdef GUI_DIALOG
+#ifdef FEAT_GUI_DIALOG
 
-typedef struct _ButtonData {
-    int	       *status;
-    int	       index;
-    GtkWidget  *dialog;
+# ifdef FEAT_GUI_GNOME
+/* ARGSUSED */
+    int
+gui_mch_dialog( int	type,
+		char_u	*title,
+		char_u	*message,
+		char_u	*buttons,
+		int	dfltbutton)
+{
+    GtkWidget	*dlg;
+    char	*gdtype;
+    char_u	*buttons_copy, *p, *next;
+    char	**buttons_list;
+    int		butcount, cur;
+
+    /* make a copy, so that we can insert NULs */
+    if ((buttons_copy = vim_strsave(buttons)) == NULL)
+	return -1;
+
+    /* determine exact number of buttons and allocate array to hold them */
+    for (butcount = 0, p = buttons; *p; p++)
+    {
+	if (*p == '\n')
+	    butcount++;
+    }
+    butcount++;
+    buttons_list = g_new0(char *, butcount + 1);
+
+    /* Add pixmap */
+    switch (type)
+    {
+    case VIM_ERROR:
+	gdtype = GNOME_MESSAGE_BOX_ERROR;
+	break;
+    case VIM_WARNING:
+	gdtype = GNOME_MESSAGE_BOX_WARNING;
+	break;
+    case VIM_INFO:
+	gdtype = GNOME_MESSAGE_BOX_INFO;
+	break;
+    case VIM_QUESTION:
+	gdtype = GNOME_MESSAGE_BOX_QUESTION;
+	break;
+    default:
+	gdtype = GNOME_MESSAGE_BOX_GENERIC;
+    };
+
+    p = buttons_copy;
+    for (cur = 0; cur < butcount; ++cur)
+    {
+	for (next = p; *next; ++next)
+	{
+	    if (*next == DLG_HOTKEY_CHAR)
+		mch_memmove(next, next + 1, STRLEN(next));
+	    if (*next == DLG_BUTTON_SEP)
+	    {
+		*next++ = NUL;
+		break;
+	    }
+	}
+
+	/* this should probably go into a table, but oh well */
+	if (g_strcasecmp((char *)p, "Ok") == 0)
+	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_OK);
+	else if (g_strcasecmp((char *)p, "Cancel") == 0)
+	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_CANCEL);
+	else if (g_strcasecmp((char *)p, "Yes") == 0)
+	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_YES);
+	else if (g_strcasecmp((char *)p, "No") == 0)
+	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_NO);
+	else if (g_strcasecmp((char *)p, "Close") == 0)
+	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_CLOSE);
+	else if (g_strcasecmp((char *)p, "Help") == 0)
+	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_HELP);
+#if 0
+	/*
+	 * these aren't really used that often anyway, but are listed here as
+	 * placeholders in case we need them.
+	 */
+	else if (g_strcasecmp((char *)p, "Apply") == 0)
+	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_APPLY);
+	else if (g_strcasecmp((char *)p, "Next") == 0)
+	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_NEXT);
+	else if (g_strcasecmp((char *)p, "Prev") == 0)
+	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_PREV);
+	else if (g_strcasecmp((char *)p, "Up") == 0)
+	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_UP);
+	else if (g_strcasecmp((char *)p, "Down") == 0)
+	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_DOWN);
+	else if (g_strcasecmp((char *)p, "Font") == 0)
+	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_FONT);
+#endif
+	else
+	    buttons_list[cur] = g_strdup((char *)p);
+
+	if (*next == NUL)
+	    break;
+
+	p = next;
+    }
+    vim_free(buttons_copy);
+
+    dlg = gnome_message_box_newv((const char *)message,
+				 (const char *)gdtype,
+				 (const char **)buttons_list);
+    for (cur = 0; cur < butcount; ++cur)
+	g_free(buttons_list[cur]);
+    g_free(buttons_list);
+    gnome_dialog_set_default(GNOME_DIALOG(dlg), dfltbutton + 1);
+    gtk_window_set_modal(GTK_WINDOW(dlg), TRUE);
+
+    return (1 + gnome_dialog_run_and_close(GNOME_DIALOG(dlg)));
+} /* gui_mch_dialog */
+
+# else /* FEAT_GUI_GNOME */
+
+typedef struct _ButtonData
+{
+    int		*status;
+    int		index;
+    GtkWidget	*dialog;
 } ButtonData;
 
-typedef struct _CancelData {
-    int	      *status;
-    GtkWidget *dialog;
+typedef struct _CancelData
+{
+    int		*status;
+    GtkWidget	*dialog;
 } CancelData;
 
 /* ARGSUSED */
-static void
+    static void
 dlg_button_clicked(GtkWidget * widget, ButtonData *data)
 {
     *(data->status) = data->index + 1;
@@ -924,7 +1117,7 @@ dlg_button_clicked(GtkWidget * widget, ButtonData *data)
  */
 
 /*ARGSUSED*/
-static int
+    static int
 dlg_key_press_event(GtkWidget * widget, GdkEventKey * event, CancelData *data)
 {
     if (event->keyval != GDK_Escape)
@@ -938,19 +1131,19 @@ dlg_key_press_event(GtkWidget * widget, GdkEventKey * event, CancelData *data)
 }
 
 /* ARGSUSED */
-int
-gui_mch_dialog(int type,		/* type of dialog */
-	       char_u * title,		/* title of dialog */
-	       char_u * message,	/* message text */
-	       char_u * buttons,	/* names of buttons */
-	       int def_but)		/* default button */
+    int
+gui_mch_dialog(	int	type,		/* type of dialog */
+		char_u	*title,		/* title of dialog */
+		char_u	*message,	/* message text */
+		char_u	*buttons,	/* names of buttons */
+		int	def_but)	/* default button */
 {
-    char_u		*names;
-    char_u		*p;
-    int			i;
-    int			butcount;
-    int			dialog_status = -1;
-    int			vertical;
+    char_u	*names;
+    char_u	*p;
+    int		i;
+    int		butcount;
+    int		dialog_status = -1;
+    int		vertical;
 
     GtkWidget		*dialog;
     GtkWidget		*frame;
@@ -972,7 +1165,7 @@ gui_mch_dialog(int type,		/* type of dialog */
     CancelData		cancel_data;
 
     if (title == NULL)
-	title = (char_u *) "Vim dialog...";
+	title = (char_u *)_("Vim dialog...");
 
     if ((type < 0) || (type > VIM_LAST_TYPE))
 	type = VIM_GENERIC;
@@ -985,10 +1178,7 @@ gui_mch_dialog(int type,		/* type of dialog */
 
     dialog = gtk_window_new(GTK_WINDOW_DIALOG);
     gtk_window_set_title(GTK_WINDOW(dialog), (const gchar *)title);
-    gtk_window_position(GTK_WINDOW(dialog), GTK_WIN_POS_MOUSE);
-#ifdef GTK_HAVE_FEATURES_1_1_4
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(gui.mainwin));
-#endif
     gtk_widget_realize(dialog);
     gdk_window_set_decorations(dialog->window, GDK_DECOR_BORDER);
     gdk_window_set_functions(dialog->window, GDK_FUNC_MOVE);
@@ -1018,7 +1208,8 @@ gui_mch_dialog(int type,		/* type of dialog */
     gtk_widget_show(table);
 
     /* Add pixmap */
-    switch (type) {
+    switch (type)
+    {
     case VIM_GENERIC:
 	icon_data = generic_xpm;
 	break;
@@ -1040,7 +1231,8 @@ gui_mch_dialog(int type,		/* type of dialog */
     icon = gdk_pixmap_colormap_create_from_xpm_d(NULL,
 				     gtk_widget_get_colormap(dialog),
 				     &mask, NULL, icon_data);
-    if (icon) {
+    if (icon)
+    {
 	pixmap = gtk_pixmap_new(icon, mask);
 	/* gtk_misc_set_alignment(GTK_MISC(pixmap), 0.5, 0.5); */
 	gtk_table_attach_defaults(GTK_TABLE(table), pixmap, 0, 1, 0, 1);
@@ -1119,14 +1311,17 @@ gui_mch_dialog(int type,		/* type of dialog */
     gtk_accel_group_attach(accel_group, GTK_OBJECT(dialog));
 
     p = names;
-    for (butcount = 0; *p; ++butcount) {
+    for (butcount = 0; *p; ++butcount)
+    {
 	char_u		*next;
 	GtkWidget	*label;
 	guint		accel_key;
 
 	/* Chunk out this single button. */
-	for (next = p; *next; ++next) {
-	    if (*next == DLG_BUTTON_SEP) {
+	for (next = p; *next; ++next)
+	{
+	    if (*next == DLG_BUTTON_SEP)
+	    {
 		*next++ = NUL;
 		break;
 	    }
@@ -1141,7 +1336,8 @@ gui_mch_dialog(int type,		/* type of dialog */
 	accel_key = gtk_label_parse_uline(GTK_LABEL(label), (const gchar *)p);
 # ifdef GTK_USE_ACCEL
 	/* Don't add accelator if 'winaltkeys' is "no". */
-	if (accel_key != GDK_VoidSymbol) {
+	if (accel_key != GDK_VoidSymbol)
+	{
 	    gtk_widget_add_accelerator(button[butcount],
 		    "clicked",
 		    accel_group,
@@ -1162,14 +1358,14 @@ gui_mch_dialog(int type,		/* type of dialog */
 			   (gpointer) &data[butcount]);
 
 	gtk_box_pack_start(GTK_BOX(sub_area), button[butcount],
-			   TRUE, FALSE, 0);
+		           TRUE, FALSE, 0);
 	p = next;
     }
 
     vim_free(names);
 
     --butcount;
-    --def_but;	    /* 1 is first button */
+    --def_but;		/* 1 is first button */
     if (def_but < 0)
 	def_but = 0;
     if (def_but > butcount)
@@ -1183,6 +1379,10 @@ gui_mch_dialog(int type,		/* type of dialog */
     gtk_widget_show(separator);
 
     dialog_status = -1;
+
+    gui_gtk_position_in_parent(GTK_WIDGET(gui.mainwin),
+					    GTK_WIDGET(dialog), VW_POS_MOUSE);
+
     gtk_widget_show(dialog);
 
     /* loop here until the dialog goes away */
@@ -1201,12 +1401,14 @@ gui_mch_dialog(int type,		/* type of dialog */
     return dialog_status;
 }
 
+# endif	/* FEAT_GUI_GNOME */
 
-#endif	/* GUI_DIALOG */
 
-#if defined(WANT_MENU) || defined(PROTO)
-void
-gui_mch_show_popupmenu(VimMenu * menu)
+#endif	/* FEAT_GUI_DIALOG */
+
+#if defined(FEAT_MENU) || defined(PROTO)
+    void
+gui_mch_show_popupmenu(vimmenu_t *menu)
 {
     gtk_menu_popup(GTK_MENU(menu->submenu_id),
 		   NULL, NULL, NULL, NULL, 3, (guint32)GDK_CURRENT_TIME);
@@ -1218,7 +1420,8 @@ gui_mch_show_popupmenu(VimMenu * menu)
  * We don't create it twice.
  */
 
-typedef struct _SharedFindReplace {
+typedef struct _SharedFindReplace
+{
     GtkWidget *dialog;	/* the main dialog widget */
     GtkWidget *exact;	/* 'Exact match' check button */
     GtkWidget *up;	/* search direction 'Up' radio button */
@@ -1234,10 +1437,11 @@ static SharedFindReplace find_widgets = { NULL };
 static SharedFindReplace repl_widgets = { NULL };
 
 /* ARGSUSED */
-static int
-find_key_press_event(GtkWidget * widget,
-	GdkEventKey * event,
-	SharedFindReplace * frdp)
+    static int
+find_key_press_event(
+		GtkWidget	*widget,
+		GdkEventKey	*event,
+		SharedFindReplace *frdp)
 {
     /* If the user is holding one of the key modifiers we will just bail out,
      * thus preserving the possibility of normal focus traversal.
@@ -1246,7 +1450,8 @@ find_key_press_event(GtkWidget * widget,
 	return FALSE;
 
     /* the scape key synthesizes a cancellation action */
-    if (event->keyval == GDK_Escape) {
+    if (event->keyval == GDK_Escape)
+    {
 	find_replace_cb(widget, FR_DIALOGTERM);
 	gtk_widget_hide(frdp->dialog);
 
@@ -1254,7 +1459,9 @@ find_key_press_event(GtkWidget * widget,
     }
 
     /* block traversal resulting from those keys */
-    if (event->keyval == GDK_Left || event->keyval == GDK_Right)
+    if (event->keyval == GDK_Left
+	    || event->keyval == GDK_Right
+	    || event->keyval == GDK_space)
 	return TRUE;
 
     /* It would be delightfull if it where possible to do search history
@@ -1264,7 +1471,7 @@ find_key_press_event(GtkWidget * widget,
     return FALSE;
 }
 
-static void
+    static void
 find_replace_dialog_create(char_u *arg, int do_replace)
 {
     GtkWidget	*frame;
@@ -1308,9 +1515,16 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     /*
      * If the dialog already exists, just raise it.
      */
-    if (frdp->dialog) {
+    if (frdp->dialog)
+    {
+	/* always make the dialog appear where you want it even if the mainwin
+	 * has moved -- dbv */
+	gui_gtk_position_in_parent(GTK_WIDGET(gui.mainwin),
+				      GTK_WIDGET(frdp->dialog), VW_POS_MOUSE);
+
 	gui_gtk_synch_fonts();
-	if (!GTK_WIDGET_VISIBLE(frdp->dialog)) {
+	if (!GTK_WIDGET_VISIBLE(frdp->dialog))
+	{
 	    gtk_widget_grab_focus(frdp->what);
 	    gtk_widget_show(frdp->dialog);
 	}
@@ -1328,15 +1542,17 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     }
 
     frdp->dialog = gtk_window_new(GTK_WINDOW_DIALOG);
-    if (do_replace) {
+    if (do_replace)
+    {
 	gtk_window_set_wmclass(GTK_WINDOW(frdp->dialog), "searchrepl", "gvim");
-	gtk_window_set_title(GTK_WINDOW(frdp->dialog), "VIM - Search and Replace...");
-    } else {
+	gtk_window_set_title(GTK_WINDOW(frdp->dialog), _("VIM - Search and Replace..."));
+    }
+    else
+    {
 	gtk_window_set_wmclass(GTK_WINDOW(frdp->dialog), "search", "gvim");
-	gtk_window_set_title(GTK_WINDOW(frdp->dialog), "VIM - Search...");
+	gtk_window_set_title(GTK_WINDOW(frdp->dialog), _("VIM - Search..."));
     }
 
-    gtk_window_position(GTK_WINDOW(frdp->dialog), GTK_WIN_POS_MOUSE);
     gtk_widget_realize(frdp->dialog);
     gdk_window_set_decorations(frdp->dialog->window,
 	    GDK_DECOR_TITLE | GDK_DECOR_BORDER | GDK_DECOR_RESIZEH);
@@ -1357,7 +1573,7 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 0);
     gtk_container_border_width(GTK_CONTAINER(table), 4);
 
-    tmp = gtk_label_new("Find what:");
+    tmp = gtk_label_new(_("Find what:"));
     gtk_misc_set_alignment(GTK_MISC(tmp), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), tmp, 0, 1, 0, 1,
 		     GTK_FILL, GTK_EXPAND, 2, 2);
@@ -1373,8 +1589,9 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     gtk_table_attach(GTK_TABLE(table), frdp->what, 1, 1024, 0, 1,
 		     GTK_EXPAND | GTK_FILL, GTK_EXPAND, 2, 2);
 
-    if (do_replace) {
-	tmp = gtk_label_new("Replace with:");
+    if (do_replace)
+    {
+	tmp = gtk_label_new(_("Replace with:"));
 	gtk_misc_set_alignment(GTK_MISC(tmp), 1.0, 0.5);
 	gtk_table_attach(GTK_TABLE(table), tmp, 0, 1, 1, 2,
 			 GTK_FILL, GTK_EXPAND, 2, 2);
@@ -1394,7 +1611,9 @@ find_replace_dialog_create(char_u *arg, int do_replace)
 	 */
 	gtk_signal_connect(GTK_OBJECT(frdp->what), "activate",
 			   GTK_SIGNAL_FUNC(entry_activate_cb), frdp->with);
-    } else {
+    }
+    else
+    {
 	/*
 	 * Make the entry activation do the search.
 	 */
@@ -1404,7 +1623,7 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     }
 
     /* exact match only button */
-    frdp->exact = gtk_check_button_new_with_label("Match exact word only");
+    frdp->exact = gtk_check_button_new_with_label(_("Match exact word only"));
     gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(frdp->exact), exact_word);
     gtk_signal_connect(GTK_OBJECT(frdp->exact), "clicked",
 		       GTK_SIGNAL_FUNC(exact_match_cb), NULL);
@@ -1415,7 +1634,7 @@ find_replace_dialog_create(char_u *arg, int do_replace)
 	gtk_table_attach(GTK_TABLE(table), frdp->exact, 0, 1023, 2, 3,
 			 GTK_FILL, GTK_EXPAND, 2, 2);
 
-    tmp = gtk_frame_new("Direction");
+    tmp = gtk_frame_new(_("Direction"));
     if (do_replace)
 	gtk_table_attach(GTK_TABLE(table), tmp, 1023, 1024, 2, 4,
 			 GTK_FILL, GTK_FILL, 2, 2);
@@ -1427,11 +1646,11 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     gtk_container_add(GTK_CONTAINER(tmp), vbox);
 
     /* 'Up' and 'Down' buttons */
-    frdp->up = gtk_radio_button_new_with_label(NULL, "Up");
+    frdp->up = gtk_radio_button_new_with_label(NULL, _("Up"));
     gtk_box_pack_start(GTK_BOX(vbox), frdp->up, TRUE, TRUE, 0);
     frdp->down = gtk_radio_button_new_with_label(
 			gtk_radio_button_group(GTK_RADIO_BUTTON(frdp->up)),
-			"Down");
+			_("Down"));
     gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(frdp->down), TRUE);
     if (do_replace)
 	gtk_signal_connect(GTK_OBJECT(frdp->down), "clicked",
@@ -1444,7 +1663,8 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     /* vbox to hold the action buttons */
     actionarea = gtk_vbutton_box_new();
     gtk_container_border_width(GTK_CONTAINER(actionarea), 2);
-    if (do_replace) {
+    if (do_replace)
+    {
 	gtk_button_box_set_layout(GTK_BUTTON_BOX(actionarea),
 				  GTK_BUTTONBOX_END);
 	gtk_button_box_set_spacing(GTK_BUTTON_BOX(actionarea), 0);
@@ -1452,7 +1672,7 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     gtk_box_pack_end(GTK_BOX(hbox), actionarea, FALSE, FALSE, 0);
 
     /* 'Find Next' button */
-    frdp->find = gtk_button_new_with_label("Find Next");
+    frdp->find = gtk_button_new_with_label(_("Find Next"));
     gtk_widget_set_sensitive(frdp->find, sensitive);
     if (do_replace)
 	gtk_signal_connect(GTK_OBJECT(frdp->find), "clicked",
@@ -1466,9 +1686,10 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     gtk_box_pack_start(GTK_BOX(actionarea), frdp->find, FALSE, FALSE, 0);
     gtk_widget_grab_default(frdp->find);
 
-    if (do_replace) {
+    if (do_replace)
+    {
 	/* 'Replace' button */
-	frdp->replace = gtk_button_new_with_label("Replace");
+	frdp->replace = gtk_button_new_with_label(_("Replace"));
 	gtk_widget_set_sensitive(frdp->replace, sensitive);
 	GTK_WIDGET_SET_FLAGS(frdp->replace, GTK_CAN_DEFAULT);
 	gtk_box_pack_start(GTK_BOX(actionarea), frdp->replace, FALSE, FALSE, 0);
@@ -1477,7 +1698,7 @@ find_replace_dialog_create(char_u *arg, int do_replace)
 			   (gpointer) FR_REPLACE);
 
 	/* 'Replace All' button */
-	frdp->all = gtk_button_new_with_label("Replace All");
+	frdp->all = gtk_button_new_with_label(_("Replace All"));
 	gtk_widget_set_sensitive(frdp->all, sensitive);
 	GTK_WIDGET_SET_FLAGS(frdp->all, GTK_CAN_DEFAULT);
 	gtk_box_pack_start(GTK_BOX(actionarea), frdp->all, FALSE, FALSE, 0);
@@ -1487,7 +1708,7 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     }
 
     /* 'Cancel' button */
-    tmp = gtk_button_new_with_label("Cancel");
+    tmp = gtk_button_new_with_label(_("Cancel"));
     GTK_WIDGET_SET_FLAGS(tmp, GTK_CAN_DEFAULT);
     gtk_box_pack_end(GTK_BOX(actionarea), tmp, FALSE, FALSE, 0);
     gtk_signal_connect(GTK_OBJECT(tmp), "clicked",
@@ -1507,6 +1728,13 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     gtk_box_pack_end(GTK_BOX(hbox), tmp, FALSE, TRUE, 0);
     gtk_widget_grab_focus(frdp->what);
 
+    /* show the frame and realize the frdp->dialog this gives us a window size
+     * request that we'll use to position the window within the boundary of
+     * the mainwin --dbv */
+    gtk_widget_show_all(frame);
+    gui_gtk_position_in_parent(GTK_WIDGET(gui.mainwin),
+				      GTK_WIDGET(frdp->dialog), VW_POS_MOUSE);
+
     gui_gtk_synch_fonts();
 
     gtk_widget_show_all(frdp->dialog);
@@ -1514,49 +1742,64 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     vim_free(entry_text);
 }
 
-void
-gui_mch_find_dialog(char_u * arg)
+    void
+gui_mch_find_dialog(exarg_t *eap)
 {
-    find_replace_dialog_create(arg, FALSE);
+    if (gui.in_use)
+	find_replace_dialog_create(eap->arg, FALSE);
 }
 
 
-void
-gui_mch_replace_dialog(char_u * arg)
+    void
+gui_mch_replace_dialog(exarg_t *eap)
 {
-    find_replace_dialog_create(arg, TRUE);
+    if (gui.in_use)
+	find_replace_dialog_create(eap->arg, TRUE);
 }
 
 
 /*
  * Synchronize all gui elements, which are dependant upon the
  * main text font used. Those are in esp. the find/replace dialogs.
- * If You don't understand why this should be needed, please try to
+ * If you don't understand why this should be needed, please try to
  * search for "piê¶æ" in iso8859-2.
  */
-void
+    void
 gui_gtk_synch_fonts(void)
 {
     SharedFindReplace *frdp;
     int do_replace;
 
     /* OK this loop is a bit tricky... */
-    for (do_replace = 0; do_replace <= 1; ++do_replace) {
+    for (do_replace = 0; do_replace <= 1; ++do_replace)
+    {
 	frdp = (do_replace) ? (&repl_widgets) : (&find_widgets);
-	if (frdp->dialog) {
+	if (frdp->dialog)
+	{
 	    GtkStyle *style;
 
 	    /* synch the font with whats used by the text itself */
 	    style = gtk_style_copy(gtk_widget_get_style(frdp->what));
 	    gdk_font_unref(style->font);
-	    style->font = gui.norm_font;
+#ifdef FEAT_XFONTSET
+	    if (gui.fontset != NOFONTSET)
+		style->font = gui.fontset;
+	    else
+#endif
+		style->font = gui.norm_font;
 	    gdk_font_ref(style->font);
 	    gtk_widget_set_style(frdp->what, style);
 	    gtk_style_unref(style);
-	    if (do_replace) {
+	    if (do_replace)
+	    {
 		style = gtk_style_copy(gtk_widget_get_style(frdp->with));
 		gdk_font_unref(style->font);
-		style->font = gui.norm_font;
+#ifdef FEAT_XFONTSET
+		if (gui.fontset != NOFONTSET)
+		    style->font = gui.fontset;
+		else
+#endif
+		    style->font = gui.norm_font;
 		gdk_font_ref(style->font);
 		gtk_widget_set_style(frdp->with, style);
 		gtk_style_unref(style);
@@ -1571,15 +1814,15 @@ gui_gtk_synch_fonts(void)
  * Creates a button with a label, and packs it into the box specified by the
  * parameter 'parent'.
  */
-GtkWidget *
+    GtkWidget *
 gui_gtk_button_new_with_label(
-    char *labelname,
-    GtkSignalFunc cbfunc,
-    gpointer cbdata,
-    GtkWidget *parent,
-    int connect_object,
-    gboolean expand,
-    gboolean fill)
+	char		*labelname,
+	GtkSignalFunc	cbfunc,
+	gpointer	cbdata,
+	GtkWidget	*parent,
+	int		connect_object,
+	gboolean	expand,
+	gboolean	fill)
 {
     GtkWidget *tmp;
 
@@ -1595,51 +1838,59 @@ gui_gtk_button_new_with_label(
 }
 
 
-/*** private function definitions ***/
-
 /*
  * Callback for actions of the find and replace dialogs
  */
 /*ARGSUSED*/
-static void
+    static void
 find_replace_cb(GtkWidget * widget, unsigned int flags)
 {
-    char *find_text, *repl_text, *cmd;
-    gboolean direction_down = TRUE;
-    gboolean exact_match = FALSE;
-    int len;
+    char	*find_text, *repl_text, *cmd;
+    gboolean	direction_down = TRUE;
+    gboolean	exact_match = FALSE;
+    int		len;
 
-    if (flags == FR_DIALOGTERM) {
-	if (State == CONFIRM) {
+    if (flags == FR_DIALOGTERM)
+    {
+	if (State == CONFIRM)
+	{
 	    add_to_input_buf((char_u *)"q", 1);
 	    return;
 	}
     }
 
     /* Get the search/replace strings from the dialog */
-    if (flags == FR_FINDNEXT) {
+    if (flags == FR_FINDNEXT)
+    {
 	find_text = gtk_entry_get_text(GTK_ENTRY(find_widgets.what));
 	repl_text = NULL;
 	direction_down = GTK_TOGGLE_BUTTON(find_widgets.down)->active;
 	exact_match = GTK_TOGGLE_BUTTON(find_widgets.exact)->active;
-    } else if (flags == FR_R_FINDNEXT || flags == FR_REPLACE ||
-	       flags == FR_REPLACEALL) {
+    }
+    else if (flags == FR_R_FINDNEXT || flags == FR_REPLACE ||
+	       flags == FR_REPLACEALL)
+    {
 	find_text = gtk_entry_get_text(GTK_ENTRY(repl_widgets.what));
 	repl_text = gtk_entry_get_text(GTK_ENTRY(repl_widgets.with));
 	direction_down = GTK_TOGGLE_BUTTON(repl_widgets.down)->active;
 	exact_match = GTK_TOGGLE_BUTTON(repl_widgets.exact)->active;
-    } else {
+    }
+    else
+    {
 	find_text = NULL;
 	repl_text = NULL;
     }
 
     /* calculate exact length of cmd buffer.  see below to count characters */
     len = 2;
-    if (flags == FR_FINDNEXT || flags == FR_R_FINDNEXT) {
+    if (flags == FR_FINDNEXT || flags == FR_R_FINDNEXT)
+    {
 	len += (strlen(find_text) + 1);
 	if (State != CONFIRM && exact_match)
 	    len += 4;   /* \< and \>*/
-    } else if (flags == FR_REPLACE || flags == FR_REPLACEALL) {
+    }
+    else if (flags == FR_REPLACE || flags == FR_REPLACEALL)
+    {
 	if (State == CONFIRM)
 	    len++;
 	else
@@ -1650,18 +1901,22 @@ find_replace_cb(GtkWidget * widget, unsigned int flags)
 
     /* start stuffing in the command text */
     if (State & INSERT)
-	cmd[0] = Ctrl('O');
+	cmd[0] = Ctrl_O;
     else if ((State | NORMAL) == 0 && State != CONFIRM)
 	cmd[0] = ESC;
     else
 	cmd[0] = NUL;
     cmd[1] = NUL;
 
-    /* Synthesize the input corresponding to the different actions. */
-    if (flags == FR_FINDNEXT || flags == FR_R_FINDNEXT) {
-	if (State == CONFIRM) {
+    /* Synthesize the input corresponding to the particular actions. */
+    if (flags == FR_FINDNEXT || flags == FR_R_FINDNEXT)
+    {
+	if (State == CONFIRM)
+	{
 	    STRCAT(cmd, "n");
-	} else {
+	}
+	else
+	{
 	    if (direction_down)
 		STRCAT(cmd, "/");
 	    else
@@ -1675,10 +1930,15 @@ find_replace_cb(GtkWidget * widget, unsigned int flags)
 
 	    STRCAT(cmd, "\r");
 	}
-    } else if (flags == FR_REPLACE) {
-	if (State == CONFIRM) {
+    }
+    else if (flags == FR_REPLACE)
+    {
+	if (State == CONFIRM)
+	{
 	    STRCAT(cmd, "y");
-	} else {
+	}
+	else
+	{
 	    STRCAT(cmd, ":%sno/");
 	    STRCAT(cmd, find_text);
 	    STRCAT(cmd, "/");
@@ -1690,10 +1950,15 @@ find_replace_cb(GtkWidget * widget, unsigned int flags)
 	 * handling of the confirmation y/n/a/q stuff.
 	 */
 	/*(void)SetFocus(s_hwnd); */
-    } else if (flags == FR_REPLACEALL) {
-	if (State == CONFIRM) {
+    }
+    else if (flags == FR_REPLACEALL)
+    {
+	if (State == CONFIRM)
+	{
 	    STRCAT(cmd, "a");
-	} else {
+	}
+	else
+	{
 	    STRCAT(cmd, ":%sno/");
 	    STRCAT(cmd, find_text);
 	    STRCAT(cmd, "/");
@@ -1702,7 +1967,8 @@ find_replace_cb(GtkWidget * widget, unsigned int flags)
 	}
     }
 
-    if (*cmd) {
+    if (*cmd)
+    {
 	add_to_input_buf((char_u *)cmd, STRLEN(cmd));
 	if (gtk_main_level() > 0)
 	    gtk_main_quit();	/* make sure if will be handled immediately */
@@ -1713,7 +1979,7 @@ find_replace_cb(GtkWidget * widget, unsigned int flags)
 
 /* our usual callback function */
 /*ARGSUSED*/
-static void
+    static void
 entry_activate_cb(GtkWidget * widget, GtkWidget * with)
 {
     gtk_widget_grab_focus(with);
@@ -1725,12 +1991,13 @@ entry_activate_cb(GtkWidget * widget, GtkWidget * with)
  * between the search and the replace dialog.
  */
 /*ARGSUSED*/
-static void
+    static void
 find_direction_cb(GtkWidget * widget, gpointer data)
 {
     gboolean direction_down = GTK_TOGGLE_BUTTON(widget)->active;
 
-    if (repl_widgets.dialog) {
+    if (repl_widgets.dialog)
+    {
 	GtkWidget *w;
 	w = direction_down ? repl_widgets.down : repl_widgets.up;
 
@@ -1740,12 +2007,13 @@ find_direction_cb(GtkWidget * widget, gpointer data)
 }
 
 /*ARGSUSED*/
-static void
+    static void
 repl_dir_cb(GtkWidget *widget, gpointer data)
 {
     gboolean direction_down = GTK_TOGGLE_BUTTON(widget)->active;
 
-    if (find_widgets.dialog) {
+    if (find_widgets.dialog)
+    {
 	GtkWidget *w;
 	w = direction_down ? find_widgets.down : find_widgets.up;
 
@@ -1755,7 +2023,7 @@ repl_dir_cb(GtkWidget *widget, gpointer data)
 }
 
 /*ARGSUSED*/
-static void
+    static void
 exact_match_cb(GtkWidget * widget, gpointer data)
 {
     gboolean exact_match = GTK_TOGGLE_BUTTON(widget)->active;
@@ -1768,11 +2036,11 @@ exact_match_cb(GtkWidget * widget, gpointer data)
 				    exact_match);
 }
 
-static void
+    static void
 entry_changed_cb(GtkWidget * entry, GtkWidget * dialog)
 {
-    gchar *entry_text;
-    gboolean nonempty;
+    gchar	*entry_text;
+    gboolean	nonempty;
 
     entry_text = gtk_entry_get_text(GTK_ENTRY(entry));
 
@@ -1781,9 +2049,11 @@ entry_changed_cb(GtkWidget * entry, GtkWidget * dialog)
 
     nonempty = (strlen(entry_text) != 0);
 
-    if (dialog == find_widgets.dialog) {
+    if (dialog == find_widgets.dialog)
+    {
 	gtk_widget_set_sensitive(find_widgets.find, nonempty);
-	if (repl_widgets.dialog) {
+	if (repl_widgets.dialog)
+	{
 	    gtk_widget_set_sensitive(repl_widgets.find, nonempty);
 	    gtk_widget_set_sensitive(repl_widgets.replace, nonempty);
 	    gtk_widget_set_sensitive(repl_widgets.all, nonempty);
@@ -1792,11 +2062,13 @@ entry_changed_cb(GtkWidget * entry, GtkWidget * dialog)
 		gtk_entry_set_text(GTK_ENTRY(repl_widgets.what), entry_text);
 	}
     }
-    if (dialog == repl_widgets.dialog) {
+    if (dialog == repl_widgets.dialog)
+    {
 	gtk_widget_set_sensitive(repl_widgets.find, nonempty);
 	gtk_widget_set_sensitive(repl_widgets.replace, nonempty);
 	gtk_widget_set_sensitive(repl_widgets.all, nonempty);
-	if (find_widgets.dialog) {
+	if (find_widgets.dialog)
+	{
 	    gtk_widget_set_sensitive(find_widgets.find, nonempty);
 	    if (strcmp(entry_text,
 		       gtk_entry_get_text(GTK_ENTRY(find_widgets.what))))
@@ -1831,8 +2103,8 @@ helpfind_entry_changed(GtkWidget *entry, gpointer cbdata)
     static void
 helpfind_ok(GtkWidget *wgt, gpointer cbdata)
 {
-    char *txt, *cmd;
-    GtkEntry *entry = GTK_ENTRY(cbdata);
+    char	*txt, *cmd;
+    GtkEntry	*entry = GTK_ENTRY(cbdata);
 
     if ((txt = gtk_entry_get_text(entry)) == NULL)
 	return;
@@ -1859,8 +2131,11 @@ helpfind_ok(GtkWidget *wgt, gpointer cbdata)
 
 /*ARGSUSED*/
     static void
-helpfind_cancel(GtkWidget *wgt, gpointer cbdata)
+helpfind_cancel(GtkWidget *wgt, gpointer data)
 {
+    if (helpfind == NULL)
+	return;
+
     /* Don't destroy this dialogue just hide it from the users view.
      * Reuse it later */
     gtk_widget_hide(helpfind);
@@ -1869,8 +2144,43 @@ helpfind_cancel(GtkWidget *wgt, gpointer cbdata)
 	gtk_main_quit();
 }
 
-void
-do_helpfind(void)
+/* ARGSUSED */
+    static int
+helpfind_key_press_event(GtkWidget *widget, GdkEventKey *event)
+{
+    /* If the user is holding one of the key modifiers we will just bail out,
+     * thus preserving the possibility of normal focus traversal.
+     */
+    if (event->state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK))
+	return FALSE;
+
+    /* the escape key synthesizes a cancellation action */
+    if (event->keyval == GDK_Escape)
+    {
+	helpfind_cancel(NULL, NULL);
+	return TRUE;
+    }
+
+    /* block traversal resulting from those keys */
+    if (event->keyval == GDK_Left
+	    || event->keyval == GDK_Right
+	    || event->keyval == GDK_space)
+	return TRUE;
+
+    /* It would be delightfull if it where possible to do search history
+     * operations on the K_UP and K_DOWN keys here.
+     */
+
+    return FALSE;
+}
+
+/*
+ * ":helpfind"
+ */
+/*ARGSUSED*/
+    void
+ex_helpfind(eap)
+    exarg_t	*eap;
 {
     GtkWidget *frame;
     GtkWidget *vbox;
@@ -1881,12 +2191,14 @@ do_helpfind(void)
 
     if (!gui.in_use)
     {
-	EMSG(e_needgui);
+	EMSG(_(e_needgui));
 	return;
     }
 
     if (helpfind)
     {
+	gui_gtk_position_in_parent(GTK_WIDGET(gui.mainwin),
+					  GTK_WIDGET(helpfind), VW_POS_MOUSE);
 	if (!GTK_WIDGET_VISIBLE(helpfind))
 	{
 	    gtk_widget_grab_focus(help_entry);
@@ -1898,11 +2210,8 @@ do_helpfind(void)
     }
 
     helpfind = gtk_window_new(GTK_WINDOW_DIALOG);
-#ifdef GTK_HAVE_FEATURES_1_1_4
     gtk_window_set_transient_for(GTK_WINDOW(helpfind), GTK_WINDOW(gui.mainwin));
-#endif
-    gtk_window_position(GTK_WINDOW(helpfind), GTK_WIN_POS_MOUSE);
-    gtk_window_set_title(GTK_WINDOW(helpfind), "VIM - Help on...");
+    gtk_window_set_title(GTK_WINDOW(helpfind), _("VIM - Help on..."));
 
     gtk_widget_realize(helpfind);
     gdk_window_set_decorations(helpfind->window,
@@ -1924,11 +2233,14 @@ do_helpfind(void)
     gtk_box_pack_start(GTK_BOX(vbox), hbox, TRUE, TRUE, 0);
     gtk_container_border_width(GTK_CONTAINER(hbox), 6);
 
-    tmp = gtk_label_new("Topic:");
+    tmp = gtk_label_new(_("Topic:"));
     gtk_box_pack_start(GTK_BOX(hbox), tmp, TRUE, TRUE, 0);
 
     help_entry = gtk_entry_new();
     gtk_box_pack_start(GTK_BOX(hbox), help_entry, TRUE, TRUE, 0);
+    gtk_signal_connect_after(GTK_OBJECT(help_entry), "key_press_event",
+				 GTK_SIGNAL_FUNC(helpfind_key_press_event),
+				 (gpointer) helpfind);
 
     action_area = gtk_hbox_new(FALSE, 0);
     gtk_container_set_border_width(GTK_CONTAINER(action_area), 4);
@@ -1938,13 +2250,13 @@ do_helpfind(void)
     gtk_container_set_border_width(GTK_CONTAINER(sub_area), 0);
     gtk_box_pack_end(GTK_BOX(action_area), sub_area, FALSE, TRUE, 0);
 
-    tmp = gui_gtk_button_new_with_label("Cancel",
+    tmp = gui_gtk_button_new_with_label(_("Cancel"),
 	    GTK_SIGNAL_FUNC(helpfind_cancel),
 	    help_entry, sub_area, TRUE, TRUE, TRUE);
     GTK_WIDGET_SET_FLAGS(tmp, GTK_CAN_DEFAULT);
     gtk_widget_grab_default(tmp);
 
-    tmp = gui_gtk_button_new_with_label("OK",
+    tmp = gui_gtk_button_new_with_label(_("OK"),
 	    GTK_SIGNAL_FUNC(helpfind_ok),
 	    help_entry, sub_area, FALSE, TRUE, TRUE);
     gtk_signal_connect(GTK_OBJECT(help_entry), "changed",
@@ -1958,6 +2270,90 @@ do_helpfind(void)
     tmp = gtk_hseparator_new();
     gtk_box_pack_end(GTK_BOX(vbox), tmp, FALSE, TRUE, 0);
 
+    /* show the frame so we can know its window size request that we'll use to
+     * position it -- dbv */
+    gtk_widget_show_all(frame);
+    gui_gtk_position_in_parent(GTK_WIDGET(gui.mainwin),
+					  GTK_WIDGET(helpfind), VW_POS_MOUSE);
+
     gtk_widget_grab_focus(help_entry);
     gtk_widget_show_all(helpfind);
+}
+
+
+/*  gui_gtk_position_in_parent
+ *
+ *  this function causes a child window to be placed within the boundary of
+ *  the parent (mainwin) window.
+ *
+ *  you can specify where the window will be positioned by the third argument
+ *  (defined in gui.h):
+ *	VW_POS_CENTER		at center of parent window
+ *	VW_POS_MOUSE		center of child at mouse position
+ *	VW_POS_TOP_CENTER	top of child at top of parent centered
+ *				horizontally about the mouse.
+ *
+ *  NOTE: for this function to act as desired the child window must have a
+ *	  window size requested.  this can be accomplished by packing/placing
+ *	  child widgets onto a gtk_frame widget rather than the gtk_window
+ *	  widget...
+ *
+ *  brent -- dbv
+ */
+    void
+gui_gtk_position_in_parent(
+	GtkWidget	*parent,
+	GtkWidget	*child,
+	gui_win_pos_t	where)
+{
+    GtkRequisition	c_size;
+    gint		xPm, yPm;
+    gint		xP, yP, wP, hP, pos_x, pos_y;
+
+    /* make sure the child widget is set up then get its size. */
+    gtk_widget_size_request(child, &c_size);
+
+    /* get origin and size of parent window */
+    gdk_window_get_origin((GdkWindow *)(parent->window), &xP, &yP);
+    gdk_window_get_size((GdkWindow *)(parent->window), &wP, &hP);
+
+    if (c_size.width > wP || c_size.height > hP)
+    {
+	/* doh! maybe the user should consider giving gVim a little more
+	 * screen real estate */
+	gtk_widget_set_uposition(child , xP + 2 , yP + 2);
+	return;
+    }
+
+    if (where == VW_POS_MOUSE)
+    {
+	/* position window at mouse pointer */
+        gtk_widget_get_pointer(parent, &xPm, &yPm);
+	pos_x = xP + xPm - (c_size.width) / 2;
+	pos_y = yP + yPm - (c_size.height) / 2;
+    }
+    else
+    {
+	/* set child x origin so it is in center of Vim window */
+        pos_x =  xP + ( wP - c_size.width )/2;
+
+	if (where == VW_POS_TOP_CENTER)
+	    pos_y = yP + 2;
+        else
+	    /* where == VW_POS_CENTER */
+	    pos_y = yP + (hP - c_size.height) / 2;
+    }
+
+    /* now, make sure the window will be inside the Vim window... */
+    if (pos_x < xP)
+        pos_x = xP + 2;
+    if (pos_y < yP)
+        pos_y = yP + 2;
+    if ((pos_x + c_size.width) > (wP + xP))
+        pos_x = xP + wP - c_size.width - 2;
+    /* Assume 'guiheadroom' indicates the title bar height... */
+    if ((pos_y + c_size.height + p_ghr / 2) > (hP + yP))
+        pos_y = yP + hP - c_size.height - 2 - p_ghr / 2;
+
+    gtk_widget_set_uposition(child, pos_x, pos_y);
 }

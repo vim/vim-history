@@ -1,7 +1,7 @@
-.TH CTAGS 1 "Version 3.5.1" "Darren Hiebert"
+.TH CTAGS 1 "Version 4.0" "Darren Hiebert"
 
 
-.SH NAME
+.SH "NAME"
 ctags \- Generate tag files for source code
 
 
@@ -12,10 +12,10 @@ ctags \- Generate tag files for source code
 \fBetags\fP [\fBoptions\fP] [\fIfile(s)\fP]
 
 
-.SH DESCRIPTION
+.SH "DESCRIPTION"
 The \fBctags\fP and \fBetags\fP programs (hereinafter collectively referred to
 as \fBctags\fP, except where distinguished) generate an index (or "tag") file
-for C, C++, Eiffel, Fortran, and Java language objects found in \fIfile(s)\fP.
+for a variety of language objects found in \fIfile(s)\fP.
 This tag file allows these items to be quickly and easily located by a text
 editor or other utility. A "tag" signifies a language object for which an
 index entry is available (or, alternatively, the index entry created for that
@@ -34,28 +34,61 @@ release are:
 
 .PP
 .RS 4
-\fBvi\fP(1) and its many derivatives
-.br
-\fBemacs\fP
+\fBvi\fP(1) and its many derivatives (e.g. Vim, Vile, Lemmy)
 .br
 \fBCRiSP\fP
 .br
+\fBemacs\fP
+.br
 \fBFTE\fP (Folding Text Editor)
 .br
-\fBLemmy\fP
-.br
-\fBNEdit\fP
+\fBNEdit\fP (Nirvana Edit)
 .br
 \fBTSE\fP (The SemWare Editor)
+.br
+\fBX2\fP
 .br
 \fBZeus\fP
 .RE
 
 .PP
-\fBCtags\fP is capable of generating tags for all of the following language
-constructs:
+\fBCtags\fP is capable of generating tags for indicated contructs of the
+following languages:
 
 .PP
+
+.RS 4
+Assembler:
+.RE
+.RS 8
+labels
+.RE
+
+.RS 4
+AWK:
+.RE
+.RS 8
+functions
+.RE
+
+.RS 4
+BETA:
+.RE
+.RS 8
+fragments
+.br
+patterns
+.br
+slots
+.RE
+
+.RS 4
+Bourne shell:
+.RE
+.RS 8
+functions
+.RE
+
 .RS 4
 C/C++:
 .RE
@@ -75,6 +108,13 @@ typedefs
 variables (definitions and declarations)
 .br
 class, struct, and union members
+.RE
+
+.RS 4
+COBOL:
+.RE
+.RS 8
+paragraphs
 .RE
 
 .RS 4
@@ -130,23 +170,87 @@ methods
 packages
 .RE
 
+.RS 4
+Lisp:
+.RE
+.RS 8
+functions
+.RE
+
+.RS 4
+Perl:
+.RE
+.RS 8
+subroutines
+.RE
+
+.RS 4
+Python:
+.RE
+.RS 8
+classes
+.br
+functions
+.RE
+
+.RS 4
+Scheme:
+.RE
+.RS 8
+functions
+.br
+sets
+.RE
+
+.RS 4
+Tcl:
+.RE
+.RS 8
+procedures
+.RE
+
+.RS 4
+Vim:
+.RE
+.RS 8
+functions
+.RE
+
 
 .SH "SOURCE FILES"
 
-The language of each source file is automatically selected based upon its file
-extension (unless the \fB--lang\fP option is specified). File extensions are
-mapped to source file languages according to the following default mapping
-(unless the \fB--langmap\fP option is specified):
+Unless the \fB--lang\fP option is specified, the language of each source file
+is automatically selected based upon its file extension, if recognized. If the
+file extension is unknown and the file is executable, the first line of the
+file is checked to see if the file is a "#!" script for a recognized
+lanaguage. File extensions are mapped to source file languages according to
+the following default mapping (unless the \fB--langmap\fP option is
+specified):
 
 .PP
 .PD 0
 .RS 4
+.TP 9
+.B Assembler
+*.asm *.s *.S
+.TP 9
+.B AWK
+*.awk
 .TP 9
 .B C
 *.c
 .TP 9
 .B C++
 *.C *.c++ *.cc *.cpp *.cxx *.h *.H *.hh *.hpp *.hxx *.h++
+.TP 9
+.B BETA
+*.bet
+.TP 9
+.B Bourne shell
+*.sh *.SH *.bsh *.bash *.ksh
+.TP 9
+.B COBOL
+*.cob *.COB
 .TP 9
 .B Eiffel
 *.e
@@ -156,6 +260,24 @@ mapped to source file languages according to the following default mapping
 .TP 9
 .B Java
 *.java
+.TP 9
+.B Lisp
+*.cl *.clisp *.el *.l *.lisp *.lsp *.ml
+.TP 9
+.B Perl
+*.pl *.pm *.perl
+.TP 9
+.B Python
+*.py *.python
+.TP 9
+.B Scheme
+*.sch *.scheme *.scm *.sm *.SCM *.SM
+.TP 9
+.B Tcl
+*.tcl *.wish
+.TP 9
+.B Vim
+*.vim
 .PD 1
 .RE
 
@@ -172,7 +294,7 @@ extensions in C++, where information would be lost if .h files were parsed
 with C rules.
 
 
-.SH OPTIONS
+.SH "OPTIONS"
 
 Despite the wealth of available options, defaults are set so that \fBctags\fP
 is most commonly executed without any options (e.g. "ctags *"), which will
@@ -234,25 +356,31 @@ Use forward searching patterns (e.g. /regexp/) (default).
 .TP 5
 .BI \-h  " list"
 Specifies a list of file extensions, separated by periods, which are to be
-interpreted as include, or header, files. This option affects how the scoping
-of tag types is interpreted (i.e. whether or not they are considered as
-globally visible or visible only within the file in which they are defined).
-Any tag type which is located in a non-include file and cannot be seen (e.g.
-linked to) from another file is considered to have file-limited (e.g. static)
-scope. No tag type appearing in an include file will be considered to have
-file-limited scope. If the first character in the list is a plus sign, then
-the extensions in the list will be appended to the current list; otherwise,
-the list will replace the current list. See also the \fB--file-scope\fP
-option. The default list is ".h.H.hh.hpp.hxx.h++.inc.def".
-To restore the default list, specify \fB-h\fP \fIdefault\fP.
+interpreted as include, or header, files. To indicate files having no
+extension, use a period not followed by a non-period character (e.g. ".",
+"..x", ".x."). This option only affects how the scoping of tag types is
+interpreted (i.e. whether or not they are considered as globally visible or
+visible only within the file in which they are defined); it does not map the
+extension to any particular language. Any tag type which is located in a
+non-include file and cannot be seen (e.g. linked to) from another file is
+considered to have file-limited (e.g. static) scope. No tag type appearing in
+an include file will be considered to have file-limited scope. If the first
+character in the list is a plus sign, then the extensions in the list will be
+appended to the current list; otherwise, the list will replace the current
+list. See also the \fB--file-scope\fP option. The default list is
+".h.H.hh.hpp.hxx.h++.inc.def". To restore the default list, specify \fB-h\fP
+\fIdefault\fP. Note that if an extension supplied to this option is not
+already mapped to a particular language (see \fBSOURCE FILES\fP, above), you
+will also need to use either the \fB--langmap\fP or \fB--language\fP option.
 
 .TP 5
 .BI \-i " types"
-This option is similar to the \fB--c-types\fP option and is retained for
-compatibility with earlier versions. If \fItypes\fP begins with the '='
-character, it is equivalent to \fB--c-types\fP=\fItypes\fP. Otherwise, it is
-equivalent to \fB--c-types\fP=\fI+types\fP. In addition, for backward
-compatibility, the following two additional modifiers are accepted:
+This option is deprecated and will be dropped at some point in the future.
+It is similar to the \fB--c-types\fP option and is retained for compatibility
+with earlier versions. If \fItypes\fP begins with the '=' character, it is
+equivalent to \fB--c-types\fP=\fItypes\fP. Otherwise, it is equivalent to
+\fB--c-types\fP=\fI+types\fP. In addition, for backward compatibility, the
+following two additional modifiers are accepted:
 
 .PP
 .PD 0
@@ -278,14 +406,15 @@ token in the source files. If two tokens are separated with the '=' character,
 the first token is replaced by the second token for parsing purposes. The list
 of tokens may be supplied directly on the command line or read in from a
 separate file. If the first character of \fItokenlist\fP is either a '.' or a
-pathname separator ('/' or '\\'), the parameter \fItokenlist\fP will be
-interpreted as a filename from which to read a list of white-space delimited
-tokens (use "./filename" to specify a file found in the current directory).
-Otherwise, \fItokenlist\fP is a list of tokens (or token pairs) to be
-specially handled, each delimited by a either a comma or by white space (in
-which case the list should be quoted to keep the entire list as one command
-line argument). Multiple \fB-I\fP options may be supplied. To clear the list
-of ignore tokens, supply a single dash ("-") for \fItokenlist\fP.
+pathname separator ('/' or '\\'), or the first two characters specify a drive
+letter (e.g. "C:"), the parameter \fItokenlist\fP will be interpreted as a
+filename from which to read a list of white-space delimited tokens (use
+"./filename" to specify a file found in the current directory). Otherwise,
+\fItokenlist\fP is a list of tokens (or token pairs) to be specially handled,
+each delimited by a either a comma or by white space (in which case the list
+should be quoted to keep the entire list as one command line argument).
+Multiple \fB-I\fP options may be supplied. To clear the list of ignore tokens,
+supply a single dash ("-") for \fItokenlist\fP.
 
 .RS 5
 .PP
@@ -411,6 +540,32 @@ Indicates whether tags generated from the specified files should be appended
 to those already present in the tag file or should replace them. This option
 is off by default. This option must appear before the first file name.
 [Ignored with \fB-e\fP]
+
+.TP 5
+\fB--beta-types\fP=\fItypes\fP
+Specifies a list of BETA language tag types to be included in the output.
+See \fB--c-types\fP for the definition of the format of \fItypes\fP. Tags for
+the following BETA language constructs are supported (types are enabled
+by default except as noted):
+
+.PP
+.RS 8
+.PD 0
+.TP 4
+.I f
+fragment definitions
+.TP 4
+.I p
+all patterns [off]
+.TP 4
+.I s
+slots (fragment uses)
+.TP 4
+.I v
+patterns (only virtual or rebound patterns are recorded)
+.RE
+.PD 1
+.RE
 
 .TP 5
 \fB--c-types\fP=\fItypes\fP
@@ -776,12 +931,30 @@ will increase the size of the output by an average of about 5 characters per
 line or, roughly, 5%. This option must appear before the first file name.
 
 .TP 5
-\fB--lang\fP=\fIauto\fP|\fIc\fP|\fIc++\fP|\fIeiffel\fP|\fIfortran\fP|\fIjava\fP
-By default, \fBctags\fP automatically selects the language of a source file
-according to its file name extension, ignoring those files whose extensions
-are unrecognized by \fBctags\fP. This option forces the specified language to
-be used for every supplied file instead of automatically selecting the
-language based upon its extension. The default is \fIauto\fP.
+\fB--lang[uage]\fP=\fIlanguage\fP
+By default, \fBctags\fP automatically selects the language of a source file,
+ignoring those files whose language cannot be determined (see
+\fBSOURCE FILES\fP, above). This option forces the specified language to be
+used for every supplied file instead of automatically selecting the language
+based upon its extension. The recognized languages are
+\fIasm\fP,
+\fIawk\fP,
+\fIbeta\fP,
+\fIc\fP,
+\fIc++\fP,
+\fIcobol\fP,
+\fIeiffel\fP,
+\fIfortran\fP,
+\fIjava\fP,
+\fIlisp\fP,
+\fIperl\fP,
+\fIpython\fP,
+\fIscheme\fP,
+\fIsh\fP,
+\fItcl\fP,
+and \fIvim\fP.
+In addition, the special value \fIauto\fP indicates that the language should
+be automatically selected. The default is \fIauto\fP.
 
 .TP 5
 \fB--langmap\fP=\fImap(s)\fP
@@ -794,12 +967,18 @@ will replace the current map. For example, to specify that only files with
 extensions of .c, .ec, and .xs are to be treated as C language files, use
 "\fB--langmap\fP=\fIc:.c.ec.xs\fP". To also specify that files with extensions
 of .j are to be treated as Java language files, use
-"\fB--langmap\fP=\fIc:.c.ec.xs,java:+.j\fP". To clear the mapping for a
-particular language (thus preventing generation of tags for that language),
-specify an empty extension list (e.g. "\fB--langmap\fP=\fIFortran:\fP"). To
-restore the default language mappings for all a particular language, supply
-the keyword "default" for the mapping. To specify restore the default language
-mappings for all languages, specify \fB--langmap\fP=\fIdefault\fP.
+"\fB--langmap\fP=\fIc:.c.ec.xs,java:+.j\fP". To indicate files having no
+extension, use a period not followed by a non-period character (e.g. ".",
+"..x", ".x."). To clear the mapping for a particular language (thus preventing
+generation of tags for that language), specify an empty extension list (e.g.
+"\fB--langmap\fP=\fIFortran:\fP"). To restore the default language mappings
+for all a particular language, supply the keyword "default" for the mapping.
+To specify restore the default language mappings for all languages, specify
+\fB--langmap\fP=\fIdefault\fP.
+
+.TP 5
+\fB--license\fP
+Prints a summary of the software license to standard output.
 
 .TP 5
 \fB--line-directives\fP=\fIyes\fP|\fIno\fP
@@ -823,6 +1002,10 @@ known to \fBctags\fP.
 \fB--links\fP=\fIyes\fP|\fIno\fP
 Indicates whether symbolic links (if suppported) should be followed. When
 disabled, symbolic links are ignored. This option is on by default.
+
+.TP 5
+\fB--options\fP=\fIfile\fP
+Read additional options from \fIfile\fP.
 
 .TP 5
 \fB--recurse\fP=\fIyes\fP|\fIno\fP

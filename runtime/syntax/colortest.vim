@@ -27,6 +27,7 @@ syn keyword col_wh_lgreen	white_on_lightgreen
 syn keyword col_wh_lcyan	white_on_lightcyan
 syn keyword col_wh_lred	white_on_lightred
 syn keyword col_wh_lmagenta	white_on_lightmagenta
+syn keyword col_wh_lyellow	white_on_lightyellow
 syn keyword col_wh_wh	white_on_white
 syn keyword col_bl_bl	black_on_black
 syn keyword col_bl_dblue	black_on_darkblue
@@ -49,6 +50,7 @@ syn keyword col_bl_lgreen	black_on_lightgreen
 syn keyword col_bl_lcyan	black_on_lightcyan
 syn keyword col_bl_lred	black_on_lightred
 syn keyword col_bl_lmagenta	black_on_lightmagenta
+syn keyword col_bl_lyellow	black_on_lightyellow
 syn keyword col_bl_wh	black_on_white
 syn keyword col_dblue_wh	darkblue_on_white
 syn keyword col_dgreen_wh	darkgreen_on_white
@@ -70,6 +72,7 @@ syn keyword col_lgreen_wh	lightgreen_on_white
 syn keyword col_lcyan_wh	lightcyan_on_white
 syn keyword col_lred_wh	lightred_on_white
 syn keyword col_lmagenta_wh	lightmagenta_on_white
+syn keyword col_lyellow_wh	lightyellow_on_white
 syn keyword col_dblue_bl	darkblue_on_black
 syn keyword col_dgreen_bl	darkgreen_on_black
 syn keyword col_dcyan_bl	darkcyan_on_black
@@ -90,6 +93,7 @@ syn keyword col_lgreen_bl	lightgreen_on_black
 syn keyword col_lcyan_bl	lightcyan_on_black
 syn keyword col_lred_bl	lightred_on_black
 syn keyword col_lmagenta_bl	lightmagenta_on_black
+syn keyword col_lyellow_bl	lightyellow_on_black
 
 hi col_wh_bl	ctermfg=white	ctermbg=black	guifg=white	guibg=black
 hi col_wh_dblue	ctermfg=white	ctermbg=darkblue	guifg=white	guibg=darkblue
@@ -112,6 +116,7 @@ hi col_wh_lgreen	ctermfg=white	ctermbg=lightgreen	guifg=white	guibg=lightgreen
 hi col_wh_lcyan	ctermfg=white	ctermbg=lightcyan	guifg=white	guibg=lightcyan
 hi col_wh_lred	ctermfg=white	ctermbg=lightred	guifg=white	guibg=lightred
 hi col_wh_lmagenta	ctermfg=white	ctermbg=lightmagenta	guifg=white	guibg=lightmagenta
+hi col_wh_lyellow	ctermfg=white	ctermbg=lightyellow	guifg=white	guibg=lightyellow
 hi col_wh_wh	ctermfg=white	ctermbg=white	guifg=white	guibg=white
 hi col_bl_bl	ctermfg=black	ctermbg=black	guifg=black	guibg=black
 hi col_bl_dblue	ctermfg=black	ctermbg=darkblue	guifg=black	guibg=darkblue
@@ -134,6 +139,7 @@ hi col_bl_lgreen	ctermfg=black	ctermbg=lightgreen	guifg=black	guibg=lightgreen
 hi col_bl_lcyan	ctermfg=black	ctermbg=lightcyan	guifg=black	guibg=lightcyan
 hi col_bl_lred	ctermfg=black	ctermbg=lightred	guifg=black	guibg=lightred
 hi col_bl_lmagenta	ctermfg=black	ctermbg=lightmagenta	guifg=black	guibg=lightmagenta
+hi col_bl_lyellow	ctermfg=black	ctermbg=lightyellow	guifg=black	guibg=lightyellow
 hi col_bl_wh	ctermfg=black	ctermbg=white	guifg=black	guibg=white
 hi col_dblue_wh	ctermfg=darkblue	ctermbg=white	guifg=darkblue	guibg=white
 hi col_dgreen_wh	ctermfg=darkgreen	ctermbg=white	guifg=darkgreen	guibg=white
@@ -155,6 +161,7 @@ hi col_lgreen_wh	ctermfg=lightgreen	ctermbg=white	guifg=lightgreen	guibg=white
 hi col_lcyan_wh	ctermfg=lightcyan	ctermbg=white	guifg=lightcyan	guibg=white
 hi col_lred_wh	ctermfg=lightred	ctermbg=white	guifg=lightred	guibg=white
 hi col_lmagenta_wh	ctermfg=lightmagenta	ctermbg=white	guifg=lightmagenta	guibg=white
+hi col_lyellow_wh	ctermfg=lightyellow	ctermbg=white	guifg=lightyellow	guibg=white
 hi col_dblue_bl	ctermfg=darkblue	ctermbg=black	guifg=darkblue	guibg=black
 hi col_dgreen_bl	ctermfg=darkgreen	ctermbg=black	guifg=darkgreen	guibg=black
 hi col_dcyan_bl	ctermfg=darkcyan	ctermbg=black	guifg=darkcyan	guibg=black
@@ -175,5 +182,6 @@ hi col_lgreen_bl	ctermfg=lightgreen	ctermbg=black	guifg=lightgreen	guibg=black
 hi col_lcyan_bl	ctermfg=lightcyan	ctermbg=black	guifg=lightcyan	guibg=black
 hi col_lred_bl	ctermfg=lightred	ctermbg=black	guifg=lightred	guibg=black
 hi col_lmagenta_bl	ctermfg=lightmagenta	ctermbg=black	guifg=lightmagenta	guibg=black
+hi col_lyellow_bl	ctermfg=lightyellow	ctermbg=black	guifg=lightyellow	guibg=black
 
 " vim:ts=21

@@ -1,4 +1,4 @@
-*develop.txt*   For Vim version 5.7.  Last change: 2000 Apr 13
+*develop.txt*   For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -11,6 +11,8 @@ Vim.
 
 1. Design goals		|design-goals|
 2. Coding style		|coding-style|
+3. Design decisions	|design-decisions|
+4. Assumptions		|design-assumptions|
 
 ==============================================================================
 1. Design goals						*design-goals*
@@ -222,6 +224,13 @@ get_env_value()	Linux system function
 
 VARIOUS							*style-various*
 
+Typedef'ed names should end in "_t": >
+    typdef int some_t;
+Define'ed names should be upper case: >
+    #define SOME_THING
+Features always start with "FEAT_": >
+    #define FEAT_FOO
+
 Don't use '\"', some compilers can't handle it.  '"' works fine.
 
 Don't use:
@@ -314,5 +323,46 @@ OK:	/* Prepare for building the table. */
 	cleanup_items();
 	generate_hash(table);
 
+==============================================================================
+3. Design decisions					*design-decisions*
 
- vim:tw=78:ts=8:sw=8:
+Folding
+
+Several forms of folding should be possible for the same buffer.  For example,
+have one window that shows the text with function bodies folded, another
+window that shows a function body.
+
+Folding is a way to display the text.  It should change the text itself.
+Therefore the folding has been implemented as a filter between the text stored
+in a buffer (buffer lines) and the text displayed in a window (logical lines).
+
+
+Naming the window
+
+The word "window" is commonly used for several things: A window on the screen,
+the xterm window, a window inside Vim to view a buffer.
+To avoid confusion, other items that are sometimes called window have been
+given another name.  Here is an overview of the related items:
+
+screen		The whole display.  For the GUI it's something like 1024x768
+		pixels.  The Vim shell can use the whole screen or part of it.
+shell		The Vim application.  This can cover the whole screen (e.g.,
+		when running in a console) or part of it (xterm or GUI).
+window		View on a buffer.  There can be several windows in Vim,
+		together with the command line, menubar, toolbar, etc. they
+		fit in the shell.
+
+
+To be continued...
+
+==============================================================================
+4. Assumptions						*design-assumptions*
+
+Size of variables:
+char	    8 bit signed
+char_u	    8 bit unsigned
+int	    16, 32 or 64 bit signed
+unsigned    16, 32 or 64 bit unsigned
+long	    32 or 64 bit signed, can hold a pointer
+
+ vim:tw=78:

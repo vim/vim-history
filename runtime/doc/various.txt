@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 5.7.  Last change: 2000 Apr 22
+*various.txt*   For Vim version 6.0d.  Last change: 2000 Jul 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -40,6 +40,15 @@ ga			Print the ascii value of the character under the
 			<NL>, but it will be shown as:
 				<^@>  0,  Hex 00,  Octal 000
 			Mnemonic: Get Ascii value.  {not in Vi}
+
+							*g8*
+g8			Print the hex values of the bytes used in the
+			character under the cursor, assuming it is in |UTF-8|
+			encoding.  This also shows composing characters.
+			Example of a character with three composing
+			characters: >
+				e0 b8 81 + e0 b8 b9 + e0 b9 89
+<			{not in Vi}
 
 							*:p* *:pr* *:print*
 :[range]p[rint]		Print [range] lines (default current line).
@@ -115,9 +124,9 @@ ga			Print the ascii value of the character under the
 			mapping |:noremap|, the argument can be mapped anyway.
 			An alternative is to use |:execute|, which uses an
 			expression as argument.  This allows the use of
-			printable characters.  Example:
->				:exe "normal \<c-w>\<c-w>"
-			Hint: If the {commands} ends in an <Esc>, Vim may
+			printable characters.  Example: >
+				:exe "normal \<c-w>\<c-w>"
+<			Hint: If the {commands} ends in an <Esc>, Vim may
 			think it's the start of a function key, and 'ttimeout'
 			will apply, which makes things very slow, or even wait
 			indefenitely for anything to be typed.  Include the
@@ -175,88 +184,112 @@ ga			Print the ascii value of the character under the
 			when there is a '-' it is excluded.  To change this,
 			you have to edit feature.h and recompile Vim.
 			To check for this in an expression, see |has()|.
-			Here is an overview of the features:
+			Here is an overview of the features.
+			The first column shows the smallest version in which
+			they are included:
+			   T	tiny
+			   S	small
+			   N	normal
+			   B	big
+			   H	huge
+			   m	manually enabled
+			 (none) system dependend
+			Thus if a feature is marked with "N", it is included
+			in the normal, big and huge versions of Vim.
 
 							*+feature-list*
-*+ARP*			Amiga only: ARP support included
-*+autocmd*		|:autocmd|, automatic commands
-*+browse*		|:browse| command
-*+builtin_terms*	some terminals builtin |builtin-terms|
-*++builtin_terms*	maximal terminals builtin |builtin-terms|
-*+byte_offset*		support for 'o' flag in 'statusline' option, "go"
+   *+ARP*		Amiga only: ARP support included
+N  *+autocmd*		|:autocmd|, automatic commands
+m  *+balloon_eval*	|balloon-eval| support
+N  *+browse*		|:browse| command
+N  *+builtin_terms*	some terminals builtin |builtin-terms|
+B  *++builtin_terms*	maximal terminals builtin |builtin-terms|
+N  *+byte_offset*	support for 'o' flag in 'statusline' option, "go"
 			and ":goto" commands.
-*+cindent*		|'cindent'|, C indenting
-*+cmdline_compl*	command line completion |cmdline-completion|
-*+cmdline_info*		|'showcmd'| and |'ruler'|
-*+comments*		|'comments'| support
-*+cryptv*		encryption support |encryption|
-*+cscope*		|cscope| support
-*+dialog_gui*		Support for |:confirm| with GUI dialog.
-*+dialog_con*		Support for |:confirm| with console dialog.
-*+dialog_con_gui*	Support for |:confirm| with GUI and console dialog.
-*+digraphs*		|digraphs|
-*+emacs_tags*		|emacs-tags| files
-*+eval*			expression evaluation |eval.txt|
-*+ex_extra*		Vim's extra Ex commands: |:center|, |:left|,
+N  *+cindent*		|'cindent'|, C indenting
+N  *+cmdline_compl*	command line completion |cmdline-completion|
+N  *+cmdline_info*	|'showcmd'| and |'ruler'|
+N  *+comments*		|'comments'| support
+N  *+cryptv*		encryption support |encryption|
+B  *+cscope*		|cscope| support
+N  *+dialog_gui*	Support for |:confirm| with GUI dialog.
+N  *+dialog_con*	Support for |:confirm| with console dialog.
+N  *+dialog_con_gui*	Support for |:confirm| with GUI and console dialog.
+N  *+digraphs*		|digraphs|
+B  *+emacs_tags*	|emacs-tags| files
+N  *+eval*		expression evaluation |eval.txt|
+N  *+ex_extra*		Vim's extra Ex commands: |:center|, |:left|,
 			|:normal|, |:retab| and |:right|
-*+extra_search*		|'hlsearch'| and |'incsearch'| options.
-*+farsi*		|farsi| language
-*+file_in_path*		|gf|, |CTRL-W_f| and |<cfile>|
-*+find_in_path*		include file searches: |[I|, |:isearch|,
+N  *+extra_search*	|'hlsearch'| and |'incsearch'| options.
+B  *+farsi*		|farsi| language
+N  *+file_in_path*	|gf|, |CTRL-W_f| and |<cfile>|
+N  *+find_in_path*	include file searches: |[I|, |:isearch|,
 			|CTRL-W_CTRL-I|, |:checkpath|, etc.
-*+fork*			Unix only: |fork| shell commands
-*+GUI_Athena*		Unix only: Athena |GUI|
-*+GUI_BeOS*		BeOS only: BeOS |GUI|
-*+GUI_GTK*		Unix only: GTK+ |GUI|
-*+GUI_Motif*		Unix only: Motif |GUI|
-*+hangul_input*		Hangul input support |hangul|
-*+insert_expand*	|insert_expand| Insert mode completion
-*+langmap*		|'langmap'|
-*+linebreak*		|'linebreak'|, |'breakat'| and |'showbreak'|
-*+lispindent*		|'lisp'|
-*+menu*			|:menu|
-*+mksession*		|:mksession|
-*+modify_fname*		|filename-modifiers|
-*+mouse*		Mouse handling |mouse-using|
-*+mouse_dec*		Unix only: Dec terminal mouse handling |dec-mouse|
-*+mouse_gpm*		Unix only: Linux console mouse handling |gpm-mouse|
-*+mouse_netterm*	Unix only: netterm mouse handling |netterm-mouse|
-*+mouse_xterm*		Unix only: xterm mouse handling |xterm-mouse|
-*+multi_byte*		Korean and other languages |multibyte|
-*+multi_byte_ime*	Win32 input method for multi_byte characters.
-*+ole*			Win32 GUI only: |ole-interface|
-*+osfiletype*		Support for the 'osfiletype' option and filetype
+N  *+folding*		|folding|
+   *+fork*		Unix only: |fork| shell commands
+N  *+gettext*		message translations |multi-lang|
+   *+GUI_Athena*	Unix only: Athena |GUI|
+   *+GUI_BeOS*		BeOS only: BeOS |GUI|
+   *+GUI_GTK*		Unix only: GTK+ |GUI|
+   *+GUI_Motif*		Unix only: Motif |GUI|
+m  *+hangul_input*	Hangul input support |hangul|
+N  *+insert_expand*	|insert_expand| Insert mode completion
+B  *+langmap*		|'langmap'|
+N  *+libcall*		|libcall()|
+N  *+linebreak*		|'linebreak'|, |'breakat'| and |'showbreak'|
+N  *+lispindent*	|'lisp'|
+N  *+localmap*		Support for mappings local to a buffer |:map-local|
+N  *+menu*		|:menu|
+N  *+mksession*		|:mksession|
+N  *+modify_fname*	|filename-modifiers|
+N  *+mouse*		Mouse handling |mouse-using|
+N  *+mouseshape*	|'mouseshape'|
+B  *+mouse_dec*		Unix only: Dec terminal mouse handling |dec-mouse|
+N  *+mouse_gpm*		Unix only: Linux console mouse handling |gpm-mouse|
+B  *+mouse_netterm*	Unix only: netterm mouse handling |netterm-mouse|
+N  *+mouse_xterm*	Unix only: xterm mouse handling |xterm-mouse|
+B  *+multi_byte*	Korean and other languages |multibyte|
+   *+multi_byte_ime*	Win32 input method for multibyte chars |multibyte-ime|
+N  *+multi_lang*	non-English language support |multi-lang|
+m  *+ole*		Win32 GUI only: |ole-interface|
+   *+osfiletype*	Support for the 'osfiletype' option and filetype
 			checking in automatic commands.  |autocmd-osfiletypes|
-*+perl*			Perl interface |perl|
-*+python*		Python interface |python|
-*+quickfix*		|:make| and |quickfix| commands
-*+rightleft*		Right to left typing |'rightleft'|
-*+scrollbind*		|'scrollbind'|
-*+smartindent*		|'smartindent'|
-*+sniff*		SniFF interface (no docs available...)
-*+statusline*		Options 'statusline', 'rulerformat' and special
+N  *+path_extra*	Up/downwards search in 'path' and 'tags'
+m  *+perl*		Perl interface |perl|
+m  *+python*		Python interface |python|
+N  *+quickfix*		|:make| and |quickfix| commands
+B  *+rightleft*		Right to left typing |'rightleft'|
+N  *+scrollbind*	|'scrollbind'|
+N  *+smartindent*	|'smartindent'|
+m  *+sniff*		SniFF interface (no docs available...)
+N  *+statusline*	Options 'statusline', 'rulerformat' and special
 			formats of 'titlestring' and 'iconstring'
-*+syntax*		Syntax highlighting |syntax|
-*+system()*		Unix only: opposite of |+fork|
-*+tag_binary*		binary searching in tags file |tag-binary-search|
-*+tag_old_static*	old method for static tags |tag-old-static|
-*+tag_any_white*	any white space allowed in tags file |tag-any-white|
-*+tcl*			Tcl interface |tcl|
-*+terminfo*		uses |terminfo| instead of termcap
-*+textobjects*		|text-objects| selection
-*+tgetent*		non-Unix only: able to use external termcap
-*+title*		Setting the window title |'title'|
-*+user_commands*	User-defined commands. |user-commands|
-*+viminfo*		|'viminfo'|
-*+visualextra*		Extra Visual mode commands |blockwise-operators|
-*+wildignore*		|'wildignore'|
-*+wildmenu*		|'wildmenu'|
-*+writebackup*		|'writebackup'| is default on
-*+xim*			X input method |xim|
-*+xfontset*		X fontset support |xfontset|
-*+xterm_clipboard*	Unix only: xterm clipboard handling
-*+xterm_save*		Save and restore xterm screen |xterm-screens|
-*+X11*			Unix only: can restore window title |X11|
+N  *+syntax*		Syntax highlighting |syntax|
+   *+system()*		Unix only: opposite of |+fork|
+N  *+tag_binary*	binary searching in tags file |tag-binary-search|
+N  *+tag_old_static*	old method for static tags |tag-old-static|
+m  *+tag_any_white*	any white space allowed in tags file |tag-any-white|
+m  *+tcl*		Tcl interface |tcl|
+   *+terminfo*		uses |terminfo| instead of termcap
+N  *+textobjects*	|text-objects| selection
+   *+tgetent*		non-Unix only: able to use external termcap
+N  *+title*		Setting the window title |'title'|
+N  *+toolbar*		|gui-toolbar|
+N  *+user_commands*	User-defined commands. |user-commands|
+N  *+viminfo*		|'viminfo'|
+N  *+vertsplit*		Vertically split windows |:vsplit|
+N  *+virtualedit*	|'virtualedit'|
+S  *+visual*		Visual mode |Visual-mode|
+N  *+visualextra*	extra Visual mode commands |blockwise-operators|
+N  *+wildignore*	|'wildignore'|
+N  *+wildmenu*		|'wildmenu'|
+S  *+windows*		more than one window
+m  *+writebackup*	|'writebackup'| is default on
+m  *+xim*		X input method |xim|
+   *+xfontset*		X fontset support |xfontset|
+N  *+xterm_clipboard*	Unix only: xterm clipboard handling
+m  *+xterm_save*	save and restore xterm screen |xterm-screens|
+N  *+X11*		Unix only: can restore window title |X11|
 
 :ve[rsion] {nr}		Is now ignored.  This was previously used to check the
 			version number of a .vimrc file.  It was removed,
@@ -271,14 +304,37 @@ ga			Print the ascii value of the character under the
 			existing file is overwritten.  When [!] is omitted,
 			and {file} exists, this command fails.  {not in Vi}
 
-:redi[r] >> {file}	Redirect message to file {file}.  Append if {file}
+:redi[r] >> {file}	Redirect messages to file {file}.  Append if {file}
 			already exists.  {not in Vi}
 
-:redi[r] @{a-zA-Z}	Redirect message to register {a-z}.  Append to the
+:redi[r] @{a-zA-Z}	Redirect messages to register {a-z}.  Append to the
 			contents of the register if its name is given
 			uppercase {A-Z}.  {not in Vi}
 
+:redi[r] @*		Redirect messages to the clipboard. {not in Vi}
+
+:redi[r] @"		Redirect messages to the unnamed register. {not in Vi}
+
 :redi[r] END		End redirecting messages.  {not in Vi}
+
+						*:sil* *:silent*
+:sil[ent][!] {command}	Execute {command} silently.  Normal messages will not
+			be given.  When [!] is added, error messages will also
+			be skipped, and commands will not be aborted when an
+			error is detected.
+			Redirection, started with |:redir|, will continue as
+			usual.  This will allow redirecting the output of a
+			command without seeing it on the screen.  Example: >
+			    :redir >/tmp/foobar
+			    :silent g/Aap/p
+			    :redir END
+<			":silent!" is useful to execute a command that may
+			fail, but the failure is to be ignored.  Example: >
+			    :silent /^begin
+<			":silent" will also avoid the hit-return prompt.  When
+			using this for an external command, this may cause the
+			screen to be messed up.  Use |CTRL-L| to clean it up
+			then.
 
 							*K*
 K			Run a program to lookup the keyword under the
@@ -287,9 +343,9 @@ K			Run a program to lookup the keyword under the
 			keyword is formed of letters, numbers and the
 			characters in 'iskeyword'.  The keyword under or
 			right of the cursor is used.  The same can be done
-			with the command
->				:!{program} {keyword}
-			There is an example of a program to use in the tools
+			with the command >
+				:!{program} {keyword}
+<			There is an example of a program to use in the tools
 			directory of Vim.  It is called 'ref' and does a
 			simple spelling check.
 			Special cases:
@@ -299,9 +355,9 @@ K			Run a program to lookup the keyword under the
 			- When 'keywordprg' is equal to "man", a count before
 			  "K" is inserted after the "man" command and before
 			  the keyword.  For example, using "2K" while the
-			  cursor is on "mkdir", results in:
->				!man 2 mkdir
-			- When 'keywordprg' is equal to "man -s", a count
+			  cursor is on "mkdir", results in: >
+				!man 2 mkdir
+<			- When 'keywordprg' is equal to "man -s", a count
 			  before "K" is inserted after the "-s".  If there is
 			  no count, the "-s" is removed.
 			{not in Vi}
@@ -313,11 +369,11 @@ K			Run a program to lookup the keyword under the
 
 [N]gs							*gs* *:sl* *:sleep*
 :[N]sl[eep] [N]	[m]	Do nothing for [N] seconds.  When [m] is included,
-			sleep for [N] milliseconds.
->  :sleep	  "sleep for one second
->  :5sleep	  "sleep for five seconds
->  :sleep 100m    "sleep for hunderd millisonds
-			Can be interrupted with CTRL-C (CTRL-Break on MS-DOS).
+			sleep for [N] milliseconds. >
+  :sleep	  "sleep for one second
+  :5sleep	  "sleep for five seconds
+  :sleep 100m     "sleep for hunderd millisonds
+<			Can be interrupted with CTRL-C (CTRL-Break on MS-DOS).
 			"gs" stands for "goto sleep".  While sleeping the
 			cursor is positioned in the text (if visible).  {not
 			in Vi}
@@ -332,7 +388,7 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 
 			*help* *<Help>* *:h* *:help* *<F1>* *i_<F1>* *i_<Help>*
 <Help>		or
-:h[elp]			Split the window and display the help file in
+:h[elp]			Open a window at the top and display the help file in
 			read-only mode.  If there is a help window open
 			already, use that one.  {not in Vi}
 
@@ -361,25 +417,25 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 			all works by using commandline completion (type CTRL-D
 			after ":help subject").
 			If there are several matches, you can have them listed
-			by hitting CTRL-D.  Example:
->				:help cont<Ctrl-D>
-			To use a regexp |pattern|, first do ":help" and then
+			by hitting CTRL-D.  Example: >
+				:help cont<Ctrl-D>
+<			To use a regexp |pattern|, first do ":help" and then
 			use ":tag {pattern}" in the help window.  The
 			":tnext" command can then be used to jump to other
-			matches, "tselect" to list matches and choose one.
->				:help index| :tse z.
-			This command can be followed by '|' and another
+			matches, "tselect" to list matches and choose one. >
+				:help index| :tse z.
+<			This command can be followed by '|' and another
 			command, but you don't need to escape the '|' inside a
-			help command.  So these both work:
->				:help |
->				:help k| only
-			Note that a space before the '|' is seen as part of
+			help command.  So these both work: >
+ 				:help |
+				:help k| only
+<			Note that a space before the '|' is seen as part of
 			the ":help" argument.
 			You can also use <LF> or <CR> to separate the help
 			command from a following command.  You need to type
-			CTRL-V first to insert the <LF> or <CR>.  Example:
->				:help so<C-V><CR>only
-			{not in Vi}
+			CTRL-V first to insert the <LF> or <CR>.  Example: >
+				:help so<C-V><CR>only
+<			{not in Vi}
 
 The help file name can be set with the 'helpfile' option.  The initial height
 of the help window can be set with the 'helpheight' option (default 20).
@@ -402,4 +458,4 @@ command:
 :helpf[ind]		Like |:help|, but use a dialog to enter the argument.
 			{only when compiled with |+GUI_GTK|}
 
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

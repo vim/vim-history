@@ -1,0 +1,76 @@
+*usr_04.txt*	For Vim version 6.0d.  Last change: 2000 Jul 07
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+			     Making local changes
+
+
+|04.1|	Motions and operators
+
+     Next chapter: |usr_05.txt|  Making big changes
+ Previous chapter: |usr_03.txt|  Moving around
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*04.1*	Motions and operators
+
+yank and put
+changing text: "r", "cw", replace mode
+"I", "A"
+"J", "~", ">>", "."
+Visual mode
+text objects
+
+
+Deleting text.
+
+You can delete text in many ways.  Let's start with a single character.
+Position the cursor on the character you want to delete and hit "x".  The
+characters right of it will shift left to fill the gap.
+
+before:	this is an examplle
+	                ^
+type "x"
+
+after:  this is an example
+			^
+
+You can repeat the "x" to delete several characters.  When you know how many
+you want to delete, prepend a count to "x".  "4x" deletes four characters.
+
+before:	 this is an examexample
+                    ^
+type "4x"
+
+after:   this is an example
+                    ^
+
+To delete the word under the cursor use "daw".  This also deletes white space
+before or after the word to make the new sentence look good.
+
+before:   this is my an example
+                   ^
+type "daw"
+
+after:    this is an example
+                  ^
+There are many other ways to delete pieces of text.  Here are a few often used
+ones:
+
+x	delete character under the cursor (short for "dl")
+X	delete character before the cursor (short for "dh")
+D	delete from cursor to end of line (short for "d$")
+dw	delete from cursor to next start of word
+db	delete from cursor to previous start of word
+diw	delete word under the cursor (excluding white space)
+dG	delete until the end of the file
+dgg	delete until the start of the file
+
+The generic form of deletion is the "d" operator.  It is followed by a motion
+command, to delete the text that was moved over.  For example, the "$" command
+moves to the end of the line.  Thus "d$" deletes to the end of the line.  The
+"D" command is in fact an abbreviation for "d$".  And "x" is an abbreviation
+for "dl", since "l" moves the cursor right.
+
+==============================================================================
+ vim:tw=78:

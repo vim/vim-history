@@ -21,6 +21,11 @@
  */
 #undef L_tmpnam
 
+/*  Define this macro if the field "st_ino" exists in struct stat in
+ *  <sys/stat.h>.
+ *  */
+#undef HAVE_STAT_ST_INO
+
 /*  Define remove to unlink if you have unlink(), but not remove().
  */
 #undef remove

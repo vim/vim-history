@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 5.7.  Last change: 2000 Feb 09
+*tips.txt*      For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -84,8 +84,8 @@ two ways:
 
 1. Using grep.
 
-Add one long line to your .vimrc:
->  map _g :let efsave=&ef<Bar>let &ef=tempname()<Bar>exe ':!grep -n -w "<cword>" *.[cChH] *.cc *.cpp *.txt >'.&ef<CR>:cf<CR>:exe ":!rm ".&ef<CR>:let &ef=efsave<Bar>unlet efsave<CR><CR>:cc<CR>
+Add one long line to your .vimrc: >
+   map _g :let efsave=&ef<Bar>let &ef=tempname()<Bar>exe ':!grep -n -w "<cword>" *.[cChH] *.cc *.cpp *.txt >'.&ef<CR>:cf<CR>:exe ":!rm ".&ef<CR>:let &ef=efsave<Bar>unlet efsave<CR><CR>:cc<CR>
 
 NOTE: This requires that the '<' flag is excluded from 'cpoptions'.
 
@@ -97,10 +97,11 @@ Also see |quickfix|.
 This depends on the format of what grep produces and 'errorformat'.  It should
 work with the default settings.
 
-Not all versions of "grep" accept the "-w" argument.  You can try if replacing
+Not all versions of "grep" accept the "-w" argument.  You can try if
+replacing >
 	-w "<cword>"
-with this
->	"\<<cword>\>"
+with this >
+	"\<<cword>\>"
 works for you.  A drawback is often that the '_' character is treated like a
 non-word character.  Thus "msg" will also match "msg_row".
 
@@ -116,16 +117,16 @@ What you need:
 - An identifier database file called "ID" in the current directory.  You can
   create it with the shell command "mkid file1 file2 ..".
 
-Put this in your .vimrc:
->	map _u :call ID_search()<Bar>execute "/\\<" . g:word . "\\>"<CR>
->	map _n :n<Bar>execute "/\\<" . g:word . "\\>"<CR>
->
->	function ID_search()
->	  let g:word = expand("<cword>")
->	  let x = system("lid --key=none ". g:word)
->	  let x = substitute(x, "\n", " ", "g")
->	  execute "next " . x
->	endfun
+Put this in your .vimrc: >
+	map _u :call ID_search()<Bar>execute "/\\<" . g:word . "\\>"<CR>
+	map _n :n<Bar>execute "/\\<" . g:word . "\\>"<CR>
+
+	function ID_search()
+	  let g:word = expand("<cword>")
+	  let x = system("lid --key=none ". g:word)
+	  let x = substitute(x, "\n", " ", "g")
+	  execute "next " . x
+	endfun
 
 To use it, place the cursor on a word, type "_u" and vim will load the file
 that contains the word.  Search for the next ocurance of the word in the same
@@ -162,8 +163,8 @@ useful to keep a paragraph as a single line.  To make this more easy:
 - set 'textwidth' to zero, to avoid linebreaks			|'tw'|
 - use "gk" and "gj" to move one screen line up or down		|gj|
 
-You might also want to set 'showbreak' to recognize a line that is wrapped:
->	:set showbreak=>>>
+You might also want to set 'showbreak' to recognize a line that is wrapped: >
+	:set showbreak=>>>
 
 ==============================================================================
 Switching screens in an xterm		*xterm-screens* *xterm-save-screen*
@@ -189,8 +190,8 @@ the programs in question one uses terminfo and the other uses termcap
 
 In your particular problem, you are looking for the control sequences
 ^[[?47h and ^[[?47l. These switch between xterms alternate and main screen
-buffer. As a quick workaround a command sequence like
->	echo -n "^[[?47h"; vim ... ; echo -n "^[[?47l"
+buffer. As a quick workaround a command sequence like >
+	echo -n "^[[?47h"; vim ... ; echo -n "^[[?47l"
 may do what you want. (My notation ^[ means the ESC character, further down
 you'll see that the databases use \E instead).
 
@@ -201,8 +202,8 @@ sequences should go.
 
 Compare your xterm termcap entry (found in /etc/termcap) with your xterm
 terminfo entry (retrieved with /usr/5bin/infocmp -C xterm). Both should
-contain entries similar to:
->	:te=\E[2J\E[?47l\E8:ti=\E7\E[?47h:
+contain entries similar to: >
+	:te=\E[2J\E[?47l\E8:ti=\E7\E[?47h:
 
 PS: If you find any difference, someone (your sysadmin?) should better check
     the complete termcap and terminfo database for consistency.
@@ -211,8 +212,8 @@ NOTE 1: If you recompile Vim with SAVE_XTERM_SCREEN defined in feature.h, the
 builtin xterm will include the mentioned "te" and "ti" entries.
 
 NOTE 2: If you want to disable the screen switching, and you don't want to
-change your termcap, you can add these lines to your .vimrc:
->	:set t_ti= t_te=
+change your termcap, you can add these lines to your .vimrc: >
+	:set t_ti= t_te=
 
 ==============================================================================
 Scrolling in Insert mode				*scroll-insert*
@@ -221,9 +222,9 @@ If you are in insert mode and you want to see something that is just off the
 screen, you can use CTRL-X CTRL-E and CTRL-X CTRL-Y to scroll the screen.
 						|i_CTRL-X_CTRL-E|
 
-To make this easier, you could use these mappings:
->	:inoremap <C-E> <C-X><C-E>
->	:inoremap <C-Y> <C-X><C-Y>
+To make this easier, you could use these mappings: >
+	:inoremap <C-E> <C-X><C-E>
+	:inoremap <C-Y> <C-X><C-Y>
 (Type this literally, make sure the '<' flag is not in 'cpoptions').
 You then lose the ability to copy text from the line above/below the cursor
 |i_CTRL-E|.
@@ -236,9 +237,9 @@ the cursor is moved up/down.
 ==============================================================================
 Smooth scrolling					*scroll-smooth*
 
-If you like the scrolling to go a bit smoother, you can use these mappings:
->	:map <C-U> <C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y>
->	:map <C-D> <C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E>
+If you like the scrolling to go a bit smoother, you can use these mappings: >
+	:map <C-U> <C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y>
+	:map <C-D> <C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E>
 
 (Type this literally, make sure the '<' flag is not in 'cpoptions').
 
@@ -246,23 +247,23 @@ If you like the scrolling to go a bit smoother, you can use these mappings:
 Correcting common typing mistakes			*type-mistakes*
 
 When there are a few words that you keep on typing in the wrong way, make
-abbreviations that correct them.  For example:
->	:ab teh the
->	:ab fro for
+abbreviations that correct them.  For example: >
+	:ab teh the
+	:ab fro for
 
 ==============================================================================
 Counting words, lines, etc.				*count-items*
 
 To count how often any pattern occurs in a buffer, set 'report' to 0, and use
 the substitute command to replace the pattern with itself.  The reported
-number of substitutions is the number of items.  Examples:
+number of substitutions is the number of items.  Examples: >
 
->	:set report=0
->	:%s/./&/g		characters
->	:%s/\i\+/&/g		words
->	:%s/^//g		lines
->	:%s/the/&/g		"the" anywhere
->	:%s/\<the\>/&/g		"the" as a word
+	:set report=0
+	:%s/./&/g		characters
+	:%s/\i\+/&/g		words
+	:%s/^//g		lines
+	:%s/the/&/g		"the" anywhere
+	:%s/\<the\>/&/g		"the" as a word
 
 You might want to reset 'hlsearch' or do ":nohlsearch".
 
@@ -271,8 +272,8 @@ Restoring the cursor position				*restore-position*
 
 Sometimes you want to write a mapping that makes a change somewhere in the
 file and restores the cursor position, without scrolling the text.  For
-example, to change the date mark in a file:
->   map <F2> msHmtgg/Last [cC]hange:\s*/e+1<CR>"_D"=strftime("%Y %b %d")<CR>p'tzt`s
+example, to change the date mark in a file: >
+   :map <F2> msHmtgg/Last [cC]hange:\s*/e+1<CR>"_D"=strftime("%Y %b %d")<CR>p'tzt`s
 
 Breaking up saving the position:
 	ms	store cursor position in the 's' mark
@@ -295,13 +296,13 @@ charset.c
 digraph.c
 ...
 
-and I want to rename *.c *.bla.  I'd do it like this:
+and I want to rename *.c *.bla.  I'd do it like this: >
 
->	$ vim
->	:r! ls *.c
->	:%s/\(.*\).c/mv & \1.bla
->	:w !sh
->	:q!
+	$ vim
+	:r! ls *.c
+	:%s/\(.*\).c/mv & \1.bla
+	:w !sh
+	:q!
 
 ==============================================================================
 Speeding up external commands				*speed-up*
@@ -315,15 +316,15 @@ should separate it into a section for interactive use and a section for
 non-interactive use (often called secondary shells).  When you execute a
 command from Vim like ":!ls", you do not need the interactive things (for
 example, setting the prompt).  Put the stuff that is not needed after these
-lines:
+lines: >
 
->	if ($?prompt == 0) then
->		exit 0
->	endif
+	if ($?prompt == 0) then
+		exit 0
+	endif
 
-Another way is to include the "-f" flag in the 'shell' option, e.g.:
+Another way is to include the "-f" flag in the 'shell' option, e.g.: >
 
->	:set shell=csh\ -f
+	:set shell=csh\ -f
 
 (the backslash is needed to include the space in the option).
 This will make csh completely skip the use of the .cshrc file.  This may cause
@@ -334,47 +335,47 @@ Useful mappings						*useful-mappings*
 
 Here are a few mappings that some people like to use.
 
-							*map-backtick*
->	:map ' `
+							*map-backtick*  >
+	:map ' `
 Make the single quote work like a backtick.  Puts the cursor on the column of
 a mark, instead of going to the first non-blank character in the line.
 
 							*emacs-keys*
-For Emacs-style editing on the command-line:
->	" start of line
->	:cnoremap <C-A>		<Home>
->	" back one character
->	:cnoremap <C-B>		<Left>
->	" delete character under cursor
->	:cnoremap <C-D>		<Del>
->	" end of line
->	:cnoremap <C-E>		<End>
->	" forward one character
->	:cnoremap <C-F>		<Right>
->	" recall newer command-line
->	:cnoremap <C-N>		<Down>
->	" recall previous (older) command-line
->	:cnoremap <C-P>		<Up>
->	" back one word
->	:cnoremap <Esc><C-B>	<S-Left>
->	" forward one word
->	:cnoremap <Esc><C-F>	<S-Right>
+For Emacs-style editing on the command-line: >
+	" start of line
+	:cnoremap <C-A>		<Home>
+	" back one character
+	:cnoremap <C-B>		<Left>
+	" delete character under cursor
+	:cnoremap <C-D>		<Del>
+	" end of line
+	:cnoremap <C-E>		<End>
+	" forward one character
+	:cnoremap <C-F>		<Right>
+	" recall newer command-line
+	:cnoremap <C-N>		<Down>
+	" recall previous (older) command-line
+	:cnoremap <C-P>		<Up>
+	" back one word
+	:cnoremap <Esc><C-B>	<S-Left>
+	" forward one word
+	:cnoremap <Esc><C-F>	<S-Right>
 
 NOTE: This requires that the '<' flag is excluded from 'cpoptions'. |<>|
 
 							*format-bullet-list*
 This mapping will format any bullet list.  It requires that there is an empty
 line above and below each list entry.  The expression commands are used to
-be able to give comments to the parts of the mapping.
+be able to give comments to the parts of the mapping. >
 
->	let m =     ":map _f  :set ai<CR>"    " need 'autoindent' set
->	let m = m . "{O<Esc>"		      " add empty line above item
->	let m = m . "}{)^W"		      " move to text after bullet
->	let m = m . "i     <CR>     <Esc>"    " add space for indent
->	let m = m . "gq}"		      " format text after the bullet
->	let m = m . "{dd"		      " remove the empty line
->	let m = m . "5lDJ"		      " put text after bullet
->	execute m			      |" define the mapping
+	:let m =     ":map _f  :set ai<CR>"    " need 'autoindent' set
+	:let m = m . "{O<Esc>"		      " add empty line above item
+	:let m = m . "}{)^W"		      " move to text after bullet
+	:let m = m . "i     <CR>     <Esc>"    " add space for indent
+	:let m = m . "gq}"		      " format text after the bullet
+	:let m = m . "{dd"		      " remove the empty line
+	:let m = m . "5lDJ"		      " put text after bullet
+	:execute m			      |" define the mapping
 
 (<> notation |<>|.  Note that this is all typed literally.  ^W is "^" "W", not
 CTRL-W.  You can copy/paste this into Vim if '<' is not included in
@@ -383,18 +384,18 @@ CTRL-W.  You can copy/paste this into Vim if '<' is not included in
 Note that the last comment starts with |", because the ":execute" command
 doesn't accept a comment directly.
 
-You also need to set 'textwidth' to a non-zero value, e.g.,
->	set tw=70
+You also need to set 'textwidth' to a non-zero value, e.g., >
+	:set tw=70
 
 A mapping that does about the same, but takes the indent for the list from the
-first line (Note: this mapping is a single long line with a lot of spaces):
->	:map _f :set ai<CR>}{a                                                          <Esc>WWmmkD`mi<CR><Esc>kkddpJgq}'mJO<Esc>j
-
+first line (Note: this mapping is a single long line with a lot of spaces): >
+	:map _f :set ai<CR>}{a                                                          <Esc>WWmmkD`mi<CR><Esc>kkddpJgq}'mJO<Esc>j
+<
 							*collapse*
 These two mappings reduce a sequence of empty (;b) or blank (;n) lines into a
-single line
->    :map ;b   GoZ<Esc>:g/^$/.,/./-j<CR>Gdd
->    :map ;n   GoZ<Esc>:g/^[ <Tab>]*$/.,/[^ <Tab>]/-j<CR>Gdd
+single line >
+    :map ;b   GoZ<Esc>:g/^$/.,/./-j<CR>Gdd
+    :map ;n   GoZ<Esc>:g/^[ <Tab>]*$/.,/[^ <Tab>]/-j<CR>Gdd
 
 ==============================================================================
 Compressing the help files				*gzip-helpfile*
@@ -405,20 +406,20 @@ files a bit slower and requires the "gzip" program.
 
 (1) Compress all the help files: "gzip doc/*.txt".
 
-(2) Edit "doc/tags" and change the ".txt" to ".txt.gz":
->	:%s=\(\t.*\.txt\)\t=\1.gz\t=
+(2) Edit "doc/tags" and change the ".txt" to ".txt.gz": >
+	:%s=\(\t.*\.txt\)\t=\1.gz\t=
 
-(3) Add these lines to your vimrc:
->	augroup helpgzip
->	autocmd!
->	autocmd BufReadPre  *.txt.gz set bin
->	autocmd BufReadPost *.txt.gz let ch_save = &ch|set ch=2
->	autocmd BufReadPost *.txt.gz '[,']!gunzip
->	autocmd BufReadPost *.txt.gz set nobin
->	autocmd BufReadPost *.txt.gz let &ch = ch_save|unlet ch_save
->	autocmd BufReadPost *.txt.gz execute ":doautocmd BufReadPost " . expand("%:r")
->	augroup END
->	set helpfile={dirname}/help.txt.gz
+(3) Add these lines to your vimrc: >
+	augroup helpgzip
+	autocmd!
+	autocmd BufReadPre  *.txt.gz set bin
+	autocmd BufReadPost *.txt.gz let ch_save = &ch|set ch=2
+	autocmd BufReadPost *.txt.gz '[,']!gunzip
+	autocmd BufReadPost *.txt.gz set nobin
+	autocmd BufReadPost *.txt.gz let &ch = ch_save|unlet ch_save
+	autocmd BufReadPost *.txt.gz execute ":doautocmd BufReadPost " . expand("%:r")
+	augroup END
+	set helpfile={dirname}/help.txt.gz
 
 Where {dirname} is the directory where the help files are.  If you have
 already included autocommands to edit ".gz" files (from
@@ -447,27 +448,27 @@ Hex editing					*hex-editing* *using-xxd*
 
 When you need to edit binary data, and prefer to do that on a hexadecimal
 listing, you can use the xxd program.  Use this to convert from binary to
-hexadecimal:
->	:%!xxd
-and use this to convert it back:
->	:%!xxd -r
+hexadecimal: >
+	:%!xxd
+and use this to convert it back: >
+	:%!xxd -r
 
 If one has a particular extension that one uses for binary files (such as exe,
 bin, etc), you may find it helpful to automate the process with the following
 bit of autocmds for your <.vimrc>.  Change that "*.bin" to whatever
-comma-separated list of extension(s) you find yourself wanting to edit:
+comma-separated list of extension(s) you find yourself wanting to edit: >
 
->	" vim -b : edit binary using xxd-format!
->	augroup Binary
->	  au!
->	  au BufReadPre  *.bin let &bin=1
->	  au BufReadPost *.bin if &bin | %!xxd
->	  au BufReadPost *.bin set ft=xxd | endif
->	  au BufWritePre *.bin if &bin | %!xxd -r
->	  au BufWritePre *.bin endif
->	  au BufWritePost *.bin if &bin | %!xxd
->	  au BufWritePost *.bin set nomod | endif
->	augroup END
+	" vim -b : edit binary using xxd-format!
+	augroup Binary
+	  au!
+	  au BufReadPre  *.bin let &bin=1
+	  au BufReadPost *.bin if &bin | %!xxd
+	  au BufReadPost *.bin set ft=xxd | endif
+	  au BufWritePre *.bin if &bin | %!xxd -r
+	  au BufWritePre *.bin endif
+	  au BufWritePost *.bin if &bin | %!xxd
+	  au BufWritePost *.bin set nomod | endif
+	augroup END
 
 ==============================================================================
 Using <> notation in autocommands			*autocmd-<>*
@@ -476,26 +477,26 @@ The <> notation is not recognized in the argument of an :autocmd.  To avoid
 having to use special characters, you could use a self-destroying mapping to
 get the <> notation and then call the mapping from the autocmd.  Example:
 
-						*map-self-destroy*
-> " This is for automatically adding the name of the file to the menu list.
-> " It uses a self-destroying mapping!
-> " 1. use a line in the buffer to convert the 'dots' in the file name to \.
-> " 2. store that in register '"'
-> " 3. add that name to the Buffers menu list
-> " WARNING: this does have some side effects, like overwriting the
-> " current register contents and removing any mapping for the "i" command.
-> "
-> autocmd BufNewFile,BufReadPre * nmap i :nunmap i<CR>O<C-R>%<Esc>:.g/\./s/\./\\./g<CR>0"9y$u:menu Buffers.<C-R>9 :buffer <C-R>%<C-V><CR><CR>
-> autocmd BufNewFile,BufReadPre * normal i
+						*map-self-destroy*  >
+ " This is for automatically adding the name of the file to the menu list.
+ " It uses a self-destroying mapping!
+ " 1. use a line in the buffer to convert the 'dots' in the file name to \.
+ " 2. store that in register '"'
+ " 3. add that name to the Buffers menu list
+ " WARNING: this does have some side effects, like overwriting the
+ " current register contents and removing any mapping for the "i" command.
+ "
+ autocmd BufNewFile,BufReadPre * nmap i :nunmap i<CR>O<C-R>%<Esc>:.g/\./s/\./\\./g<CR>0"9y$u:menu Buffers.<C-R>9 :buffer <C-R>%<C-V><CR><CR>
+ autocmd BufNewFile,BufReadPre * normal i
 
 Another method, perhaps better, is to use the ":execute" command.  In the
 string you can use the <> notation by preceding it with a backslash.  Don't
 forget to double the number of existing backslashes and put a backslash before
 '"'.
-
-> autocmd BufNewFile,BufReadPre * exe "normal O\<C-R>%\<Esc>:.g/\\./s/\\./\\\\./g\<CR>0\"9y$u:menu Buffers.\<C-R>9 :buffer \<C-R>%\<C-V>\<CR>\<CR>"
+>
+  autocmd BufNewFile,BufReadPre * exe "normal O\<C-R>%\<Esc>:.g/\\./s/\\./\\\\./g\<CR>0\"9y$u:menu Buffers.\<C-R>9 :buffer \<C-R>%\<C-V>\<CR>\<CR>"
 
 For a real buffer menu, user functions should be used (see |:function|), but
 then the <> notation isn't used, which defeats using it as an example here.
 
- vim:ts=8:sw=8:tw=78:
+ vim:tw=78:

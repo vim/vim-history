@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Jun 16
+" Last Change:	2000 Jul 25
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -14,25 +14,47 @@ let &cpo = ""
 if !exists("did_install_default_menus")
 let did_install_default_menus = 1
 
+
+if exists("v:lang")
+  let langmenuname = expand("<sfile>:p:h") . "/lang/menu_" . v:lang . ".vim"
+  " Uncomment this for testing:
+  " let langmenuname = expand("<sfile>:p:h") . "/lang/menu_de_DE.ISO_8859-1.vim"
+  if filereadable(langmenuname)
+    exe "source " . langmenuname
+  else
+    " try to get the first long file name which matches v:lang.
+    " (e.g. menu_de_DE.ISO_8859-1.vim if v:lang == de_DE)
+    let langmenuname = substitute(glob(expand("<sfile>:p:h")."/lang/menu_".v:lang."*.vim"), "\n.*", "", "g")
+    if langmenuname != ""
+      exe "source " . langmenuname
+    endif
+  endif
+  unlet langmenuname
+endif
+
 " Help menu
 amenu 9999.10 &Help.&Overview<Tab><F1>		:help<CR>
 amenu 9999.20 &Help.&How-to\ links		:help how-to<CR>
 amenu 9999.30 &Help.&GUI			:help gui<CR>
 amenu 9999.40 &Help.&Credits			:help credits<CR>
 amenu 9999.50 &Help.Co&pying			:help uganda<CR>
-amenu 9999.55 &Help.-sep-			<nul>
-amenu 9999.60 &Help.&Version			:version<CR>
-amenu 9999.70 &Help.&About			:intro<CR>
+if has("gui_gtk")
+  amenu 9999.60 &Help.&Find\.\.\.		:helpfind<CR>
+endif
+amenu 9999.65 &Help.-sep-			<nul>
+amenu 9999.70 &Help.&Version			:version<CR>
+amenu 9999.80 &Help.&About			:intro<CR>
 
 " File menu
 amenu 10.310 &File.&Open\.\.\.<Tab>:e		:browse confirm e<CR>
 amenu 10.320 &File.Sp&lit-Open\.\.\.<Tab>:sp	:browse sp<CR>
+amenu 10.325 &File.&New<Tab>:enew		:confirm enew<CR>
 amenu 10.330 &File.&Close<Tab>:q		:confirm q<CR>
 amenu 10.335 &File.-SEP1-			:
 amenu 10.340 &File.&Save<Tab>:w			:confirm w<CR>
 amenu 10.350 &File.Save\ &As\.\.\.<Tab>:w	:browse confirm w<CR>
-amenu 10.355 &File.-SEP2-			:
 if has("win32")
+  amenu 10.355 &File.-SEP2-			:
 " Use Notepad for printing. ":w >> prn" doesn't work for PostScript printers.
   amenu 10.360 &File.&Print :let smod=&mod<Bar>:let ttt=tempname()<Bar>
 	\exec ":w! ".ttt<Bar>let &mod=smod<Bar>exec "!notepad /p ".ttt<Bar>
@@ -42,9 +64,17 @@ if has("win32")
 	\exec ":'<,'>w! ".ttt<Bar>let &mod=smod<Bar>exec "!notepad /p ".ttt<Bar>
 	\exec "!del ".ttt<CR>
 elseif has("unix")
+  amenu 10.355 &File.-SEP2-			:
   amenu 10.360 &File.&Print			:w !lpr<CR>
   vunmenu &File.&Print
   vmenu &File.&Print				:w !lpr<CR>
+elseif has("vms")
+  amenu 10.355 &File.-SEP2-                     :
+  amenu 10.360 &File.&Print :let smod=&mod<Bar>:let ttt=tempname()<Bar>
+        \exec ":w! ".ttt<Bar>let &mod=smod<Bar>exec "!print/delete ".ttt<CR>
+  vunmenu &File.&Print
+  vmenu &File.&Print <Esc>:let smod=&mod<Bar>:let ttt=tempname()<Bar>
+        \exec ":'<,'>w! ".ttt<Bar>let &mod=smod<Bar>exec "!print/delete ".ttt<CR>
 endif
 amenu 10.365 &File.-SEP3-			:
 amenu 10.370 &File.Sa&ve-Exit<Tab>:wqa		:confirm wqa<CR>
@@ -66,12 +96,12 @@ nmenu 20.370 &Edit.Put\ &Before<Tab>[p		[p
 imenu	     &Edit.Put\ &Before<Tab>[p		<C-O>[p
 nmenu 20.380 &Edit.Put\ &After<Tab>]p		]p
 imenu	     &Edit.Put\ &After<Tab>]p		<C-O>]p
-if has("win32")
+if has("win32") || has("win16")
   vmenu 20.390 &Edit.&Delete<Tab>x		x
 endif
 amenu 20.400 &Edit.&Select\ all<Tab>ggVG	:if &slm != ""<Bar>exe ":norm gggH<C-O>G"<Bar>else<Bar>exe ":norm ggVG"<Bar>endif<CR>
 amenu 20.405 &Edit.-SEP2-			:
-if has("win32") || has("gui_gtk")
+if has("win32")  || has("win16") || has("gui_gtk")
   amenu 20.410 &Edit.&Find\.\.\.		:promptfind<CR>
   amenu 20.420 &Edit.Find\ and\ R&eplace\.\.\.	:promptrepl<CR>
   vunmenu      &Edit.Find\ and\ R&eplace\.\.\.
@@ -90,7 +120,11 @@ amenu 40.300 &Tools.&Jump\ to\ this\ tag<Tab>g^] g<C-]>
 vunmenu &Tools.&Jump\ to\ this\ tag<Tab>g^]
 vmenu &Tools.&Jump\ to\ this\ tag<Tab>g^]	g<C-]>
 amenu 40.310 &Tools.Jump\ &back<Tab>^T		<C-T>
-amenu 40.320 &Tools.Build\ &Tags\ File		:!ctags -R .<CR>
+if has("vms")
+  amenu 40.320 &Tools.Build\ &Tags\ File                :!mc vim:ctags -R .<CR>
+else
+  amenu 40.320 &Tools.Build\ &Tags\ File		:!ctags -R .<CR>
+endif
 amenu 40.330 &Tools.-SEP1-			:
 amenu 40.340 &Tools.&Make<Tab>:make		:make<CR>
 amenu 40.350 &Tools.&List\ Errors<Tab>:cl	:cl<CR>
@@ -99,7 +133,31 @@ amenu 40.370 &Tools.&Next\ Error<Tab>:cn	:cn<CR>
 amenu 40.380 &Tools.&Previous\ Error<Tab>:cp	:cp<CR>
 amenu 40.390 &Tools.&Older\ List<Tab>:cold	:colder<CR>
 amenu 40.400 &Tools.N&ewer\ List<Tab>:cnew	:cnewer<CR>
-
+amenu 40.410 &Tools.Error\ &Window<Tab>:cwin	:cwin<CR>
+amenu 40.500 &Tools.-SEP2-                      :
+if has("vms")
+  amenu 40.510 &Tools.Convert\ to\ HEX<Tab>:%!mc\ vim:xxd
+	\ :let b:mod = &mod<CR>
+	\ :%!mc vim:xxd<CR>
+	\ :set ft=xxd<CR>
+	\ :let &mod = b:mod<CR>
+  amenu 40.520 &Tools.Convert\ back<Tab>:%!mc\ vim:xxd\ -r
+	\ :let b:mod = &mod<CR>
+	\ :%!mc vim:xxd -r<CR>
+	\ :doautocmd filetypedetect BufReadPost<CR>
+	\ :let &mod = b:mod<CR>
+else
+  amenu 40.510 &Tools.Convert\ to\ HEX<Tab>:%!xxd
+	\ :let b:mod = &mod<CR>
+	\ :silent %!xxd<CR>
+	\ :set ft=xxd<CR>
+	\ :let &mod = b:mod<CR>
+  amenu 40.520 &Tools.Convert\ back<Tab>:%!xxd\ -r
+	\ :let b:mod = &mod<CR>
+	\ :%!xxd -r<CR>
+	\ :doautocmd filetypedetect BufReadPost<CR>
+	\ :let &mod = b:mod<CR>
+endif
 
 " Can't delete a menu in Athena version
 if has("gui_athena")
@@ -142,12 +200,16 @@ func! BmenuShow(...)
     let g:bmenu_wait = 1
     let g:bmenu_short = 1
     let g:bmenu_count = 0
-    if !exists('g:bmenu_cutoff')
-	let g:bmenu_cutoff = &lines / 2
+    if version >= 600
+	let bmenu_cutoff = &menuitems
+    elseif exists('g:bmenu_cutoff')
+	let bmenu_cutoff = g:bmenu_cutoff
+    else
+	let bmenu_cutoff = &lines / 2
     endif
     " remove old menu, if exists
     exe g:bmenu_priority . 'am &Buffers.x x'
-    aun &Buffers
+    exe "aun &Buffers"
 
     " get new priority, if exists
     if a:0 == 1
@@ -171,7 +233,7 @@ func! BmenuShow(...)
 	endif
 	let buf = buf + 1
     endwhile
-    if g:bmenu_count < g:bmenu_cutoff
+    if g:bmenu_count < bmenu_cutoff
 	let g:bmenu_short = 0
     endif
 
@@ -194,8 +256,16 @@ endfunc
 func! BmenuHash(name)
     " Make name all upper case, so that chars are between 32 and 96
     let nm = substitute(a:name, ".*", '\U\0', "")
+    if has("ebcdic")
+        " HACK: Replace all non alphabetics with 'Z'
+        "       Just to make it work for now.
+        let nm = substitute(nm, "[^A-Z]", 'Z', "g")
+        let sp = char2nr('A') - 1
+    else
+        let sp = char2nr(' ')
+    endif
     " convert first six chars into a number for sorting:
-    return (char2nr(nm[0]) - 32) * 0x1000000 + (char2nr(nm[1]) - 32) * 0x40000 + (char2nr(nm[2]) - 32) * 0x1000 + (char2nr(nm[3]) - 32) * 0x40 + (char2nr(nm[4]) - 32) * 0x40 + (char2nr(nm[5]) - 32)
+    return (char2nr(nm[0]) - sp) * 0x1000000 + (char2nr(nm[1]) - sp) * 0x40000 + (char2nr(nm[2]) - sp) * 0x1000 + (char2nr(nm[3]) - sp) * 0x40 + (char2nr(nm[4]) - sp) * 0x40 + (char2nr(nm[5]) - sp)
 endfunc
 
 func! BmenuHash2(name)
@@ -214,6 +284,7 @@ func! BmenuHash2(name)
 	return '&u-z.'
     else
 	return '&others.'
+    endif
 endfunc
 
 " take a buffer number, return a name to insert into a menu:
@@ -221,9 +292,9 @@ func! BMenuFilename(name, num)
     let munge = BmenuMunge(a:name, a:num)
     let hash = BmenuHash(munge)
     if g:bmenu_short == 0
-	let name = 'am ' . g:bmenu_priority . '.' . hash .' &Buffers.' . munge
+	let name = 'am ' . g:bmenu_priority . '.' . hash . ' &Buffers.' . munge
     else
-	let name = 'am ' . g:bmenu_priority . '.' . hash . '.' . hash .' &Buffers.' . BmenuHash2(munge) . munge
+	let name = 'am ' . g:bmenu_priority . '.' . hash . '.' . hash . ' &Buffers.' . BmenuHash2(munge) . munge
     endif
     " make 'cpo' empty to include the <CR>
     let cpo_save = &cpo
@@ -235,7 +306,7 @@ endfunc
 func! BmenuMunge(fname, bnum)
     let name = a:fname
     if name == ''
-	let name = '[No File]'
+	let name = "[No File]"
     endif
     let name = fnamemodify(name, ':~')
     if !isdirectory(a:fname)
@@ -267,21 +338,24 @@ endif " !exists("no_buffers_menu")
 amenu 70.300 &Window.&New<Tab>^Wn		<C-W>n
 amenu 70.310 &Window.S&plit<Tab>^Ws		<C-W>s
 amenu 70.320 &Window.Sp&lit\ To\ #<Tab>^W^^	<C-W><C-^>
-amenu 70.325 &Window.-SEP1-			:
-amenu 70.330 &Window.&Close<Tab>^Wc		:confirm close<CR>
-amenu 70.340 &Window.Close\ &Other(s)<Tab>^Wo	:confirm only<CR>
-amenu 70.345 &Window.-SEP2-			:
-amenu 70.350 &Window.Ne&xt<Tab>^Ww		<C-W>w
+amenu 70.330 &Window.S&plit\ Vertically<Tab>^Wv	<C-W>v
+amenu 70.335 &Window.-SEP1-			:
+amenu 70.340 &Window.&Close<Tab>^Wc		:confirm close<CR>
+amenu 70.345 &Window.Close\ &Other(s)<Tab>^Wo	:confirm only<CR>
+amenu 70.350 &Window.-SEP2-			:
+amenu 70.355 &Window.Ne&xt<Tab>^Ww		<C-W>w
 amenu 70.360 &Window.P&revious<Tab>^WW		<C-W>W
 amenu 70.365 &Window.-SEP3-			:
 amenu 70.370 &Window.&Equal\ Height<Tab>^W=	<C-W>=
 amenu 70.380 &Window.&Max\ Height<Tab>^W_	<C-W>_
 amenu 70.390 &Window.M&in\ Height<Tab>^W1_	<C-W>1_
-amenu 70.400 &Window.Rotate\ &Up<Tab>^WR	<C-W>R
-amenu 70.410 &Window.Rotate\ &Down<Tab>^Wr	<C-W>r
-if has("win32") || has("gui_gtk")
-  amenu 70.420 &Window.-SEP4-			:
-  amenu 70.430 &Window.Select\ &Font\.\.\.	:set guifont=*<CR>
+amenu 70.400 &Window.Max\ Width<Tab>^W\|	<C-W>\|
+amenu 70.410 &Window.Min\ Width<Tab>^W1\|	<C-W>1\|
+amenu 70.420 &Window.Rotate\ &Up<Tab>^WR	<C-W>R
+amenu 70.430 &Window.Rotate\ &Down<Tab>^Wr	<C-W>r
+if has("win32") || has("win16") || has("gui_gtk")
+  amenu 70.440 &Window.-SEP4-			:
+  amenu 70.450 &Window.Select\ &Font\.\.\.	:set guifont=*<CR>
 endif
 
 " The popup menu
@@ -295,101 +369,120 @@ imenu 1.40 PopUp.&Paste		<Esc>:if col(".")!=1<Bar>exe 'norm "*p'<Bar>else<Bar>ex
 cmenu 1.40 PopUp.&Paste		<C-R>*
 vmenu 1.50 PopUp.&Delete	x
 amenu 1.55 PopUp.-SEP2-		:
-vmenu 1.60 PopUp.Select\ Blockwise <C-V>
+vmenu 1.60 PopUp.Select\ Blockwise <C-Q>
 amenu 1.70 PopUp.Select\ &Word	vaw
 amenu 1.80 PopUp.Select\ &Line	V
-amenu 1.90 PopUp.Select\ &Block	<C-V>
+amenu 1.90 PopUp.Select\ &Block	<C-Q>
 amenu 1.100 PopUp.Select\ &All	ggVG
 
-" The GUI toolbar (for Win32 or GTK)
-if has("win32") || has("gui_gtk")
+" The GUI toolbar (for MS-Windows and GTK)
+if has("win32") || has("win16") || has("gui_gtk") || has("gui_motif")
   amenu 1.10 ToolBar.Open	:browse e<CR>
-  tmenu ToolBar.Open		Open file
   amenu 1.20 ToolBar.Save	:w<CR>
-  tmenu ToolBar.Save		Save current file
   amenu 1.30 ToolBar.SaveAll	:wa<CR>
-  tmenu ToolBar.SaveAll		Save all files
 
   if has("win32")
     amenu 1.40 ToolBar.Print	:let smod=&mod<Bar>:let ttt=tempname()<Bar>exec ":w! ".ttt<Bar>let &mod=smod<Bar>exec "!notepad /p ".ttt<Bar>exec "!del ".ttt<CR>
     vunmenu ToolBar.Print
     vmenu ToolBar.Print		<Esc>:let smod=&mod<Bar>:let ttt=tempname()<Bar>exec ":'<,'>w! ".ttt<Bar>let &mod=smod<Bar>exec "!notepad /p ".ttt<Bar>exec "!del ".ttt<CR>
+  elseif has("vms")
+    amenu 1.40 ToolBar.Print	:let smod=&mod<Bar>:let ttt=tempname()<Bar>exec ":w! ".ttt<Bar>let &mod=smod<Bar>exec "!print/delete ".ttt<CR>
+    vunmenu ToolBar.Print
+    vmenu ToolBar.Print		<Esc>:let smod=&mod<Bar>:let ttt=tempname()<Bar>exec ":'<,'>w! ".ttt<Bar>let &mod=smod<Bar>exec "!print/delete ".ttt<CR>    
   else
     amenu 1.40 ToolBar.Print	:w !lpr<CR>
     vunmenu ToolBar.Print
     vmenu ToolBar.Print		<Esc>:w !lpr<CR>
   endif
-  tmenu ToolBar.Print		Print
 
   amenu 1.45 ToolBar.-sep1-	<nul>
   amenu 1.50 ToolBar.Undo	u
-  tmenu ToolBar.Undo		Undo
   amenu 1.60 ToolBar.Redo	<C-R>
-  tmenu ToolBar.Redo		Redo
 
   amenu 1.65 ToolBar.-sep2-	<nul>
   vmenu 1.70 ToolBar.Cut	"*x
-  tmenu ToolBar.Cut		Cut to clipboard
   vmenu 1.80 ToolBar.Copy	"*y
-  tmenu ToolBar.Copy		Copy to clipboard
   nmenu 1.90 ToolBar.Paste	i<C-R>*<Esc>
   vmenu ToolBar.Paste		"-xi<C-R>*<Esc>
   menu! ToolBar.Paste		<C-R>*
-  tmenu ToolBar.Paste		Paste from Clipboard
 
   amenu 1.95 ToolBar.-sep3-	<nul>
   amenu 1.100 ToolBar.Find	:promptfind<CR>
-  tmenu ToolBar.Find		Find...
   amenu 1.110 ToolBar.FindNext	n
-  tmenu ToolBar.FindNext	Find Next
   amenu 1.120 ToolBar.FindPrev	N
-  tmenu ToolBar.FindPrev	Find Previous
   amenu 1.130 ToolBar.Replace	:promptrepl<CR>
   vunmenu ToolBar.Replace
   vmenu ToolBar.Replace		y:promptrepl <C-R>"<CR>
-  tmenu ToolBar.Replace		Find & Replace...
 
 if 0	" disabled; These are in the Windows menu
   amenu 1.135 ToolBar.-sep4-	<nul>
   amenu 1.140 ToolBar.New	<C-W>n
-  tmenu ToolBar.New		New Window
   amenu 1.150 ToolBar.WinSplit	<C-W>s
-  tmenu ToolBar.WinSplit	Split Window
   amenu 1.160 ToolBar.WinMax	:resize 200<CR>
-  tmenu ToolBar.WinMax		Maximise Window
   amenu 1.170 ToolBar.WinMin	:resize 1<CR>
-  tmenu ToolBar.WinMin		Minimise Window
-  amenu 1.180 ToolBar.WinClose	:close<CR>
-  tmenu ToolBar.WinClose	Close Window
+  amenu 1.180 ToolBar.WinVSplit	<C-W>v
+  amenu 1.190 ToolBar.WinMaxWidth	<C-W>500>
+  amenu 1.200 ToolBar.WinMinWidth	<C-W>1\|
+  amenu 1.210 ToolBar.WinClose	:close<CR>
 endif
 
-  amenu 1.185 ToolBar.-sep5-	<nul>
-  amenu 1.190 ToolBar.LoadSesn	:call LoadVimSesn()<CR>
-  tmenu ToolBar.LoadSesn	Load session
-  amenu 1.200 ToolBar.SaveSesn	:call SaveVimSesn()<CR>
-  tmenu ToolBar.SaveSesn	Save current session
-  amenu 1.210 ToolBar.RunScript	:browse so<CR>
-  tmenu ToolBar.RunScript	Run a Vim Script
+  amenu 1.215 ToolBar.-sep5-	<nul>
+  amenu 1.220 ToolBar.LoadSesn	:call LoadVimSesn()<CR>
+  amenu 1.230 ToolBar.SaveSesn	:call SaveVimSesn()<CR>
+  amenu 1.240 ToolBar.RunScript	:browse so<CR>
 
-  amenu 1.215 ToolBar.-sep6-	<nul>
-  amenu 1.220 ToolBar.Make	:make<CR>
-  tmenu ToolBar.Make		Make current project
-  amenu 1.230 ToolBar.Shell	:sh<CR>
-  tmenu ToolBar.Shell		Open a command shell
-  amenu 1.240 ToolBar.RunCtags	:!ctags -R .<CR>
-  tmenu ToolBar.RunCtags	Build tags in current directory tree
-  amenu 1.250 ToolBar.TagJump	g]
-  tmenu ToolBar.TagJump		Jump to tag under cursor
+  amenu 1.245 ToolBar.-sep6-	<nul>
+  amenu 1.250 ToolBar.Make	:make<CR>
+  amenu 1.260 ToolBar.Shell	:sh<CR>
+  amenu 1.270 ToolBar.RunCtags	:!ctags -R .<CR>
+  amenu 1.280 ToolBar.TagJump	g]
 
-  amenu 1.265 ToolBar.-sep7-	<nul>
-  amenu 1.270 ToolBar.Help	:help<CR>
-  tmenu ToolBar.Help		Vim Help
+  amenu 1.295 ToolBar.-sep7-	<nul>
+  amenu 1.300 ToolBar.Help	:help<CR>
   if has("gui_gtk")
-    amenu 1.280 ToolBar.FindHelp :helpfind<CR>
+    amenu 1.310 ToolBar.FindHelp :helpfind<CR>
   else
-    amenu 1.280 ToolBar.FindHelp :help 
+    amenu 1.310 ToolBar.FindHelp :help 
   endif
+
+" Only set the tooltips here if not done in a language menu file
+if exists("*Do_toolbar_tmenu")
+  call Do_toolbar_tmenu()
+else
+  let did_toolbar_tmenu = 1
+  tmenu ToolBar.Open		Open file
+  tmenu ToolBar.Save		Save current file
+  tmenu ToolBar.SaveAll		Save all files
+  tmenu ToolBar.Print		Print
+  tmenu ToolBar.Undo		Undo
+  tmenu ToolBar.Redo		Redo
+  tmenu ToolBar.Cut		Cut to clipboard
+  tmenu ToolBar.Copy		Copy to clipboard
+  tmenu ToolBar.Paste		Paste from Clipboard
+  tmenu ToolBar.Find		Find...
+  tmenu ToolBar.FindNext	Find Next
+  tmenu ToolBar.FindPrev	Find Previous
+  tmenu ToolBar.Replace		Find & Replace...
+ if 0	" disabled; These are in the Windows menu
+  tmenu ToolBar.New		New Window
+  tmenu ToolBar.WinSplit	Split Window
+  tmenu ToolBar.WinMax		Maximise Window
+  tmenu ToolBar.WinMin		Minimise Window
+  tmenu ToolBar.WinVSplit	Split Window Vertically
+  tmenu ToolBar.WinMaxWidth	Maximise Window Width
+  tmenu ToolBar.WinMinWidth	Minimise Window Width
+  tmenu ToolBar.WinClose	Close Window
+ endif
+  tmenu ToolBar.LoadSesn	Load session
+  tmenu ToolBar.SaveSesn	Save current session
+  tmenu ToolBar.RunScript	Run a Vim Script
+  tmenu ToolBar.Make		Make current project
+  tmenu ToolBar.Shell		Open a command shell
+  tmenu ToolBar.RunCtags	Build tags in current directory tree
+  tmenu ToolBar.TagJump		Jump to tag under cursor
+  tmenu ToolBar.Help		Vim Help
   tmenu ToolBar.FindHelp	Search Vim Help
+endif
 
 " Select a session to load; default to current session name if present
 fun LoadVimSesn()
@@ -418,7 +511,7 @@ endif " !exists("did_install_default_menus")
 " Avoid installing the Syntax menu twice.
 if (exists("did_load_filetypes") || exists("syntax_on"))
 	\ && !exists("did_install_syntax_menu")
-let did_install_syntax_menu = 1
+  let did_install_syntax_menu = 1
 
 " Define the SetSyn function, used for the Syntax menu entries.
 " Set 'filetype' and also 'syntax' if it is manually selected.

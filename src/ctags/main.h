@@ -1,7 +1,7 @@
 /*****************************************************************************
 *   $Id$
 *
-*   Copyright (c) 1998-1999, Darren Hiebert
+*   Copyright (c) 1998-2000, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -14,9 +14,11 @@
 /*============================================================================
 =   Include files
 ============================================================================*/
-#include "general.h"
-#include "vstring.h"
+#include "general.h"	/* must always come first */
+
 #include <stdio.h>
+
+#include "vstring.h"
 
 /*============================================================================
 =   Data declarations
@@ -40,6 +42,8 @@ extern void *eMalloc __ARGS((const size_t size));
 extern void *eRealloc __ARGS((void *const ptr, const size_t size));
 extern void eFree __ARGS((void *const ptr));
 extern long unsigned int getFileSize __ARGS((const char *const name));
+extern boolean isExecutable __ARGS((const char *const name));
+extern boolean isSameFile __ARGS((const char *const name1, const char *const name2));
 extern boolean doesFileExist __ARGS((const char *const fileName));
 extern void addTotals __ARGS((const unsigned int files, const long unsigned int lines, const long unsigned int bytes));
 extern const char *baseFilename __ARGS((const char *const filePath));

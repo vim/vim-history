@@ -34,7 +34,11 @@
 #   if defined(__QNX__)
 #    define EFM_DFLT	"%f(%l):%*[^WE]%t%*\\D%n:%m"
 #   else /* Unix, probably */
+#    ifdef EBCDIC
+#define EFM_DFLT	"%*[^ ] %*[^ ] %f:%l%*[ ]%m,%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%f:%l:%m,\"%f\"\\, line %l%*\\D%c%*[^ ] %m,%D%*\\a[%*\\d]: Entering directory `%f',%X%*\\a[%*\\d]: Leaving directory `%f',%DMaking %*\\a in %f"
+#    else
 #define EFM_DFLT	"%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%f:%l:%m,\"%f\"\\, line %l%*\\D%c%*[^ ] %m,%D%*\\a[%*\\d]: Entering directory `%f',%X%*\\a[%*\\d]: Leaving directory `%f',%DMaking %*\\a in %f"
+#    endif
 #   endif
 #  endif
 # endif
@@ -64,18 +68,28 @@
 # define TA_DFLT	FALSE
 #endif
 
-#ifdef MULTI_BYTE
-#define FE_ANSI		"ansi"
-#define FE_UNICODE	"unicode"
-#define FE_DBJPN	"japan"
-#define FE_DBKOR	"korea"
-#define FE_DBCHT	"taiwan"
-#define FE_DBCHS	"prc"
-#define FE_HEBREW	"hebrew"
-#define FE_FARSI	"farsi"
+#ifdef FEAT_MBYTE
+/* Possible values for 'charcode' */
+# define CC_ANSI	"ansi"
+# define CC_LATIN1	"latin-1"
+# define CC_UNICODE	"unicode"
+# define CC_UCS2	"ucs-2"
+# define CC_UCS2B	"ucs-2b"
+# define CC_UCS2L	"ucs-2l"
+# define CC_UCS4	"ucs-4"
+# define CC_UCS4B	"ucs-4b"
+# define CC_UCS4L	"ucs-4l"
+# define CC_UCS4BL	"ucs-4bl"
+# define CC_UCS4LB	"ucs-4lb"
+# define CC_UTF8	"utf-8"
+# define CC_DBJPN	"japan"
+# define CC_DBKOR	"korea"
+# define CC_DBCHT	"taiwan"
+# define CC_DBCHS	"prc"
+# define CC_DEBUG	"debug"		/* for debugging only */
 
-/* default value for 'fileencoding' */
-#define FE_DFLT		FE_ANSI
+/* default value for 'charcode' */
+# define CC_DFLT	CC_LATIN1
 #endif
 
 /* end-of-line style */
@@ -150,6 +164,8 @@
 #define MOUSE_RETURN	'r'		/* use mouse for hit-return message */
 #define MOUSE_A		"nvich"		/* used for 'a' flag */
 #define MOUSE_ALL	"anvichr"	/* all possible characters */
+#define MOUSE_NONE	' '		/* don't use Visual selection */
+#define MOUSE_NONEF	'x'		/* forced non-Visual selection */
 
 /* characters for p_shm option: */
 #define SHM_RO		'r'		/* readonly */
@@ -184,8 +200,9 @@
 #define GO_RIGHT	'r'		/* use right scrollbar */
 #define GO_TEAROFF	't'		/* add tear-off menu items */
 #define GO_TOOLBAR	'T'		/* add toolbar */
+#define GO_FOOTER	'F'		/* add footer */
 #define GO_VERTICAL	'v'		/* arrange dialog buttons vertically */
-#define GO_ALL		"abfgilmMprtTv"	/* all possible flags for 'go' */
+#define GO_ALL		"abfFgilmMprtTv" /* all possible flags for 'go' */
 
 /* flags for 'comments' option */
 #define COM_NEST	'n'		/* comments strings nest */
@@ -248,193 +265,235 @@
  * The following are actual variabables for the options
  */
 
-#ifdef RIGHTLEFT
+#ifdef FEAT_RIGHTLEFT
 EXTERN long	p_aleph;	/* 'aleph' */
 #endif
+EXTERN int	p_ar;		/* 'autoread' */
 EXTERN int	p_aw;		/* 'autowrite' */
-EXTERN char_u  *p_bs;		/* 'backspace' */
-EXTERN char_u  *p_bg;		/* 'background' */
+EXTERN char_u	*p_bs;		/* 'backspace' */
+EXTERN char_u	*p_bg;		/* 'background' */
 EXTERN int	p_bk;		/* 'backup' */
-EXTERN char_u  *p_bdir;		/* 'backupdir' */
-EXTERN char_u  *p_bex;		/* 'backupext' */
-EXTERN char_u  *p_bsdir;	/* 'browsedir' */
+EXTERN char_u	*p_bdir;	/* 'backupdir' */
+EXTERN char_u	*p_bex;		/* 'backupext' */
+#ifdef FEAT_BEVAL
+EXTERN int	p_bdlay;	/* 'balloondelay' */
+EXTERN int	p_beval;	/* 'ballooneval' */
+#endif
+EXTERN char_u	*p_bsdir;	/* 'browsedir' */
 #ifdef MSDOS
 EXTERN int	p_biosk;	/* 'bioskey' */
 EXTERN int	p_consk;	/* 'conskey' */
 #endif
-#ifdef LINEBREAK
-EXTERN char_u  *p_breakat;	/* 'breakat' */
+#ifdef FEAT_LINEBREAK
+EXTERN char_u	*p_breakat;	/* 'breakat' */
 #endif
-#ifdef USE_CLIPBOARD
-EXTERN char_u  *p_cb;		/* 'clipboard' */
+#ifdef FEAT_MBYTE
+EXTERN char_u	*p_cc;		/* 'charcode' */
+# ifdef FEAT_EVAL
+EXTERN char_u	*p_ccv;		/* 'charconvert' */
+# endif
+#endif
+#ifdef FEAT_CLIPBOARD
+EXTERN char_u	*p_cb;		/* 'clipboard' */
 #endif
 EXTERN long	p_ch;		/* 'cmdheight' */
-#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+#if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 EXTERN int	p_confirm;	/* 'confirm' */
 #endif
 EXTERN int	p_cp;		/* 'compatible' */
-EXTERN char_u  *p_cpo;		/* 'cpoptions' */
-#ifdef USE_CSCOPE
-EXTERN char_u  *p_csprg;	/* 'cscopeprg' */
+EXTERN char_u	*p_cpo;		/* 'cpoptions' */
+#ifdef FEAT_CSCOPE
+EXTERN char_u	*p_csprg;	/* 'cscopeprg' */
 EXTERN int	p_cst;		/* 'cscopetag' */
 EXTERN long	p_csto;		/* 'cscopetagorder' */
 EXTERN int	p_csverbose;	/* 'cscopeverbose' */
 #endif
-EXTERN char_u  *p_def;		/* 'define' */
-#ifdef INSERT_EXPAND
-EXTERN char_u  *p_dict;		/* 'dictionary' */
+EXTERN char_u	*p_def;		/* 'define' */
+#ifdef FEAT_INS_EXPAND
+EXTERN char_u	*p_dict;	/* 'dictionary' */
 #endif
-#ifdef DIGRAPHS
+#ifdef FEAT_DIGRAPHS
 EXTERN int	p_dg;		/* 'digraph' */
 #endif
 EXTERN char_u	*p_dir;		/* 'directory' */
-EXTERN char_u  *p_dy;		/* 'display' */
+EXTERN char_u	*p_dy;		/* 'display' */
 EXTERN int	p_ed;		/* 'edcompatible' */
+#ifdef FEAT_VERTSPLIT
+EXTERN char_u	*p_ead;		/* 'eadirection' */
+#endif
 EXTERN int	p_ea;		/* 'equalalways' */
 EXTERN char_u	*p_ep;		/* 'equalprg' */
 EXTERN int	p_eb;		/* 'errorbells' */
-#ifdef QUICKFIX
-EXTERN char_u  *p_ef;		/* 'errorfile' */
-EXTERN char_u  *p_efm;		/* 'errorformat' */
-EXTERN char_u  *p_gefm;		/* 'grepformat' */
-EXTERN char_u  *p_gp;		/* 'grepprg' */
+#ifdef FEAT_QUICKFIX
+EXTERN char_u	*p_ef;		/* 'errorfile' */
+EXTERN char_u	*p_efm;		/* 'errorformat' */
+EXTERN char_u	*p_gefm;	/* 'grepformat' */
+EXTERN char_u	*p_gp;		/* 'grepprg' */
 #endif
-#ifdef AUTOCMD
-EXTERN char_u  *p_ei;		/* 'eventignore' */
+#ifdef FEAT_AUTOCMD
+EXTERN char_u	*p_ei;		/* 'eventignore' */
 #endif
 EXTERN int	p_ek;		/* 'esckeys' */
 EXTERN int	p_exrc;		/* 'exrc' */
-EXTERN char_u  *p_ffs;		/* 'fileformats' */
-EXTERN char_u  *p_fp;		/* 'formatprg' */
+#ifdef FEAT_MBYTE
+EXTERN char_u	*p_fccs;	/* 'filecharcodes' */
+#endif
+EXTERN char_u	*p_ffs;		/* 'fileformats' */
+EXTERN char_u	*p_fp;		/* 'formatprg' */
 EXTERN int	p_gd;		/* 'gdefault' */
-#ifdef USE_GUI
-EXTERN char_u  *p_guifont;	/* 'guifont' */
-# ifdef USE_FONTSET
-EXTERN char_u  *p_guifontset;	/* 'guifontset' */
+#ifdef FEAT_GUI
+EXTERN char_u	*p_guifont;	/* 'guifont' */
+# ifdef FEAT_XFONTSET
+EXTERN char_u	*p_guifontset;	/* 'guifontset' */
+# endif
+# ifdef FEAT_MBYTE
+EXTERN char_u	*p_guifontwide;	/* 'guifontwide' */
 # endif
 EXTERN int	p_guipty;	/* 'guipty' */
 #endif
-#if defined(USE_GUI_GTK) || defined(USE_GUI_X11)
+#if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_X11)
 EXTERN long	p_ghr;		/* 'guiheadroom' */
 #endif
 #ifdef CURSOR_SHAPE
-EXTERN char_u  *p_guicursor;	/* 'guicursor' */
+EXTERN char_u	*p_guicursor;	/* 'guicursor' */
 #endif
-#if defined(USE_GUI)
-EXTERN char_u  *p_go;		/* 'guioptions' */
+#ifdef FEAT_MOUSESHAPE
+EXTERN char_u	*p_mouseshape;	/* 'mouseshape' */
 #endif
-EXTERN char_u  *p_hf;		/* 'helpfile' */
+#if defined(FEAT_GUI)
+EXTERN char_u	*p_go;		/* 'guioptions' */
+#endif
+EXTERN char_u	*p_hf;		/* 'helpfile' */
+#ifdef FEAT_WINDOWS
 EXTERN long	p_hh;		/* 'helpheight' */
+#endif
 EXTERN int	p_hid;		/* 'hidden' */
-EXTERN char_u  *p_hl;		/* 'highlight' */
+/* use P_HID to take care of ":hide" */
+#define P_HID (p_hid || cmdmod.hide)
+EXTERN char_u	*p_hl;		/* 'highlight' */
 EXTERN int	p_hls;		/* 'hlsearch' */
 EXTERN long	p_hi;		/* 'history' */
-#ifdef RIGHTLEFT
+#ifdef FEAT_RIGHTLEFT
 EXTERN int	p_hkmap;	/* 'hkmap' */
 EXTERN int	p_hkmapp;	/* 'hkmapp' */
-# ifdef FKMAP
+# ifdef FEAT_FKMAP
 EXTERN int	p_fkmap;	/* 'fkmap' */
 EXTERN int	p_altkeymap;	/* 'altkeymap' */
 # endif
 #endif
-#ifdef WANT_TITLE
+#ifdef FEAT_TITLE
 EXTERN int	p_icon;		/* 'icon' */
-EXTERN char_u  *p_iconstring;	/* 'iconstring' */
+EXTERN char_u	*p_iconstring;	/* 'iconstring' */
 #endif
 EXTERN int	p_ic;		/* 'ignorecase' */
 EXTERN int	p_is;		/* 'incsearch' */
 EXTERN int	p_im;		/* 'insertmode' */
-EXTERN char_u  *p_inc;		/* 'include' */
-EXTERN char_u  *p_isf;		/* 'isfname' */
-EXTERN char_u  *p_isi;		/* 'isident' */
-EXTERN char_u  *p_isp;		/* 'isprint' */
+EXTERN char_u	*p_isf;		/* 'isfname' */
+EXTERN char_u	*p_isi;		/* 'isident' */
+EXTERN char_u	*p_isp;		/* 'isprint' */
 EXTERN int	p_js;		/* 'joinspaces' */
-EXTERN char_u  *p_kp;		/* 'keywordprg' */
-EXTERN char_u  *p_km;		/* 'keymodel' */
-#ifdef HAVE_LANGMAP
-EXTERN char_u  *p_langmap;	/* 'langmap'*/
+EXTERN char_u	*p_kp;		/* 'keywordprg' */
+#ifdef FEAT_VISUAL
+EXTERN char_u	*p_km;		/* 'keymodel' */
 #endif
+#ifdef FEAT_LANGMAP
+EXTERN char_u	*p_langmap;	/* 'langmap'*/
+#endif
+#ifdef FEAT_GUI
+EXTERN long	p_linespace;	/* 'linespace' */
+#endif
+#ifdef FEAT_WINDOWS
 EXTERN long	p_ls;		/* 'laststatus' */
-EXTERN char_u  *p_lcs;		/* 'listchars' */
+#endif
+EXTERN char_u	*p_lcs;		/* 'listchars' */
 
 EXTERN int	p_lz;		/* 'lazyredraw' */
 EXTERN int	p_magic;	/* 'magic' */
-#ifdef QUICKFIX
-EXTERN char_u  *p_mef;		/* 'makeef' */
-EXTERN char_u  *p_mp;		/* 'makeprg' */
+#ifdef FEAT_QUICKFIX
+EXTERN char_u	*p_mef;		/* 'makeef' */
+EXTERN char_u	*p_mp;		/* 'makeprg' */
 #endif
 EXTERN long	p_mat;		/* 'matchtime' */
-#ifdef WANT_EVAL
+#ifdef FEAT_EVAL
 EXTERN long	p_mfd;		/* 'maxfuncdepth' */
 #endif
 EXTERN long	p_mmd;		/* 'maxmapdepth' */
 EXTERN long	p_mm;		/* 'maxmem' */
 EXTERN long	p_mmt;		/* 'maxmemtot' */
+#ifdef FEAT_MENU
+EXTERN long	p_mis;		/* 'menuitems' */
+#endif
 EXTERN long	p_mls;		/* 'modelines' */
-EXTERN char_u  *p_mouse;	/* 'mouse' */
-#ifdef USE_GUI
+EXTERN char_u	*p_mouse;	/* 'mouse' */
+#ifdef FEAT_GUI
 EXTERN int	p_mousef;	/* 'mousefocus' */
 EXTERN int	p_mh;		/* 'mousehide' */
 #endif
-EXTERN char_u  *p_mousem;	/* 'mousemodel' */
+EXTERN char_u	*p_mousem;	/* 'mousemodel' */
 EXTERN long	p_mouset;	/* 'mousetime' */
 EXTERN int	p_more;		/* 'more' */
-EXTERN char_u  *p_para;		/* 'paragraphs' */
+EXTERN char_u	*p_para;	/* 'paragraphs' */
 EXTERN int	p_paste;	/* 'paste' */
-EXTERN char_u  *p_pt;		/* 'pastetoggle' */
-EXTERN char_u  *p_pm;		/* 'patchmode' */
-EXTERN char_u  *p_path;		/* 'path' */
+EXTERN char_u	*p_pt;		/* 'pastetoggle' */
+EXTERN char_u	*p_pm;		/* 'patchmode' */
+EXTERN char_u	*p_path;	/* 'path' */
+#ifdef FEAT_SEARCHPATH
+EXTERN char_u	*p_cdpath;	/* 'cdpath' */
+#endif
 EXTERN int	p_remap;	/* 'remap' */
 EXTERN long	p_report;	/* 'report' */
 EXTERN long	p_pvh;		/* 'previewheight' */
 #ifdef WIN32
 EXTERN int	p_rs;		/* 'restorescreen' */
 #endif
-#ifdef RIGHTLEFT
+#ifdef FEAT_RIGHTLEFT
 EXTERN int	p_ari;		/* 'allowrevins' */
 EXTERN int	p_ri;		/* 'revins' */
 #endif
-#ifdef CMDLINE_INFO
+#ifdef FEAT_CMDL_INFO
 EXTERN int	p_ru;		/* 'ruler' */
 #endif
-#ifdef STATUSLINE
+#ifdef FEAT_STL_OPT
 EXTERN char_u	*p_ruf;		/* 'rulerformat' */
 #endif
+EXTERN char_u	*p_rtp;		/* 'runtimepath' */
 EXTERN long	p_sj;		/* 'scrolljump' */
 EXTERN long	p_so;		/* 'scrolloff' */
-#ifdef SCROLLBIND
-EXTERN char_u  *p_sbo;		/* 'scrollopt' */
+#ifdef FEAT_SCROLLBIND
+EXTERN char_u	*p_sbo;		/* 'scrollopt' */
 #endif
-EXTERN char_u  *p_sections;	/* 'sections' */
+EXTERN char_u	*p_sections;	/* 'sections' */
 EXTERN int	p_secure;	/* 'secure' */
-EXTERN char_u  *p_sel;		/* 'selection' */
-EXTERN char_u  *p_slm;		/* 'selectmode' */
-#ifdef MKSESSION
-EXTERN char_u  *p_sessopt;	/* 'sessionoptions' */
+#ifdef FEAT_VISUAL
+EXTERN char_u	*p_sel;		/* 'selection' */
+EXTERN char_u	*p_slm;		/* 'selectmode' */
 #endif
-EXTERN char_u  *p_sh;		/* 'shell' */
-EXTERN char_u  *p_shcf;		/* 'shellcmdflag' */
-#ifdef QUICKFIX
-EXTERN char_u  *p_sp;		/* 'shellpipe' */
+#ifdef FEAT_SESSION
+EXTERN char_u	*p_sessopt;	/* 'sessionoptions' */
 #endif
-EXTERN char_u  *p_shq;		/* 'shellquote' */
-EXTERN char_u  *p_sxq;		/* 'shellxquote' */
-EXTERN char_u  *p_srr;		/* 'shellredir' */
+EXTERN char_u	*p_sh;		/* 'shell' */
+EXTERN char_u	*p_shcf;	/* 'shellcmdflag' */
+#ifdef FEAT_QUICKFIX
+EXTERN char_u	*p_sp;		/* 'shellpipe' */
+#endif
+EXTERN char_u	*p_shq;		/* 'shellquote' */
+EXTERN char_u	*p_sxq;		/* 'shellxquote' */
+EXTERN char_u	*p_srr;		/* 'shellredir' */
 #ifdef AMIGA
 EXTERN long	p_st;		/* 'shelltype' */
 #endif
 #ifdef BACKSLASH_IN_FILENAME
 EXTERN int	p_ssl;		/* 'shellslash' */
 #endif
-#ifdef STATUSLINE
-EXTERN char_u  *p_stl;		/* 'statusline' */
+#ifdef FEAT_STL_OPT
+EXTERN char_u	*p_stl;		/* 'statusline' */
 #endif
 EXTERN int	p_sr;		/* 'shiftround' */
-EXTERN char_u  *p_shm;		/* 'shortmess' */
-#ifdef LINEBREAK
-EXTERN char_u  *p_sbr;		/* 'showbreak' */
+EXTERN char_u	*p_shm;		/* 'shortmess' */
+#ifdef FEAT_LINEBREAK
+EXTERN char_u	*p_sbr;		/* 'showbreak' */
 #endif
-#ifdef CMDLINE_INFO
+#ifdef FEAT_CMDL_INFO
 EXTERN int	p_sc;		/* 'showcmd' */
 #endif
 EXTERN int	p_sft;		/* 'showfulltag' */
@@ -443,62 +502,85 @@ EXTERN int	p_smd;		/* 'showmode' */
 EXTERN long	p_ss;		/* 'sidescroll' */
 EXTERN int	p_scs;		/* 'smartcase' */
 EXTERN int	p_sta;		/* 'smarttab' */
+#ifdef FEAT_WINDOWS
 EXTERN int	p_sb;		/* 'splitbelow' */
+#endif
+#ifdef FEAT_VERTSPLIT
+EXTERN int	p_spr;		/* 'splitright' */
+#endif
 EXTERN int	p_sol;		/* 'startofline' */
-EXTERN char_u  *p_su;		/* 'suffixes' */
-EXTERN char_u  *p_sws;		/* 'swapsync' */
-EXTERN char_u  *p_swb;		/* 'switchbuf' */
+EXTERN char_u	*p_su;		/* 'suffixes' */
+EXTERN char_u	*p_sws;		/* 'swapsync' */
+EXTERN char_u	*p_swb;		/* 'switchbuf' */
 EXTERN int	p_tbs;		/* 'tagbsearch' */
 EXTERN long	p_tl;		/* 'taglength' */
 EXTERN int	p_tr;		/* 'tagrelative' */
-EXTERN char_u  *p_tags;		/* 'tags' */
+EXTERN char_u	*p_tags;	/* 'tags' */
 EXTERN int	p_tgst;		/* 'tagstack' */
 EXTERN int	p_terse;	/* 'terse' */
 EXTERN int	p_ta;		/* 'textauto' */
 EXTERN int	p_to;		/* 'tildeop' */
 EXTERN int	p_timeout;	/* 'timeout' */
 EXTERN long	p_tm;		/* 'timeoutlen' */
-#ifdef WANT_TITLE
+#ifdef FEAT_TITLE
 EXTERN int	p_title;	/* 'title' */
 EXTERN long	p_titlelen;	/* 'titlelen' */
-EXTERN char_u  *p_titleold;	/* 'titleold' */
-EXTERN char_u  *p_titlestring;	/* 'titlestring' */
+EXTERN char_u	*p_titleold;	/* 'titleold' */
+EXTERN char_u	*p_titlestring;	/* 'titlestring' */
+#endif
+#ifdef FEAT_INS_EXPAND
+EXTERN char_u	*p_tsr;		/* 'thesaurus' */
 #endif
 EXTERN int	p_ttimeout;	/* 'ttimeout' */
 EXTERN long	p_ttm;		/* 'ttimeoutlen' */
 EXTERN int	p_tbi;		/* 'ttybuiltin' */
 EXTERN int	p_tf;		/* 'ttyfast' */
-#if defined(USE_GUI_GTK) && defined(USE_TOOLBAR)
-EXTERN char_u  *p_toolbar;	/* 'toolbar' */
+#if defined(FEAT_TOOLBAR) && !defined(FEAT_GUI_W32)
+EXTERN char_u	*p_toolbar;	/* 'toolbar' */
 #endif
 EXTERN long	p_ttyscroll;	/* 'ttyscroll' */
-EXTERN char_u  *p_ttym;		/* 'ttymouse' */
+#ifdef FEAT_MOUSE
+EXTERN char_u	*p_ttym;	/* 'ttymouse' */
+#endif
 EXTERN long	p_ul;		/* 'undolevels' */
 EXTERN long	p_uc;		/* 'updatecount' */
 EXTERN long	p_ut;		/* 'updatetime' */
-#ifdef VIMINFO
-EXTERN char_u  *p_viminfo;	/* 'viminfo' */
+#ifdef FEAT_WINDOWS
+EXTERN char_u	*p_fcs;		/* 'fillchar' */
+#endif
+#ifdef FEAT_VIMINFO
+EXTERN char_u	*p_viminfo;	/* 'viminfo' */
 #endif
 EXTERN int	p_vb;		/* 'visualbell' */
+#ifdef FEAT_VIRTUALEDIT
+EXTERN char_u	*p_ve;		/* 'virtualedit' */
+#endif
 EXTERN long	p_verbose;	/* 'verbose' */
 EXTERN int	p_warn;		/* 'warn' */
-#if defined(USE_GUI_MSWIN) || defined(USE_GUI_MOTIF) || defined(LINT) || defined (USE_GUI_GTK)
-#define HAS_WAK
+#if defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_MOTIF) || defined(LINT) \
+	|| defined (FEAT_GUI_GTK)
+#define FEAT_WAK
 EXTERN char_u	*p_wak;		/* 'winaltkeys' */
 #endif
-#ifdef WILDIGNORE
-EXTERN char_u  *p_wig;		/* 'wildignore' */
+#ifdef FEAT_WILDIGN
+EXTERN char_u	*p_wig;		/* 'wildignore' */
 #endif
 EXTERN int	p_wiv;		/* 'weirdinvert' */
-EXTERN char_u  *p_ww;		/* 'whichwrap' */
+EXTERN char_u	*p_ww;		/* 'whichwrap' */
 EXTERN long	p_wc;		/* 'wildchar' */
 EXTERN long	p_wcm;		/* 'wildcharm' */
-EXTERN char_u  *p_wim;		/* 'wildmode' */
-#ifdef WILDMENU
+EXTERN char_u	*p_wim;		/* 'wildmode' */
+#ifdef FEAT_WILDMENU
 EXTERN int	p_wmnu;		/* 'wildmenu' */
 #endif
+#ifdef FEAT_WINDOWS
 EXTERN long	p_wh;		/* 'winheight' */
 EXTERN long	p_wmh;		/* 'winminheight' */
+#endif
+#ifdef FEAT_VERTSPLIT
+EXTERN long	p_wmw;		/* 'winminwidth' */
+EXTERN long	p_wiw;		/* 'winwidth' */
+#endif
 EXTERN int	p_ws;		/* 'wrapscan' */
 EXTERN int	p_write;	/* 'write' */
 EXTERN int	p_wa;		/* 'writeany' */

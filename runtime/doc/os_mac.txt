@@ -1,4 +1,4 @@
-*os_mac.txt*    For Vim version 5.7.  Last change: 2000 Jun 15
+*os_mac.txt*    For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -39,19 +39,19 @@ absolute (i.e. relative to the "Desktop"), the following algorithm is used:
 	If the path start by a ":", the path is relative
 	If the path doesn't start by neither a "/" nor ":",
 	  and a ":" is found before a "/" then the path is absolute
+>
+		:e /HD/text
+		:e HD:text
+<	Edit the file "text" of the disk "HD" >
+		:e :src:main.c
+		:e src/main.c
+<	Edit the file "main.c" in the folder "src" in the current folder >
+		:e os_mac.c
+<	Edit the file "os_mac.c" in the current folder.
 
->	e /HD/text
->	e HD:text
-	Edit the file "text" of the disk "HD"
->	e :src:main.c
->	e src/main.c
-	Edit the file "main.c" in the folder "src" in the current folder
->	e os_mac.c
-	Edit the file "os_mac.c" in the current folder.
+You can use the |$VIM| and |$VIMRUNTIME|  variable. >
 
-You can use the |$VIM| and |$VIMRUNTIME|  variable.
-
->	so $VIMRUNTIME:syntax:syntax.vim
+		:so $VIMRUNTIME:syntax:syntax.vim
 
 ==============================================================================
 2. .vimrc and .vim files				*mac-vimfile*
@@ -92,4 +92,4 @@ working.
 You have to increase the memory partition to at least 1024 kBytes to prevent
 Vim from crashing due to low memory.
 
- vim:ts=8:sw=8:tw=78:
+ vim:tw=78:

@@ -1,13 +1,15 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Jun 16
+" Last Change:	2000 Jul 15
 
 " This file sets up for syntax highlighting.
 " It is loaded from "syntax.vim" and "manual.vim".
 " 1. Set the default highlight groups.
 " 2. Install Syntax autocommands for all the available syntax files.
 
-if has("syntax")
+if !has("syntax")
+  finish
+endif
 
 " let others know that syntax has been switched on
 let syntax_on = 1
@@ -72,237 +74,17 @@ hi link Debug		Special
 " First remove all old syntax autocommands.
 au! Syntax
 
-
 " OFF
 au Syntax OFF		syn clear
 
 " ON
 au Syntax ON		if &filetype != "" | exe "set syntax=" . &filetype | else | echohl ErrorMsg | echo "filetype unknown" | echohl None | endif
 
+" Load the syntax file when the Syntax option is set.
+au Syntax * runtime syntax/<amatch>.vim
 
-" The Syntax autocommands are all listed here, so that the user can remove,
-" change or add his own for each syntax separately.
-
-" Use the :SynAu user command to shorten the list below.
-" If you get an error message "Command already exists", you already have
-" defined the ":SynAu" command somewhere.  You should rename it.
-command -nargs=1  SynAu  au Syntax <args> so $VIMRUNTIME/syntax/<args>.vim
-
-SynAu abaqus
-SynAu abc
-SynAu abel
-SynAu ada
-SynAu ahdl
-SynAu amiga
-SynAu aml
-SynAu apache
-SynAu apachestyle
-SynAu asm
-SynAu asmh8300
-SynAu asn
-SynAu aspperl
-SynAu aspvbs
-SynAu atlas
-SynAu ave
-SynAu awk
-SynAu basic
-SynAu bc
-SynAu bib
-SynAu btm
-SynAu c
-SynAu cf
-SynAu ch
-SynAu change
-SynAu clean
-SynAu clipper
-SynAu cobol
-SynAu conf
-SynAu config
-SynAu cpp
-SynAu csh
-SynAu csp
-SynAu css
-SynAu cterm
-SynAu ctrlh
-SynAu cupl
-SynAu cuplsim
-SynAu cvs
-SynAu cweb
-SynAu dcl
-SynAu def
-SynAu diff
-SynAu diva
-SynAu dosbatch
-SynAu dosini
-SynAu dracula
-SynAu dtd
-SynAu eiffel
-SynAu elf
-SynAu elmfilt
-SynAu erlang
-SynAu esqlc
-SynAu expect
-SynAu exports
-SynAu focexec
-SynAu form
-SynAu forth
-SynAu fortran
-SynAu fvwm
-SynAu gdb
-SynAu gdmo
-SynAu gedcom
-SynAu gnuplot
-SynAu gp
-SynAu haskell
-SynAu hb
-SynAu help
-SynAu html
-SynAu htmlm4
-SynAu icon
-SynAu idl
-SynAu idlang
-SynAu inform
-SynAu ishd
-SynAu ist
-SynAu java
-SynAu javacc
-SynAu javascript
-SynAu jgraph
-SynAu jproperties
-SynAu jsp
-SynAu kscript
-SynAu kwt
-SynAu lace
-SynAu latte
-SynAu lex
-SynAu lhaskell
-SynAu lilo
-SynAu lisp
-SynAu lite
-SynAu lotos
-SynAu lout
-SynAu lss
-SynAu lua
-SynAu m4
-SynAu mail
-SynAu make
-SynAu man
-SynAu maple
-SynAu masm
-SynAu master
-SynAu matlab
-SynAu mel
-SynAu mf
-SynAu mib
-SynAu model
-SynAu modsim3
-SynAu modula2
-SynAu modula3
-SynAu mp
-SynAu msql
-SynAu muttrc
-SynAu nasm
-SynAu nastran
-SynAu ncf
-SynAu nroff
-SynAu objc
-SynAu ocaml
-SynAu opl
-SynAu ora
-SynAu pascal
-SynAu pcap
-SynAu pccts
-SynAu perl
-SynAu php3
-SynAu phtml
-SynAu pike
-SynAu pine
-SynAu plsql
-SynAu po
-SynAu pod
-SynAu postscr
-SynAu pov
-SynAu procmail
-SynAu prolog
-SynAu ptcap
-SynAu purifylog
-SynAu python
-SynAu radiance
-SynAu rc
-SynAu rcslog
-SynAu rebol
-SynAu remind
-SynAu rexx
-SynAu rpcgen
-SynAu ruby
-SynAu samba
-SynAu sas
-SynAu sather
-SynAu scheme
-SynAu sdl
-SynAu sed
-SynAu sgml
-SynAu sgmllnx
-SynAu sh
-SynAu sicad
-SynAu simula
-SynAu skill
-SynAu sl
-SynAu slang
-SynAu slrnrc
-SynAu slrnsc
-SynAu sm
-SynAu smil
-SynAu sml
-SynAu snnsnet
-SynAu snnspat
-SynAu snnsres
-SynAu spec
-SynAu spice
-SynAu spup
-SynAu sql
-SynAu sqr
-SynAu squid
-SynAu st
-SynAu stp
-SynAu tads
-SynAu tags
-SynAu tcl
-SynAu tex
-SynAu texinfo
-SynAu tli
-SynAu tf
-SynAu tsalt
-SynAu uil
-SynAu vb
-SynAu verilog
-SynAu vgrindefs
-SynAu vhdl
-SynAu vim
-SynAu viminfo
-SynAu vrml
-SynAu web
-SynAu webmacro
-SynAu whitespace
-SynAu winbatch
-SynAu xdefaults
-SynAu xmath
-SynAu xml
-SynAu xpm
-SynAu xpm2
-SynAu xs
-SynAu xxd
-SynAu yacc
-SynAu z8a
-SynAu zsh
-
-:delcommand SynAu
 
 " Source the user-specified syntax highlighting file
 if exists("mysyntaxfile") && filereadable(expand(mysyntaxfile))
   execute "source " . mysyntaxfile
 endif
-
-endif " has("syntax")
-
-" vim: ts=8 sts=0

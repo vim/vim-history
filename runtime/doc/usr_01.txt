@@ -1,0 +1,104 @@
+*usr_01.txt*	For Vim version 6.0d.  Last change: 2000 Jul 27
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+			      About the manuals
+
+
+|01.1|  Two manuals
+|01.2|  Using the Vim tutor
+|01.3|  Copyright
+
+     Next chapter: |usr_02.txt|  The first steps in Vim
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*01.1*  Two manuals
+
+The Vim documentation consists of two parts:
+
+1. The User manual
+   Task oriented explanations, from simple to complex.  Reads like a book.
+
+2. The Reference manual
+   Precise description of how everything in Vim works.
+
+There are links between the two parts, allowing the reader to quickly jump
+between the description of an editing task and a precise explanation of the
+commands and options used for it.
+
+Hit CTRL-] to jump to a subject under the cursor.
+Hit CTRL-O to jump back (can be repeated).
+
+
+Most of the manuals assume that Vim has been properly installed.  If you
+didn't do that yet, or if Vim doesn't run properly (e.g., files can't be found
+or in the GUI the menus are not shown) first read the chapter on installation:
+|usr_90.txt|.
+
+
+The notation used in these manuals is explained here: |notation|
+
+==============================================================================
+*01.2*  Using the Vim tutor
+							*tutor*
+Instead of reading the text (boring!) you can use the vimtutor to learn your
+first Vim commands.  This is a 30 minute tutorial that teaches the most basic
+Vim functionality hands-on.
+
+On Unix, if Vim has been properly installed, you can start it from the shell:
+>
+	vimtutor
+
+This will make a copy of the tutor file, so that you can edit it without
+the risk of damaging the original.
+
+On non-Unix systems, you have to do a little work:
+
+1. Copy the tutor file.  You can do this with Vim:
+>
+	vim -u NONE -c 'e $VIMRUNTIME/tutor/tutor' -c 'w! TUTORCOPY' -c 'q'
+<
+   This will write the file "TUTORCOPY" in the current directory.
+
+2. Edit the copied file with Vim:
+>
+	vim -u NONE -c "set nocp" TUTORCOPY
+<
+   The extra arguments make sure Vim is started in a good mood.
+
+3. Delete the copied file:
+>
+	del TUTORCOPY
+<
+==============================================================================
+*01.3*  Copyright
+
+The Vim user manual and reference manual are copyrighted by Bram Moolenaar.
+
+Permission is granted to copy and distribute the manuals in unmodifed
+electronic form in any way (on a CD-ROM, on the WWW, etc.).  This can be done
+for free or not.
+
+Permission is granted to print and distribute the unmodified manuals on paper
+FOR FREE ONLY.  No charge for production, materials, transport, etc. can be
+made.
+
+Written permission from the author is required for distributing a paper copy
+for money.
+
+Permission is granted to distribute the manuals as just mentioned but with
+text added which is clearly marked as such.
+
+People who contribute text to the manuals must agree with these conditions.
+
+Rationale:
+This limitation avoids the situation that somebody would bring out a book
+with this text and charge money for it without paying the people who spent
+their valuable time to write it.
+I will allow publishing a book with this text if the publisher guarantees that
+the profits go to the right place (to be judged by me).
+It also disallows changing the text and pretending that I wrote it.
+
+==============================================================================
+ vim:tw=78:

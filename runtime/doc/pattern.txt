@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 5.7.  Last change: 2000 Apr 06
+*pattern.txt*   For Vim version 6.0d.  Last change: 2000 Jul 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -159,10 +159,10 @@ line offset is given, the whole lines between the two cursor positions are
 affected.
 
 							*//;*
-A very special offset is ';' followed by another search command.  For example:
+A very special offset is ';' followed by another search command.  For example: >
 
->  /test 1/;/test
->  /test.*/+1;?ing?
+   /test 1/;/test
+   /test.*/+1;?ing?
 
 The first one first finds the next occurrence of "test 1", and then the first
 occurrence of "test" after that.
@@ -209,8 +209,8 @@ method 'w' is used for this message (default: standout).
 							*search-range*
 You cannot limit the search command "/" to a certain range of lines.  A trick
 to do this anyway is to use the ":substitute" command with the 'c' flag.
-Example:
->  :.,300s/Pattern//gc
+Example: >
+   :.,300s/Pattern//gc
 This command will search from the cursor position until line 300 for
 "Pattern".  At the match, you will be asked to type a character.  Type 'q' to
 stop at this match, type 'n' to find the next match.
@@ -231,219 +231,158 @@ the "*" is under your right hand middle finger (search to the right and down).
 2. The definition of a pattern		*search-pattern* *pattern* *[pattern]*
 					*regular-expression* *regexp* *Pattern*
 
-Patterns may contain special characters, depending on the setting of the
-'magic' option.  It is recommended to always use the default setting, which is
-'magic'.  This avoids portability problems.
-
-							*/bar* */\bar*
+						*/bar* */\bar* */pattern*
 1. A pattern is one or more branches, separated by "\|".  It matches anything
    that matches one of the branches.  Example: "foo\|beep" matches "foo" and
-   "beep".  If more than one branch matches, the first one is used.
+   matches "beep".  If more than one branch matches, the first one is used.
 
-2. A branch is one or more pieces, concatenated.  It matches a match for the
-   first, followed by a match for the second, etc.  Example: "foo[0-9]beep",
-   first match "foo", then a digit and then "beep".
+   pattern ::=	    branch
+		or  branch \| branch
+		or  branch \| branch \| branch
+		etc.
 
-3. A piece is an atom, possibly followed by:
-     'magic' 'nomagic'	~
-							*/star* */\star*
-	*	\*	matches 0 or more of the preceding atom, as much as
-			possible (maximum 32767)
-							*/\+*
-	\+	\+	matches 1 or more of the preceding atom, as much as
-			possible (maximum 32767) {not in Vi}
-							*/\=*
-	\=	\=	matches 0 or 1 of the preceding atom, as much as
-			possible {not in Vi}
-							*/\{*
-	\{n,m}  \{n,m}	matches n to m of the preceding atom, as much as
-			possible {not in Vi}
-	\{n}    \{n}	matches n of the preceding atom {not in Vi}
-	\{n,}   \{n,}	matches at least n of the preceding atom, as much as
-			possible {not in Vi}
-	\{,m}   \{,m}	matches 0 to m of the preceding atom, as much as
-			possible {not in Vi}
-	\{}     \{}	matches 0 or more of the preceding atom, as much as
-			possible (same as *) {not in Vi}
-							*/\{-*
-	\{-n,m}  \{-n,m} matches n to m of the preceding atom, as few as
-			possible {not in Vi}
-	\{-n}    \{-n}	matches n of the preceding atom {not in Vi}
-	\{-n,}   \{-n,}	matches at least n of the preceding atom, as few as
-			possible {not in Vi}
-	\{-,m}   \{-,m}	matches 0 to m of the preceding atom, as few as
-			possible {not in Vi}
-	\{-}     \{-}	matches 0 or more of the preceding atom, as few as
-			possible {not in Vi}
+						*/branch*
+2. A branch is one or more concats, separated by "\&".  It matches the last
+   concat, but only if all the preceding contats also match at the same
+   position.  Example: "foobeep\&..." matches "foo" in "foobeep".
 
-		(n and m are decimal numbers between 1 and 32767)
+   branch ::=	    concat
+		or  concat \& concat
+		or  concat \& concat \& concat
+		etc.
 
-		If a "-" appears immediately after the "{", then a shortest
-		match first algorithm is used (see example below).  In
-		particular, "\{-}" is the same as "*" but uses the shortest
-		match first algorithm.  BUT: A match that starts earlier is
-		preferred over a shorter match: "a\{-}b" matches "aaab" in
-		"xaaab".
+						*/concat*
+3. A concat is one or more pieces, concatenated.  It matches a match for the
+   first piece, followed by a match for the second piece, etc.  Example:
+   "f[0-9]b", first matches "f", then a digit and then "b".
 
-    Examples:
-       .*	.\*	matches anything, also empty string
-       ^.\+$	^.\+$	matches any non-empty line
-       foo\=	foo\=	matches "fo" and "foo"
-       ab\{2,3}c	matches "abbc" or "abbbc"
-       a\{5}		matches "aaaaa".
-       ab\{2,}c		matches "abbc", "abbbc", "abbbbc", etc
-       ab\{,3}c		matches "ac", "abc", "abbc" or "abbbc".
-       a[bc]\{3}d	matches "abbbd", "abbcd", "acbcd", "acccd", etc.
-       a\(bc\)\{1,2}d	matches "abcd" or "abcbcd"
-       a[bc]\{-}[cd]	matches "abc" in "abcd"
-       a[bc]*[cd]	matches "abcd" in "abcd"
+   concate  ::=	    piece
+		or  piece piece
+		or  piece piece piece
+		etc.
+
+						*/piece*
+4. A piece is an atom, possibly followed by a multi, an indication of how many
+   times the atom can be matched.  Example: "a*" matches any sequence of "a"
+   characters: "", "a", "aa", etc.  See |/multi|.
+
+   piece   ::=	    atom
+		or  atom  multi
+
+						*/atom*
+5. An atom can be one of a long list of items.  Each atom matches a certain
+   character.  It is often an ordinary character or a character class.  See
+   |/ordinary-atom|.  Braces can be used to make a pattern into an atom.  The
+   "\z(\)" construct is only for syntax highlighting, see |:syn-ext-match|.
+
+   atom    ::=	    ordinary-atom
+   		or  \( pattern \)
+		or  \z( pattern \)
 
 
-4. An atom can be:
-      magic   nomagic	~
-	^	^	at beginning of pattern or after "\|" or	*/^*
-			"\(", matches start of line; at other
-			positions, matches literal '^'
-	\^	\^	at any position, matches literal '^'		*/\^*
-	$	$	at end of pattern or in front of "\|" or	*/$*
-			"\)", matches end-of-line <EOL>; at other
-			positions, matches literal '$'
-	\$	\$	at any position, matches literal '$'		*/\$*
-	.	\.	matches any single character		  */.* */\.*
-	\<	\<	matches the beginning of a word			*/\<*
-	\>	\>	matches the end of a word			*/\>*
+Overview of multi items.				*/multi*
+More explanation and examples below, follow the links.
 
-	Character classes {not in Vi}:
-	\i	\i	identifier character (see 'isident' option)	*/\i*
-	\I	\I	like "\i", but excluding digits			*/\I*
-	\k	\k	keyword character (see 'iskeyword' option)	*/\k*
-	\K	\K	like "\k", but excluding digits			*/\K*
-	\f	\f	file name character (see 'isfname' option)	*/\f*
-	\F	\F	like "\f", but excluding digits			*/\F*
-	\p	\p	printable character (see 'isprint' option)	*/\p*
-	\P	\P	like "\p", but excluding digits			*/\P*
+	  multi ~
+     'magic' 'nomagic'	matches of the preceding atom ~
+|/star|	*	\*	0 or more	as many as possible
+|/\+|	\+	\+	1 or more	as many as possible (*)
+|/\=|	\=	\=	0 or 1		as many as possible (*)
 
-						*whitespace* *white-space*
-	\s	\s	whitespace character: <Space> and <Tab>		*/\s*
-	\S	\S	non-whitespace character; opposite of \s	*/\S*
-	\d	\d	digit:				[0-9]		*/\d*
-	\D	\D	non-digit:			[^0-9]		*/\D*
-	\x	\x	hex digit:			[0-9A-Fa-f]	*/\x*
-	\X	\X	non-hex digit:			[^0-9A-Fa-f]	*/\X*
-	\o	\o	octal digit:			[0-7]		*/\o*
-	\O	\O	non-octal digit:		[^0-7]		*/\O*
-	\w	\w	word character:			[0-9A-Za-z_]	*/\w*
-	\W	\W	non-word character:		[^0-9A-Za-z_]	*/\W*
-	\h	\h	head of word character:		[A-Za-z_]	*/\h*
-	\H	\H	non-head of word character:	[^A-Za-z_]	*/\H*
-	\a	\a	alphabetic character:		[A-Za-z]	*/\a*
-	\A	\A	non-alphabetic character:	[^A-Za-z]	*/\A*
-	\l	\l	lowercase character:		[a-z]		*/\l*
-	\L	\L	non-lowercase character:	[^a-z]		*/\L*
-	\u	\u	uppercase character:		[A-Z]		*/\u*
-	\U	\U	non-uppercase character		[^A-Z]		*/\U*
-			NOTE: using the atom is faster than the [] form
-			NOTE: 'ignorecase' is not used by character classes
-	(end of character classes)
+|/\{|	\{n,m}	\{n,m}	n to m		as many as possible (*)
+	\{n}	\{n}	n		exactly (*)
+	\{n,}	\{n,}	at least n	as many as possible (*)
+	\{,m}	\{,m}	0 to m		as many as possible (*)
+	\{}	\{}	0 or more	as many as possible (same as *) (*)
 
-	\e	\e	matches <Esc>					*/\e*
-	\t	\t	matches <Tab>					*/\t*
-	\r	\r	matches <CR>					*/\r*
-	\b	\b	matches <BS>					*/\b*
-	\n	\n	matches <NL> Not available yet!  Will be used	*/\n*
-			for multi-line patterns
-	~	\~	matches the last given substitute string    */~* */\~*
-	\(\)	\(\)	A pattern enclosed by escaped parentheses      */\(\)*
-			(e.g., "\(^a\)") matches that pattern		*/\)*
-	\1      \1	Matches the same string that was matched by	*/\1*
-			the first sub-expression in \( and \). {not in Vi}
-			Example: "\([a-z]\).\1" matches "ata", "ehe", "tot",
-			etc.
-	\2      \2	Like "\1", but uses second sub-expression,	*/\2*
-	   ...								*/\3*
-	\9      \9	Like "\1", but uses ninth sub-expression.	*/\9*
-			Note: The numbering of groups is done based on which
-			"\(" comes first (going left to right).
+|/\{-|	\{-n,m}	\{-n,m}	n to m		as few as possible (*)
+	\{-n}	\{-n}	n		exactly (*)
+	\{-n,}	\{-n,}	at least n 	as few as possible (*)
+	\{-,m}	\{-,m}	0 to m		as few as possible (*)
+	\{-}	\{-}	0 or more	as few as possible (*)
 
-	x	x	A single character, with no special meaning,
-			matches itself
-	\x	\x	A backslash followed by a single character, */\* */\\*
-			with no special meaning, is reserved for future
-			expansions
+|/\@>|	\@>	\@>	1, like matching a whole pattern (*)
+|/\@=|	\@=	\@=	nothing, requires a match |/zero-width| (*)
+|/\@!|	\@!	\@!	nothing, requires NO match |/zero-width| (*)
+|/\@<=|	\@<=	\@<=	nothing, requires a match behind |/zero-width| (*)
+|/\@<!|	\@<!	\@<!	nothing, requires NO match behind |/zero-width| (*)
 
-	[]	\[]	A range. This is a sequence of characters	*/[]*
-			enclosed in "[]" or "\[]".  It matches any	*/\[]*
-			single character from the sequence.  E.g., "[xyz]"
-			matches any 'x', 'y' or 'z'.
-			- If the sequence begins with "^", it matches any
-			  single character NOT in the sequence: "[^xyz]"
-			  matches anything but 'x', 'y' and 'z'.
-			- If two characters in the sequence are separated by
-			  '-', this is shorthand for the full list of ASCII
-			  characters between them.  E.g., "[0-9]" matches any
-			  decimal digit.
-			- A character class expression is evaluated to the set
-			  of characters belonging to that character class.  The
-			  following character classes are supported:
-			  Name		Contents ~
-*[:alnum:]*		  [:alnum:]     letters and digits
-*[:alpha:]*		  [:alpha:]     letters
-*[:blank:]*		  [:blank:]     space and tab characters
-*[:cntrl:]*		  [:cntrl:]     control characters
-*[:digit:]*		  [:digit:]     decimal digits
-*[:graph:]*		  [:graph:]     printable characters excluding space
-*[:lower:]*		  [:lower:]     lowercase letters
-*[:print:]*		  [:print:]     printable characters including space
-*[:punct:]*		  [:punct:]     punctuation characters
-*[:space:]*		  [:space:]     whitespace characters
-*[:upper:]*		  [:upper:]     uppercase letters
-*[:xdigit:]*		  [:xdigit:]    hexadecimal digits
-*[:return:]*		  [:return:]	the <CR> character
-*[:tab:]*		  [:tab:]	the <Tab> character
-*[:escape:]*		  [:escape:]	the <Esc> character
-*[:backspace:]*		  [:backspace:]	the <BS> character
-			  The brackets in character class expressions are
-			  additional to the brackets delimiting a range.
-			  For example, the following is plausible for a UNIX
-			  filename: [-./[:alnum:]_~]\+
-			  That is, a list of at least one character, each of
-			  which is either '-', '.', '/', alphabetic, numeric,
-			  '_' or '~'.				*/\]*
-			- To include a literal ']', '^', '-' or '\' in the
-			  sequence, put a backslash before it: "[xyz\]]",
-			  "[\^xyz]", "[xy\-z]" and "[xyz\\]". (Note: POSIX
-			  does not support the use of a backslash this way).
-			  For ']' you can also make it the first character
-			  (following a possible "^"):  "[]xyz]" or "[^]xyz]"
-			  {not in Vi}.
-			  For '-' you can also make it the first or last
-			  character: "[-xyz]", "[^-xyz]" or "[xyz-]".
-			  For '\' you can also let it be followed by any
-			  character that's not in "^]-\etrb".  "[\xyz]"
-			  matches '\', 'x', 'y' and 'z'.  It's better to use
-			  "\\" though, future expansions may use other
-			  characters after '\'.
-			- The following translations are accepted when the 'l'
-			  flag is not included in 'cpoptions' {not in Vi}:
-				\e	<Esc>
-				\t	<Tab>
-				\r	<CR>
-				\b	<BS>
-			  NOTE: The other backslash codes mentioned above do
-			  not work inside []!
-			- Matching ranges can be slow, use one of the other
-			  items above when possible.
+(*) {not in Vi}
 
-If the 'ignorecase' option is on, the case of letters is ignored.  'smartcase'
-can be set to ignore case when the pattern contains uppercase letters only.
 
-It is impossible to have a pattern that contains a line break (Sorry!).
+Overview of ordinary atoms.				*/ordinary-atom*
+More explanation and examples below, follow the links.
 
-Examples:
-^beep(			Probably the start of the C function "beep".
+      ordinary atom ~
+      magic   nomagic	matches ~
+|/^|	^	^	start-of-line |/zero-width|
+|/\^|	\^	\^	literal '^'
+|/$|	$	$	end-of-line |/zero-width|
+|/\$|	\$	\$	literal '$'
+|/.|	.	\.	any single character (not an end-of-line)
+|/\_.|	\_.	\_.	any single character or end-of-line
+|/\<|	\<	\<	beginning of a word |/zero-width|
+|/\>|	\>	\>	end of a word |/zero-width|
+|/\zs|	\zs	\zs	anything, sets start of match
+|/\ze|	\ze	\ze	anything, sets end of match
 
-[a-zA-Z]$		Any alphabetic character at the end of a line.
+Character classes {not in Vi}:
+|/\i|	\i	\i	identifier character (see 'isident' option)
+|/\I|	\I	\I	like "\i", but excluding digits
+|/\k|	\k	\k	keyword character (see 'iskeyword' option)
+|/\K|	\K	\K	like "\k", but excluding digits
+|/\f|	\f	\f	file name character (see 'isfname' option)
+|/\F|	\F	\F	like "\f", but excluding digits
+|/\p|	\p	\p	printable character (see 'isprint' option)
+|/\P|	\P	\P	like "\p", but excluding digits
+|/\s|	\s	\s	whitespace character: <Space> and <Tab>
+|/\S|	\S	\S	non-whitespace character; opposite of \s
+|/\d|	\d	\d	digit:				[0-9]
+|/\D|	\D	\D	non-digit:			[^0-9]
+|/\x|	\x	\x	hex digit:			[0-9A-Fa-f]
+|/\X|	\X	\X	non-hex digit:			[^0-9A-Fa-f]
+|/\o|	\o	\o	octal digit:			[0-7]
+|/\O|	\O	\O	non-octal digit:		[^0-7]
+|/\w|	\w	\w	word character:			[0-9A-Za-z_]
+|/\W|	\W	\W	non-word character:		[^0-9A-Za-z_]
+|/\h|	\h	\h	head of word character:		[A-Za-z_]
+|/\H|	\H	\H	non-head of word character:	[^A-Za-z_]
+|/\a|	\a	\a	alphabetic character:		[A-Za-z]
+|/\A|	\A	\A	non-alphabetic character:	[^A-Za-z]
+|/\l|	\l	\l	lowercase character:		[a-z]
+|/\L|	\L	\L	non-lowercase character:	[^a-z]
+|/\u|	\u	\u	uppercase character:		[A-Z]
+|/\U|	\U	\U	non-uppercase character		[^A-Z]
+|/\_|	\_x	\_x	where x is any of the characters above: character
+			class with end-of-line included
+(end of character classes)
 
+|/\e|	\e	\e	<Esc>
+|/\t|	\t	\t	<Tab>
+|/\r|	\r	\r	<CR>
+|/\b|	\b	\b	<BS>
+|/\n|	\n	\n	end-of-line
+|/~|	~	\~	last given substitute string
+|/\1|	\1	\1	same string as matched by first \(\) {not in Vi}
+|/\2|	\2	\2	Like "\1", but uses second \(\)
+	   ...
+|/\9|	\9	\9	Like "\1", but uses ninth \(\)
+
+|/\z|	\z1	\z1	only for syntax highlighting, see |:syn-ext-match|
+	   ...
+|/\z|	\z9	\z9	only for syntax highlighting, see |:syn-ext-match|
+
+	x	x	a character with no special meaning matches itself
+
+|/[]|	[]	\[]	any character specified inside the []
+
+|/\c|	\c	\c	ignore case
+|/\C|	\C	\C	match case
+|/\m|	\m	\m	switch 'magic' on for this pattern
+|/\M|	\M	\M	switch 'magic' off for this pattern
+
+
+Example			matches ~
 \<\I\i*		or
 \<\h\w*
 \<[a-zA-Z_][a-zA-Z0-9_]*
@@ -456,6 +395,380 @@ Examples:
 
 [.!?][])"']*\($\|[ ]\)	A search pattern that finds the end of a sentence,
 			with almost the same definition as the ")" command.
+
+
+Magic							*/magic*
+
+Patterns may contain special characters, depending on the setting of the
+'magic' option.  See the lists below.
+							*/\m* */\M*
+Use of "\m" makes the pattern after it be interpreted as if 'magic' is set,
+ignoring the actual value of the 'magic' option.
+Use of "\M" makes the pattern after it be interpreted as if 'nomagic' is used.
+{only Vim supports \m and \M}
+
+It is recommended to always keep the 'magic' option at the default setting,
+which is 'magic'.  This avoids portability problems.  To make a pattern immune
+to the 'magic' option being set or not, put "\m" or "\M" at the start of the
+pattern.
+
+
+Multi items
+
+An atom can be followed by an indication of how many times the atom can be
+matched and in what way.  This is called a multi.  See |/multi| for an
+overview.
+
+It is not possible to use a multi that can match more than one time after an
+atom that can match an empty string.  That's because this could result in an
+endless loop.  If you try it, you will get this error message: >
+ 	*, \+ or \{ operand could be empty
+<
+							*/star* */\star*
+*	(use \* with 'nomagic')
+	Matches 0 or more of the preceding atom, as many as possible.
+	Example  'nomagic'	matches ~
+	a*	   a\*		"", "a", "aa", "aaa", etc.
+	.*	   \.\*		anything, also an empty string, no end-of-line
+	\_.*	   \_.\*	everything up to the end of the buffer
+	\_.*END	   \_.\*END	everything up to and including the last "END"
+				in the buffer
+
+	Be aware that repeating "\_." can match a lot of text and take a long
+	time.  For example, "\_.*END" matches all text from the current
+	position to the last occurrence of "END" in the file.  Since the "*"
+	will match as many as possible, this first skips over all lines until
+	the end of the file and then tries matching "END", backing up one
+	character at a time.
+
+							*/\+*
+\+	Matches 1 or more of the preceding atom, as many as possible. {not in
+	Vi}
+	Example		matches ~
+	^.\+$		any non-empty line
+	\s\+		white space of at least one character
+
+							*/\=*
+\=	Matches 0 or 1 of the preceding atom, as many as possible. {not in Vi}
+	Example		matches ~
+	foo\=		"fo" and "foo"
+
+							*/\{*
+\{n,m}	Matches n to m of the preceding atom, as many as possible
+\{n}	Matches n of the preceding atom
+\{n,}	Matches at least n of the preceding atom, as many as possible
+\{,m}	Matches 0 to m of the preceding atom, as many as possible
+\{}	Matches 0 or more of the preceding atom, as many as possible (like *)
+							*/\{-*
+\{-n,m}	matches n to m of the preceding atom, as few as possible
+\{-n}	matches n of the preceding atom
+\{-n,}	matches at least n of the preceding atom, as few as possible
+\{-,m}	matches 0 to m of the preceding atom, as few as possible
+\{-}	matches 0 or more of the preceding atom, as few as possible
+	{Vi does not have any of these}
+
+	n and m are positive decimal numbers
+
+	If a "-" appears immediately after the "{", then a shortest match
+	first algorithm is used (see example below).  In particular, "\{-}" is
+	the same as "*" but uses the shortest match first algorithm.  BUT: A
+	match that starts earlier is preferred over a shorter match: "a\{-}b"
+	matches "aaab" in "xaaab".
+
+	Example			matches ~
+	ab\{2,3}c		"abbc" or "abbbc"
+	a\{5}			"aaaaa".
+	ab\{2,}c		"abbc", "abbbc", "abbbbc", etc
+	ab\{,3}c		"ac", "abc", "abbc" or "abbbc".
+	a[bc]\{3}d		"abbbd", "abbcd", "acbcd", "acccd", etc.
+	a\(bc\)\{1,2}d		"abcd" or "abcbcd"
+	a[bc]\{-}[cd]		"abc" in "abcd"
+	a[bc]*[cd]		"abcd" in "abcd"
+
+							*/\@=*
+\@=	Matches the preceding atom with zero width. {not in Vi}
+	Like '(?=pattern)" in Perl.
+	Example			matches ~
+	foo\(bar\)\@=		"foo" in "foobar"
+	foo\(bar\)\@=foo	nothing
+							*/zero-width*
+	When using "\@=" (or "^", "$", "\<", "\>") no characters are included
+	in the match.  These items are only used to check if a match can be
+	made.  This can be tricky, because a match with following items will
+	be done in the same position.  The last example above will not match
+	"foobarfoo", because it tries match "foo" in the same position where
+	"bar" matched.
+
+	Note that using "\&" works exactly the same as using "\@=": "foo\&.."
+	is the same as "\(foo\)\@=..".  But using "\&" is easier.
+
+
+							*/\@!*
+\@!	Matches with zero width if the preceding atom does NOT match at the
+	current position |/zero-width| {not in Vi}
+	Like '(?!pattern)" in Perl.
+	Example			matches ~
+	foo\(bar\)\@!		any "foo" not followed by "bar"
+	a.\{-}p\@!		"a", "ap", "app", etc. not followed by a "p"
+
+	Using "\@!" is tricky, because there are many places where a pattern
+	does not match.  "a.*p\@!" will match from an "a" to the end of the
+	line, because ".*" can match all characters in the line and the "p"
+	doesn't match at the end of the line.  "a.\{-}p\@!" will match any
+	"a", "ap", "aap", etc. that isn't followed by a "p", because the "."
+	can match a "p" and "p\@!" doesn't match after that.
+
+	You can't use "\@!" to look for a non-match before the matching
+	position: "\(foo\)\@!bar" will match "bar" in "foobar", because at the
+	position where "bar" matches, "foo" does not match.  To avoid matching
+	"foobar" you could use "\(foo\)\@!...bar", but that doesn't match a
+	bar at the start of a line. Use "\(foo\)\@<!bar".
+
+							*/\@<=*
+\@<=	Matches with zero width if the preceding atom matches just before what
+	follows. |/zero-width| {not in Vi}
+	Like '(?>=pattern)" in Perl, but Vim allows non-fixed-width patterns.
+	Example			matches ~
+	\(an\_\s\+\)\@<=file	"file" after "an" and white space or a
+				end-of-line
+
+	"\@<=" and "\@<!" check for matches just before what follows.
+	Theoretically these matches could start anywhere before this position.
+	But to limit the time needed only the line where what follows matches
+	is searched, and one line before that (if there is one).  This should
+	be sufficient to match most things and not be too slow.
+
+							*/\@<!*
+\@<!	Matches with zero width if the preceding atom does NOT match just
+	before what follows. |/zero-width| {not in Vi}
+	Like '(?>!pattern)" in Perl, but Vim allows non-fixed-width patterns.
+	Example			matches ~
+	\(foo\)\@<!bar		any "bar" that's not in "foobar"
+
+							*/\@>*
+\@>	Matches the preceding atom like matching a whole pattern. {not in Vi}
+	Like '(?>pattern)" in Perl.
+	Example		matches ~
+	\(.\{-}{{{\)\@>
+	\(a*\)\@>a	nothing (the "a*" takes all the "a"'s, there can't be
+			another one following)
+
+	This matches the preceding atom as if it was a pattern by itself.  If
+	it doesn't match, there is no retry with shorter sub-matches or
+	anything.  Observe this difference: "a*b" and "a*ab" both match
+	"aaab", but in the first case the "a*" matches only the first two
+	"a"s.  "\(a*\)\@>ab" will not match "aaab", because the "a*" matches
+	the "aaa" (as many "a"s as possible), thus the "ab" can't match.
+
+
+An ordinary atom can be:
+
+							*/^*
+^	At beginning of pattern or after "\|", "\(", or "\n": matches start of
+	line; at other positions, matches literal '^'. |/zero-width|
+	Example		matches ~
+	^beep(		Probably the start of the C function "beep".
+
+							*/\^*
+\^	At any position, matches literal '^'.
+
+							*/$*
+$	At end of pattern or in front of "\|" or "\)", matches end-of-line
+	<EOL>; at other positions, matches literal '$'. |/zero-width|
+
+							*/\$*
+\$	At any position, matches literal '$'.
+
+.	(with 'nomagic': \.)				*/.* */\.*
+	Matches any single character, but not an end-of-line.
+
+							*/\_.*
+\_.	Matches any single character or end-of-line.
+	Careful: "\_.*" matches all text to the end of the buffer!
+
+							*/\<*
+\<	Matches the beginning of a word: The next char is the first char of a
+	word. |/zero-width|
+
+							*/\>*
+\>	Matches the end of a word: The previous char is the last char of a
+	word. |/zero-width|
+
+							*/\zs*
+\zs	Matches at any position, and sets the start of the match there: The
+	next char is the first char of the whole match. |/zero-width|
+	Can be used multiple times, the last one encountered in a matching
+	branch is used.
+	Example: "^\s*\zsif" matches an "if" at the start of a line, ignoring
+	white space.
+							*/\ze*
+\ze	Matches at any position, and sets the end of the match there: The
+	previous char is the last char of the whole match. |/zero-width|
+	Can be used multiple times, the last one encountered in a matching
+	branch is used.
+	Example: "end\ze\(if\|for\)" matches the "end" in "endif" and
+	"endfor".
+
+Character classes: {not in Vi}
+\i	identifier character (see 'isident' option)	*/\i*
+\I	like "\i", but excluding digits			*/\I*
+\k	keyword character (see 'iskeyword' option)	*/\k*
+\K	like "\k", but excluding digits			*/\K*
+\f	file name character (see 'isfname' option)	*/\f*
+\F	like "\f", but excluding digits			*/\F*
+\p	printable character (see 'isprint' option)	*/\p*
+\P	like "\p", but excluding digits			*/\P*
+
+						*whitespace* *white-space*
+\s	whitespace character: <Space> and <Tab>		*/\s*
+\S	non-whitespace character; opposite of \s	*/\S*
+\d	digit:				[0-9]		*/\d*
+\D	non-digit:			[^0-9]		*/\D*
+\x	hex digit:			[0-9A-Fa-f]	*/\x*
+\X	non-hex digit:			[^0-9A-Fa-f]	*/\X*
+\o	octal digit:			[0-7]		*/\o*
+\O	non-octal digit:		[^0-7]		*/\O*
+\w	word character:			[0-9A-Za-z_]	*/\w*
+\W	non-word character:		[^0-9A-Za-z_]	*/\W*
+\h	head of word character:		[A-Za-z_]	*/\h*
+\H	non-head of word character:	[^A-Za-z_]	*/\H*
+\a	alphabetic character:		[A-Za-z]	*/\a*
+\A	non-alphabetic character:	[^A-Za-z]	*/\A*
+\l	lowercase character:		[a-z]		*/\l*
+\L	non-lowercase character:	[^a-z]		*/\L*
+\u	uppercase character:		[A-Z]		*/\u*
+\U	non-uppercase character		[^A-Z]		*/\U*
+
+	NOTE: Using the atom is faster than the [] form.
+
+	NOTE: 'ignorecase', "\c" and "\C" are not used by character classes.
+
+							*/\_*
+\_x	Where "x" is any of the characters above: The character class with
+	end-of-line added
+(end of character classes)
+
+\e	matches <Esc>					*/\e*
+\t	matches <Tab>					*/\t*
+\r	matches <CR>					*/\r*
+\b	matches <BS>					*/\b*
+\n	matches a end-of-line				*/\n*
+
+~	matches the last given substitute string    */~* */\~*
+
+\(\)	A pattern enclosed by escaped parentheses      */\(\)*
+		(e.g., "\(^a\)") matches that pattern		*/\)*
+
+\1      Matches the same string that was matched by	*/\1*
+		the first sub-expression in \( and \). {not in Vi}
+		Example: "\([a-z]\).\1" matches "ata", "ehe", "tot",
+		etc.
+\2      Like "\1", but uses second sub-expression,	*/\2*
+   ...							*/\3*
+\9      Like "\1", but uses ninth sub-expression.	*/\9*
+	Note: The numbering of groups is done based on which "\(" comes first
+	(going left to right).
+
+x	A single character, with no special meaning, matches itself
+
+							*/\* */\\*
+\x	A backslash followed by a single character, with no special meaning,
+	is reserved for future expansions
+
+[]	(with 'nomagic': \[])		*/[]* */\[]* */\_[]* */collection*
+\_[]
+	A collection. This is a sequence of characters enclosed in brackets.
+	It matches any single character in the collection.
+	Example		matches ~
+	[xyz]		any 'x', 'y' or 'z'
+	[a-zA-Z]$	any alphabetic character at the end of a line
+	\c[a-z]$	same
+
+	With "\_" prepended the collection also includes the end-of-line.
+	The same can be done by including "\n" in the collection.  The
+	end-of-line is also matched when the collection starts with "^"!  Thus
+	"\_[^ab]" matches the end-of-line and any character but "a" and "b".
+	This makes it Vi compatible: Without the "\_" or "\n" the collection
+	does not match an end-of-line.  
+
+	If the sequence begins with "^", it matches any single character NOT
+	in the collection: "[^xyz]" matches anything but 'x', 'y' and 'z'.
+	- If two characters in the sequence are separated by '-', this is
+	  shorthand for the full list of ASCII characters between them.  E.g.,
+	  "[0-9]" matches any decimal digit.
+	- A character class expression is evaluated to the set of characters
+	  belonging to that character class.  The following character classes
+	  are supported:
+			  Name		Contents ~
+*[:alnum:]*		  [:alnum:]     letters and digits
+*[:alpha:]*		  [:alpha:]     letters
+*[:blank:]*		  [:blank:]     space and tab characters
+*[:cntrl:]*		  [:cntrl:]     control characters
+*[:digit:]*		  [:digit:]     decimal digits
+*[:graph:]*		  [:graph:]     printable characters excluding space
+*[:lower:]*		  [:lower:]     lowercase letters (all letters when
+					'ignorecase' is used)
+*[:print:]*		  [:print:]     printable characters including space
+*[:punct:]*		  [:punct:]     punctuation characters
+*[:space:]*		  [:space:]     whitespace characters
+*[:upper:]*		  [:upper:]     uppercase letters (all letters when
+					'ignorecase' is used)
+*[:xdigit:]*		  [:xdigit:]    hexadecimal digits
+*[:return:]*		  [:return:]	the <CR> character
+*[:tab:]*		  [:tab:]	the <Tab> character
+*[:escape:]*		  [:escape:]	the <Esc> character
+*[:backspace:]*		  [:backspace:]	the <BS> character
+	  The brackets in character class expressions are additional to the
+	  brackets delimiting a collection.  For example, the following is a
+	  plausible pattern for a UNIX filename: "[-./[:alnum:]_~]\+" That is,
+	  a list of at least one character, each of which is either '-', '.',
+	  '/', alphabetic, numeric, '_' or '~'.
+							  */\]*
+	- To include a literal ']', '^', '-' or '\' in the collection, put a
+	  backslash before it: "[xyz\]]", "[\^xyz]", "[xy\-z]" and "[xyz\\]".
+	  (Note: POSIX does not support the use of a backslash this way).  For
+	  ']' you can also make it the first character (following a possible
+	  "^"):  "[]xyz]" or "[^]xyz]" {not in Vi}.
+	  For '-' you can also make it the first or last character: "[-xyz]",
+	  "[^-xyz]" or "[xyz-]".  For '\' you can also let it be followed by
+	  any character that's not in "^]-\bertn".  "[\xyz]" matches '\', 'x',
+	  'y' and 'z'.  It's better to use "\\" though, future expansions may
+	  use other characters after '\'.
+	- The following translations are accepted when the 'l' flag is not
+	  included in 'cpoptions' {not in Vi}:
+		\e	<Esc>
+		\t	<Tab>
+		\r	<CR>	(NOT end-of-line!)
+		\b	<BS>
+	  NOTE: The other backslash codes mentioned above do not work inside
+	  []!
+	- Matching with a collection can be slow, because each character in
+	  the text has to be compared with each character in the collection.
+	  Use one of the other atoms above when possible.  Example: "\d" is
+	  much faster than "[0-9]" and matches the same characters.
+
+
+Ignoring case in a pattern					*/ignorecase*
+
+If the 'ignorecase' option is on, the case of normal letters is ignored.
+'smartcase' can be set to ignore case when the pattern contains uppercase
+letters only.
+							*/\c* */\C*
+When "\c" appears anywhere in the pattern, the whole pattern is handled like
+'ignorecase' is on.  The actual value of 'ignorecase' and 'smartcase' is
+ignored.  "\C" does the opposite: Force matching case for the whole pattern.
+{only Vim supports \c and \C}
+Note that 'ignorecase', "\c" and "\C" are not used for the character classes.
+
+Examples:
+      pattern	'ignorecase'  'smartcase'	matches ~
+	foo	  off	       on or off	foo
+	foo	  on	       on or off	foo Foo FOO
+	Foo	  on	       off		foo Foo FOO
+	Foo	  on	       on		    Foo		
+	\cfoo	  on or off    on or off	foo Foo FOO
+	foo\C	  on or off    on or off	foo
+
 
 Technical detail:				*NL-used-for-Nul*
 <Nul> characters in the file are stored as <NL> in memory.  In the display
@@ -471,4 +784,8 @@ When 'fileformat' is "mac", <NL> characters in the file are stored as <CR>
 characters internally.  In the display they are shown as "^M".  Otherwise this
 works similar to the usage of <NL> for a <Nul>.
 
- vim:tw=78:ts=8:sw=8:
+When working with expression evaluation, a <NL> character in the pattern
+matches a <NL> in the string.  The use of "\n" (backslash n) to match a <NL>
+doesn't work there, it only works to match text in the buffer.
+
+ vim:tw=78:

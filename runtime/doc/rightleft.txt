@@ -1,4 +1,4 @@
-*rightleft.txt* For Vim version 5.7.  Last change: 1999 Jun 14
+*rightleft.txt* For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Avner Lottem
@@ -188,4 +188,4 @@ The result is that all Hebrew characters are displayed as ~x.  To solve this
 problem, set isprint=@,128-255.
 
 
- vim:ts=8:sw=8:tw=78:
+ vim:tw=78:

@@ -2,7 +2,7 @@
 #include	<stdlib.h>
 #include	<string.h>
 #include	<unixio.h>
-
+#include        "vim.h"
 int main(int argc, char *argv[])
 {
     FILE	*fpi, *fpo;
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 	{
 	    if (err_line)
 	    {
-		if (strstr(buf, "At line"))
+		if (strstr(buf, _("At line")))
 		{
 		    err_line = 0;
 		    fprintf(fpo, "@");

@@ -8,9 +8,11 @@
 
 #include "vim.h"
 
-#ifdef LINEBREAK
-static int win_chartabsize __ARGS((WIN *wp, int c, colnr_t col));
+#ifdef FEAT_LINEBREAK
+static int win_chartabsize __ARGS((win_t *wp, char_u *p, colnr_t col));
 #endif
+
+static int nr2hex __ARGS((int c));
 
 /*
  * chartab[] is used
@@ -25,8 +27,8 @@ static int    chartab_initialized = FALSE;
 /*
  * init_chartab(): Fill chartab[] with flags for ID and file name characters
  * and the size of characters on the screen (1 or 2 positions).
- * Also fills b_chartab[] with flags for keyword characters for current
- * buffer.
+ * Also fills curbuf->b_chartab[] with flags for keyword characters for
+ * current buffer.
  *
  * Return FAIL if 'iskeyword', 'isident', 'isfname' or 'isprint' option has an
  * error, OK otherwise.
@@ -34,53 +36,96 @@ static int    chartab_initialized = FALSE;
     int
 init_chartab()
 {
-    int	    c;
-    int	    c2;
-    char_u  *p;
-    int	    i;
-    int	    tilde;
-    int	    do_isalpha;
+    return buf_init_chartab(curbuf, TRUE);
+}
 
-    /*
-     * Set the default size for printable characters:
-     * From <Space> to '~' is 1 (printable), others are 2 (not printable).
-     * This also inits all 'isident' and 'isfname' flags to FALSE.
-     */
-    c = 0;
-    while (c < ' ')
-	chartab[c++] = 2;
-    while (c <= '~')
-	chartab[c++] = 1 + CHAR_IP;
-#ifdef FKMAP
-    if (p_altkeymap)
+    int
+buf_init_chartab(buf, global)
+    buf_t	*buf;
+    int		global;		/* FALSE: only set buf->b_chartab[] */
+{
+    int		c;
+    int		c2;
+    char_u	*p;
+    int		i;
+    int		tilde;
+    int		do_isalpha;
+
+    if (global)
     {
-	while (c < YE)
-	    chartab[c++] = 1 + CHAR_IP;
-    }
+	/*
+	 * Set the default size for printable characters:
+	 * From <Space> to '~' is 1 (printable), others are 2 (not printable).
+	 * This also inits all 'isident' and 'isfname' flags to FALSE.
+	 *
+	 * EBCDIC: all chars below ' ' are not printable, all others are
+	 * printable.
+	 */
+	c = 0;
+	while (c < ' ')
+	    chartab[c++] = 2;
+#ifdef EBCDIC
+	while (c < 255)
+#else
+	while (c <= '~')
 #endif
-    while (c < 256)
-	chartab[c++] = 2;
+	    chartab[c++] = 1 + CHAR_IP;
+#ifdef FEAT_FKMAP
+	if (p_altkeymap)
+	{
+	    while (c < YE)
+		chartab[c++] = 1 + CHAR_IP;
+	}
+#endif
+	while (c < 256)
+	{
+#ifdef FEAT_MBYTE
+	    /* UTF-8: can't tell width from first byte unless it's ASCII */
+	    if (cc_utf8 && c >= 0x80)
+		chartab[c++] = CHAR_IP;
+	    /* double-byte chars are either unprintable or double-width */
+	    else if (cc_dbcs && MB_BYTE2LEN(c) == 2)
+		chartab[c++] = CHAR_IP + 2;
+	    else
+#endif
+		chartab[c++] = 2;
+	}
+
+#ifdef FEAT_MBYTE
+	/* Assume that every multi-byte char is a filename character. */
+	for (c = 1; c < 256; ++c)
+	    if (MB_BYTE2LEN(c) > 1)
+		chartab[c] |= CHAR_IF;
+#endif
+    }
 
     /*
      * Init word char flags all to FALSE
      */
-    if (curbuf != NULL)
-	for (c = 0; c < 256; ++c)
-	    curbuf->b_chartab[c] = FALSE;
+    for (c = 0; c < 256; ++c)
+    {
+#ifdef FEAT_MBYTE
+	/* double-byte characters are probably word characters */
+	if (cc_dbcs && MB_BYTE2LEN(c) == 2)
+	    buf->b_chartab[c] = TRUE;
+	else
+#endif
+	    buf->b_chartab[c] = FALSE;
+    }
 
-#ifdef LISPINDENT
+#ifdef FEAT_LISP
     /*
      * In lisp mode the '-' character is included in keywords.
      */
-    if (curbuf->b_p_lisp)
-	curbuf->b_chartab['-'] = TRUE;
+    if (buf->b_p_lisp)
+	buf->b_chartab['-'] = TRUE;
 #endif
 
     /* Walk through the 'isident', 'iskeyword', 'isfname' and 'isprint'
      * options Each option is a list of characters, character numbers or
      * ranges, separated by commas, e.g.: "200-210,x,#-178,-"
      */
-    for (i = 0; i < 4; ++i)
+    for (i = global ? 0 : 3; i <= 3; ++i)
     {
 	if (i == 0)
 	    p = p_isi;		    /* first round: 'isident' */
@@ -89,7 +134,7 @@ init_chartab()
 	else if (i == 2)
 	    p = p_isf;		    /* third round: 'isfname' */
 	else	/* i == 3 */
-	    p = curbuf->b_p_isk;    /* fourth round: 'iskeyword' */
+	    p = buf->b_p_isk;    /* fourth round: 'iskeyword' */
 
 	while (*p)
 	{
@@ -136,7 +181,7 @@ init_chartab()
 	    while (c <= c2)
 	    {
 		if (!do_isalpha || isalpha(c)
-#ifdef FKMAP
+#ifdef FEAT_FKMAP
 			|| (p_altkeymap && (F_isalpha(c) || F_isdigit(c)))
 #endif
 			    )
@@ -150,12 +195,23 @@ init_chartab()
 		    }
 		    else if (i == 1)		/* set printable to 1 or 2 */
 		    {
-			if (c < ' ' || c > '~'
-#ifdef FKMAP
-				|| (p_altkeymap
-					    && (F_isalpha(c) || F_isdigit(c)))
+			if ((c < ' '
+#ifndef EBCDIC
+				    || c > '~'
 #endif
-				)
+#ifdef FEAT_FKMAP
+				    || (p_altkeymap
+					&& (F_isalpha(c) || F_isdigit(c)))
+#endif
+			    )
+#ifdef FEAT_MBYTE
+				/* for UTF-8 keep size for c >= 0x80, for DBCS
+				 * keep size when it's a multi-byte */
+				&& (!has_mbyte
+				    || (cc_utf8 && c < 0x80)
+				    || (cc_dbcs && MB_BYTE2LEN(c) != 2))
+#endif
+			   )
 			{
 			    if (tilde)
 			    {
@@ -177,7 +233,7 @@ init_chartab()
 			    chartab[c] |= CHAR_IF;
 		    }
 		    else /* i == 3 */		/* (re)set keyword flag */
-			curbuf->b_chartab[c] = !tilde;
+			buf->b_chartab[c] = !tilde;
 		}
 		++c;
 	    }
@@ -188,6 +244,7 @@ init_chartab()
     return OK;
 }
 
+#if defined(FEAT_STL_OPT) || defined(FEAT_WINDOWS) || defined(PROTO)
 /*
  * Translate any special characters in buf[bufsize].
  * If there is not enough room, not all characters will be translated.
@@ -204,24 +261,33 @@ trans_characters(buf, bufsize)
 
     len = STRLEN(buf);
     room = bufsize - len;
-    while (*buf)
+    while (*buf != 0)
     {
-	new = transchar(*buf);
-	new_len = STRLEN(new);
-	if (new_len > 1)
+#ifdef FEAT_MBYTE
+	/* Assume a multi-byte character doesn't need translation. */
+	if (has_mbyte && (new_len = mb_ptr2len_check(buf)) > 1)
+	    len -= new_len;
+	else
+#endif
 	{
-	    room -= new_len - 1;
-	    if (room <= 0)
-		return;
-	    mch_memmove(buf + new_len, buf + 1, (size_t)len);
+	    new = transchar(*buf);
+	    new_len = STRLEN(new);
+	    if (new_len > 1)
+	    {
+		room -= new_len - 1;
+		if (room <= 0)
+		    return;
+		mch_memmove(buf + new_len, buf + 1, (size_t)len);
+	    }
+	    mch_memmove(buf, new, (size_t)new_len);
+	    --len;
 	}
-	mch_memmove(buf, new, (size_t)new_len);
 	buf += new_len;
-	--len;
     }
 }
+#endif
 
-#if defined(WANT_EVAL) || defined(PROTO)
+#if defined(FEAT_EVAL) || defined(PROTO)
 /*
  * Translate a string into allocated memory, replacing special chars with
  * printable chars.  Returns NULL when out of memory.
@@ -231,13 +297,26 @@ transstr(s)
     char_u	*s;
 {
     char_u	*res;
+#ifdef FEAT_MBYTE
+    int		l;
+#endif
 
     res = alloc((unsigned)(vim_strsize(s) + 1));
     if (res != NULL)
     {
 	*res = NUL;
-	while (*s)
-	    STRCAT(res, transchar(*s++));
+	while (*s != NUL)
+	{
+#ifdef FEAT_MBYTE
+	    if (has_mbyte && (l = mb_ptr2len_check(s)) > 1)
+	    {
+		STRNCAT(res, s, l);
+		s += l;
+	    }
+	    else
+#endif
+		STRCAT(res, transchar(*s++));
+	}
     }
     return res;
 }
@@ -250,10 +329,10 @@ transstr(s)
  */
     char_u *
 transchar(c)
-    int	 c;
+    int		c;
 {
-    static char_u   buf[5];
-    int		    i;
+    static char_u	buf[5];
+    int			i;
 
     i = 0;
     if (IS_SPECIAL(c))	    /* special key code, display as ~@ char */
@@ -264,8 +343,13 @@ transchar(c)
 	c = K_SECOND(c);
     }
 
-    if ((!chartab_initialized && ((c >= ' ' && c <= '~')
-#ifdef FKMAP
+    if ((!chartab_initialized && (
+#ifdef EBCDIC
+		    (c >= 64 && c < 255)
+#else
+		    (c >= ' ' && c <= '~')
+#endif
+#ifdef FEAT_FKMAP
 			|| F_ischar(c)
 #endif
 		)) || (chartab[c] & CHAR_IP))	    /* printable character */
@@ -278,46 +362,141 @@ transchar(c)
     return buf;
 }
 
+/*
+ * Convert non-printable character to two or more printable characters in
+ * "buf[]".  "buf" needs to be able to hold five bytes.
+ */
     void
 transchar_nonprint(buf, c)
     char_u	*buf;
     int		c;
 {
+#ifdef EBCDIC
+    /* For EBCDIC only the characters 0-63 and 255 are not printable */
+    if (CtrlChar(c) != 0 || c == DEL)
+#else
     if (c <= 0x7f)				    /* 0x00 - 0x1f and 0x7f */
+#endif
     {
 	if (c == NL)
 	    c = NUL;			/* we use newline in place of a NUL */
 	else if (c == CR && get_fileformat(curbuf) == EOL_MAC)
 	    c = NL;		/* we use CR in place of  NL in this case */
 	buf[0] = '^';
+#ifdef EBCDIC
+	if (c == DEL)
+	    buf[1] = '?';		/* DEL displayed as ^? */
+	else
+	    buf[1] = CtrlChar(c);
+#else
 	buf[1] = c ^ 0x40;		/* DEL displayed as ^? */
+#endif
+
 	buf[2] = NUL;
     }
+#ifdef FEAT_MBYTE
+    else if (cc_utf8 && c >= 0x80)
+    {
+	transchar_hex(buf, c);
+    }
+#endif
+#ifndef EBCDIC
     else if (c >= ' ' + 0x80 && c <= '~' + 0x80)    /* 0xa0 - 0xfe */
     {
 	buf[0] = '|';
 	buf[1] = c - 0x80;
 	buf[2] = NUL;
     }
-    else					    /* 0x80 - 0x9f and 0xff */
+#else
+    else if (c < 64)
     {
 	buf[0] = '~';
+	buf[1] = MetaChar(c);
+	buf[2] = NUL;
+    }
+#endif
+    else					    /* 0x80 - 0x9f and 0xff */
+    {
+	/*
+	 * TODO: EBCDIC I don't know what to do with this chars, so I display
+	 * them as '~?' for now
+	 */
+	buf[0] = '~';
+#ifdef EBCDIC
+	buf[1] = '?';			/* 0xff displayed as ~? */
+#else
 	buf[1] = (c - 0x80) ^ 0x40;	/* 0xff displayed as ~? */
+#endif
 	buf[2] = NUL;
     }
 }
 
+    void
+transchar_hex(buf, c)
+    char_u	*buf;
+    int		c;
+{
+    buf[0] = '<';
+    buf[1] = nr2hex((unsigned)c >> 4);
+    buf[2] = nr2hex(c);
+    buf[3] = '>';
+    buf[4] = NUL;
+}
+
 /*
- * return the number of characters 'c' will take on the screen
- * This is used very often, keep it fast!!!
+ * Return number of display cells occupied by byte "b".
+ * Caller must make sure 0 <= b <= 255.
+ * For multi-byte mode "b" must be the first byte of a character.
+ * A TAB is counted as two cells: "^I".
+ * For UTF-8 mode this will return 0 for bytes >= 0x80.
  */
     int
-charsize(c)
-    int c;
+byte2cells(b)
+    int		b;
+{
+    return (chartab[b] & CHAR_MASK);
+}
+
+/*
+ * Return number of display cells occupied by character "c".
+ * "c" can be a special key (negative number) in which case 3 or 4 is returned.
+ * A TAB is counted as two cells: "^I".
+ */
+    int
+char2cells(c)
+    int		c;
 {
     if (IS_SPECIAL(c))
-	return (chartab[K_SECOND(c)] & CHAR_MASK) + 2;
-    return (chartab[c] & CHAR_MASK);
+	return char2cells(K_SECOND(c)) + 2;
+#ifdef FEAT_MBYTE
+    /* DBCS: double-byte means double-width */
+    if (cc_dbcs && c >= 0x100)
+	return 2;
+    /* UTF-8: up to 0x80 need to check the value, below that like ASCII */
+    if (cc_utf8 && c >= 0x80)
+	return utf_char2cells(c);
+#endif
+    return (chartab[c & 0xff] & CHAR_MASK);
+}
+
+/*
+ * Return number of display cells occupied by character at "*p".
+ * A TAB is counted as two cells: "^I".
+ */
+    int
+ptr2cells(p)
+    char_u	*p;
+{
+#ifdef FEAT_MBYTE
+    int		n;
+
+    n = (chartab[*p] & CHAR_MASK);
+    if (n == 0)	    /* must be utf-8 */
+	n = mb_ptr2cells(p);
+    return n;
+#else
+    return (chartab[*p] & CHAR_MASK);
+#endif
 }
 
 /*
@@ -326,12 +505,22 @@ charsize(c)
  */
     int
 vim_strsize(s)
-    char_u *s;
+    char_u	*s;
 {
-    int	    len = 0;
+    int		len = 0;
 
     while (*s)
-	len += charsize(*s++);
+    {
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    len += ptr2cells(s);
+	    s += mb_ptr2len_check(s);
+	}
+	else
+#endif
+	    len += byte2cells(*s++);
+    }
     return len;
 }
 
@@ -342,32 +531,32 @@ vim_strsize(s)
  * Also see getvcol() below.
  */
 
-#define RET_WIN_BUF_CHARTABSIZE(wp, buf, c, col) \
-    if ((c) == TAB && (!(wp)->w_p_list || lcs_tab1)) \
+#define RET_WIN_BUF_CHARTABSIZE(wp, buf, p, col) \
+    if (*(p) == TAB && (!(wp)->w_p_list || lcs_tab1)) \
     { \
 	int ts; \
 	ts = (buf)->b_p_ts; \
 	return (int)(ts - (col % ts)); \
     } \
     else \
-	return charsize(c);
+	return ptr2cells(p);
 
     int
-chartabsize(c, col)
-    int		c;
+chartabsize(p, col)
+    char_u	*p;
     colnr_t	col;
 {
-    RET_WIN_BUF_CHARTABSIZE(curwin, curbuf, c, col)
+    RET_WIN_BUF_CHARTABSIZE(curwin, curbuf, p, col)
 }
 
-#ifdef LINEBREAK
+#ifdef FEAT_LINEBREAK
     static int
-win_chartabsize(wp, c, col)
-    WIN		*wp;
-    int		c;
+win_chartabsize(wp, p, col)
+    win_t	*wp;
+    char_u	*p;
     colnr_t	col;
 {
-    RET_WIN_BUF_CHARTABSIZE(wp, wp->w_buffer, c, col)
+    RET_WIN_BUF_CHARTABSIZE(wp, wp->w_buffer, p, col)
 }
 #endif
 
@@ -382,7 +571,7 @@ linetabsize(s)
     colnr_t	col = 0;
 
     while (*s != NUL)
-	col += lbr_chartabsize(s++, col);
+	col += lbr_chartabsize_adv(&s, col);
     return (int)col;
 }
 
@@ -391,13 +580,21 @@ linetabsize(s)
  */
     int
 win_linetabsize(wp, s)
-    WIN		*wp;
+    win_t	*wp;
     char_u	*s;
 {
     colnr_t	col = 0;
 
     while (*s != NUL)
-	col += win_lbr_chartabsize(wp, s++, col, NULL);
+    {
+	col += win_lbr_chartabsize(wp, s, col, NULL);
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    s += mb_ptr2len_check(s);
+	else
+#endif
+	    ++s;
+    }
     return (int)col;
 }
 
@@ -409,7 +606,7 @@ win_linetabsize(wp, s)
 vim_isIDc(c)
     int c;
 {
-    return (c < 0x100 && (chartab[c] & CHAR_ID));
+    return (c > 0 && c < 0x100 && (chartab[c] & CHAR_ID));
 }
 
 /*
@@ -420,16 +617,16 @@ vim_isIDc(c)
 vim_iswordc(c)
     int c;
 {
-    return (c < 0x100 && curbuf->b_chartab[c]);
+    return (c > 0 && c < 0x100 && curbuf->b_chartab[c]);
 }
 
-#if defined(SYNTAX_HL) || defined(PROTO)
+#if defined(FEAT_SYN_HL) || defined(PROTO)
     int
 vim_iswordc_buf(c, buf)
-    int c;
-    BUF	*buf;
+    int		c;
+    buf_t	*buf;
 {
-    return (c < 0x100 && buf->b_chartab[c]);
+    return (c > 0 && c < 0x100 && buf->b_chartab[c]);
 }
 #endif
 
@@ -440,12 +637,7 @@ vim_iswordc_buf(c, buf)
 vim_isfilec(c)
     int	c;
 {
-    return ((c < 0x100 && (chartab[c] & CHAR_IF))
-#ifdef MULTI_BYTE
-	    /* assume that every leading byte is a filename character */
-	    || IsLeadByte(c)
-#endif
-	   );
+    return (c > 0 && c < 0x100 && (chartab[c] & CHAR_IF));
 }
 
 /*
@@ -455,7 +647,7 @@ vim_isfilec(c)
 vim_isprintc(c)
     int c;
 {
-    return (c < 0x100 && (chartab[c] & CHAR_IP));
+    return (c > 0 && c < 0x100 && (chartab[c] & CHAR_IP));
 }
 
 /*
@@ -479,15 +671,35 @@ lbr_chartabsize(s, col)
     unsigned char   *s;
     colnr_t	    col;
 {
-#ifdef LINEBREAK
+#ifdef FEAT_LINEBREAK
     if (!curwin->w_p_lbr && *p_sbr == NUL)
     {
 #endif
-	RET_WIN_BUF_CHARTABSIZE(curwin, curbuf, *s, col)
-#ifdef LINEBREAK
+	RET_WIN_BUF_CHARTABSIZE(curwin, curbuf, s, col)
+#ifdef FEAT_LINEBREAK
     }
     return win_lbr_chartabsize(curwin, s, col, NULL);
 #endif
+}
+
+/*
+ * Call lbr_chartabsize() and advance the pointer.
+ */
+    int
+lbr_chartabsize_adv(s, col)
+    unsigned char   **s;
+    colnr_t	    col;
+{
+    int		retval;
+
+    retval = lbr_chartabsize(*s, col);
+#ifdef FEAT_MBYTE
+    if (has_mbyte)
+	*s += mb_ptr2len_check(*s);
+    else
+#endif
+	++*s;
+    return retval;
 }
 
 /*
@@ -500,18 +712,19 @@ lbr_chartabsize(s, col)
 /*ARGSUSED*/
     int
 win_lbr_chartabsize(wp, s, col, head)
-    WIN			*wp;
+    win_t		*wp;
     unsigned char	*s;
     colnr_t		col;
     int			*head;
 {
+#ifdef FEAT_LINEBREAK
     int		c = *s;
-#ifdef LINEBREAK
     int		size;
     colnr_t	col2;
     colnr_t	colmax;
     int		added;
     int		numberextra;
+    char_u	*ps;
 
     /*
      * No 'linebreak' and 'showbreak': return quickly.
@@ -519,34 +732,51 @@ win_lbr_chartabsize(wp, s, col, head)
     if (!wp->w_p_lbr && *p_sbr == NUL)
     {
 #endif
-	RET_WIN_BUF_CHARTABSIZE(wp, wp->w_buffer, c, col)
-#ifdef LINEBREAK
+	RET_WIN_BUF_CHARTABSIZE(wp, wp->w_buffer, s, col)
+#ifdef FEAT_LINEBREAK
     }
 
     /*
      * First get normal size, without 'linebreak'
      */
-    size = win_chartabsize(wp, c, col);
+    size = win_chartabsize(wp, s, col);
 
     /*
      * If 'linebreak' set check at a blank before a non-blank if the line
      * needs a break here
      */
     if (wp->w_p_lbr && vim_isbreak(c) && !vim_isbreak(s[1])
-					     && !wp->w_p_list && wp->w_p_wrap)
+					     && !wp->w_p_list && wp->w_p_wrap
+# ifdef FEAT_VERTSPLIT
+					     && wp->w_width != 0
+# endif
+					     )
     {
-	numberextra = wp->w_p_nu? 8: 0;
+	numberextra = win_col_off(wp);
 	/* count all characters from first non-blank after a blank up to next
 	 * non-blank after a blank */
 	col2 = col;
-	colmax = (((col + numberextra) / Columns) + 1) * Columns;
-	while ((c = *++s) != NUL && (vim_isbreak(c)
-		|| (!vim_isbreak(c) && (col2 == col || !vim_isbreak(s[-1])))))
+	colmax = (((col + numberextra) / W_WIDTH(wp)) + 1) * W_WIDTH(wp);
+	for (;;)
 	{
-	    col2 += win_chartabsize(wp, c, col2);
+	    ps = s;
+# ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		s += mb_ptr2len_check(s);
+	    else
+# endif
+		++s;
+	    c = *s;
+	    if (!(c != NUL
+		    && (vim_isbreak(c)
+			|| (!vim_isbreak(c)
+			    && (col2 == col || !vim_isbreak(*ps))))))
+		break;
+
+	    col2 += win_chartabsize(wp, s, col2);
 	    if (col2 + numberextra >= colmax)		/* doesn't fit */
 	    {
-		size = Columns - ((col + numberextra) % Columns);
+		size = W_WIDTH(wp) - ((col + numberextra) % W_WIDTH(wp));
 		break;
 	    }
 	}
@@ -557,11 +787,15 @@ win_lbr_chartabsize(wp, s, col, head)
      * Set *head to the size of what we add.
      */
     added = 0;
-    if (*p_sbr != NUL && wp->w_p_wrap && col)
+    if (*p_sbr != NUL && wp->w_p_wrap && col
+# ifdef FEAT_VERTSPLIT
+					     && wp->w_width != 0
+# endif
+	    )
     {
-	numberextra = wp->w_p_nu ? 8 : 0;
-	col = (col + numberextra) % Columns;
-	if (col == 0 || col + size > (colnr_t)Columns)
+	numberextra = win_col_off(wp);
+	col = (col + numberextra) % W_WIDTH(wp);
+	if (col == 0 || col + size > (colnr_t)W_WIDTH(wp))
 	{
 	    added = STRLEN(p_sbr);
 	    size += added;
@@ -585,41 +819,37 @@ win_lbr_chartabsize(wp, s, col, head)
  */
     void
 getvcol(wp, pos, start, cursor, end)
-    WIN		*wp;
-    FPOS	*pos;
+    win_t	*wp;
+    pos_t	*pos;
     colnr_t	*start;
     colnr_t	*cursor;
     colnr_t	*end;
 {
-    int		    col;
-    colnr_t	    vcol;
-    char_u	   *ptr;
-#ifdef MULTI_BYTE
-    char_u	   *bptr;
-#endif
-    int		    incr;
-    int		    head;
-    int		    ts = wp->w_buffer->b_p_ts;
-    int		    c;
+    colnr_t	vcol;
+    char_u	*ptr;		/* points to current char */
+    char_u	*posptr;	/* points to char at pos->col */
+    int		incr;
+    int		head;
+    int		ts = wp->w_buffer->b_p_ts;
+    int		c;
 
     vcol = 0;
-#ifdef MULTI_BYTE
-    bptr =
-#endif
     ptr = ml_get_buf(wp->w_buffer, pos->lnum, FALSE);
+    posptr = ptr + pos->col;
 
     /*
      * This function is used very often, do some speed optimizations.
      * When 'list', 'linebreak' and 'showbreak' are not set use a simple loop.
+     * Also use this when 'list' is set but tabs take their normal size.
      */
-    if ((!wp->w_p_list || lcs_tab1)
-#ifdef LINEBREAK
+    if ((!wp->w_p_list || lcs_tab1 != NUL)
+#ifdef FEAT_LINEBREAK
 	    && !wp->w_p_lbr && *p_sbr == NUL
 #endif
        )
     {
 	head = 0;
-	for (col = pos->col; ; --col, ++ptr)
+	for (;;)
 	{
 	    c = *ptr;
 	    /* make sure we don't go past the end of the line */
@@ -632,25 +862,44 @@ getvcol(wp, pos, start, cursor, end)
 	    if (c == TAB)
 		incr = ts - (vcol % ts);
 	    else
+	    {
 		incr = CHARSIZE(c);
-#ifdef MULTI_BYTE
-	    if (wp->w_p_wrap
-		    && is_dbcs
-		    && ptr - bptr > 0
-		    && (int)(vcol % Columns) == (int)Columns - 2
-		    && mb_isbyte1(bptr, (int)(ptr - bptr + 1)))
-		++incr;
+#ifdef FEAT_MBYTE
+		if (has_mbyte
+#ifdef FEAT_VERTSPLIT
+			&& wp->w_width != 0
 #endif
+			)
+		{
+		    int	i = mb_ptr2cells(ptr);
 
-	    if (col == 0)	/* character at pos.col */
+		    if (incr == 0)	/* UTF-8 */
+			incr = i;
+		    /* If a double-cell char doesn't fit at the end of a line
+		     * it wraps to the next line, it's like this char is three
+		     * cells wide. */
+		    if (i == 2 && wp->w_p_wrap && (int)(vcol % W_WIDTH(wp))
+						      == (int)W_WIDTH(wp) - 1)
+			++incr;
+		}
+#endif
+	    }
+
+	    if (ptr >= posptr)	/* character at pos->col */
 		break;
 
 	    vcol += incr;
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		ptr += mb_ptr2len_check(ptr);
+	    else
+#endif
+		++ptr;
 	}
     }
     else
     {
-	for (col = pos->col; ; --col, ++ptr)
+	for (;;)
 	{
 	    /* A tab gets expanded, depending on the current column */
 	    head = 0;
@@ -662,18 +911,28 @@ getvcol(wp, pos, start, cursor, end)
 		break;
 	    }
 
-#ifdef MULTI_BYTE
-	    if (wp->w_p_wrap
-		    && is_dbcs
-		    && ptr - bptr > 0
-		    && (int)(vcol % Columns) == (int)Columns - 2
-		    && mb_isbyte1(bptr, (int)(ptr - bptr + 1)))
+#ifdef FEAT_MBYTE
+	    /* If a double-cell char doesn't fit at the end of a line it wraps
+	     * to the next line, it's like this char is three cells wide. */
+	    if (has_mbyte
+		    && mb_ptr2cells(ptr) == 2
+		    && wp->w_p_wrap
+#ifdef FEAT_VERTSPLIT
+		    && wp->w_width != 0
+#endif
+		    && (int)(vcol % W_WIDTH(wp)) == (int)W_WIDTH(wp) - 1)
 		++incr;
 #endif
-	    if (col == 0)	/* character at pos.col */
+	    if (ptr >= posptr)	/* character at pos->col */
 		break;
 
 	    vcol += incr;
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		ptr += mb_ptr2len_check(ptr);
+	    else
+#endif
+		++ptr;
 	}
     }
     if (start != NULL)
@@ -682,13 +941,58 @@ getvcol(wp, pos, start, cursor, end)
 	*end = vcol + incr - 1;
     if (cursor != NULL)
     {
-	if (*ptr == TAB && (State & NORMAL) && !wp->w_p_list
-					 && !(VIsual_active && *p_sel == 'e'))
+	if (*ptr == TAB
+		&& (State & NORMAL)
+		&& !wp->w_p_list
+#ifdef FEAT_VIRTUALEDIT
+		&& !virtual_active()
+#endif
+#ifdef FEAT_VISUAL
+		&& !(VIsual_active && *p_sel == 'e')
+#endif
+		)
 	    *cursor = vcol + incr - 1;	    /* cursor at end */
 	else
 	    *cursor = vcol + head;	    /* cursor at start */
     }
 }
+
+#if defined(FEAT_VIRTUALEDIT) || defined(PROTO)
+/*
+ * Get virtual column in virtual mode.
+ */
+    void
+getvvcol(wp, pos, start, cursor, end)
+    win_t	*wp;
+    pos_t	*pos;
+    colnr_t	*start;
+    colnr_t	*cursor;
+    colnr_t	*end;
+{
+    int		add = 0;
+
+    getvcol(wp, pos, start, cursor, end);
+
+    if (virtual_active() && start != NULL)
+    {
+	/* We should pass the "coladd" value instead of guessing it... */
+	if (pos->col == wp->w_cursor.col && pos->lnum == wp->w_cursor.lnum)
+	    add = wp->w_coladd;
+	else if (pos->col == curwin->w_cursor.col
+					&& pos->lnum == curwin->w_cursor.lnum)
+	    add = wp->w_coladd;
+#ifdef FEAT_VISUAL
+	else if (pos->col == VIsual.col && pos->lnum == VIsual.lnum)
+	    add = VIsual_coladd;
+#endif
+	*start += add;
+	if (cursor != NULL)
+	    *cursor = *start;
+	if (end != NULL)
+	    *end = *start;
+    }
+}
+#endif
 
 /*
  * Get the most left and most right virtual column of pos1 and pos2.
@@ -696,13 +1000,13 @@ getvcol(wp, pos, start, cursor, end)
  */
     void
 getvcols(pos1, pos2, left, right)
-    FPOS    *pos1, *pos2;
+    pos_t    *pos1, *pos2;
     colnr_t *left, *right;
 {
     colnr_t	l1, l2, r1, r2;
 
-    getvcol(curwin, pos1, &l1, NULL, &r1);
-    getvcol(curwin, pos2, &l2, NULL, &r2);
+    getvvcol(curwin, pos1, &l1, NULL, &r1);
+    getvvcol(curwin, pos2, &l2, NULL, &r2);
     if (l1 < l2)
 	*left = l1;
     else
@@ -768,7 +1072,7 @@ skiptowhite_esc(p)
 {
     while (*p != ' ' && *p != '\t' && *p != NUL)
     {
-	if ((*p == '\\' || *p == Ctrl('V')) && *(p + 1) != NUL)
+	if ((*p == '\\' || *p == Ctrl_V) && *(p + 1) != NUL)
 	    ++p;
 	++p;
     }
@@ -779,7 +1083,6 @@ skiptowhite_esc(p)
  * Getdigits: Get a number from a string and skip over it.
  * Note: the argument is a pointer to a char_u pointer!
  */
-
     long
 getdigits(pp)
     char_u **pp;
@@ -914,11 +1217,23 @@ vim_str2nr(start, hexp, len, dooct, dohex, nptr, unptr)
  */
     int
 hex2nr(c)
-    int	    c;
+    int		c;
 {
-    if (c >= 'a')
+    if (c >= 'a' && c <= 'f')
 	return c - 'a' + 10;
-    if (c >= 'A')
+    if (c >= 'A' && c <= 'F')
 	return c - 'A' + 10;
     return c - '0';
+}
+
+/*
+ * Convert the lower 4 bits of byte "c" to its hex character.
+ */
+    static int
+nr2hex(c)
+    int		c;
+{
+    if ((c & 0xf) <= 9)
+	return (c & 0xf) + '0';
+    return (c & 0xf) - 10 + 'A';
 }

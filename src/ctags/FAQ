@@ -142,13 +142,13 @@ Vim comes bundled with Exuberant Ctags!
 12.  How can I locate all references to a specific function or variable?
 
 There are several packages already available which provide this capability.
-Namely, these are: the GNU id-utils package, cscope (a commercial package),
-cs (a cscope work-alike), cflow. As of this writing, they can be found in
-the following locations:
+Namely, these are: the GNU id-utils package, cscope, cs (a cscope work-alike),
+and cflow. As of this writing, they can be found in the following locations:
 
 id-utils:  ftp://ftp.gnu.ai.mit.edu/pub/gnu/id-utils-3.2.tar.gz
-cflow:     ftp://sunsite.unc.edu/pub/Linux/devel/lang/c/cflow-2.0.tar.gz
+cscope:    http://cscope.sourceforge.net/
 cs:        ftp://cantor.informatik.rwth-aachen.de/pub/unix/cs-0.5.tar.gz
+cflow:     ftp://sunsite.unc.edu/pub/Linux/devel/lang/c/cflow-2.0.tar.gz
 
   ----------------------------------------------------------------------
 13.  Why does appending tags to a tag file tag so long?

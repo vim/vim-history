@@ -1,4 +1,4 @@
-*scroll.txt*    For Vim version 5.7.  Last change: 2000 Jun 14
+*scroll.txt*    For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -229,26 +229,28 @@ For the X11 GUIs (Motif, Athena and GTK) scrolling the wheel generates key
 presses <MouseDown> and <MouseUp>.  The default action for these keys are:
     <MouseDown>		scroll three lines down.	*<MouseDown>*
     <S-MouseDown>	scroll a full page down.	*<S-MouseDown>*
+    <C-MouseDown>	scroll a full page down.	*<C-MouseDown>*
     <MouseUp>		scroll three lines up.		*<MouseUp>*
     <S-MouseUp>		scroll a full page up.		*<S-MouseUp>*
+    <C-MouseUp>		scroll a full page up.		*<C-MouseUp>*
 This should work in all modes, except when editing the command line.
 
 You can modify this behavior by mapping the keys.  For example, to make the
-scroll wheel move one line or half a page in Normal mode:
->   map <MouseDown> <C-Y>
->   map <S-MouseDown> <C-U>
->   map <MouseUp> <C-E>
->   map <S-MouseUp> <C-D>
+scroll wheel move one line or half a page in Normal mode: >
+   :map <MouseDown> <C-Y>
+   :map <S-MouseDown> <C-U>
+   :map <MouseUp> <C-E>
+   :map <S-MouseUp> <C-D>
 You can also use Alt and Ctrl modifiers.
 
 This only works when Vim gets the scroll wheel events, of course.  You can
 check if this works with the "xev" program.
 
 When using Xfree86, the /etc/XF86Config file should have the correct entry for
-your mouse.  For FreeBSD, this entry works for a Logitech scrollmouse:
->   Protocol     "MouseMan"
->   Device       "/dev/psm0"
->   ZAxisMapping 4 5
+your mouse.  For FreeBSD, this entry works for a Logitech scrollmouse: >
+    Protocol     "MouseMan"
+    Device       "/dev/psm0"
+    ZAxisMapping 4 5
 See the Xfree86 documentation for information.
 
 							*xterm-mouse-wheel*
@@ -263,24 +265,24 @@ To use the mouse wheel in an older xterm you must do this:
    <MouseDown> keys.
 
 You can do the translations by adding this to your ~.Xdefaults file (or other
-file where your X resources are kept):
+file where your X resources are kept): >
 
-> XTerm*VT100.Translations:		#override \n\
-> 		s<Btn4Down>: string("0x9b") string("[64~") \n\
-> 		s<Btn5Down>: string("0x9b") string("[65~") \n\
-> 		<Btn4Down>: string("0x9b") string("[62~") \n\
-> 		<Btn5Down>: string("0x9b") string("[63~") \n\
->		<Btn4Up>: \n\
->		<Btn5Up>: 
+  XTerm*VT100.Translations:		#override \n\
+		s<Btn4Down>: string("0x9b") string("[64~") \n\
+		s<Btn5Down>: string("0x9b") string("[65~") \n\
+		<Btn4Down>: string("0x9b") string("[62~") \n\
+		<Btn5Down>: string("0x9b") string("[63~") \n\
+		<Btn4Up>: \n\
+		<Btn5Up>: 
 
-Add these mappings to your vimrc file:
-> map <M-Esc>[62~ <MouseDown>
-> map! <M-Esc>[62~ <MouseDown>
-> map <M-Esc>[63~ <MouseUp>
-> map! <M-Esc>[63~ <MouseUp>
-> map <M-Esc>[64~ <S-MouseDown>
-> map! <M-Esc>[64~ <S-MouseDown>
-> map <M-Esc>[65~ <S-MouseUp>
-> map! <M-Esc>[65~ <S-MouseUp>
-
- vim:tw=78:ts=8:sw=8:
+Add these mappings to your vimrc file: >
+	:map <M-Esc>[62~ <MouseDown>
+	:map! <M-Esc>[62~ <MouseDown>
+	:map <M-Esc>[63~ <MouseUp>
+	:map! <M-Esc>[63~ <MouseUp>
+	:map <M-Esc>[64~ <S-MouseDown>
+	:map! <M-Esc>[64~ <S-MouseDown>
+	:map <M-Esc>[65~ <S-MouseUp>
+	:map! <M-Esc>[65~ <S-MouseUp>
+<
+ vim:tw=78:

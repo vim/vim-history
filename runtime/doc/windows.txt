@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 5.7.  Last change: 2000 Apr 09
+*windows.txt*   For Vim version 6.0d.  Last change: 2000 Jul 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -23,6 +23,10 @@ differently when used in combination with more than one window.
 11. Using hidden buffers		|buffer-hidden|
 
 {Vi does not have any of these commands}
+{not able to use multiple windows when the +windows feature was disabled at
+compile time}
+{not able to use vertically split windows when the +vertsplit feature was
+disabled at compile time}
 
 ==============================================================================
 1. Introduction						*windows-intro*
@@ -38,13 +42,16 @@ A buffer can be in one of three states:
 							*active-buffer*
 active:   The buffer is displayed in a window.  If there is a file for this
 	  buffer, it has been read into the buffer.  The buffer may have been
-	  modified.
+	  modified since then and thus be different from the file.
 							*hidden-buffer*
 hidden:   The buffer is not displayed.  If there is a file for this buffer, it
-	  has been read into the buffer.  The buffer may have been modified.
+	  has been read into the buffer.  Otherwise it's the same as an active
+	  buffer, you just can't see it.
 							*inactive-buffer*
 inactive: The buffer is not displayed and does not contain anything.  Options
-	  for the buffer are remembered if the file was once loaded.
+	  for the buffer are remembered if the file was once loaded.  It can
+	  contains marks from the |viminfo| file.  But the buffer doesn't
+	  contain text.
 
 In a table:
 
@@ -70,8 +77,8 @@ be editing empty buffers.
 If there are many file names, the windows will become very small.  You might
 want to set the 'winheight' option to create a workable situation.
 
-Buf/Win Enter/Leave autocommands are not executed when opening the new windows
-and reading the files, that's only done when they are really entered.
+Buf/Win Enter/Leave |autocommand|s are not executed when opening the new
+windows and reading the files, that's only done when they are really entered.
 
 							*status-line*
 A status line will be used to separate windows.  The 'laststatus' option tells
@@ -102,24 +109,36 @@ that have termcap codes for italics.
 CTRL-W s						*CTRL-W_s*
 CTRL-W S						*CTRL-W_S*
 CTRL-W CTRL-S						*CTRL-W_CTRL-S*
-:[N]sp[lit] [+cmd]					*:sp* *:split*
+:[N]sp[lit] [++opt] [+cmd]				*:sp* *:split*
 		Split current window in two.  The result is two viewports on
 		the same file.  Make new window N high (default is to use half
 		the height of the current window).  Reduces the current window
 		height to create room (and others, if the 'equalalways' option
-		is set).  (Note: CTRL-S does not work on all terminals).  Also
-		see |+cmd|.
+		is set and 'eadirection' isn't "hor").
+		Note: CTRL-S does not work on all terminals and might block
+		further input, use CTRL-Q to get going again.
+		Also see |++opt| and |+cmd|.
+
+CTRL-W CTRL-V						*CTRL-W_CTRL-V*
+CTRL-W v						*CTRL-W_v*
+:[N]vs[plit] [++opt] [+cmd] [file]			*:vs* *:vsplit*
+		Like |:split|, but split vertically.  If 'equalalways' is set
+		and 'eadirection' isn't "ver" the windows will be spread out
+		horizontally, unless a width was specified.
 
 CTRL-W n						*CTRL-W_n*
 CTRL-W CTRL_N						*CTRL-W_CTRL-N*
-:[N]new [+cmd]						*:new*
+:[N]new [++opt] [+cmd]					*:new*
 		Create a new window and start editing an empty file in it.
 		Make new window N high (default is to use half the existing
 		height).  Reduces the current window height to create room (and
-		others, if the 'equalalways' option is set).  Also see
-		|+cmd|.  If 'fileformats' is not empty, the first format given
-		will be used for the new buffer.  If 'fileformats' is empty,
-		the 'fileformat' of the current buffer is used.
+		others, if the 'equalalways' option is set and 'eadirection'
+		isn't "hor").
+		Also see |++opt| and |+cmd|.
+		If 'fileformats' is not empty, the first format given will be
+		used for the new buffer.  If 'fileformats' is empty, the
+		'fileformat' of the current buffer is used.  This can be
+		overridden with the |++opt| argument.
 		Autocommands are executed in this order:
 		1. WinLeave for the current window
 		2. WinEnter for the new window
@@ -127,18 +146,25 @@ CTRL-W CTRL_N						*CTRL-W_CTRL-N*
 		4. BufEnter for the new buffer
 		This behaves like a ":split" first, and then a ":e" command.
 
-:[N]new [+cmd] {file}
-:[N]sp[lit] [+cmd] {file}				*:split_f*
-		Create a new window and start editing file {file} in it.  If
-		[+cmd] is given, execute the command when the file has been
-		loaded |+cmd|.  Make new window N high (default is to use half
-		the existing height).  Reduces the current window height to
-		create room (and others, if the 'equalalways' option is set).
+:[N]vne[w] [++opt] [+cmd] [file]			*:vne* *:vnew*
+		Like |:new|, but split vertically.  If 'equalalways' is set
+		and 'eadirection' isn't "ver" the windows will be spread out
+		horizontally, unless a width was specified.
 
-:[N]sv[iew] [+cmd] {file}			*:sv* *:sview* *splitview*
+:[N]new [++opt] [+cmd] {file}
+:[N]sp[lit] [++opt] [+cmd] {file}			*:split_f*
+		Create a new window and start editing file {file} in it.
+		If [+cmd] is given, execute the command when the file has been
+		loaded |+cmd|.
+		Also see |++opt|.
+		Make new window N high (default is to use half the existing
+		height).  Reduces the current window height to create room
+		(and others, if the 'equalalways' option is set).
+
+:[N]sv[iew] [++opt] [+cmd] {file}		*:sv* *:sview* *splitview*
 		Same as ":split", but set 'readonly' option for this buffer.
 
-:[N]sf[ind] [+cmd] {file}			*:sf* *:sfind* *splitfind*
+:[N]sf[ind] [++opt] [+cmd] {file}		*:sf* *:sfind* *splitfind*
 		Same as ":split", but search for {file} in 'path'.  Doesn't
 		split if {file} is not found.
 
@@ -146,6 +172,35 @@ CTRL-W CTRL-^					*CTRL-W_CTRL-^* *CTRL-W_^*
 CTRL-W ^	Does ":split #", split window in two and edit alternate file.
 		When a count is given, it becomes ":split #N", split window
 		and edit buffer N.
+
+Note that the 'splitbelow' and 'splitright' options influence where a new
+window will appear.
+
+						*:vertical*
+:vert[ical] {cmd}
+		Execute {cmd}.  If it contains a command that splits a window,
+		it will be split vertically.
+
+						*:topleft*
+:to[pleft] {cmd}
+		Execute {cmd}.  If it contains a command that splits a window,
+		it will appear at the top and occupy the full width of the Vim
+		window.  When the split is vertical the window appears at the
+		far left and occupies the full height of the Vim window.
+
+						*:botright*
+:bo[tright] {cmd}
+		Execute {cmd}.  If it contains a command that splits a window,
+		it will appear at the bottom and occupy the full width of the
+		Vim window.  When the split is vertical the window appears at
+		the far firght and occupies the full height of the Vim window.
+
+These command modifers can be combined to make a vertically split window
+occupy the full height.  Example: >
+	:vertical topleft edit tags
+Opens a vertically split, full-height window on the "tags" file at the far
+left of the Vim window.
+
 
 Closing a window
 ----------------
@@ -189,6 +244,13 @@ CTRL-W CTRL-C						*CTRL-W_CTRL-C*
 		Changes to the buffer are not written and won't get lost, so
 		this is a "safe" command.
 
+:hid[e] {cmd}	Execute {cmd} with 'hidden' is set.  The previous value of
+		'hidden' is restored after {cmd} has been executed.
+		Example: >
+		    :hide edit Makefile
+<		This will edit "Makefile", and hide the current buffer if it
+		has any changes.
+
 CTRL-W o						*CTRL-W_o*
 CTRL-W CTRL-O					*CTRL-W_CTRL-O* *:on* *:only*
 :on[ly][!]	Make the current window the only one on the screen.  All other
@@ -206,33 +268,49 @@ CTRL-W CTRL-O					*CTRL-W_CTRL-O* *:on* *:only*
 
 CTRL-W <Down>					*CTRL-W_<Down>*
 CTRL-W CTRL-J					*CTRL-W_CTRL-J* *CTRL-W_j*
-CTRL-W j	move cursor to Nth window below current one.
+CTRL-W j	Move cursor to Nth window below current one.  Uses the cursor
+		position to select between alternatives.
 
 CTRL-W <Up>					*CTRL-W_<Up>*
 CTRL-W CTRL-K					*CTRL-W_CTRL-K* *CTRL-W_k*
-CTRL-W k	move cursor to Nth window above current one.
+CTRL-W k	Move cursor to Nth window above current one.  Uses the cursor
+		position to select between alternatives.
+
+CTRL-W <Left>					*CTRL-W_<Left>*
+CTRL-W CTRL-H					*CTRL-W_CTRL_H*
+CTRL-W <BS>					*CTRL-W_<BS>* *CTRL-W_h*
+CTRL-W h	Move cursor to Nth window left of current one.  Uses the
+		cursor position to select between alternatives.
+
+CTRL-W <Right>					*CTRL-W_<Right>*
+CTRL-W CTRL-L					*CTRL-W_CTRL_L* *CTRL-W_l*
+CTRL-W l	Move cursor to Nth window right of current one.  Uses the
+		cursor position to select between alternatives.
 
 CTRL-W w					*CTRL-W_w* *CTRL-W_CTRL-W*
-CTRL-W CTRL-W	Without count: move cursor to window below current one.  If
-		there is no window below, go to top window.
-		With count: go to Nth window.
+CTRL-W CTRL-W	Without count: move cursor to window below/right of the
+		current one.  If there is no window below or right, go to
+		top-left window.  With count: go to Nth window (windows are
+		numbered from top-left to bottom-right).
 
 						*CTRL-W_W*
-CTRL-W W	Without count: move cursor to window above current one.  If
-		there is no window above, go to bottom window.
-		With count: go to Nth window.
+CTRL-W W	Without count: move cursor to window above/left of current
+		one.  If there is no window above or left, go to bottom-right
+		window.  With count: go to Nth window (windows are numbered
+		from top-left to bottom-right).
 
 CTRL-W t					*CTRL-W_t* *CTRL-W_CTRL-T*
-CTRL-W CTRL-T	move cursor to top window.
+CTRL-W CTRL-T	move cursor to top-left window.
 
 CTRL-W b					*CTRL-W_b* *CTRL-W_CTRL-B*
-CTRL-W CTRL-B	move cursor to bottom window.
+CTRL-W CTRL-B	move cursor to bottom-right window.
 
 CTRL-W p					*CTRL-W_p* *CTRL-W_CTRL-P*
 CTRL-W CTRL-P	go to previous (last accessed) window.
 
 If Visual mode is active and the new window is not for the same buffer, the
-Visual mode is ended.
+Visual mode is ended.  If the window is on the same buffer, the cursor
+position is set to keep the same Visual area selected.
 
 ==============================================================================
 5. Moving windows around				*window-moving*
@@ -254,28 +332,44 @@ CTRL-W CTRL-X	Without count: Exchange current window with next one.  If there
 		is no next window, exchange with previous window.
 		With count: Exchange current window with Nth window (first
 		window is 1).  The cursor is put in the other window.
+		When vertical and horizontal window splits are mixed, the
+		exchange is only done in the row or column of windows that the
+		current window is in.
 
 ==============================================================================
 6. Window resizing					*window-resize*
 
 						*CTRL-W_=*
-CTRL-W =	make all windows (almost) equally high.
+CTRL-W =	Make all windows (almost) equally high and wide, but use
+		'winheight' and 'winwidth' for the current window.
 
 :res[ize] -N					*:res* *:resize* *CTRL-W_-*
-CTRL-W -	decrease current window height by N
+CTRL-W -	Decrease current window height by N (default 1).
+		If used after 'vertical': decrease width by N.
 
 :res[ize] +N					*CTRL-W_+*
-CTRL-W +	increase current window height by N
+CTRL-W +	Increase current window height by N (default 1).
+		If used after 'vertical': increase width by N.
 
 :res[ize] [N]
 CTRL-W CTRL-_					*CTRL-W_CTRL-_* *CTRL-W__*
-CTRL-W _	set current window height to N (default: highest possible)
+CTRL-W _	Set current window height to N (default: highest possible).
 
-z{nr}<CR>	set current window height to {nr}
+z{nr}<CR>	Set current window height to {nr}.
 
-You can also resize the window by dragging a status line up or down with the
-mouse.  This only works if the version of Vim that is being used supports the
-mouse and the 'mouse' option has been set to enable it.
+						*CTRL-W_<*
+CTRL-W <	Decrease current window width by N (default 1).
+
+						*CTRL-W_>*
+CTRL-W >	Increase current window width by N (default 1).
+
+:vertical res[ize] [N]			*:vertical-resize* *CTRL-W_bar*
+CTRL-W |	Set current window width to N (default: widest possible).
+
+You can also resize a window by dragging a status line up or down with the
+mouse.  Or by dragging a vertical separator line left or right.  This only
+works if the version of Vim that is being used supports the mouse and the
+'mouse' option has been set to enable it.
 
 The option 'winheight' ('wh') is used to set the minimal window height of the
 current window.  This option is used each time another window becomes the
@@ -284,11 +378,20 @@ very large value, e.g., '9999', to make the current window always fill all
 available space.  Set it to a reasonable value, e.g., '10', to make editing in
 the current window comfortable.
 
+The equivalent 'winwidth' ('wiw') option is used to set the minimal width of
+the current window.
+
 When the option 'equalalways' ('ea') is set, all the windows are automatically
 made the same size after splitting or closing a window.  If you don't set this
 option, splitting a window will reduce the size of the current window and
 leave the other windows the same.  When closing a window, the extra lines are
 given to the window above it.
+
+The 'eadirection' option limits the direction in which the 'equalalways'
+option is applied.  The default "both" resizes in both directions.  When the
+value is "ver" only the heights of windows are equalized.  Use this when you
+have manually resized a vertically split window and want to keep this width.
+Likewise, "hor" causes only the widths of windows to be equalized.
 
 The option 'cmdheight' ('ch') is used to set the height of the command-line.
 If you are annoyed by the |hit-return| prompt for long messages, set this
@@ -298,6 +401,9 @@ If there is only one window, resizing that window will also change the command
 line height.  If there are several windows, resizing the current window will
 also change the height of the window below it (and sometimes the window above
 it).
+
+The minimal height and width of a window is set with 'winminheight' and
+'winminwidth'.  These are hard values, a window will never become smaller.
 
 ==============================================================================
 7. Exiting Vim						*window-exit*
@@ -311,6 +417,9 @@ it).
 		changed.  See |:confirm|.
 
 :qa[ll]!	Exit Vim.  Any changes to buffers are lost.
+
+							*:quita* *:quitall*
+:quita[ll][!]	Same as ":qall".
 
 :wqa[ll]					*:wqa* *:wqall* *:xa* *:xall*
 :xa[ll]		Write all changed buffers and exit Vim.  If there are buffers
@@ -404,31 +513,33 @@ can also get to them with the buffer list commands, like ":bnext".
 		Buf/Win Enter/Leave autocommands are not executed for the new
 		windows here, that's only done when they are really entered.
 
-:[N]sa[rgument][!] [N]				*:sa* *:sargument*
+:[N]sa[rgument][!] [++opt] [+cmd] [N]			*:sa* *:sargument*
 		Short for ":split | argument [N]": split window and go to Nth
 		argument.  But when there is no such argument, the window is
-		not split.
+		not split.  Also see |++opt| and |+cmd|.
 
-:[N]sn[ext][!] [file ..]				*:sn* *:snext*
+:[N]sn[ext][!] [++opt] [+cmd] [file ..]			*:sn* *:snext*
 		Short for ":split | [N]next": split window and go to Nth next
 		argument.  But when there is no next file, the window is not
-		split.
+		split.  Also see |++opt| and |+cmd|.
 
-:[N]spr[evious][!] [N]				*:spr* *:sprevious*
-:[N]sN[ext][!] [N]				*:sN* *:sNext*
+:[N]spr[evious][!] [++opt] [+cmd] [N]			*:spr* *:sprevious*
+:[N]sN[ext][!] [++opt] [+cmd] [N]			*:sN* *:sNext*
 		Short for ":split | [N]Next": split window and go to Nth
 		previous argument.  But when there is no previous file, the
-		window is not split.
+		window is not split.  Also see |++opt| and |+cmd|.
 
 						*:sr* *:srewind*
-:sr[ewind][!]	Short for ":split | rewind": split window and go to first
+:sr[ewind][!] [++opt] [+cmd]
+		Short for ":split | rewind": split window and go to first
 		argument.  But when there is no argument list, the window is
-		not split.
+		not split.  Also see |++opt| and |+cmd|.
 
 						*:sla* *:slast*
-:sla[st][!]	Short for ":split | last": split window and go to last
+:sla[st][!] [++opt] [+cmd]
+		Short for ":split | last": split window and go to last
 		argument.  But when there is no argument list, the window is
-		not split.
+		not split.  Also see |++opt| and |+cmd|.
 
 ==============================================================================
 10. Tag or file name under the cursor			*window-tag*
@@ -461,15 +572,14 @@ CTRL-W g CTRL-]	Split current window in two.  Use identifier under cursor as a
 		(like a help window is).  If a new one is opened,
 		'previewheight' is used for the height of the window.   See
 		also |:tag|.
-		Example:				*CursorHold-example*
->   au! CursorHold *.[ch] nested exe "ptag " . expand("<cword>")
-		This will cause a ":ptag" to be executed for the keyword under
+		Example:				*CursorHold-example*  >
+  :au! CursorHold *.[ch] nested exe "silent! ptag " . expand("<cword>")
+<		This will cause a ":ptag" to be executed for the keyword under
 		the cursor, when the cursor hasn't moved for the time set with
 		'updatetime'.  The "nested" makes other autocommands be
 		executed, so that syntax highlighting works in the preview
-		window.  Also see |CursorHold|.  Note: this isn't perfect, you
-		will get error messages when the cursor rests on a word that
-		isn't a tag.
+		window.  Also see |CursorHold|.  To disable this again: >
+  :au! CursorHold
 
 CTRL-W z					*CTRL-W_z*
 CTRL-W CTRL-Z					*CTRL-W_CTRL-Z* *:pc* *:pclose*
@@ -536,12 +646,12 @@ Be careful: there may be more hidden, modified buffers!
 
 :files						*:files*
 :buffers					*:buffers* *:ls*
-:ls		Show all buffers.  Example:
+:ls		Show all buffers.  Example: >
 
->			1 #h  "/test/text"		line 1
->			2  -  "asdf"			line 0
->			3 % + "version.c"		line 1
-
+			1 #h  "/test/text"		line 1
+			2  -  "asdf"			line 0
+			3 % + "version.c"		line 1
+<
 		Each buffer has a unique number.  That number will not change,
 		so you can always go to a specific buffer with ":buffer N" or
 		"N CTRL-^", where N is the buffer number.
@@ -713,4 +823,4 @@ Note: All the commands above that start editing another buffer, keep the
 'readonly' flag as it was.  This differs from the ":edit" command, which sets
 the 'readonly' flag each time the file is read.
 
- vim:ts=8:sw=8:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":
+ vim:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":

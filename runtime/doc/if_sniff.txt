@@ -1,4 +1,4 @@
-*if_sniff.txt*	For Vim version 5.7.  Last change: 2000 Jan 01
+*if_sniff.txt*	For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL
@@ -91,4 +91,4 @@ archive: if_sniff.c and if_sniff.h.
 On Unix: Edit the Makefile and uncomment the SNIFF macro definitions
 On NT: Specify SNIFF=yes with your make command.
 
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

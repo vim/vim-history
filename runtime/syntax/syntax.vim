@@ -1,11 +1,13 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	1998 Dec 6
+" Last Change:	2000 Jul 21
 
 " This file is used for ":syntax on".
 " It installs the autocommands and starts highlighting for all buffers.
 
-if has("syntax")
+if !has("syntax")
+  finish
+endif
 
 " If Syntax highlighting appears to be on already, turn it off first, so that
 " any leftovers are cleared.
@@ -21,14 +23,10 @@ filetype on
 
 " Set up the connection between FileType and Syntax autocommands.
 " This makes the syntax automatically set when the file type is detected.
-augroup syntax
+augroup syntaxset
 au! FileType *		exe "set syntax=" . expand("<amatch>")
 augroup END
 
 
 " Execute the syntax autocommands for the each buffer.
-doautoall filetype BufRead
-
-endif " has("syntax")
-
-" vim: ts=8 sts=0
+doautoall filetypedetect BufRead

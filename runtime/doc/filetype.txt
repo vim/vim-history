@@ -1,0 +1,211 @@
+*filetype.txt*   For Vim version 6.0d.  Last change: 2000 Jul 21
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+Filetypes					*filetype* *file-type*
+
+1. Filetypes			|filetypes|
+2. Filetype settings		|filetype-settings|
+
+Also see |autocmd.txt|.
+
+{Vi does not have any of these commands}
+
+==============================================================================
+1. Filetypes					*filetypes* *file-types*
+
+Vim can detect the type of file that is edited.  This is done by checking the
+file name and sometimes by inspecting the contents of the file for specific
+text.
+
+							*:filetype* *:filet*
+To enable file type detection, use this command in your vimrc: >
+	:filetype on
+Each time a new or existing file is edited, Vim will try to recognize the type
+of the file and set the 'filetype' option.  This will trigger the FileType
+event, which can be used to set the syntax highlighting, set options, etc.
+
+Detail: The ":filetype on" command will load the file
+	$VIMRUNTIME/filetype.vim, which defines autocommands for the
+	BufNewFile and BufRead events.  If the file type is not found by the
+	name, the file $VIMRUNTIME/scripts.vim is used to detect it from the
+	contents of the file.
+
+To add your own file types, see |new-filetype| below.
+
+If the file type is not detected automatically, or it finds the wrong type,
+you can either set the 'filetype' option manually, or add a modeline to your
+file.  Example, for in an IDL file use the command: >
+	:set filetype=idl
+or add this |modeline| to the file: >
+	/* vim: set filetype=idl : */
+<
+						*:filetype-settings-on*
+You can enable loading the settings for specific fyle types with: >
+	:filetype settings on
+If filetype detection was not switched on yet, it will be as well.
+
+						*:filetype-settings-off*
+You can disable it again with: >
+	:filetype settings off
+The filetype detection is not switched off then.  But if you do switch off
+filetype detection, the settins will not be loaded either.  Overview:
+
+	command			detection	settings ~
+	:filetype on		on		unchanged
+	:filetype settings on	on		on
+	:filetype off		off		off
+	:filetype settings off	unchanged	off
+
+You can use the detected file type to set options and install mappings.  For
+example, to set the 'tabstop' option for C files to 4: >
+	:autocmd FileType c	setlocal tabstop=4
+
+Example to install a mapping for Java: >
+	:autocmd FileType java	map <buffer> <F4> /import<CR>
+
+Note that ":map <buffer>" and ":setlocal" are used to affect only this
+specific buffer.  You probably don't want to use these settings for another
+type of buffers.
+
+If you have several commands to be executed, it is more convenient to put them
+in a function.  This is faster and easier to maintain.  Example: >
+	:autocmd FileType cpp	call FT_cpp()
+	:function FT_cpp()
+	:  map <buffer> <F4> a#include ""<Esc>i
+	:  setlocal cindent shiftwidth=4 softtabstop=4
+	:endfunction
+
+The file types are also used for syntax highlighting.  If the ":syntax on"
+command is used, the file type detection is installed too.  There is no need
+to do ":filetype on" after ":syntax on".
+
+To disable file type detection, use this command: >
+	:filetype off
+
+To disable one of the file types, add a line in the myfiletypefile, see
+|remove-filetype|.
+
+							*new-filetype*
+If a file type that you want to use is not detected yet, there are two ways to
+add it.  It's better not modify the $VIMRUNTIME/filetype.vim file.  It will be
+overwritten when installing a new version of Vim.
+
+							*myfiletypefile*
+1. If your file type can be detected by the file name.
+   Create a file that contains autocommands to detect the file type.
+   Example: >
+	:" myfiletypefile
+	:augroup filetype
+	:  au! BufRead,BufNewFile *.mine	set filetype=mine
+	:  au! BufRead,BufNewFile *.xyz	set filetype=drawing
+	:augroup END
+<
+   Then add a line in your vimrc file to set the "myfiletypefile" variable to
+   the name of this file.  Example: >
+	:let myfiletypefile = "~/vim/myfiletypes.vim"
+<
+   Your file will then be sourced after the default FileType autocommands have
+   been installed.  This allows you to overrule any of the defaults, by using
+   ":au!" to remove any existing FileType autocommands for the same pattern.
+   Only the autocommand to source the scripts.vim file is given later.  This
+   makes sure that your autocommands in "myfiletypefile" are used before
+   checking the contents of the file.
+
+   NOTE: Make sure that you set "myfiletypefile" before switching on file type
+   detection.  Thus is must be before any ":filetype on" or ":syntax on"
+   command.
+
+							*myscriptsfile*
+2. If your file type can only be detected by inspecting the contents of the
+   file, create a vim script file for doing this.  Example: >
+	:if getline(1) =~ '^#!.*\<mine\>'
+	:  set filetype=mine
+	:endif
+<  See $VIMRUNTIME/scripts.vim for more examples.
+   Let's assume you write this file in "~/vim/myscripts.vim".  Then set the
+   "myscriptsfile" variable to this file name.  Example: >
+	:let myscriptsfile = "~/vim/myscripts.vim"
+<  The "myscriptsfile" is loaded in $VIMRUNTIME/scripts.vim before the default
+   checks for file types, which means that your rules override the default
+   rules in $VIMRUNTIME/scripts.vim.
+
+						*remove-filetype*
+If a file type is detected that is wrong for you, you can remove it by
+deleting the autocommand that detects the file type.  This is best done by
+adding a line in your |myfiletypefile|: >
+	:augroup filetype
+	:au! BufNewFile,BufRead {pattern}
+	:augroup END
+Where {pattern} is the matched pattern that you want to be ignored.
+
+If the file type is actually detected by a script, you need to avoid that
+$VIMRUNTIME/scripts.vim does its work.  That can be done by setting 'filetype'
+to an unrecognized name, for example "ignored": >
+	:augroup filetype
+	:au! BufNewFile,BufRead {pattern} set ft=ignored
+	:augroup END
+
+If you are setting up a system with many users, and you don't want each user
+to add/remove the same filetypes, consider creating a vimrc file that is used
+for everybody.  See |system-vimrc|.
+
+
+						*autocmd-osfiletypes*
+On operating systems which support storing a file type with the file, you can
+specify that an autocommand should only be executed if the file is of a
+certain type.
+
+The actual type checking depends on which platform you are running Vim
+on; see your system's documentation for details.
+
+To use osfiletype checking in an autocommand you should put a list of types to
+match in angle brackets in place of a pattern, like this: >
+
+	:au BufRead *.html,<&faf;HTML>  so $VIMRUNTIME/syntax/html.vim
+
+This will match:
+
+- Any file whose name ends in `.html'
+- Any file whose type is `&faf' or 'HTML', where the meaning of these types
+  depends on which version of Vim you are using.
+  Unknown types are considered NOT to match.
+
+You can also specify a type and a pattern at the same time (in which case they
+must both match): >
+
+	:au BufRead <&fff>diff*
+
+This will match files of type `&fff' whose names start with `diff'.
+
+Note that osfiletype checking is skipped if Vim is compiled without the
+|+osfiletype| feature.
+
+==============================================================================
+3. Filetype settings					*filetype-settings*
+
+The mappings for a specific filetype are only added when the variable
+"localmapchar" has been set.  It will be prepended to each local mapping.
+This allows you to avoid the mappings to run into your global mappings. >
+	:let localmapchar = ','
+Note that "," is actually a command, but it's hardly ever used.  In case you
+do need it, this mapping will make it available: >
+	:noremap ,, ,
+This does require that no filetype settings file uses "<localmapchar>,".
+
+							*mail-filetype*
+The 'modeline' option is switched off to avoid the danger of trojan horses.
+The 'textwidth' option is set to 72.  This is often recommended for e-mail.
+The 'formatoptions' are set to break text lines and to repeat the comment
+leader in new lines, so that a leading ">" for quotes is repeated.  You can
+also format quoted text with |gq|.
+
+Local mappings:
+<localmapchar>q		Quotes the text selected in Visual mode, or
+			from the cursor position to the end of the file in
+			Normal mode.  This means "> " is inserted in each
+			line.
+
+ vim:tw=78:

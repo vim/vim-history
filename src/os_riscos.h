@@ -15,13 +15,13 @@
 #include <fcntl.h>
 
 #define CASE_INSENSITIVE_FILENAME
-#define WANT_MODIFY_FNAME
-#define WANT_OSFILETYPE
+#define FEAT_MODIFY_FNAME
+#define FEAT_OSFILETYPE
 #define OFT_DFLT "Text"
 #define USE_TERM_CONSOLE
 #define HAVE_AVAIL_MEM
 
-#ifndef MIN_FEAT
+#ifdef FEAT_NORMAL
 # define VIM_BACKTICK		/* internal backtick expansion */
 #endif
 
@@ -57,7 +57,7 @@
 # define SYNTAX_FNAME	"Vim:Syntax.%s"
 #endif
 
-#define VIMINFO
+#define FEAT_VIMINFO
 
 #ifndef VIMINFO_FILE
 # define VIMINFO_FILE	"<Choices$Write>.VimInfo"
@@ -100,10 +100,16 @@
 # define SYS_OPTWIN_FILE    "Vim:Optwin"
 #endif
 #ifndef FILETYPE_FILE
-# define FILETYPE_FILE	    "Vim:Filetype"
+# define FILETYPE_FILE	    "Filetype"
+#endif
+#ifndef SETSOFF_FILE
+# define SETSOFF_FILE	    "Settings"
 #endif
 #ifndef FTOFF_FILE
-# define FTOFF_FILE	    "Vim:Ftoff"
+# define FTOFF_FILE	    "Ftoff"
+#endif
+#ifndef SETSOFF_FILE
+# define SETSOFF_FILE	    "Setsoff"
 #endif
 
 #define ERRORFILE	"errors/vim"
@@ -126,8 +132,6 @@
 #ifdef HAVE_SIGSET
 # define signal sigset
 #endif
-
-#define SIZEOF_INT 4
 
 #define n_flag (1<<31)
 #define z_flag (1<<30)

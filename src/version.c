@@ -12,8 +12,8 @@
  * Vim originated from Stevie version 3.6 (Fish disk 217) by GRWalter (Fred)
  * It has been changed beyond recognition since then.
  *
- * Differences between version 4.x and 5.0, 5.1, etc. can be
- * found with ":help version5".
+ * Differences between version 5.x and 6.x can be found with ":help version6".
+ * Differences between version 4.x and 5.x can be found with ":help version5".
  * Differences between version 3.0 and 4.x can be found with ":help version4".
  * All the remarks about older versions have been removed, they are not very
  * interesting.
@@ -53,18 +53,23 @@ static void version_msg __ARGS((char *s));
 static char *(features[]) =
 {
 #ifdef AMIGA		/* only for Amiga systems */
-# ifdef NO_ARP
-	"-ARP",
-# else
+# ifdef FEAT_ARP
 	"+ARP",
+# else
+	"-ARP",
 # endif
 #endif
-#ifdef AUTOCMD
+#ifdef FEAT_AUTOCMD
 	"+autocmd",
 #else
 	"-autocmd",
 #endif
-#ifdef USE_BROWSE
+#ifdef FEAT_BEVAL
+	"+balloon_eval",
+#else
+	"-balloon_eval",
+#endif
+#ifdef FEAT_BROWSE
 	"+browse",
 #else
 	"-browse",
@@ -78,246 +83,294 @@ static char *(features[]) =
 #ifdef ALL_BUILTIN_TCAPS
 	"++builtin_terms",
 #endif
-#ifdef BYTE_OFFSET
+#ifdef FEAT_BYTEOFF
 	"+byte_offset",
 #else
 	"-byte_offset",
 #endif
-#ifdef CINDENT
+#ifdef FEAT_GUI_MOTIF
+# ifdef FEAT_CDE_COLORS
+	"+cde_colors",
+# else
+	"-cde_colors",
+# endif
+#endif
+#ifdef FEAT_CINDENT
 	"+cindent",
 #else
 	"-cindent",
 #endif
-#ifdef CMDLINE_COMPL
+#ifdef FEAT_CMDL_COMPL
 	"+cmdline_compl",
 #else
 	"-cmdline_compl",
 #endif
-#ifdef CMDLINE_INFO
+#ifdef FEAT_CMDL_INFO
 	"+cmdline_info",
 #else
 	"-cmdline_info",
 #endif
-#ifdef COMMENTS
+#ifdef FEAT_COMMENTS
 	"+comments",
 #else
 	"-comments",
 #endif
-#ifdef CRYPTV
+#ifdef FEAT_CRYPT
 	"+cryptv",
 #else
 	"-cryptv",
 #endif
-#ifdef USE_CSCOPE
+#ifdef FEAT_CSCOPE
 	"+cscope",
 #else
 	"-cscope",
 #endif
-#if defined(CON_DIALOG) && defined(GUI_DIALOG)
+#if defined(FEAT_CON_DIALOG) && defined(FEAT_GUI_DIALOG)
 	"+dialog_con_gui",
 #else
-# if defined(CON_DIALOG)
+# if defined(FEAT_CON_DIALOG)
 	"+dialog_con",
 # else
-#  if defined(GUI_DIALOG)
+#  if defined(FEAT_GUI_DIALOG)
 	"+dialog_gui",
 #  else
 	"-dialog",
 #  endif
 # endif
 #endif
-#ifdef DIGRAPHS
+#ifdef FEAT_DIGRAPHS
 	"+digraphs",
 #else
 	"-digraphs",
 #endif
-#ifdef EMACS_TAGS
+#ifdef EBCDIC
+	"+ebcdic",
+#else
+	"-ebcdic",
+#endif
+#ifdef FEAT_EMACS_TAGS
 	"+emacs_tags",
 #else
 	"-emacs_tags",
 #endif
-#ifdef WANT_EVAL
+#ifdef FEAT_EVAL
 	"+eval",
 #else
 	"-eval",
 #endif
-#ifdef EX_EXTRA
+#ifdef FEAT_EX_EXTRA
 	"+ex_extra",
 #else
 	"-ex_extra",
 #endif
-#ifdef EXTRA_SEARCH
+#ifdef FEAT_SEARCH_EXTRA
 	"+extra_search",
 #else
 	"-extra_search",
 #endif
-#ifdef FKMAP
+#ifdef FEAT_FKMAP
 	"+farsi",
 #else
 	"-farsi",
 #endif
-#ifdef FILE_IN_PATH
+#ifdef FEAT_SEARCHPATH
 	"+file_in_path",
 #else
 	"-file_in_path",
 #endif
-#ifdef WANT_OSFILETYPE
+#ifdef FEAT_OSFILETYPE
 	"+osfiletype",
 #else
 	"-osfiletype",
 #endif
-#ifdef FIND_IN_PATH
+#ifdef FEAT_FIND_ID
 	"+find_in_path",
 #else
 	"-find_in_path",
+#endif
+#ifdef FEAT_FOOTER
+	"+footer",
+#else
+	"-footer",
 #endif
 	    /* only interesting on Unix systems */
 #if !defined(USE_SYSTEM) && defined(UNIX)
 	"+fork()",
 #endif
-#if defined(UNIX) || defined(VMS)
-# ifdef USE_GUI_GTK
-	"+GUI_GTK",
-# else
-#  ifdef USE_GUI_MOTIF
-	"+GUI_Motif",
-#  else
-#   ifdef USE_GUI_ATHENA
-	"+GUI_Athena",
-#   else
-#    ifdef USE_GUI_BEOS
-	"+GUI_BeOS",
-#     else
-	"-GUI",
-#    endif
-#   endif
-#  endif
-# endif
+#ifdef FEAT_GETTEXT
+	"+gettext",
+#else
+	"-gettext",
 #endif
-#ifdef HANGUL_INPUT
+#ifdef FEAT_HANGULIN
 	"+hangul_input",
 #else
 	"-hangul_input",
 #endif
-#ifdef INSERT_EXPAND
+#ifdef FEAT_INS_EXPAND
 	"+insert_expand",
 #else
 	"-insert_expand",
 #endif
-#ifdef HAVE_LANGMAP
+#ifdef FEAT_LANGMAP
 	"+langmap",
 #else
 	"-langmap",
 #endif
-#ifdef LINEBREAK
+#ifdef FEAT_LIBCALL
+	"+libcall",
+#else
+	"-libcall",
+#endif
+#ifdef FEAT_LINE_HL
+	"+line_highlight",
+#else
+	"-line_highlight",
+#endif
+#ifdef FEAT_LINEBREAK
 	"+linebreak",
 #else
 	"-linebreak",
 #endif
-#ifdef LISPINDENT
+#ifdef FEAT_LISP
 	"+lispindent",
 #else
 	"-lispindent",
 #endif
-#ifdef WANT_MENU
+#ifdef FEAT_LOCALMAP
+	"+localmap",
+#else
+	"-localmap",
+#endif
+#ifdef FEAT_MENU
 	"+menu",
 #else
 	"-menu",
 #endif
-#ifdef MKSESSION
+#ifdef FEAT_SESSION
 	"+mksession",
 #else
 	"-mksession",
 #endif
-#ifdef WANT_MODIFY_FNAME
+#ifdef FEAT_MODIFY_FNAME
 	"+modify_fname",
 #else
 	"-modify_fname",
 #endif
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 	"+mouse",
+#  ifdef FEAT_MOUSESHAPE
+	"+mouseshape",
+#  else
+	"-mouseshape",
+#  endif
 # else
 	"-mouse",
 #endif
 #if defined(UNIX) || defined(VMS)
-# ifdef DEC_MOUSE
+# ifdef FEAT_MOUSE_DEC
 	"+mouse_dec",
 # else
 	"-mouse_dec",
 # endif
-# ifdef GPM_MOUSE
+# ifdef FEAT_MOUSE_GPM
 	"+mouse_gpm",
 # else
 	"-mouse_gpm",
 # endif
-# ifdef NETTERM_MOUSE
+# ifdef FEAT_MOUSE_JSB
+	"+mouse_jsbterm",
+# else
+	"-mouse_jsbterm",
+# endif
+# ifdef FEAT_MOUSE_NET
 	"+mouse_netterm",
 # else
 	"-mouse_netterm",
 # endif
-# ifdef XTERM_MOUSE
+# ifdef FEAT_MOUSE_XTERM
 	"+mouse_xterm",
 # else
 	"-mouse_xterm",
 # endif
 #endif
-#ifdef MULTI_BYTE_IME
+#ifdef FEAT_MBYTE_IME
 	"+multi_byte_ime",
 #else
-# ifdef MULTI_BYTE
+# ifdef FEAT_MBYTE
 	"+multi_byte",
 # else
 	"-multi_byte",
 # endif
 #endif
-#ifdef USE_GUI_WIN32
-# ifdef HAVE_OLE
+#ifdef FEAT_MULTI_LANG
+	"+multi_lang",
+#else
+	"-multi_lang",
+#endif
+#ifdef FEAT_GUI_W32
+# ifdef FEAT_OLE
 	"+ole",
 # else
 	"-ole",
 # endif
 #endif
-#ifdef HAVE_PERL_INTERP
+#ifdef FEAT_PATH_EXTRA
+	"+path_extra",
+#else
+	"-path_extra",
+#endif
+#ifdef FEAT_PERL
 	"+perl",
 #else
 	"-perl",
 #endif
-#ifdef HAVE_PYTHON
+#ifdef FEAT_PYTHON
 	"+python",
 #else
 	"-python",
 #endif
-#ifdef QUICKFIX
+#ifdef FEAT_QUICKFIX
 	"+quickfix",
 #else
 	"-quickfix",
 #endif
-#ifdef RIGHTLEFT
+#ifdef FEAT_RIGHTLEFT
 	"+rightleft",
 #else
 	"-rightleft",
 #endif
-#ifdef SCROLLBIND
+#ifdef FEAT_SCROLLBIND
 	"+scrollbind",
 #else
 	"-scrollbind",
 #endif
-#ifdef SMARTINDENT
+#ifdef FEAT_SIGNS
+	"+signs",
+#else
+	"-signs",
+#endif
+#ifdef FEAT_SMARTINDENT
 	"+smartindent",
 #else
 	"-smartindent",
 #endif
-#ifdef USE_SNIFF
+#ifdef FEAT_SNIFF
 	"+sniff",
 #else
 	"-sniff",
 #endif
-#ifdef STATUSLINE
+#ifdef FEAT_STL_OPT
 	"+statusline",
 #else
 	"-statusline",
 #endif
-#ifdef SYNTAX_HL
+#ifdef FEAT_SUN_WORKSHOP
+	"+sun_workshop",
+#else
+	"-sun_workshop",
+#endif
+#ifdef FEAT_SYN_HL
 	"+syntax",
 #else
 	"-syntax",
@@ -326,22 +379,22 @@ static char *(features[]) =
 #if defined(USE_SYSTEM) && (defined(UNIX) || defined(__EMX__))
 	"+system()",
 #endif
-#ifdef BINARY_TAGS
+#ifdef FEAT_TAG_BINS
 	"+tag_binary",
 #else
 	"-tag_binary",
 #endif
-#ifdef OLD_STATIC_TAGS
+#ifdef FEAT_TAG_OLDSTATIC
 	"+tag_old_static",
 #else
 	"-tag_old_static",
 #endif
-#ifdef TAG_ANY_WHITE
+#ifdef FEAT_TAG_ANYWHITE
 	"+tag_any_white",
 #else
 	"-tag_any_white",
 #endif
-#ifdef HAVE_TCL
+#ifdef FEAT_TCL
 	"+tcl",
 #else
 	"-tcl",
@@ -360,74 +413,96 @@ static char *(features[]) =
 	"-tgetent",
 # endif
 #endif
-#ifdef TEXT_OBJECTS
+#ifdef FEAT_TEXTOBJ
 	"+textobjects",
 #else
 	"-textobjects",
 #endif
-#ifdef WANT_TITLE
+#ifdef FEAT_TITLE
 	"+title",
 #else
 	"-title",
 #endif
-#ifdef USER_COMMANDS
+#ifdef FEAT_TOOLBAR
+	"+toolbar",
+#else
+	"-toolbar",
+#endif
+#ifdef FEAT_USR_CMDS
 	"+user_commands",
 #else
 	"-user_commands",
 #endif
-#ifdef VISUALEXTRA
-	"+visualextra",
+#ifdef FEAT_VERTSPLIT
+	"+vertsplit",
 #else
-	"-visualextra",
+	"-vertsplit",
 #endif
-#ifdef VIMINFO
+#ifdef FEAT_VIRTUALEDIT
+	"+virtualedit",
+#else
+	"-virtualedit",
+#endif
+#ifdef FEAT_VISUAL
+	"+visual",
+# ifdef FEAT_VISUALEXTRA
+	"+visualextra",
+# else
+	"-visualextra",
+# endif
+#else
+	"-visual",
+#endif
+#ifdef FEAT_VIMINFO
 	"+viminfo",
 #else
 	"-viminfo",
 #endif
-#ifdef WILDIGNORE
+#ifdef FEAT_WILDIGN
 	"+wildignore",
 #else
 	"-wildignore",
 #endif
-#ifdef WILDMENU
+#ifdef FEAT_WILDMENU
 	"+wildmenu",
 #else
 	"-wildmenu",
 #endif
-#ifdef WRITEBACKUP
+#ifdef FEAT_WINDOWS
+	"+windows",
+#else
+	"-windows",
+#endif
+#ifdef FEAT_WRITEBACKUP
 	"+writebackup",
 #else
 	"-writebackup",
 #endif
 #if defined(UNIX) || defined(VMS)
-# if defined(WANT_X11) && defined(HAVE_X11)
+# ifdef FEAT_X11
 	"+X11",
 # else
 	"-X11",
 # endif
 #endif
-#ifdef USE_FONTSET
+#ifdef FEAT_XFONTSET
 	"+xfontset",
 #else
 	"-xfontset",
 #endif
-#ifdef USE_XIM
+#ifdef FEAT_XIM
 	"+xim",
 #else
 	"-xim",
 #endif
 #ifdef UNIX
-#ifdef BROKEN_LOCALE
-	"+brokenlocale",
-#endif
-# ifdef XTERM_CLIP
+# ifdef FEAT_XCLIPBOARD
 	"+xterm_clipboard",
 # else
 	"-xterm_clipboard",
 # endif
 #endif
-#ifdef SAVE_XTERM_SCREEN
+#ifdef FEAT_XTERM_SAVE
 	"+xterm_save",
 #else
 	"-xterm_save",
@@ -437,10 +512,6 @@ static char *(features[]) =
 
 static int included_patches[] =
 {   /* Add new patch number below this line */
-/**/
-    2,
-/**/
-    1,
 /**/
     0
 };
@@ -458,13 +529,13 @@ highest_patch()
 }
 
     void
-do_version(arg)
-    char_u  *arg;
+ex_version(eap)
+    exarg_t	*eap;
 {
     /*
      * Ignore a ":version 9.99" command.
      */
-    if (*arg == NUL)
+    if (*eap->arg == NUL)
     {
 	msg_putchar('\n');
 	list_version();
@@ -484,36 +555,36 @@ list_version()
      */
     MSG(longVersion);
 #ifdef WIN32
-# ifdef USE_GUI_WIN32
+# ifdef FEAT_GUI_W32
 #  if (_MSC_VER <= 1010)    /* Only MS VC 4.1 and earlier can do Win32s */
-    MSG_PUTS("\nMS-Windows 16/32 bit GUI version");
+    MSG_PUTS(_("\nMS-Windows 16/32 bit GUI version"));
 #  else
-    MSG_PUTS("\nMS-Windows 32 bit GUI version");
+    MSG_PUTS(_("\nMS-Windows 32 bit GUI version"));
 #  endif
     if (gui_is_win32s())
-	MSG_PUTS(" in Win32s mode");
-# ifdef HAVE_OLE
-    MSG_PUTS(" with OLE support");
+	MSG_PUTS(_(" in Win32s mode"));
+# ifdef FEAT_OLE
+    MSG_PUTS(_(" with OLE support"));
 # endif
 # else
-    MSG_PUTS("\nMS-Windows 32 bit console version");
+    MSG_PUTS(_("\nMS-Windows 32 bit console version"));
 # endif
 #endif
 #ifdef WIN16
-    MSG_PUTS("\nMS-Windows 16 bit version");
+    MSG_PUTS(_("\nMS-Windows 16 bit version"));
 #endif
 #ifdef MSDOS
 # ifdef DJGPP
-    MSG_PUTS("\n32 bit MS-DOS version");
+    MSG_PUTS(_("\n32 bit MS-DOS version"));
 # else
-    MSG_PUTS("\n16 bit MS-DOS version");
+    MSG_PUTS(_("\n16 bit MS-DOS version"));
 # endif
 #endif
 #ifdef macintosh
-    MSG_PUTS("\nMacOS version");
+    MSG_PUTS(_("\nMacOS version"));
 #endif
 #ifdef RISCOS
-    MSG_PUTS("\nRISC OS version");
+    MSG_PUTS(_("\nRISC OS version"));
 #endif
 #ifdef VMS
     MSG_PUTS("\nOpenVMS version");
@@ -523,7 +594,7 @@ list_version()
     /* Print a range when patches are consecutive: "1-10, 12, 15-40, 42-45" */
     if (included_patches[0] != 0)
     {
-	MSG_PUTS("\nIncluded patches: ");
+	MSG_PUTS(_("\nIncluded patches: "));
 	first = -1;
 	/* find last one */
 	for (i = 0; included_patches[i] != 0; ++i)
@@ -547,21 +618,69 @@ list_version()
 	}
     }
 
-#if defined(UNIX) || defined(VMS)
-    if (*compiled_user != NUL)
+#ifdef HAVE_PATHDEF
+    if (*compiled_user != NUL || *compiled_sys != NUL)
     {
-	MSG_PUTS("\nCompiled by ");
-	MSG_PUTS(compiled_user);
+	MSG_PUTS(_("\nCompiled "));
+	if (*compiled_user != NUL)
+	{
+	    MSG_PUTS(_("by "));
+	    MSG_PUTS(compiled_user);
+	}
 	if (*compiled_sys != NUL)
 	{
 	    MSG_PUTS("@");
 	    MSG_PUTS(compiled_sys);
 	}
-	MSG_PUTS(", with (+) or without (-):\n");
     }
-    else
 #endif
-	MSG_PUTS("\nCompiled with (+) or without (-):\n");
+
+#ifdef FEAT_HUGE
+    MSG_PUTS(_("\nHuge"));
+#else
+# ifdef FEAT_BIG
+    MSG_PUTS(_("\nBig"));
+# else
+#  ifdef FEAT_NORMAL
+    MSG_PUTS(_("\nNormal"));
+#  else
+#   ifdef FEAT_SMALL
+    MSG_PUTS(_("\nSmall"));
+#   else
+    MSG_PUTS(_("\nTiny"));
+#   endif
+#  endif
+# endif
+#endif
+    MSG_PUTS(_(" version "));
+#ifndef FEAT_GUI
+    MSG_PUTS(_("without"));
+#else
+# ifdef FEAT_GUI_GTK
+#  ifdef FEAT_GUI_GNOME
+    MSG_PUTS(_("with GTK-GNOME"));
+#  else
+    MSG_PUTS(_("with GTK"));
+#  endif
+# else
+#  ifdef FEAT_GUI_MOTIF
+    MSG_PUTS(_("with X11-Motif"));
+#  else
+#   ifdef FEAT_GUI_ATHENA
+    MSG_PUTS(_("with X11-Athena"));
+#   else
+#    ifdef FEAT_GUI_BEOS
+    MSG_PUTS(_("with BeOS"));
+#    else
+#     if defined(MSWIN) || defined(macintosh)
+    MSG_PUTS(_("with"));
+#     endif
+#    endif
+#   endif
+#  endif
+# endif
+#endif
+    MSG_PUTS(_(" GUI.  Features included (+) or not (-):\n"));
 
     /* print all the features */
     for (i = 0; features[i] != NULL; ++i)
@@ -573,58 +692,58 @@ list_version()
 
     msg_putchar('\n');
 #ifdef SYS_VIMRC_FILE
-    version_msg("   system vimrc file: \"");
+    version_msg(_("   system vimrc file: \""));
     version_msg(SYS_VIMRC_FILE);
     version_msg("\"\n");
 #endif
 #ifdef USR_VIMRC_FILE
-    version_msg("     user vimrc file: \"");
+    version_msg(_("     user vimrc file: \""));
     version_msg(USR_VIMRC_FILE);
     version_msg("\"\n");
 #endif
 #ifdef USR_VIMRC_FILE2
-    version_msg(" 2nd user vimrc file: \"");
+    version_msg(_(" 2nd user vimrc file: \""));
     version_msg(USR_VIMRC_FILE2);
     version_msg("\"\n");
 #endif
 #ifdef USR_VIMRC_FILE3
-    version_msg("  3d user vimrc file: \"");
+    version_msg(_("  3d user vimrc file: \""));
     version_msg(USR_VIMRC_FILE3);
     version_msg("\"\n");
 #endif
 #ifdef USR_EXRC_FILE
-    version_msg("      user exrc file: \"");
+    version_msg(_("      user exrc file: \""));
     version_msg(USR_EXRC_FILE);
     version_msg("\"\n");
 #endif
 #ifdef USR_EXRC_FILE2
-    version_msg("  2nd user exrc file: \"");
+    version_msg(_("  2nd user exrc file: \""));
     version_msg(USR_EXRC_FILE2);
     version_msg("\"\n");
 #endif
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 # ifdef SYS_GVIMRC_FILE
-    version_msg("  system gvimrc file: \"");
+    version_msg(_("  system gvimrc file: \""));
     version_msg(SYS_GVIMRC_FILE);
     MSG_PUTS("\"\n");
 # endif
-    version_msg("    user gvimrc file: \"");
+    version_msg(_("    user gvimrc file: \""));
     version_msg(USR_GVIMRC_FILE);
     version_msg("\"\n");
 # ifdef USR_GVIMRC_FILE2
-    version_msg("2nd user gvimrc file: \"");
+    version_msg(_("2nd user gvimrc file: \""));
     version_msg(USR_GVIMRC_FILE2);
     version_msg("\"\n");
 # endif
 # ifdef USR_GVIMRC_FILE3
-    version_msg(" 3d user gvimrc file: \"");
+    version_msg(_(" 3d user gvimrc file: \""));
     version_msg(USR_GVIMRC_FILE3);
     version_msg("\"\n");
 # endif
 #endif
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 # ifdef SYS_MENU_FILE
-    version_msg("    system menu file: \"");
+    version_msg(_("    system menu file: \""));
     version_msg(SYS_MENU_FILE);
     MSG_PUTS("\"\n");
 # endif
@@ -632,33 +751,33 @@ list_version()
 #ifdef HAVE_PATHDEF
     if (*default_vim_dir != NUL)
     {
-	version_msg("  fall-back for $VIM: \"");
+	version_msg(_("  fall-back for $VIM: \""));
 	version_msg((char *)default_vim_dir);
 	MSG_PUTS("\"\n");
     }
     if (*default_vimruntime_dir != NUL)
     {
-	version_msg(" f-b for $VIMRUNTIME: \"");
+	version_msg(_(" f-b for $VIMRUNTIME: \""));
 	version_msg((char *)default_vimruntime_dir);
 	MSG_PUTS("\"\n");
     }
-    version_msg("Compilation: ");
+    version_msg(_("Compilation: "));
     version_msg((char *)all_cflags);
     msg_putchar('\n');
 #ifdef VMS
     if (*compiler_version != NUL)
     {
-	version_msg("Compiler: ");
+	version_msg(_("Compiler: "));
 	version_msg((char *)compiler_version);
 	msg_putchar('\n');
     }
 #endif
-    version_msg("Linking: ");
+    version_msg(_("Linking: "));
     version_msg((char *)all_lflags);
 #endif
 #ifdef DEBUG
     msg_putchar('\n');
-    version_msg("  DEBUG BUILD");
+    version_msg(_("  DEBUG BUILD"));
 #endif
 }
 

@@ -1,4 +1,4 @@
-README_ami.txt for version 5.7 of Vim: Vi IMproved.
+README_ami.txt for version 6.0d of Vim: Vi IMproved.
 
 This file explains the installation of Vim on Amiga systems.
 See README.txt for general information about Vim.
@@ -13,8 +13,8 @@ easily upgrade to a new version.  For example:
   dh0:editors/vim/vim55		contains the Vim version 5.5 distributed files
 You would then unpack the archives like this:
   cd dh0:editors
-  tar xf t:vim57bin.tar
-  tar xf t:vim57rt.tar
+  tar xf t:vim60bin.tar
+  tar xf t:vim60rt.tar
 
 Set the $VIM environment variable to point to the top directory of your Vim
 files.  For the above example:

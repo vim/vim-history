@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	SAS
 " Maintainer:	Phil Hanna <pehanna@yahoo.com>
-" Last Change:	18 May 1999
+" Last Change:	18 May 1999 (modified 2000 Jul 10 by Bram)
 
 syn clear
 
@@ -22,7 +22,7 @@ syn match   sasStep        "^\s*PROC\s"
 syn keyword sasConditional    DO ELSE END IF THEN UNTIL WHILE
 
 syn keyword sasStatement      ABORT ARRAY ATTRIB BY CALL CARDS CARDS4 CATNAME
-syn keyword sasStatement      CONTINUE DATALINES DATALINES4 DELETE DISPLAY
+syn keyword sasStatement      CONTINUE DATALINES DATALINES4 DELETE
 syn keyword sasStatement      DM DROP ENDSAS ERROR FILE FILENAME FOOTNOTE
 syn keyword sasStatement      FORMAT GOTO INFILE INFORMAT INPUT KEEP
 syn keyword sasStatement      LABEL LEAVE LENGTH LIBNAME LINK LIST LOSTCARD
@@ -30,6 +30,7 @@ syn keyword sasStatement      MERGE MISSING MODIFY OPTIONS OUTPUT PAGE
 syn keyword sasStatement      PUT REDIRECT REMOVE RENAME REPLACE RETAIN
 syn keyword sasStatement      RETURN SELECT SET SKIP STARTSAS STOP TITLE
 syn keyword sasStatement      UPDATE WAITSAS WHERE WINDOW X
+syn match sasStatement      "DISPLAY"
 
 syn match   sasStatement      "FOOTNOTE\d"
 syn match   sasStatement      "TITLE\d"

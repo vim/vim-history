@@ -21,6 +21,16 @@
 #define lt(a, b) (((a).lnum != (b).lnum) \
 		   ? ((a).lnum < (b).lnum) : ((a).col < (b).col))
 
+#ifdef FEAT_VIRTUALEDIT
+# define lt_coladd(a, aa, b, bb) (((a).lnum != (b).lnum) \
+		   ? (a).lnum < (b).lnum \
+		   : (a).col != (b).col \
+		       ? (a).col < (b).col \
+		       : aa < bb)
+#else
+# define lt_coladd(a, aa, b, bb) lt(a, b)
+#endif
+
 #define ltoreq(a, b) (((a).lnum != (b).lnum) \
 		   ? ((a).lnum < (b).lnum) : ((a).col <= (b).col))
 
@@ -54,10 +64,12 @@
 # endif
 #endif
 
-/* macro version of chartab(), only works with 0-255 values */
-#define CHARSIZE(c)	(chartab[c] & CHAR_MASK);
+/* macro version of chartab().
+ * Only works with values 0-255!
+ * Doesn't work for UTF-8 mode with chars >= 0x80. */
+#define CHARSIZE(c)	(chartab[c] & CHAR_MASK)
 
-#ifdef HAVE_LANGMAP
+#ifdef FEAT_LANGMAP
 /*
  * Adjust chars in a language according to 'langmap' option.
  * NOTE that there is NO overhead if 'langmap' is not set; but even
@@ -110,7 +122,7 @@
  * Based on zip/crypt sources.
  */
 
-#ifdef CRYPTV
+#ifdef FEAT_CRYPT
 
 #ifndef __MINGW32__
 # define PWLEN 80

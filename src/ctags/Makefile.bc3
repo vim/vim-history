@@ -1,7 +1,8 @@
+# $Id$
+#
 # Simple makefile for Borland C++ 3.1
 
-SOURCES	= args.c eiffel.c entry.c fortran.c get.c keyword.c main.c \
-	options.c parse.c read.c sort.c strlist.c vstring.c
+!include source.mak
 
 # Adjust the paths to your location of the borland C files
 BCCLOC  = c:\borlandc
@@ -18,7 +19,7 @@ LIB	= -L$(BCCLOC)\lib
 #	add -v for source debugging
 OPTIMIZE= -1- -O1
 
-CFLAGS	= -DMSDOS -mc -d -w-ccc -w-par -w-pia -w-rch -w-sus $(INC)
+CFLAGS	= -DMSDOS -ml -d -w-ccc -w-par -w-pia -w-rch -w-sus $(INC)
 LFLAGS	= $(LIB) $(EXTRA)
 
 ctags.exe: $(SOURCES) respbcc

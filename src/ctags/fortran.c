@@ -1,7 +1,7 @@
 /*****************************************************************************
 *   $Id$
 *
-*   Copyright (c) 1998-1999, Darren Hiebert
+*   Copyright (c) 1998-2000, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -13,7 +13,7 @@
 /*============================================================================
 =   Include files
 ============================================================================*/
-#include "general.h"
+#include "general.h"	/* must always come first */
 
 #include <string.h>
 #include <limits.h>
@@ -185,7 +185,7 @@ static void parseModule __ARGS((tokenInfo *const token));
 static void tagSlashName __ARGS((tokenInfo *const token, const tagType type));
 static void parseType __ARGS((tokenInfo *const token));
 static void parseBlock __ARGS((tokenInfo *const token));
-static void parseFile __ARGS((tokenInfo *const token));
+static void parse __ARGS((tokenInfo *const token));
 static tokenInfo *newToken __ARGS((void));
 static void deleteToken __ARGS((tokenInfo *const token));
 static void init __ARGS((void));
@@ -964,7 +964,7 @@ static void parseBlock( token )
 	nameTag(token, TAG_BLOCK_DATA);
 }
 
-static void parseFile( token )
+static void parse( token )
     tokenInfo *const token;
 {
     do
@@ -1046,7 +1046,7 @@ extern boolean createFortranTags( passCount )
     }
     else
     {
-	parseFile(token);
+	parse(token);
 	retry = FALSE;
     }
     deleteToken(token);

@@ -29,13 +29,13 @@
 #define HAVE_FCNTL_H
 #define HAVE_QSORT
 #define USE_FNAME_CASE		/* adjust case of file names */
-#ifndef USE_CLIPBOARD
-# define USE_CLIPBOARD		/* include clipboard support */
+#ifndef FEAT_CLIPBOARD
+# define FEAT_CLIPBOARD		/* include clipboard support */
 #endif
 #if defined(__DATE__) && defined(__TIME__)
 # define HAVE_DATE_TIME
 #endif
-#ifndef USE_GUI_WIN32		/* GUI works different */
+#ifndef FEAT_GUI_W32		/* GUI works different */
 # define BREAKCHECK_SKIP    1	/* call mch_breakcheck() each time, it's fast */
 #endif
 #define HAVE_AVAIL_MEM
@@ -44,11 +44,11 @@
 # define HAVE_PUTENV		/* at least Bcc 5.2 has it */
 #endif
 
-#ifndef MIN_FEAT
+#ifdef FEAT_NORMAL
 # define VIM_BACKTICK		/* internal backtick expansion */
 #endif
 
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
 # define NO_CONSOLE		/* don't included console-only code */
 #endif
 
@@ -57,8 +57,6 @@
 #define BROKEN_TOUPPER
 
 #define FNAME_ILLEGAL "\"*?><|" /* illegal characters in a file name */
-
-#define SIZEOF_INT 4
 
 #include <stdlib.h>
 #include <time.h>

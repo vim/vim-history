@@ -1,4 +1,4 @@
-*version4.txt*  For Vim version 5.7.  Last change: 1999 May 02
+*version4.txt*  For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -51,8 +51,8 @@ space, which is useful when working on a system with short file names.  For
 example, on MS-DOS the backup files for "longfile.c" and "longfile.h" would
 both become "longfile.bak"; now they will be "longfile.c~" and "longfile.h~".
 
-If you prefer to use ".bak", you can set the 'backupext' option:
->	:set bex=.bak					|'backupext'|
+If you prefer to use ".bak", you can set the 'backupext' option: >
+	:set bex=.bak					|'backupext'|
 
 
 Structure of swap file changed				*swapfile-changed*
@@ -352,4 +352,4 @@ this and accidentally hit CTRL-B, it is very difficult to find out how to undo
 it.  Since hardly anybody uses this feature, it is disabled by default.  If
 you want to use it, define RIGHTLEFT in feature.h before compiling. |'revins'|
 
- vim:ts=8:sw=8:tw=78:
+ vim:tw=78:

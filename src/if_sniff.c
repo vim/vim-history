@@ -16,7 +16,7 @@
 # include <string.h>
 # include <assert.h>
 #else
-# ifdef USE_GUI_X11
+# ifdef FEAT_GUI_X11
 #  include "gui_x11.pro"
 # endif
 #  include "os_unixx.h"
@@ -54,25 +54,25 @@ struct sn_cmd
 
 static struct sn_cmd sniff_cmds[] =
 {
-    { "toggle",		'e', "Toggle implementation/definition",RQ_SCONTEXT },
-    { "superclass",	's', "Show base class of",		RQ_CONTEXT },
-    { "overridden",	'm', "Show overridden member function",	RQ_SCONTEXT },
-    { "retrieve-file",	'r', "Retrieve from file",		RQ_CONTEXT },
-    { "retrieve-project",'p', "Retrieve from project",		RQ_CONTEXT },
+    { "toggle",		'e', N_("Toggle implementation/definition"),RQ_SCONTEXT },
+    { "superclass",	's', N_("Show base class of"),		RQ_CONTEXT },
+    { "overridden",	'm', N_("Show overridden member function"),	RQ_SCONTEXT },
+    { "retrieve-file",	'r', N_("Retrieve from file"),		RQ_CONTEXT },
+    { "retrieve-project",'p', N_("Retrieve from project"),	RQ_CONTEXT },
     { "retrieve-all-projects",
-			'P', "Retrieve from all projects",	RQ_CONTEXT },
-    { "retrieve-next",	'R', "Retrieve next symbol",		RQ_CONTEXT },
-    { "goto-symbol",	'g', "Show source of",			RQ_CONTEXT },
-    { "find-symbol",	'f', "Find symbol",			RQ_CONTEXT },
-    { "browse-class",	'w', "Browse class",			RQ_CONTEXT },
-    { "hierarchy",	't', "Show class in hierarchy",		RQ_CONTEXT },
-    { "restr-hier",	'T', "Show class in restricted hierarchy",RQ_CONTEXT },
-    { "xref-to",	'x', "Xref refers to",			RQ_CONTEXT },
-    { "xref-by",	'X', "Xref referred by",		RQ_CONTEXT },
-    { "xref-has",	'c', "Xref has a",			RQ_CONTEXT },
-    { "xref-used-by",	'C', "Xref used by",			RQ_CONTEXT },
-    { "show-docu",	'd', "Show docu of",			RQ_CONTEXT },
-    { "gen-docu",	'D', "Generate docu for",		RQ_CONTEXT },
+			'P', N_("Retrieve from all projects"),	RQ_CONTEXT },
+    { "retrieve-next",	'R', N_("Retrieve next symbol"),	RQ_CONTEXT },
+    { "goto-symbol",	'g', N_("Show source of"),		RQ_CONTEXT },
+    { "find-symbol",	'f', N_("Find symbol"),			RQ_CONTEXT },
+    { "browse-class",	'w', N_("Browse class"),		RQ_CONTEXT },
+    { "hierarchy",	't', N_("Show class in hierarchy"),	RQ_CONTEXT },
+    { "restr-hier",	'T', N_("Show class in restricted hierarchy"),RQ_CONTEXT },
+    { "xref-to",	'x', N_("Xref refers to"),		RQ_CONTEXT },
+    { "xref-by",	'X', N_("Xref referred by"),		RQ_CONTEXT },
+    { "xref-has",	'c', N_("Xref has a"),			RQ_CONTEXT },
+    { "xref-used-by",	'C', N_("Xref used by")			RQ_CONTEXT },
+    { "show-docu",	'd', N_("Show docu of")			RQ_CONTEXT },
+    { "gen-docu",	'D', N_("Generate docu for"),		RQ_CONTEXT },
     { "connect",	'y', NULL,				RQ_CONNECT },
     { "disconnect",	'q', NULL,				RQ_DISCONNECT },
     { "font-info",	'z', NULL,				RQ_SILENT },
@@ -83,7 +83,7 @@ static struct sn_cmd sniff_cmds[] =
 static char *SniffEmacs[2] = {"sniffemacs", (char *)NULL};  /* Yes, Emacs! */
 static int fd_to_sniff;
 static int sniff_will_disconnect = 0;
-static char msg_sniff_disconnect[] = "aCannot connect to SNiFF+. Check environment (sniffemacs must be found in $PATH).\n";
+static char msg_sniff_disconnect[] = N_("Cannot connect to SNiFF+. Check environment (sniffemacs must be found in $PATH).\n");
 /* Initializing vim commands
  * executed each time vim connects to Sniff
  */
@@ -125,7 +125,7 @@ static void vi_error_msg __ARGS((char *));
 static char *vi_symbol_under_cursor __ARGS((void));
 static void vi_open_file __ARGS((char *));
 static char *vi_buffer_name __ARGS((void));
-static BUF  *vi_find_buffer __ARGS((char *));
+static buf_t *vi_find_buffer __ARGS((char *));
 static void vi_exec_cmd __ARGS((char *));
 static void vi_set_cursor_pos __ARGS((long char_nr));
 static long vi_cursor_pos __ARGS((void));
@@ -149,7 +149,7 @@ struct sniffBufNode *sniffBufStart=NULL;
 struct sniffBufNode *sniffBufEnd=NULL;
 HANDLE hBufferMutex;
 
-# ifdef USE_GUI_WIN32
+# ifdef FEAT_GUI_W32
     extern HWND s_hwnd;       /* gvim's Window handle */
 # else
     extern HANDLE g_hConIn;   /* handle of Console Input */
@@ -363,7 +363,7 @@ SniffEmacsReadThread(void *dummy)
 	    /* notify others that new data has arrived */
 	    sniff_request_processed = 0;
 	    sniff_request_waiting = 1;
-#ifdef USE_GUI_WIN32
+#ifdef FEAT_GUI_W32
 	    PostMessage(s_hwnd, WM_USER, (WPARAM)0, (LPARAM)0);
 #else
 	    /* simulate an Escape key pressed */
@@ -387,7 +387,8 @@ SniffEmacsReadThread(void *dummy)
  * Function that should be called from outside
  * to process the waiting sniff requests
  */
-void ProcessSniffRequests()
+    void
+ProcessSniffRequests()
 {
     static char buf[256];
     int len;
@@ -401,7 +402,7 @@ void ProcessSniffRequests()
 #endif
 	if (len<0)
 	{
-	    vi_error_msg("Sniff: Error during read. Disconnected");
+	    vi_error_msg(_("Sniff: Error during read. Disconnected"));
 	    sniff_disconnect(1);
 	    break;
 	}
@@ -425,9 +426,10 @@ void ProcessSniffRequests()
  * Handle ":sniff" command
  */
     void
-do_sniff(arg)
-    char_u *arg;
+ex_sniff(eap)
+    exarg_t	*eap;
 {
+    char_u *arg = eap->arg;
     char *symbol = NULL;
     char *cmd = NULL;
     int  len_cmd = 0;
@@ -438,7 +440,7 @@ do_sniff(arg)
     {				/* no request: print available commands */
 	print_cmds = TRUE;
 	msg_start();
-	msg_outtrans_attr((char_u *)"-- SNiFF+ commands --",
+	msg_outtrans_attr((char_u *)_("-- SNiFF+ commands --"),
 		highlight_attr[HLF_T]);
     }
     else	/* extract command name and symbol if present */
@@ -467,10 +469,10 @@ do_sniff(arg)
     if (print_cmds)
     {
 	msg_putchar('\n');
-	msg_outtrans((char_u *)"SNiFF+ is currently ");
+	msg_outtrans((char_u *)_("SNiFF+ is currently "));
 	if (!sniff_connected)
-	    msg_outtrans((char_u *)"not ");
-	msg_outtrans((char_u *)"connected");
+	    msg_outtrans((char_u *)_("not "));
+	msg_outtrans((char_u *)_("connected"));
 	msg_end();
 	return;
     }
@@ -480,7 +482,7 @@ do_sniff(arg)
     }
     else
     {
-	EMSG2("Unknown SNiFF+ request: %s", cmd);
+	EMSG2(_("Unknown SNiFF+ request: %s"), cmd);
     }
     vim_free(cmd);
 }
@@ -492,7 +494,7 @@ sniff_connect()
     if (sniff_connected)
 	return;
     if (ConnectToSniffEmacs())
-	vi_error_msg("Error connecting to SNiFF+");
+	vi_error_msg(_("Error connecting to SNiFF+"));
     else
     {
 	int i;
@@ -520,7 +522,7 @@ sniff_disconnect(immediately)
 	sniff_connected = 0;
 	want_sniff_request = 0;
 	sniff_will_disconnect = 0;
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 	if (gui.in_use)
 	    gui_mch_wait_for_chars(0L);
 #endif
@@ -617,10 +619,10 @@ ConnectToSniffEmacs()
 	{
 /*	    FILE *out = fdopen(FromSniffEmacs[1], "w"); */
 	    sleep(1);
-	    fputs(msg_sniff_disconnect, stdout);
+	    fputs(_(msg_sniff_disconnect), stdout);
 	    fflush(stdout);
 	    sleep(3);
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 	    if (gui.in_use)
 		gui_exit(1);
 #endif
@@ -653,19 +655,19 @@ ConnectToSniffEmacs()
 HandleSniffRequest(buffer)
     char *buffer;
 {
-    static int first_time=0;
-    char VICommand[256];
-    char command;
-    char *arguments;
-    char file[256], new_path[256];
-    int  position, writable, tab_width;
-    BUF  *buf;
+    static int	first_time=0;
+    char	VICommand[256];
+    char	command;
+    char	*arguments;
+    char	file[256], new_path[256];
+    int		position, writable, tab_width;
+    buf_t	*buf;
 
-    const char* SetTab     = "set tabstop=%d";
-    const char* SelectBuf  = "buf %s";
-    const char* DeleteBuf  = "bd %s";
-    const char* UnloadBuf  = "bun %s";
-    const char* GotoLine   = "%d";
+    const char * SetTab     = "set tabstop=%d";
+    const char * SelectBuf  = "buf %s";
+    const char * DeleteBuf  = "bd %s";
+    const char * UnloadBuf  = "bun %s";
+    const char * GotoLine   = "%d";
 
     command   = buffer[0];
     arguments = &buffer[1];
@@ -674,10 +676,10 @@ HandleSniffRequest(buffer)
     {
 	case 'o' :  /* visit file at char pos */
 	case 'O' :  /* visit file at line number */
-#if defined(USE_GUI_X11) || defined(USE_GUI_WIN32)
+#if defined(FEAT_GUI_X11) || defined(FEAT_GUI_W32)
 	    if (gui.in_use && !gui.in_focus)  /* Raise Vim Window */
 	    {
-# ifdef USE_GUI_WIN32
+# ifdef FEAT_GUI_W32
 		SetActiveWindow(s_hwnd);
 # else
 		extern Widget vimShell;
@@ -771,7 +773,7 @@ HandleSniffRequest(buffer)
 	case '\0':
 	    break;
 	default :
-	    sprintf(VICommand, "Unrecognized sniff request [%s]", buffer );
+	    sprintf(VICommand, _("Unrecognized sniff request [%s]"), buffer );
 	    vi_error_msg(VICommand);
 	    break;
     }
@@ -855,7 +857,7 @@ SendRequest(command, symbol)
     }
     if (!sniff_connected && !(cmd_type & SILENT))
     {
-	vi_error_msg("SNiFF+ not connected");
+	vi_error_msg(_("SNiFF+ not connected"));
 	return;
     }
 
@@ -864,7 +866,7 @@ SendRequest(command, symbol)
 	if (!IS_SNIFF_BUF)
 	{
 	    if (!(cmd_type & SILENT))
-		vi_error_msg("Not a SNiFF+ buffer");
+		vi_error_msg(_("Not a SNiFF+ buffer"));
 	    return;
 	}
 	buffer_name = vi_buffer_name();
@@ -894,11 +896,11 @@ SendRequest(command, symbol)
     {
 	if ((cmd_type & NEED_SYMBOL) && !(cmd_type & EMPTY_SYMBOL))
 	{
-	    sprintf(msgtxt, "%s: %s", command->msg_txt, symbol);
+	    sprintf(msgtxt, "%s: %s", _(command->msg_txt), symbol);
 	    vi_msg(msgtxt);
 	}
 	else
-	    vi_msg(command->msg_txt);
+	    vi_msg(_(command->msg_txt));
     }
     WriteToSniff(cmdstr);
     if (cmd_type & DISCONNECT)
@@ -922,7 +924,7 @@ WriteToSniff(str)
 #endif
     if (bytes<0)
     {
-	vi_msg("Sniff: Error during write. Disconnected");
+	vi_msg(_("Sniff: Error during write. Disconnected"));
 	sniff_disconnect(1);
     }
 }
@@ -955,11 +957,11 @@ vi_open_file(fname)
     --no_wait_return;					/* [ex_docmd.c] */
 }
 
-    static BUF *
+    static buf_t *
 vi_find_buffer(fname)
     char *fname;
 {			    /* derived from buflist_findname() [buffer.c] */
-    BUF		*buf;
+    buf_t	*buf;
 
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 	if (buf->b_sfname != NULL && fnamecmp(fname, buf->b_sfname) == 0)

@@ -1,0 +1,77 @@
+*sign.txt*     For Vim version 6.0d.  Last change: 2000 Jul 07
+
+
+		  VIM REFERENCE MANUAL    by Gordon Prieur
+
+
+Sign Support Features				*sign-support*
+
+1. Introduction				|sign-intro|
+2. Commands				|sign-commands|
+3. Compiling vim/gvim with signs	|sign-compiling|
+
+{Vi does not have any of these features}
+
+==============================================================================
+1. Introduction					*sign-intro*
+
+When a debugger or other IPE tool is driving an editor it needs to be able
+to give specific highlights which quickly tell the user usefull information
+about the file. One example of this would be a debugger which had an icon
+in the left-hand column denoting a breakpoint. Another example might be an
+arrow representing the Program Counter (PC). The sign features allow both
+placement of a sign, or icon, in the left-hand side of the window and
+definition of a highlight which will be applied to that line. The sign
+is most likely only feasible in gvim (although Sun Microsystem's dtterm
+does support this its the only terminal emulator I know of which does).
+The highlight should be feasible in any color terminal emulator.
+
+Signs and highlights are not usefull just for debuggers. Sun's Visual
+WorkShop uses signs and highlights to mark build errors and SourceBrowser
+hits. Additionally, the debugger supports 8 to 10 different signs and
+highlight colors.
+
+Before a sign can be created, a sign type must be defined. Sign types are
+defined by the |highlight-sign|, |highlight-guifg|, and |highlight-guibg|
+arguments to the |:highlight| command. Once a sign type has been defined
+signs using that type can be created. The ":sign" command is used to create
+and manipulate signs within a buffer or file.
+
+==============================================================================
+2. Commands					*sign-commands*
+
+						*:sig* *:sign*
+:sig[n] id linenum index file		Create a new sign
+:sig[n] id index file			Change sign types
+:sig[n] id file			Jump to sign
+:signs					Display all signs
+						*:uns* *:unsign*
+:uns[ign] id file			Delete a sign
+
+Where:
+	id		is a sign identifier passed to the sign command
+	linenum		is a line number where a sign should be created
+	index		is the sign index passed in the sign= part of the
+			|:highlight| command
+	file		is the name of the file with the sign
+
+Creating and deleting signs are obvious functions. Why change sign type and
+jump to sign? Some debuggers have different signs for a breakpoint and the
+same breakpoint when the debugger is stopped at that breakpoint. Since the
+debugger may stop at a breakpoint often, it makes sense to allow the sign
+type to change rather than to have to remove the sign and create a new one
+at the same location with a different sign type (index).
+
+The jump to sign is usefull in many situations. In Sun's Visual WorkShop we
+use this feature when stepping up and down the stack, for jumping to the
+source of a breakpoint, and for various other uses.
+
+==============================================================================
+3. Compiling vim/gvim with signs		*sign-compiling*
+
+The debug sign and debug line highlights are controlled by the compile-time
+flags USE_DEBUG_GLYPH and USE_DEBUG_HIGHLIGHT. The latter is intended for
+systems without sign support. However, I've had a tight schedule and have not
+tested USE_DEBUG_HIGHLIGHT without USE_DEBUG_GLYPH enabled as well.
+
+ vim:tw=78:

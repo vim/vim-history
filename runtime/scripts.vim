@@ -1,7 +1,7 @@
 " Vim support file to detect file types in scripts
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Jun 08
+" Last change:	2000 Jul 15
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the type of file can be recognized by
@@ -15,7 +15,9 @@ if !did_filetype() && exists("myscriptsfile") && file_readable(expand(myscriptsf
 endif
 
 " Only do this when the FileType autocommand has not been triggered yet
-if !did_filetype()
+if did_filetype()
+  finish
+endif
 
 " Line continuation is used here, remove 'C' from 'cpoptions'
 let scr_cpo_save = &cpo
@@ -157,7 +159,3 @@ endif
 " Restore 'cpoptions'
 let &cpo = scr_cpo_save
 unlet scr_cpo_save
-
-endif " !did_filetype()
-
-" vim: ts=8 tw=0 sts=0

@@ -113,3 +113,10 @@
 #  define _IO_PTEM_H
 # endif
 #endif
+
+/* shared library access */
+#if defined(HAVE_DLFCN_H) && defined(HAVE_DLOPEN)
+#  include <dlfcn.h>
+#elif defined(HAVE_DL_H) && defined(HAVE_SHL_LOAD)
+#  include <dl.h>
+#endif

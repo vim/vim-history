@@ -1,7 +1,11 @@
 Tests for "gf" on ${VAR}
 
 STARTTEST
-:set isfname=@,48-57,/,.,-,_,+,,,$,:,~,{,}
+:if has("ebcdic")
+: set isfname=@,240-249,/,.,-,_,+,,,$,:,~,{,}
+:else
+: set isfname=@,48-57,/,.,-,_,+,,,$,:,~,{,}
+:endif
 :if has("unix")
 :let $CDIR = "."
 /CDIR

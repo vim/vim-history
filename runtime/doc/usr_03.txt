@@ -1,0 +1,20 @@
+*usr_03.txt*	For Vim version 6.0d.  Last change: 2000 Jul 07
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+			     Moving around
+
+
+|03.1|	Horizontal movements
+
+     Next chapter: |usr_04.txt|  Making local changes
+ Previous chapter: |usr_02.txt|  The first steps in Vim
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*03.1*	Horizontal movements
+
+TODO
+
+==============================================================================
+ vim:tw=78:

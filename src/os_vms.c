@@ -75,7 +75,7 @@ typedef struct
     int	nul;
 }	ITMLST2;
 
-#if defined(HAVE_X11) && defined(WANT_X11)
+#ifdef FEAT_X11
 # include <X11/Xlib.h>
 # include <X11/Xutil.h>
 # include <X11/Xatom.h>
@@ -84,14 +84,14 @@ Window		x11_window = 0;
 Display		*x11_display = NULL;
 int		got_x_error = FALSE;
 
-# ifdef WANT_TITLE
+# ifdef FEAT_TITLE
 static int	get_x11_windis __ARGS((void));
 static void	set_x11_title __ARGS((char_u *));
 static void	set_x11_icon __ARGS((char_u *));
 # endif
 #endif
 
-#ifdef WANT_TITLE
+#ifdef FEAT_TITLE
 static int	get_x11_title __ARGS((int));
 static int	get_x11_icon __ARGS((int));
 static char_u	*oldtitle = NULL;
@@ -223,7 +223,7 @@ static int	opage = 24;
     void
 mch_write(char_u *s, int len)
 {
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use && !gui.dying)
     {
 	gui_write(s, len);
@@ -253,7 +253,7 @@ mch_inchar(char_u *buf, int maxlen, long wtime)
 {
     int		c, res;
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use)
     {
 	if (!gui_wait_for_chars(wtime))
@@ -286,7 +286,7 @@ mch_inchar(char_u *buf, int maxlen, long wtime)
     int
 mch_char_avail(void)
 {
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use)
     {
 	gui_mch_update();
@@ -408,17 +408,17 @@ deathtrap SIGDEFARG(sigarg)
     }
     if (entered++)
     {
-	OUT_STR("Vim: Double signal, exiting\n");
+	OUT_STR(_("Vim: Double signal, exiting\n"));
 	out_flush();
 	reset_signals();	/* don't catch any signals anymore */
 	getout(1);
     }
 
-    sprintf((char *)IObuff, "Vim: Caught %s %s\n",
+    sprintf((char *)IObuff, _("Vim: Caught %s %s\n"),
 #ifdef SIGHASARG
-		    "deadly signal", signal_info[i].name
+		    _("deadly signal"), signal_info[i].name
 #else
-		    "some", "deadly signal"
+		    _("some"), _("deadly signal")
 #endif
 	   );
 
@@ -440,7 +440,7 @@ mch_suspend(void)
     char	symstr[80];
     stat_t	osb, nsb;
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use)
     {
 	gui_mch_iconify();
@@ -453,7 +453,7 @@ mch_suspend(void)
     vms_flushbuf();	/* needed to disable mouse on some systems */
     kill(0, SIGTSTP);	/* send ourselves a STOP signal */
 
-# ifdef WANT_TITLE
+# ifdef FEAT_TITLE
     /*
      * Set oldtitle to NULL, so the current title is obtained again.
      */
@@ -486,7 +486,7 @@ mch_suspend(void)
     res = lib$attach(&ppid);
     if (!(res & 1))
     {
-	OUT_STR("\nDetach failed");
+	OUT_STR(_("\nDetach failed"));
 	suspend_shell();
     }
 
@@ -495,7 +495,7 @@ mch_suspend(void)
     /* updatescreen();*/
 
     settmode(TMODE_RAW);		/* set to raw mode */
-#ifdef WANT_TITLE
+#ifdef FEAT_TITLE
     resettitle();
 #endif
 #endif
@@ -503,13 +503,13 @@ mch_suspend(void)
 }
 
     void
-mch_windinit(void)
+mch_shellinit(void)
 {
     Columns = 80;
     Rows = 24;
 
     vms_flushbuf();
-    (void)mch_get_winsize();
+    (void)mch_get_shellsize();
     set_signals();
 }
 
@@ -560,7 +560,7 @@ set_signals()
      */
     catch_signals(deathtrap, SIG_ERR);
 
-#if defined(USE_GUI) && defined(SIGHUP)
+#if defined(FEAT_GUI) && defined(SIGHUP)
     /*
      * When the GUI is running, ignore the hangup signal.
      */
@@ -619,9 +619,9 @@ mch_check_input(void)
 	return FAIL;
 }
 
-#ifdef WANT_TITLE
+#ifdef FEAT_TITLE
 
-#if defined(HAVE_X11) && defined(WANT_X11)
+#ifdef FEAT_X11
 
 /*
  * X Error handler, otherwise X just exits!  (very rude) -- webb
@@ -630,7 +630,7 @@ mch_check_input(void)
 x_error_handler(Display *dpy, XErrorEvent *error_event)
 {
 	XGetErrorText(dpy, error_event->error_code, (char *)IObuff, IOSIZE);
-	STRCAT(IObuff, "\nVim: Got X error\n");
+	STRCAT(IObuff, _("\nVim: Got X error\n"));
 
 	/* preserve_exit();			** preserve files and exit */
 
@@ -667,7 +667,7 @@ get_x11_windis(void)
     /* X just exits if it finds an error otherwise! */
     XSetErrorHandler(x_error_handler);
 
-#ifdef USE_GUI_MOTIF
+#ifdef FEAT_GUI_MOTIF
     if (gui.in_use)
     {
 	/*
@@ -842,7 +842,7 @@ set_x11_icon(char_u *icon)
     XFlush(x11_display);
 }
 
-#else	/* HAVE_X11 && WANT_X11 */
+#else	/* FEAT_X11 */
 
     static int
 get_x11_title(int test_only)
@@ -865,13 +865,13 @@ get_x11_icon(int test_only)
 	return FALSE;
 }
 
-#endif	/* HAVE_X11 && WANT_X11 */
+#endif	/* FEAT_X11 */
 
 
     int
 mch_can_restore_title(void)
 {
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     /*
      * If GUI is (going to be) used, we can always set the window title.
      * Saves a bit of time, because the X11 display server does not need to be
@@ -890,7 +890,7 @@ mch_can_restore_title(void)
     int
 mch_can_restore_icon(void)
 {
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     /*
      * If GUI is (going to be) used, we can always set the icon name.
      * Saves a bit of time, because the X11 display server does not need to be
@@ -927,11 +927,11 @@ mch_settitle(title, icon)
     /*
      * if the window ID and the display is known, we may use X11 calls
      */
-#if defined(HAVE_X11) && defined(WANT_X11)
+#ifdef FEAT_X11
     if (get_x11_windis() == OK)
 	type = 1;
 #else
-# ifdef USE_GUI_BEOS
+# ifdef FEAT_GUI_BEOS
     /* we always have a 'window' */
     type = 1;
 # endif
@@ -949,7 +949,7 @@ mch_settitle(title, icon)
 
 	if (*T_TS != NUL)		/* it's OK if t_fs is empty */
 	    term_settitle(title);
-#if defined(HAVE_X11) && defined(WANT_X11)
+#ifdef FEAT_X11
 	else
 	    set_x11_title(title);		/* x11 */
 #endif
@@ -968,7 +968,7 @@ mch_settitle(title, icon)
 	    out_str(T_CIE);			/* set icon end */
 	    out_flush();
 	}
-#if defined(HAVE_X11) && defined(WANT_X11)
+#ifdef FEAT_X11
 	else
 	    set_x11_icon(icon);			/* x11 */
 #endif
@@ -994,7 +994,7 @@ mch_restore_title(int which)
 				((which & 2) && did_set_icon) ? oldicon : NULL);
 }
 
-#endif /* WANT_TITLE */
+#endif /* FEAT_TITLE */
 
     int
 vim_is_xterm(name)
@@ -1104,7 +1104,7 @@ strerror(int err)
 
     if (err > 0 && err < sys_nerr)
 	    return (sys_errlist[err]);
-    sprintf(er, "Error %d", err);
+    sprintf(er, _("Error %d"), err);
     return er;
 }
 #endif
@@ -1269,11 +1269,11 @@ mch_windexit(int r)
 {
     exiting = TRUE;
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (!gui.in_use)
 #endif
     {
-#ifdef WANT_TITLE
+#ifdef FEAT_TITLE
 	mch_restore_title(3);   /* restore xterm title and icon name */
 #endif
 	stoptermcap();
@@ -1296,7 +1296,7 @@ mch_windexit(int r)
     ml_close_all(TRUE);			/* remove all memfiles */
     may_core_dump();
     settmode(TMODE_COOK);
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.in_use)
 	gui_exit(r);
 #endif
@@ -1510,7 +1510,7 @@ get_stty(void)
 {
 }
 
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 
 /*
  * set mouse clicks on or off (only works for xterms)
@@ -1536,7 +1536,7 @@ mch_setmouse(int on)
 		  (xterm_mouse_vers > 1 ? "\033[?1002l" : "\033[?1000l"));
       ison = on;
     }
-#if defined(DEC_MOUSE)
+#ifdef FEAT_MOUSE_DEC
     else if (use_dec_mouse())
     {
       if (on) /* enable mouse events */
@@ -1545,7 +1545,7 @@ mch_setmouse(int on)
 	  out_str_nf((char_u *) "\033['z");
     ison = on;
     }
-#endif /* DEC_MOUSE */
+#endif
 }
 
 /*
@@ -1554,7 +1554,7 @@ mch_setmouse(int on)
     void
 check_mouse_termcode()
 {
-# ifdef XTERM_MOUSE
+# ifdef FEAT_MOUSE_XTERM
     if (use_xterm_mouse())
     {
 	set_mouse_termcode(KS_MOUSE, (char_u *)"\033[M");
@@ -1569,15 +1569,15 @@ check_mouse_termcode()
     else
 	del_mouse_termcode(KS_MOUSE);
 # endif
-# ifdef GPM_MOUSE
+# ifdef FEAT_MOUSE_GPM
     if (!use_xterm_mouse())
 	set_mouse_termcode(KS_MOUSE, (char_u *)"\033MG");
 # endif
-# ifdef NETTERM_MOUSE
+# ifdef FEAT_MOUSE_NET
     /* can be added always, there is no conflict */
     set_mouse_termcode(KS_NETTERM_MOUSE, (char_u *)"\033}");
 # endif
-# ifdef DEC_MOUSE
+# ifdef FEAT_MOUSE_DEC
     /* conflicts with xterm mouse: "\033[" and "\033[M" */
     if (!use_xterm_mouse())
 	set_mouse_termcode(KS_DEC_MOUSE, (char_u *)"\033[");
@@ -1603,7 +1603,7 @@ use_xterm_mouse()
     return 0;
 }
 
-#if defined(DEC_MOUSE)
+#ifdef FEAT_MOUSE_DEC
 /*
  * Return non-zero when using a DEC mouse, according to 'ttymouse'.
  */
@@ -1616,7 +1616,7 @@ use_dec_mouse()
     }
     return 0;
 }
-#endif /* DEC_MOUSE */
+#endif
 
 #endif /* USE_MOUSE */
 
@@ -1626,35 +1626,30 @@ use_dec_mouse()
     int
 mch_screenmode(char_u *arg)
 {
-	EMSG("Screen mode setting not supported");
-	return FAIL;
+    EMSG(_("Screen mode setting not supported"));
+    return FAIL;
 }
 
 /*
- * Get the current window size.
+ * Get the current window size in Rows and Columns.
  */
     int
-mch_get_winsize(void)
+mch_get_shellsize(void)
 {
-    TT_MODE		tmode;
+    TT_MODE	tmode;
 
     tmode = get_tty();			/* get size from VMS	*/
     Columns = tmode.width;
     Rows = tmode.x.y.length;
-    check_winsize();
-    return(OK);
+    return OK;
 }
 
+/*
+ * Try to set the window size to Rows and new_Columns.
+ */
     void
-mch_set_winsize(void)
+mch_set_shellsize(void)
 {
-#ifdef USE_GUI
-    if (gui.in_use)
-    {
-	gui_set_winsize(FALSE);
-	return;
-    }
-#endif
     set_tty(Rows, Columns);
     switch (Columns)
     {
@@ -1663,6 +1658,15 @@ mch_set_winsize(void)
 	default:	break;
     }
     vms_flushbuf();
+}
+
+/*
+ * Rows and/or Columns has changed.
+ */
+    void
+mch_new_shellsize(void)
+{
+    /* Nothing to do. */
 }
 
 /*
@@ -1700,22 +1704,22 @@ mch_call_shell(char_u *cmd, int options)
     else
 	x = system((char *)p_sh);
     if (x == 127)
-	OUT_STR("\nCannot execute shell sh\n");
+	OUT_STR(_("\nCannot execute shell sh\n"));
     else if (x && !(options & SHELL_SILENT))
     {
 	msg_putchar('\n');
 	msg_outnum((long)x);
-	OUT_STR(" returned\n");
+	OUT_STR(_(" returned\n"));
     }
     settmode(TMODE_RAW);			/* set to raw mode */
-#ifdef WANT_TITLE
+#ifdef FEAT_TITLE
     resettitle();
 #endif
     return x;
 }
 
 #ifdef TESTING_PTY
-# undef USE_GUI
+# undef FEAT_GUI
 #endif
 
 /*
@@ -1727,7 +1731,7 @@ mch_call_shell(char_u *cmd, int options)
     void
 mch_breakcheck(void)
 {
-#ifdef USE_GUI
+#ifdef FEAT_GUI
     if (gui.starting)  /* Transition state, can't check for ^C yet */
 	return;
     if (gui.in_use)
@@ -1735,7 +1739,7 @@ mch_breakcheck(void)
 	gui_mch_update();
 	return;
     }
-#endif /* USE_GUI */
+#endif /* FEAT_GUI */
     /*
      * check for CTRL-C typed by reading all available characters
      */
@@ -1758,7 +1762,7 @@ WaitForChar(long msec)
     if (!vim_is_input_buf_empty())	/* something in inbuf[] */
       return 1;
 
-#if defined(DEC_MOUSE)
+#ifdef FEAT_MOUSE_DEC
     /* May need to query the mouse position. */
     if (WantQueryMouse)
     {
@@ -2016,20 +2020,6 @@ have_dollars(int num, char_u **file)
     return FALSE;
 }
 
-    void
-getlinecol(void)
-{
-    char_u	tbuf[TBUFSZ];
-
-    if (term_str(KS_NAME) )
-    {
-	if (Columns == 0)
-	    Columns = 80; /*tgetnum("co");*/
-	if (Rows == 0)
-	    Rows = 24;    /*tgetnum("li");*/
-    }
-}
-
 
     char_u *
 mch_getenv(char_u *lognam)
@@ -2205,7 +2195,7 @@ mch_input_isatty(void)
  */
 
     int
-mch_expandpath(struct growarray *gap, char_u *path, int flags)
+mch_expandpath(garray_t *gap, char_u *path, int flags)
 {
     int		i,cnt = 0;
     char	*cp;

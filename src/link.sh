@@ -12,51 +12,65 @@
 # Author: Bram Moolenaar
 #   Date: 1999 June 7
 
-echo "$LINK" >link.cmd
+echo "$LINK " >link.cmd
 exit_value=0
 
 #
-# If link.sed already exists, use it.  We assume a previous run of link.sh has
-# found the correct set of libraries.
+# If auto/link.sed already exists, use it.  We assume a previous run of
+# link.sh has found the correct set of libraries.
 #
-if test -f link.sed; then
-  echo "link.sh: The file 'link.sed' exists, which is going to be used now."
-  echo "link.sh: If linking fails, try deleting the link.sed file."
-  echo "link.sh: If this fails too, try creating an empty link.sed file."
+if test -f auto/link.sed; then
+  echo "link.sh: The file 'auto/link.sed' exists, which is going to be used now."
+  echo "link.sh: If linking fails, try deleting the auto/link.sed file."
+  echo "link.sh: If this fails too, try creating an empty auto/link.sed file."
 else
 
 #
 # If linking works with the full link command, try removing some libraries,
 # that are know not to be needed on at least one system.
-# Remove pathdef.c if there is a new link command and compile it again.
+# Remove auto/pathdef.c if there is a new link command and compile it again.
 #
 # Note: Can't remove Xext; It links fine but will give an error when running
 # gvim with Motif.
+# X11, m, perl and crypt are removed when they appear several times.
 #
   cat link.cmd
   if sh link.cmd; then
-    touch link.sed
-    for libname in SM ICE nsl dnet dnet_stub inet socket dir elf Xmu Xpm x pthread thread readline; do
-      if grep "l$libname " link.cmd >/dev/null; then
-        if test ! -f link1.sed; then
-          echo "link.sh: OK, linking works, let's try removing a few libraries..."
-        fi
-        echo "link.sh: Trying to remove the $libname library..."
-        echo "s/-l$libname  *//g" >link1.sed
-        sed -f link.sed <link.cmd >linkit2.sh
-        sed -f link1.sed <linkit2.sh >linkit.sh
-        cat linkit.sh
-        if sh linkit.sh; then
-          echo "link.sh: We don't need the $libname library!"
-          cat link1.sed >>link.sed
-          rm -f pathdef.c
+    touch auto/link.sed
+    cp link.cmd linkit.sh
+    for libname in SM ICE nsl dnet dnet_stub inet socket dir elf Xt Xmu Xpm X11 x pthread thread readline m perl crypt; do
+      cont=yes
+      while test -n "$cont"; do
+        if grep "l$libname " linkit.sh >/dev/null; then
+          if test ! -f link1.sed; then
+            echo "link.sh: OK, linking works, let's try removing a few libraries."
+            echo "link.sh: See link.log for details."
+            rm -f link.log
+          fi
+          echo "link.sh: Trying to remove the $libname library..."
+          echo "s/-l$libname  *//" >link1.sed
+          sed -f auto/link.sed <link.cmd >linkit2.sh
+          sed -f link1.sed <linkit2.sh >linkit.sh
+          cat linkit.sh >>link.log
+          # Redirect this link output, it may contain error messages which
+          # should be ignored.
+          if sh linkit.sh >>link.log 2>&1; then
+            echo "link.sh: We don't need the $libname library!"
+            cat link1.sed >>auto/link.sed
+            rm -f auto/pathdef.c
+          else
+            echo "link.sh: We DO need the $libname library."
+            cont=
+            cp link.cmd linkit.sh
+          fi
         else
-          echo "link.sh: We DO need the $libname library."
+          cont=
+          cp link.cmd linkit.sh
         fi
-      fi
+      done
     done
-    if test ! -f pathdef.c; then
-      $MAKE pathdef.o
+    if test ! -f auto/pathdef.c; then
+      $MAKE auto/pathdef.o
     fi
     if test ! -f link1.sed; then
       echo "link.sh: Linked fine, no libraries can be removed"
@@ -70,23 +84,23 @@ fi
 #
 # Now do the real linking.
 #
-if test -s link.sed; then
-  echo "link.sh: Using link.sed file to remove a few libraries"
-  sed -f link.sed <link.cmd >linkit.sh
+if test -s auto/link.sed; then
+  echo "link.sh: Using auto/link.sed file to remove a few libraries"
+  sed -f auto/link.sed <link.cmd >linkit.sh
   cat linkit.sh
   if sh linkit.sh; then
     exit_value=0
     echo "link.sh: Linked fine with a few libraries removed"
   else
     exit_value=$?
-    echo "link.sh: Linking failed, making link.sed empty and trying again"
-    mv -f link.sed link2.sed
-    touch link.sed
-    rm -f pathdef.c
-    $MAKE pathdef.o
+    echo "link.sh: Linking failed, making auto/link.sed empty and trying again"
+    mv -f auto/link.sed link2.sed
+    touch auto/link.sed
+    rm -f auto/pathdef.c
+    $MAKE auto/pathdef.o
   fi
 fi
-if test -f link.sed -a ! -s link.sed -a ! -f link3.sed; then
+if test -f auto/link.sed -a ! -s auto/link.sed -a ! -f link3.sed; then
   echo "link.sh: Using unmodified link command"
   cat link.cmd
   if sh link.cmd; then
@@ -95,8 +109,8 @@ if test -f link.sed -a ! -s link.sed -a ! -f link3.sed; then
   else
     exit_value=$?
     if test -f link2.sed; then
-      echo "link.sh: Linking doesn't work at all, removing link.sed"
-      rm -f link.sed
+      echo "link.sh: Linking doesn't work at all, removing auto/link.sed"
+      rm -f auto/link.sed
     fi
   fi
 fi

@@ -5,7 +5,7 @@
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
-#ifdef HAVE_OLE
+#ifdef FEAT_OLE
 
 #include <windows.h>
 #include <oleauto.h>
@@ -300,7 +300,7 @@ CVim::SendKeys(BSTR keys)
 STDMETHODIMP
 CVim::Eval(BSTR expr, BSTR *result)
 {
-#ifdef WANT_EVAL
+#ifdef FEAT_EVAL
     size_t len;
     char *buffer;
     char *str;
@@ -728,4 +728,4 @@ extern "C" void UninitOLE()
 	cf = NULL;
     }
 }
-#endif /* HAVE_OLE */
+#endif /* FEAT_OLE */

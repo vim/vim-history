@@ -1,4 +1,4 @@
-*quotes.txt*    For Vim version 5.7.  Last change: 1999 Jun 08
+*quotes.txt*    For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -241,3 +241,5 @@ In summary:
 	    \___ \ | | | | | | |_  | |_  | | |
 	     ___) || | | |_| |	_| |  _| |_|_|
 	    |____/ |_|	\___/|_|   |_|	 (_|_)	      (Tony Nugent, Australia)
+
+ vim:tw=78:

@@ -1,4 +1,4 @@
-README.txt for version 5.7 of Vim: Vi IMproved.
+README.txt for version 6.0d of Vim: Vi IMproved.
 
 
 WHAT IS VIM
@@ -19,7 +19,7 @@ Porting to other systems should not be very difficult.
 
 
 DISTRIBUTION
-
+[This file was modified for Vim by Bram Moolenaar]
 There are separate distributions for Unix, PC, Amiga and some other systems.
 This README.txt file comes with the runtime archive.  It includes the
 documentation, syntax files and other files that are used at runtime.  To run

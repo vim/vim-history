@@ -1,13 +1,13 @@
 #*****************************************************************************
 #	$Id$
 #
-#   Development makefile for Exuberant Ctags, used to build releases.
+#	Copyright (c) 1996-2000, Darren Hiebert
 #
-#	Copyright (c) 1996-1999, Darren Hiebert
+#   Development makefile for Exuberant Ctags, used to build releases.
 #*****************************************************************************
 
-SOURCES		=	args.c eiffel.c entry.c fortran.c get.c keyword.c \
-				main.c options.c parse.c read.c sort.c strlist.c vstring.c
+include source.mak
+
 DSOURCES	=	$(SOURCES) debug.c
 HEADERS		=	args.h ctags.h debug.h entry.h general.h get.h \
 				keyword.h main.h options.h parse.h read.h sort.h \
@@ -21,12 +21,12 @@ DIST_FILES	=	COPYING FAQ INSTALL INSTALL.DOS QUOTES README configure.in \
 				acconfig.h mkinstalldirs Makefile.in Makefile.amiga \
 				Makefile.bc3 Makefile.bc5 Makefile.djg Makefile.maint \
 				Makefile.mvc Makefile.os2 Makefile.qdos Makefile.ming \
-				descrip.mms \
+				descrip.mms source.mak \
 				$(DSOURCES) qdos.c strstr.c $(HEADERS) ctags.1 ctags.lsm NEWS
 
 DOS_FILES	=	COPYING FAQ INSTALL.DOS QUOTES README \
 				Makefile.bc3 Makefile.bc5 Makefile.djg Makefile.os2 \
-				Makefile.ming Makefile.mvc \
+				Makefile.ming Makefile.mvc source.mak \
 				$(DSOURCES) $(HEADERS)
 
 CVS_FILES	=	$(DIST_FILES) ctags.spec
@@ -126,7 +126,7 @@ gcovclean:
 	rm -f $(COV_GEN)
 
 clean: depclean profclean gcovclean
-	rm -f *.[oi] *.o[dm] ctags dctags ctags*.exe ctags.man \
+	rm -f *.[ois] *.o[dm] ctags dctags mctags ctags*.exe ctags.man \
 	      ctags.prof ctags.cov *.bb *.bbg tags TAGS syntax.vim $(ERRFILE)
 
 distclean: clean
@@ -148,7 +148,7 @@ tags: $(DSOURCES) $(HEADERS)
 syntax: syntax.vim
 syntax.vim: $(DSOURCES) $(HEADERS)
 	@ echo "-- Generating syntax file"
-	@ ctags --c-types=ct --file-scope -o- $^ |\
+	@ ctags --c-types=cgstu --file-scope -o- $^ |\
 		awk 'BEGIN{printf("syntax keyword Typedef\t")}\
 				{printf("%s ", $$1)}END{print ""}' > $@
 
@@ -216,7 +216,7 @@ dos1-%: $(DOS_FILES)
 		unix2dos $${file} $(CTAGS_DOSDIR)/ctags$*/$${file} ;\
 	done
 	cd $(CTAGS_DOSDIR); mv makefile makefile.bak; \
-		sed -e 's/^\(VERSION =\) [0-9]\+/\1 $*/' makefile.bak > makefile
+		sed -e 's/^\(VERSION = \).*$$/\1$*/' makefile.bak > makefile
 
 dos2-%: $(DOS_VER_FILES) ctags.man
 	for file in $^ ;do \
@@ -281,23 +281,26 @@ $(DEP_DIR)/%.d: %.c Makefile.maint
 #
 # Compilation rules
 #
-%.o : %.c $(DEP_DIR)/%.d
+%.o: %.c $(DEP_DIR)/%.d
 	@ echo "-- Compiling $<"
 	@ $(CC) $(CFLAGS) -DEXTERNAL_SORT $(OPT) $(WARNINGS) -Wuninitialized -O -c $<  $(REDIR)
 
-%.od : %.c $(DEP_DIR)/%.d
+%.od: %.c $(DEP_DIR)/%.d
 	@ echo "-- Compiling (debug) $<"
 	@ $(CC) -g $(DCFLAGS) $(WARNINGS) -o $*.od -c $<  $(REDIR)
 
-%.om : %.c $(DEP_DIR)/%.d
+%.om: %.c $(DEP_DIR)/%.d
 	@ echo "-- Compiling (safe alloc) $<"
 	@ $(CC) -g -DTRAP_MEMORY_CALLS $(DCFLAGS) $(WARNINGS) -o $*.om -c $<  $(REDIR)
 
-%.i : %.c $(DEP_DIR)/%.d FORCE
+%.i: %.c $(DEP_DIR)/%.d FORCE
 	$(CC) $(DCFLAGS) $(WARNINGS) -Wuninitialized -O -E $< > $@ $(REDIR)
 
-%.ic : %.c $(DEP_DIR)/%.d FORCE
+%.ic: %.c $(DEP_DIR)/%.d FORCE
 	$(CC) $(DCFLAGS) $(WARNINGS) -Wuninitialized -O -E $< | noblanks > $@ $(REDIR)
+
+%.s: %.c $(DEP_DIR)/%.d FORCE
+	$(CC) $(DCFLAGS) $(WARNINGS) -S $< > $@ $(REDIR)
 
 %.err: %.c
 	@ $(CC) $(DCFLAGS) $(WARNINGS) -Wuninitialized -O -c $<
@@ -305,5 +308,11 @@ $(DEP_DIR)/%.d: %.c Makefile.maint
 
 %.c.gcov: %.da
 	@ gcov $*.c
+
+%.sproto: %.c
+	@ genproto -s -m __ARGS $<
+
+%.proto: %.c
+	@ genproto -e -m __ARGS $<
 
 # vi:ts=4 sw=4

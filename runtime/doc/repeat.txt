@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 5.7.  Last change: 2000 Apr 14
+*repeat.txt*    For Vim version 6.0d.  Last change: 2000 Jul 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -125,6 +125,18 @@ q			Stops recording.  (Implementation note: The 'q' that
 
 :so[urce]! {file}	Read Vim commands from {file}.  {not in Vi}
 
+							*:ru* *:runtime*
+:ru[ntime] {file}	Read Ex commands from {file} in each directory given
+			by 'runtimepath'.  There is no error for non-existing
+			files.  Example: >
+				:runtime syntax/c.vim
+
+							*:fini* *:finish*
+:fini[sh]		Stop sourcing a script.  Can only be used in a Vim
+			script file.  This is a quick way to skip the rest of
+			the file.
+			{not in Vi}
+
 All commands and command sequences can be repeated by putting them in a named
 register and then executing it.  There are two ways to get the commands in the
 register:
@@ -163,8 +175,8 @@ You can use the "<sfile>" string (literally, this is not a special key) inside
 of the sourced file, in places where a file name is expected.  It will be
 replaced by the file name of the sourced file.  For example, if you have a
 "other.vimrc" file in the same directory as your ".vimrc" file, you can source
-it from your ".vimrc" file with this command:
->	:source <sfile>:h/other.vimrc
+it from your ".vimrc" file with this command: >
+	:source <sfile>:h/other.vimrc
 
 In script files terminal-dependent key codes are represented by
 terminal-independent two character codes.  This means that they can be used
@@ -195,40 +207,40 @@ Long lines in a ":source"d Ex command script file can be split by inserting
 a line continuation symbol "\" (backslash) at the start of the next line.
 There can be white space before the backslash, which is ignored.
 
-Example: the lines
->	set comments=sr:/*,mb:*,el:*/,
->		     \://,
->		     \b:#,
->		     \:%,
->		     \n:>,
->		     \fb:-
+Example: the lines >
+	:set comments=sr:/*,mb:*,el:*/,
+		     \://,
+		     \b:#,
+		     \:%,
+		     \n:>,
+		     \fb:-
 are interpreted as if they were given in one line:
->	set comments=sr:/*,mb:*,el:*/,://,b:#,:%,n:>,fb:-
+	:set comments=sr:/*,mb:*,el:*/,://,b:#,:%,n:>,fb:-
 
 All leading whitespace characters in the line before a backslash are ignored.
 Note however that trailing whitespace in the line before it cannot be
 inserted freely; it depends on the position where a command is split up
 whether additional whitespace is allowed or not.
 
-There is a problem with the ":append" and ":insert" commands:
->   1append
->   \asdf
->   .
+There is a problem with the ":append" and ":insert" commands: >
+   :1append
+   \asdf
+   .
 The backslash is seen as a line-continuation symbol, thus this results in the
-command:
->   1appendasdf
->   .
-To avoid this, add the 'C' flag to the 'cpoptions' option:
->   set cpo+=C
->   1append
->   \asdf
->   .
->   set cpo-=C
+command: >
+   :1appendasdf
+   .
+To avoid this, add the 'C' flag to the 'cpoptions' option: >
+   :set cpo+=C
+   :1append
+   \asdf
+   .
+   :set cpo-=C
 
 Rationale: Most programs work with a trailing backslash to indicate line
 continuation.  Using this in Vim would cause incompatibility with Vi.  For
-example for this Vi mapping:
->	map xx  asdf\
+example for this Vi mapping: >
+	:map xx  asdf\
 Therefore the unusual leading backslash is used.
 
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

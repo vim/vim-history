@@ -1,7 +1,7 @@
 /* fileio.c */
-void filemess __ARGS((BUF *buf, char_u *name, char_u *s, int attr));
-int readfile __ARGS((char_u *fname, char_u *sfname, linenr_t from, linenr_t lines_to_skip, linenr_t lines_to_read, int flags));
-int buf_write __ARGS((BUF *buf, char_u *fname, char_u *sfname, linenr_t start, linenr_t end, int append, int forceit, int reset_changed, int filtering));
+void filemess __ARGS((buf_t *buf, char_u *name, char_u *s, int attr));
+int readfile __ARGS((char_u *fname, char_u *sfname, linenr_t from, linenr_t lines_to_skip, linenr_t lines_to_read, exarg_t *eap, int flags));
+int buf_write __ARGS((buf_t *buf, char_u *fname, char_u *sfname, linenr_t start, linenr_t end, exarg_t *eap, int append, int forceit, int reset_changed, int filtering));
 char_u *shorten_fname __ARGS((char_u *full_path, char_u *dir_name));
 void shorten_fnames __ARGS((int force));
 char_u *modname __ARGS((char_u *fname, char_u *ext, int prepend_dot));
@@ -9,15 +9,17 @@ char_u *buf_modname __ARGS((int shortname, char_u *fname, char_u *ext, int prepe
 int vim_fgets __ARGS((char_u *buf, int size, FILE *fp));
 int vim_rename __ARGS((char_u *from, char_u *to));
 void check_timestamps __ARGS((int focus));
-int buf_check_timestamp __ARGS((BUF *buf, int focus));
+int buf_check_timestamp __ARGS((buf_t *buf, int focus));
 void write_lnum_adjust __ARGS((linenr_t offset));
 char_u *vim_tempname __ARGS((int extra_char));
 void do_augroup __ARGS((char_u *arg));
 int check_ei __ARGS((void));
 void do_autocmd __ARGS((char_u *arg, int forceit));
 int do_doautocmd __ARGS((char_u *arg, int do_msg));
-void do_autoall __ARGS((char_u *arg));
-int apply_autocmds __ARGS((EVENT_T event, char_u *fname, char_u *fname_io, int force, BUF *buf));
+void ex_doautoall __ARGS((exarg_t *eap));
+void aucmd_prepbuf __ARGS((aco_save_t *aco, buf_t *buf));
+void aucmd_restbuf __ARGS((aco_save_t *aco));
+int apply_autocmds __ARGS((EVENT_T event, char_u *fname, char_u *fname_io, int force, buf_t *buf));
 int has_cursorhold __ARGS((void));
 char_u *get_augroup_name __ARGS((int idx));
 char_u *set_context_in_autocmd __ARGS((char_u *arg, int doautocmd));

@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 5.7.  Last change: 2000 Jan 01
+*gui_x11.txt*   For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -11,7 +11,8 @@ Vim's Graphical User Interface				*gui-x11* *GUI-X11*
 3. Shell Commands		|gui-pty|
 4. Various			|gui-x11-various|
 5. GTK version			|gui-gtk|
-6. Compiling			|gui-x11-compiling|
+6. GNOME version		|gui-gnome|
+7. Compiling			|gui-x11-compiling|
 
 Other relevant documentation:
 |gui.txt|	For generic items of the GUI.
@@ -31,10 +32,11 @@ added after "gvim", for example "gvim-5".
 
 You may also start up the GUI from within the terminal version by using one of
 these commands:
-	:gui [+cmd] [-f|-b] [files...]			*:gu* *:gui*
-	:gvim [+cmd] [-f|-b] [files...]			*:gv* *:gvim*
+	:gui [++opt] [+cmd] [-f|-b] [files...]			*:gu* *:gui*
+	:gvim [++opt] [+cmd] [-f|-b] [files...]			*:gv* *:gvim*
 The "-f" option runs Vim in the foreground.
 The "-b" option runs Vim in the background (this is the default).
+Also see |++opt| and |+cmd|.
 
 							*gui-fork*
 When the GUI is started, it does a fork() and exits the current process.
@@ -96,32 +98,32 @@ If any of these things are also set with Vim commands, eg with
 ":set guifont=Screen15", then this will override the X resources (currently
 'guifont' is the only option that is supported).
 
-Here is an example of what you might put in your ~/.Xdefaults file:
+Here is an example of what you might put in your ~/.Xdefaults file: >
 
->	Vim*useSchemes:			all
->	Vim*sgiMode:			true
->	Vim*useEnhancedFSB:		true
->	Vim.foreground:			Black
->	Vim.background:			Wheat
->	Vim*fontList:			7x13
+	Vim*useSchemes:			all
+	Vim*sgiMode:			true
+	Vim*useEnhancedFSB:		true
+	Vim.foreground:			Black
+	Vim.background:			Wheat
+	Vim*fontList:			7x13
 
 The first three of these are standard resources on Silicon Graphics machines
 which make Motif applications look even better, highly recommended!
 
-The "Vim*fontList" is to set the menu font for Motif.  Example:
->	Vim*menuBar*fontList:        -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
-With Athena:
->	Vim*menuBar*SmeBSB*font:     -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
->	Vim*menuBar*MenuButton*font: -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
+The "Vim*fontList" is to set the menu font for Motif.  Example: >
+	Vim*menuBar*fontList:        -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
+With Athena: >
+	Vim*menuBar*SmeBSB*font:     -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
+	Vim*menuBar*MenuButton*font: -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
 
 Don't use "Vim*geometry" in the defaults.  This will break the menus.  Use
 "Vim.geometry" instead.
 
 If you get an error message "Cannot allocate colormap entry for "gray60",
-try adding this to your Vim resources (change the colors to your liking):
+try adding this to your Vim resources (change the colors to your liking): >
 
->	Vim*scrollBackground:		Black
->	Vim*scrollForeground:		Blue
+	Vim*scrollBackground:		Black
+	Vim*scrollForeground:		Blue
 
 The resources can also be set with arguments to vim:
 
@@ -178,9 +180,9 @@ problems with a pseudo-tty when you least expect it, test it when not editing
 a file.  Be prepared to "kill" the started command or Vim.  Commands like
 ":r !cat" may hang!
 
-If using a pseudo-tty does not work for you, reset the 'guipty' option:
+If using a pseudo-tty does not work for you, reset the 'guipty' option: >
 
->	:set noguipty
+	:set noguipty
 
 Using a pipe should work on any Unix system, but there are disadvantages:
 - Some shell commands will notice that a pipe is being used and behave
@@ -197,8 +199,8 @@ When your erase character is wrong for an external command, you should fix
 this in your "~/.cshrc" file, or whatever file your shell uses for
 initializations.  For example, when you want to use backspace to delete
 characters, but hitting backspaces produces "^H" instead, try adding this to
-your "~/.cshrc":
->	stty erase ^H
+your "~/.cshrc": >
+	stty erase ^H
 The ^H is a real CTRL-H, type it as CTRL-V CTRL-H.
 
 ==============================================================================
@@ -207,35 +209,60 @@ The ^H is a real CTRL-H, type it as CTRL-V CTRL-H.
 							*gui-x11-printing*
 The "File/Print" menu simply sends the current buffer to "lpr".  No options or
 whatever.  If you want something else, you can define your own print command.
-For example:
+For example: >
 
->  :10amenu File.Print :w !lpr -Php3
->  :10vmenu File.Print :w !lpr -Php3
-
+  :10amenu File.Print :w !lpr -Php3
+  :10vmenu File.Print :w !lpr -Php3
+<
 							*X11-icon*
 Vim uses a black&white icon by default when compiled with Motif or Athena.  A
 colored Vim icon is included as $VIMRUNTIME/vim32x32.xpm.  For GTK+, this is
 the builtin icon used.  Unfortunately, how you should install it depends on
 your window manager.  When you use this, remove the 'i' flag from
-'guioptions', to remove the black&white icon:
->  :set guioptions-=i
+'guioptions', to remove the black&white icon: >
+  :set guioptions-=i
 
 If you use one of the fvwm* family of window managers simply add this line to
-your .fvwm2rc configuration file:
+your .fvwm2rc configuration file: >
 
-> Style "vim"		Icon vim32x32.xpm
+  Style "vim"		Icon vim32x32.xpm
 
 Make sure the icon file's location is consistent with the window manager's
 IconPath statement.  Either modify the IconPath from within your .fvwm2rc or
 drop the icon into one the pre-defined directories:
 
-> IconPath /usr/X11R6/include/X11/pixmaps:/usr/X11R6/include/X11/bitmaps
+  IconPath /usr/X11R6/include/X11/pixmaps:/usr/X11R6/include/X11/bitmaps >
 
-For CDE "dtwm" (a derivative of Motif) add this line in the .Xdefaults:
->  Dtwm*Vim*iconImage: /usr/local/share/vim/vim32x32.xpm
+For CDE "dtwm" (a derivative of Motif) add this line in the .Xdefaults: >
+   Dtwm*Vim*iconImage: /usr/local/share/vim/vim32x32.xpm
 
-For "mwm" (Motif window manager) the line would be:
->  Mwm*Vim*iconImage: /usr/local/share/vim/vim32x32.xpm
+For "mwm" (Motif window manager) the line would be: >
+   Mwm*Vim*iconImage: /usr/local/share/vim/vim32x32.xpm
+
+Mouse Pointers Available in X11				*X11_mouse_shapes*
+
+By using the |'mouseshape'| option, the mouse pointer can be automatically
+changed whenever vim enters one of its various modes (e.g., Insert or
+Command).  Currently, the available pointers are:
+
+	arrow			an arrow pointing northwest
+	beam			a I-like vertical bar
+	size			an arrow pointing up and down
+	busy			a wristwatch
+	blank			an invisible pointer
+	crosshair		a thin "+" sign
+	hand1			a dark hand pointing northeast
+	hand2			a light hand pointing northwest
+	pencil			a pencil pointing southeast
+	question		question_arrow
+	right_arrow		an arrow pointing northeast
+	up_arrow		an arrow pointing upwards
+
+Additionally, any of the mouse pointers that are built into X11 may be
+used by specifying an integer from the X11/cursorfont.h include file.
+
+If a name is used that exists on other systems, but not in X11, the default
+"arrow" pointer is used.
 
 ==============================================================================
 5. GTK version						*gui-gtk* *GTK+* *GTK*
@@ -277,21 +304,39 @@ need to set those up in some sort of gtkrc file.  you'll have to refer
 to the GTK documentation, however little there is, on how to do this.
 
 						*gtk-tooltip-colors*
-Example, which sets the tooltip colors to black on light-yellow:
+Example, which sets the tooltip colors to black on light-yellow: >
 
->	style "tooltips"
->	{
->		bg[NORMAL] = "#ffffcc"
->		fg[NORMAL] = "#000000"
->	}
+	style "tooltips"
+	{
+		bg[NORMAL] = "#ffffcc"
+		fg[NORMAL] = "#000000"
+	}
 
->	widget "gtk-tooltips*"          style "tooltips"
+	widget "gtk-tooltips*"          style "tooltips"
 
 Write this in the file ~/.gtkrc and it will be used by GTK.  Don't forget to
 remove the ">" characters from the first column.
 
 ==============================================================================
-6. Compiling						*gui-x11-compiling*
+6. GNOME version				*gui-gnome* *Gnome* *GNOME*
+
+The Gnome GUI works just like the GTK version.  It only looks a bit different.
+See |GTK| above for how it works.
+
+These are the different looks:
+- Uses GNOME dialogs.
+- Uses the GNOME dock, so that the toolbar and menubar can be moved to
+  different locations other than the top (e.g., the toolbar can be placed on
+  the left, right, top, or bottom).  The positioning of the menubar and
+  toolbar isn't saved right now; I think that's for GNOME session management
+  which isn't supported (yet).
+- That means the menubar and toolbar handles are back!  Yeah!  And the
+  resizing grid still works too.
+
+Gnome is automatically compiled with if it was found by configure.
+
+==============================================================================
+7. Compiling						*gui-x11-compiling*
 
 If using X11, Vim's Makefile will by default first try to find the necessary
 GTK+ files on your system.  If the GTK+ files cannot be found, then the Motif
@@ -339,4 +384,4 @@ versions.  This will cause problems.  For example, using header files for
 X11R5 with a library for X11R6 probably doesn't work (although the linking
 won't give an error message, Vim will crash later).
 
- vim:tw=78:ts=8:sw=4
+ vim:tw=78:sw=4

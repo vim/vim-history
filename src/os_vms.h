@@ -1,6 +1,6 @@
-/* vi:ts=4:sw=4
+/* vi:ts=8:sts=4:sw=4
  *
- * VIM - Vi IMproved		by Bram Moolenaar
+ * VIM - Vi IMproved	by Bram Moolenaar
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
@@ -26,20 +26,13 @@
 #endif
 
 #ifdef HAVE_LIBC_H
-# include <libc.h>					/* for NeXT */
+# include <libc.h>		/* for NeXT */
 #endif
 
-#include	<socket.h>
+#include <socket.h>
 
-#ifndef MIN_FEAT
+#ifdef FEAT_NORMAL
 # define VIM_BACKTICK		/* internal backtick expansion */
-#endif
-
-/*
- * SVR4 may be defined for linux, but linux isn't SVR4
- */
-#if defined(SVR4) && defined(__linux__)
-# undef SVR4
 #endif
 
 #ifndef __ARGS
@@ -74,8 +67,8 @@
 #  define SIGDUMMYARG	0
 # endif
 #else
-# define SIGPROTOARG   (void)
-# define SIGDEFARG(s)  ()
+# define SIGPROTOARG	(void)
+# define SIGDEFARG(s)	()
 # define SIGDUMMYARG
 #endif
 
@@ -97,8 +90,8 @@
 #endif
 
 #if !defined(HAVE_SYS_TIME_H) || defined(TIME_WITH_SYS_TIME)
-# include <time.h>			/* on some systems time.h should not be
-							   included together with sys/time.h */
+# include <time.h>	/* on some systems time.h should not be
+			   included together with sys/time.h */
 #endif
 #ifdef HAVE_SYS_TIME_H
 # include <sys/time.h>
@@ -113,15 +106,15 @@
 #endif
 
 #if defined(NAME_MAX) && !defined(MAXNAMLEN)
-# define MAXNAMLEN NAME_MAX			/* for Linux before .99p3 */
+# define MAXNAMLEN NAME_MAX		/* for Linux before .99p3 */
 #endif
 
 /*
  * Note: if MAXNAMLEN has the wrong value, you will get error messages
- *		 for not being able to open the swap file.
+ *	 for not being able to open the swap file.
  */
 #if !defined(MAXNAMLEN)
-# define MAXNAMLEN 512				/* for all other Unix */
+# define MAXNAMLEN 512			/* for all other Unix */
 #endif
 
 #ifdef HAVE_ERRNO_H
@@ -132,38 +125,38 @@
 # include <pwd.h>
 #endif
 
-#include	<unixio.h>
-#include	<unixlib.h>
-#include	<signal.h>
-#include	<file.h>
-#include	<ssdef.h>
-#include	<descrip.h>
-#include	<libclidef.h>
-#include	<lnmdef.h>
-#include	<psldef.h>
-#include	<prvdef.h>
-#include	<dvidef.h>
-#include	<dcdef.h>
-#include	<stsdef.h>
-#include	<iodef.h>
-#include	<ttdef.h>
-#include	<tt2def.h>
-#include	<jpidef.h>
-#include	<rms.h>
-#include	<string.h>
-#include	<starlet.h>
-#include	<lib$routines.h>
+#include <unixio.h>
+#include <unixlib.h>
+#include <signal.h>
+#include <file.h>
+#include <ssdef.h>
+#include <descrip.h>
+#include <libclidef.h>
+#include <lnmdef.h>
+#include <psldef.h>
+#include <prvdef.h>
+#include <dvidef.h>
+#include <dcdef.h>
+#include <stsdef.h>
+#include <iodef.h>
+#include <ttdef.h>
+#include <tt2def.h>
+#include <jpidef.h>
+#include <rms.h>
+#include <string.h>
+#include <starlet.h>
+#include <lib$routines.h>
 
 #ifdef __COHERENT__
 # undef __ARGS
 #endif /* __COHERENT__ */
 
 #ifndef W_OK
-# define W_OK 2			/* for systems that don't have W_OK in unistd.h */
+# define W_OK 2		/* for systems that don't have W_OK in unistd.h */
 #endif
 
 #ifndef R_OK
-# define R_OK 4			/* for systems that don't have R_OK in unistd.h */
+# define R_OK 4		/* for systems that don't have R_OK in unistd.h */
 #endif
 
 
@@ -171,47 +164,47 @@
  * System definitions
  */
 
-#define CASE_INSENSITIVE_FILENAME	/* Open VMS is case insensitive */
-#define SPACE_IN_FILENAME			/* There is space between user and passwd */
-#define FNAME_ILLEGAL "|*#?%"		/* Illegal characters in a file name */
-#define BINARY_FILE_IO				/* Use binary fileio */
+#define CASE_INSENSITIVE_FILENAME   /* Open VMS is case insensitive */
+#define SPACE_IN_FILENAME	    /* There is space between user and passwd */
+#define FNAME_ILLEGAL "|*#?%"	    /* Illegal characters in a file name */
+#define BINARY_FILE_IO		    /* Use binary fileio */
 
-/* #define USE_TMPNAM */			/* use tmpnam() instead of mktemp() */
+/* #define USE_TMPNAM */	    /* use tmpnam() instead of mktemp() */
 
 /*
  * system-dependent filenames
  */
 
 #ifndef USR_EXRC_FILE
-# define USR_EXRC_FILE	"sys$login:.exrc"
+# define USR_EXRC_FILE		"sys$login:.exrc"
 #endif
 
 #ifndef USR_EXRC_FILE2
-# define USR_EXRC_FILE2  "sys$login:_exrc"
+# define USR_EXRC_FILE2		"sys$login:_exrc"
 #endif
 
 #ifndef USR_VIMRC_FILE
-# define USR_VIMRC_FILE	"sys$login:.vimrc"
+# define USR_VIMRC_FILE		"sys$login:.vimrc"
 #endif
 
 #ifndef USR_VIMRC_FILE2
-# define USR_VIMRC_FILE2 "sys$login:_vimrc"
+# define USR_VIMRC_FILE2	"sys$login:_vimrc"
 #endif
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 # ifndef USR_GVIMRC_FILE
 #  define USR_GVIMRC_FILE	"sys$login:.gvimrc"
 # endif
 # ifndef USR_GVIMRC_FILE2
-#  define USR_GVIMRC_FILE2   "sys$login:_gvimrc"
+#  define USR_GVIMRC_FILE2	"sys$login:_gvimrc"
 # endif
 #endif
 
 #ifndef SYS_VIMRC_FILE
-# define SYS_VIMRC_FILE "$VIM/vimrc"
+# define SYS_VIMRC_FILE		"$VIM/vimrc"
 #endif
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 # ifndef SYS_GVIMRC_FILE
 #  define SYS_GVIMRC_FILE	"$VIM/gvimrc"
 # endif
@@ -222,42 +215,48 @@
 #endif
 
 #ifndef FILETYPE_FILE
-# define FILETYPE_FILE	"$VIMRUNTIME:filetype.vim"
+# define FILETYPE_FILE	"filetype.vim"
+#endif
+#ifndef SETTINGS_FILE
+# define SETTINGS_FILE	"settings.vim"
 #endif
 #ifndef FTOFF_FILE
-# define FTOFF_FILE		"$VIMRUNTIME:ftoff.vim"
+# define FTOFF_FILE	"ftoff.vim"
+#endif
+#ifndef SETSOFF_FILE
+# define SETSOFF_FILE	"setsoff.vim"
 #endif
 
 #ifndef EXRC_FILE
-# define EXRC_FILE		".exrc"
+# define EXRC_FILE	".exrc"
 #endif
 
 #ifndef VIMRC_FILE
-# define VIMRC_FILE		".vimrc"
+# define VIMRC_FILE	".vimrc"
 #endif
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 # ifndef GVIMRC_FILE
 #  define GVIMRC_FILE	".gvimrc"
 # endif
 #endif
 
 #ifndef VIM_HLP
-# define VIM_HLP		"$VIMRUNTIME/doc/help.txt"
+# define VIM_HLP	"$VIMRUNTIME/doc/help.txt"
 #endif
 
 #ifndef SYNTAX_FNAME
 # define SYNTAX_FNAME	"$VIMRUNTIME/syntax/%s.vim"
 #endif
 
-#ifdef VIMINFO
+#ifdef FEAT_VIMINFO
 # ifndef VIMINFO_FILE
-#  define VIMINFO_FILE		"sys$login:.viminfo"
+#  define VIMINFO_FILE	"sys$login:.viminfo"
 # endif
 # ifndef VIMINFO_FILE2
-#  define VIMINFO_FILE2		"sys$login:_viminfo"
+#  define VIMINFO_FILE2	"sys$login:_viminfo"
 # endif
-#endif /* VIMINFO */
+#endif
 
 /*
 * This should contain a comma-separated list of all the user account base
@@ -269,30 +268,30 @@
 #endif
 
 #ifndef DEF_BDIR
-# define DEF_BDIR		"./,sys$login:,tmp:"	/* default for 'backupdir' */
+# define DEF_BDIR	"./,sys$login:,tmp:"	/* default for 'backupdir' */
 #endif
 
 #ifndef DEF_DIR
-# define DEF_DIR		"./,sys$login:,tmp:"	/* default for 'directory' */
+# define DEF_DIR	"./,sys$login:,tmp:"	/* default for 'directory' */
 #endif
 
-#define TEMPNAME		"tmp:v?XXXXXX.txt"
-#define TEMPNAMELEN		28
+#define TEMPNAME	"tmp:v?XXXXXX.txt"
+#define TEMPNAMELEN	28
 
-#define CMDBUFFSIZE	1024	/* size of the command processing buffer */
-#define MAXPATHL	1024	/* VMS has long paths and plenty of memory */
+#define CMDBUFFSIZE 1024    /* size of the command processing buffer */
+#define MAXPATHL    1024    /* VMS has long paths and plenty of memory */
 
-#define CHECK_INODE			/* used when checking if a swap file already
-							   exists for a file */
+#define CHECK_INODE	    /* used when checking if a swap file already
+			       exists for a file */
 
 #ifndef MAXMEM
-# define MAXMEM			512			/* use up to 512Kbyte for buffer */
+# define MAXMEM		512	    /* use up to 512Kbyte for buffer */
 #endif
 #ifndef MAXMEMTOT
-# define MAXMEMTOT		2048		/* use up to 2048Kbyte for Vim */
+# define MAXMEMTOT	2048	    /* use up to 2048Kbyte for Vim */
 #endif
 
-#define BASENAMELEN		(MAXNAMLEN - 5)
+#define BASENAMELEN	(MAXNAMLEN - 5)
 
 /* memmove is not present on all systems, use memmove, bcopy, memcpy or our
  * own version */
@@ -305,9 +304,9 @@
 #  define mch_memmove(to, from, len) bcopy((char *)(from), (char *)(to), len)
 # else
 #  ifdef USEMEMCPY
-#	define mch_memmove(to, from, len) memcpy((char *)(to), (char *)(from), len)
+#   define mch_memmove(to, from, len) memcpy((char *)(to), (char *)(from), len)
 #  else
-#	define VIM_MEMMOVE		/* found in misc2.c */
+#   define VIM_MEMMOVE	    /* found in misc2.c */
 #  endif
 # endif
 #endif

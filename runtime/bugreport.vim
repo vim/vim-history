@@ -2,7 +2,7 @@
 :" information about the environment of a possible bug in Vim.
 :"
 :" Maintainer:	Bram Moolenaar <Bram@vim.org>
-:" Last change:	2000 Feb 15
+:" Last change:	2000 Jul 15
 :"
 :" To use inside Vim:
 :"	:so $VIMRUNTIME/bugreport.vim
@@ -59,10 +59,12 @@
 :  echo "--- Normal mode mappings ---"
 :endif
 :map
+:mapglobal
 :if 1
 :  echo "--- Insert mode mappings ---"
 :endif
 :map!
+:mapglobal!
 :if 1
 :  echo "--- Abbreviations ---"
 :endif

@@ -6,8 +6,8 @@
 #
 # (C) Michael Schroeder, Juergen Weigert
 #
-# split osdef.h.in into osdef1.h.in and osdef2.h.in, because some sed's could
-# not handle the amount of commands (is 50 commands the limit?).
+# osdef.h.in has been split into osdef1.h.in and osdef2.h.in, because some
+# sed's could not handle the amount of commands (is 50 commands the limit?).
 #
 # 31.10.95 jw.
 
@@ -23,7 +23,7 @@ rm -f core* *.core
 cat << EOF > osdef0.c
 #define select select_declared_wrong
 #define tgetstr tgetstr_declared_wrong
-#include "config.h"
+#include "auto/config.h"
 #include "os_unix.h"	/* bring in most header files, more follow below */
 #include "os_unixx.h"	/* bring in header files for os_unix.c */
 
@@ -63,10 +63,10 @@ cat << EOF > osdef2.sed
 EOF
 
 cat osdef0.ccc | sed -n -f osdef11.sed >> osdef2.sed
-sed -f osdef2.sed < $srcdir/osdef1.h.in > osdef.h
+sed -f osdef2.sed < $srcdir/osdef1.h.in > auto/osdef.h
 
 cat osdef0.ccc | sed -n -f osdef21.sed > osdef2.sed
-sed -f osdef2.sed < $srcdir/osdef2.h.in >> osdef.h
+sed -f osdef2.sed < $srcdir/osdef2.h.in >> auto/osdef.h
 
 rm osdef0.c osdef0.cc osdef0.ccc osdef11.sed osdef21.sed osdef2.sed
 
@@ -79,7 +79,7 @@ if test -f core*; then
   exit 1
 fi
 cat $srcdir/osdef1.h.in $srcdir/osdef2.h.in >osdefX.h.in
-if eval test "`diff osdef.h osdefX.h.in | wc -l`" -eq 4; then
+if eval test "`diff auto/osdef.h osdefX.h.in | wc -l`" -eq 4; then
   echo "  Hmm, sed is very pessimistic about your system header files."
   echo "  But it did not dump core -- strange! Let's continue carefully..."
   echo "  If this fails, you may want to remove offending lines from osdef.h"

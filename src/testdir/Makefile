@@ -13,7 +13,7 @@ SCRIPTS = test1.out test2.out test3.out test4.out test5.out test6.out \
 		test23.out test24.out test25.out test26.out test27.out \
 		test28.out test29.out test30.out test31.out test32.out \
 		test33.out test34.out test35.out test36.out test37.out \
-		test38.out test39.out
+		test38.out test39.out test40.out
 
 SCRIPTS_GUI = test16.out
 
@@ -36,7 +36,7 @@ clean:
 
 .in.out:
 	-rm -f $*.failed
-	$(VIMPROG) -u vimrc.unix -U NONE -s dotest.in $*.in
+	$(VIMPROG) -u unix.vim -U NONE -s dotest.in $*.in
 	/bin/sh -c "if diff test.out $*.ok; \
 		then mv -f test.out $*.out; \
 		else echo $* FAILED >>test.log; mv -f test.out $*.failed; \

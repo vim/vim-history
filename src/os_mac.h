@@ -18,7 +18,7 @@
 #include <Memory.h>
 #include <OSUtils.h>
 #include <Files.h>
-#ifdef MULTI_BYTE
+#ifdef FEAT_MBYTE
 #include <Script.h>
 #endif
 
@@ -31,23 +31,26 @@
 #include <stat.h>
 #include <unix.h>
 
+#if 0	    /* this doesn't work, because realloc() isn't redefined */
 /*
  * Use Macintosh subroutine to alloc the memory.
  * (malloc generate Ptr format hard to debug with ZoneRanger)
  */
-#define malloc(x) NewPtr(x)
-#define free(x)   DisposePtr((char *) x)
+# define malloc(x) NewPtr(x)
+# define free(x)   DisposePtr((char *) x)
+# define realloc() something
+#endif
 
 /* This will go away when CMD_KEY fully tested */
 #define USE_CMD_KEY
 #if defined (__POWERPC__) /* Got problem trying to use shared library in 68k */
-# undef HAVE_PYTHON
+# undef FEAT_PYTHON
 #else
-# undef HAVE_PYTHON
+# undef FEAT_PYTHON
 #endif
-#define USE_BROWSE
+#define FEAT_BROWSE
 #define GUI_DIALOGUE
-#define RIGHTLEFT
+#define FEAT_RIGHTLEFT
 #define DONT_ADD_PATHSEP_TO_DIR
 #define USE_EXE_NAME		    /* to find  $VIM */
 #define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */
@@ -72,16 +75,10 @@
 #endif
 #define BREAKCHECK_SKIP	    1	    /* call mch_breakcheck() each time, it's
 				       quite fast */
-#ifndef MIN_FEAT
+#ifdef FEAT_NORMAL
 # define VIM_BACKTICK		    /* internal backtick expansion */
 #endif
 #define HAVE_STRFTIME
-
-#if defined(__POWERPC__) || defined (__fourbyteints__)
-# define SIZEOF_INT 4
-#else
-# define SIZEOF_INT 2
-#endif
 
 #ifndef __POWERPC__
 # if !defined(__fourbyteints__) || !__option(enumsalwaysint)
@@ -107,7 +104,7 @@
 # define SYS_OPTWIN_FILE "$VIMRUNTIME:optwin.vim"
 #endif
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 # ifndef USR_GVIMRC_FILE
 #  define USR_GVIMRC_FILE "$VIM:.gvimrc"
 # endif
@@ -136,21 +133,27 @@
 #endif
 
 #ifndef FILETYPE_FILE
-# define FILETYPE_FILE	"$VIMRUNTIME:filetype.vim"
+# define FILETYPE_FILE	"filetype.vim"
+#endif
+#ifndef SETTINGS_FILE
+# define SETTINGS_FILE	"settings.vim"
 #endif
 #ifndef FTOFF_FILE
-# define FTOFF_FILE	"$VIMRUNTIME:ftoff.vim"
+# define FTOFF_FILE	"ftoff.vim"
+#endif
+#ifndef SETSOFF_FILE
+# define SETSOFF_FILE	"setsoff.vim"
 #endif
 
 #ifndef SYNTAX_FNAME
 # define SYNTAX_FNAME	"$VIMRUNTIME:syntax:%s.vim"
 #endif
 
-#ifdef VIMINFO
+#ifdef FEAT_VIMINFO
 # ifndef VIMINFO_FILE
 #  define VIMINFO_FILE	"$VIM:viminfo"
 # endif
-#endif /* VIMINFO */
+#endif /* FEAT_VIMINFO */
 
 #ifndef DEF_BDIR
 # define DEF_BDIR	".,c:\\tmp,c:\\temp"	/* default for 'backupdir' */

@@ -45,7 +45,7 @@ static int delayed_redraw = FALSE;  /* set when ctrl-C detected */
 static int bioskey_read = _NKEYBRD_READ;   /* bioskey() argument: read key */
 static int bioskey_ready = _NKEYBRD_READY; /* bioskey() argument: key ready? */
 
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 static int mouse_avail = FALSE;		/* mouse present */
 static int mouse_active;		/* mouse enabled */
 static int mouse_hidden;		/* mouse not shown */
@@ -82,12 +82,96 @@ int		S_iRight = 0;
 int		S_iBottom = 0;
 short		S_selVideo;	/* Selector for DJGPP direct video transfers */
 
+/*
+ * Use burst writes to improve mch_write speed - VJN 01/10/99
+ */
+unsigned short	S_linebuffer[8000]; /* <VN> enough for 160x50 */
+unsigned short	S_blankbuffer[256]; /* <VN> max length of console line */
+unsigned short	*S_linebufferpos = S_linebuffer;
+int		S_iBufferRow;
+int		S_iBufferColumn;
+
     static void
 mygotoxy(int x, int y)
 {
     S_iCurrentRow = y - 1;
     S_iCurrentColumn = x - 1;
-    gotoxy(x,y);		/* set cursor position */
+}
+
+    static void
+setblankbuffer(unsigned short uiValue)
+{
+    int				i;
+    static unsigned short	olduiValue = 0;
+
+    if (olduiValue != uiValue)
+    {
+	/* Load blank line buffer with spaces */
+	for (i = 0; i < Columns; ++i)
+	    S_blankbuffer[i] = uiValue;
+	olduiValue = uiValue;
+    }
+}
+
+    static void
+myclreol(void)
+{
+    /* Clear to end of line */
+    setblankbuffer(S_uiAttribute | ' ');
+    _dosmemputw(S_blankbuffer, S_iRight - S_iCurrentColumn, S_ulScreenBase
+			 + (S_iCurrentRow) * (Columns << 1)
+			 + (S_iCurrentColumn << 1));
+}
+
+    static void
+myclrscr(void)
+{
+    /* Clear whole screen */
+    short	iColumn;
+    int		endpoint = (Rows * Columns) << 1;
+
+    setblankbuffer(S_uiAttribute | ' ');
+
+    for (iColumn = 0; iColumn < endpoint; iColumn += (Columns << 1))
+	_dosmemputw(S_blankbuffer, Columns, S_ulScreenBase + iColumn);
+}
+
+    static void
+mydelline(void)
+{
+    short iRow, iColumn;
+
+    /* Copy the lines underneath */
+    for (iRow = S_iCurrentRow; iRow < S_iBottom - 1; iRow++)
+	movedata(S_selVideo, ((iRow + 1) * Columns) << 1,
+		S_selVideo, (iRow * Columns) << 1,
+		(S_iRight - S_iLeft + 1) << 1);
+
+    /* Clear the new row */
+    setblankbuffer(S_uiAttribute | ' ');
+
+    iColumn = (S_iLeft - 1) << 1;
+    _dosmemputw(S_blankbuffer, (S_iRight - S_iLeft) + 1, S_ulScreenBase
+			 + (S_iBottom - 1) * (Columns << 1) + iColumn);
+}
+
+    static void
+myinsline(void)
+{
+    short iRow, iColumn;
+
+    /* Copy the lines underneath */
+    for (iRow = S_iBottom - 1; iRow >= S_iTop; iRow--)
+	movedata(S_selVideo, ((iRow - 1) * Columns) << 1,
+		S_selVideo, (iRow * Columns) << 1,
+		(S_iRight - S_iLeft + 1) << 1);
+
+    /* Clear the new row */
+    setblankbuffer(S_uiAttribute | ' ');
+
+    iColumn = (S_iLeft - 1) << 1;
+    _dosmemputw(S_blankbuffer, (S_iRight - S_iLeft) + 1, S_ulScreenBase
+			 + (S_iTop - 1) * (Columns << 1) + iColumn);
 }
 
 /*
@@ -96,8 +180,7 @@ mygotoxy(int x, int y)
     static void
 myscroll(void)
 {
-    short iRow, iColumn;
-    unsigned short uiValue;
+    short		iRow, iColumn;
 
     /* Copy the screen */
     for (iRow = S_iTop; iRow < S_iBottom; iRow++)
@@ -106,10 +189,23 @@ myscroll(void)
 		(S_iRight - S_iLeft + 1) << 1);
 
     /* Clear the bottom row */
-    uiValue = S_uiAttribute | ' ';
-    for (iColumn = S_iLeft - 1; iColumn < S_iRight; iColumn++)
-	_dosmemputw(&uiValue, 1, S_ulScreenBase
-			 + (S_iBottom - 1) * (Columns << 1) + (iColumn << 1));
+    setblankbuffer(S_uiAttribute | ' ');
+
+    iColumn = (S_iLeft - 1) << 1;
+    _dosmemputw(S_blankbuffer, (S_iRight - S_iLeft) + 1, S_ulScreenBase
+			 + (S_iBottom - 1) * (Columns << 1) + iColumn);
+}
+
+    static void
+myflush(void)
+{
+    if (S_linebufferpos != S_linebuffer)
+    {
+	_dosmemputw(S_linebuffer, (S_linebufferpos - S_linebuffer),
+		S_ulScreenBase
+		      + S_iBufferRow * (Columns << 1) + (S_iBufferColumn << 1));
+	S_linebufferpos = S_linebuffer;
+    }
 }
 
     static int
@@ -119,15 +215,26 @@ myputch(int iChar)
 
     if (iChar == '\n')
     {
+	myflush();
 	if (S_iCurrentRow >= S_iBottom - S_iTop)
 	    myscroll();
 	else
-	    mygotoxy(S_iLeft, S_iCurrentRow + 2);
+	{
+	    S_iCurrentColumn = S_iLeft - 1;
+	    S_iCurrentRow++;
+	}
     }
     else if (iChar == '\r')
-	mygotoxy(S_iLeft, S_iCurrentRow + 1);
+    {
+	myflush();
+	S_iCurrentColumn = S_iLeft - 1;
+    }
     else if (iChar == '\b')
-	mygotoxy(S_iCurrentColumn, S_iCurrentRow + 1);
+    {
+	myflush();
+	if (S_iCurrentColumn >= S_iLeft)
+	    S_iCurrentColumn--;
+    }
     else if (iChar == 7)
     {
 	sound(440);	/* short beep */
@@ -138,17 +245,25 @@ myputch(int iChar)
     {
 	uiValue = S_uiAttribute | (unsigned char)iChar;
 
-	_dosmemputw(&uiValue, 1, S_ulScreenBase
-		  + S_iCurrentRow * (Columns << 1) + (S_iCurrentColumn << 1));
+	/*
+	 * Normal char - are we starting to buffer?
+	 */
+	if (S_linebufferpos == S_linebuffer)
+	{
+	    S_iBufferColumn = S_iCurrentColumn;
+	    S_iBufferRow = S_iCurrentRow;
+	}
+
+	*S_linebufferpos++ = uiValue;
 
 	S_iCurrentColumn++;
 	if (S_iCurrentColumn >= S_iRight && S_iCurrentRow >= S_iBottom - S_iTop)
 	{
+	    myflush();
 	    myscroll();
-	    mygotoxy(S_iLeft, S_iCurrentRow + 2);
+	    S_iCurrentColumn = S_iLeft - 1;
+	    S_iCurrentRow++;
 	}
-	else
-	    mygotoxy(S_iCurrentColumn + 1, S_iCurrentRow + 1);
     }
 
     return 0;
@@ -189,7 +304,6 @@ get_screenbase(void)
 mytextattr(int iAttribute)
 {
     S_uiAttribute = (unsigned short)iAttribute << 8;
-    textattr(iAttribute);		/* for delline() etc */
 }
 
     static void
@@ -203,7 +317,6 @@ mytextcolor(int iTextColor)
 {
     S_uiAttribute = (unsigned short)((S_uiAttribute & 0xf000)
 					   | (unsigned short)iTextColor << 8);
-    textattr(S_uiAttribute >> 8);	/* for delline() etc */
 }
 
     static void
@@ -211,9 +324,33 @@ mytextbackground(int iBkgColor)
 {
     S_uiAttribute = (unsigned short)((S_uiAttribute & 0x0f00)
 					 | (unsigned short)(iBkgColor << 12));
-    textattr(S_uiAttribute >> 8);	/* for delline() etc */
 }
+/*
+ * Getdigits: Get a number from a string and skip over it.
+ * Note: the argument is a pointer to a char_u pointer!
+ */
 
+    static long
+mygetdigits(pp)
+    char_u **pp;
+{
+    char_u	*p;
+    long	retval = 0;
+
+    p = *pp;
+    if (*p == '-')		/* skip negative sign */
+	++p;
+    while(isdigit(*p))
+    {
+	retval = (retval * 10) + (*p - '0');
+	++p;
+    }
+    if (**pp == '-')		/* process negative sign */
+	retval = -retval;
+
+    *pp = p;
+    return retval;
+}
 #else
 # define mygotoxy gotoxy
 # define myputch putch
@@ -223,6 +360,11 @@ mytextbackground(int iBkgColor)
 # define mytextattr textattr
 # define mytextcolor textcolor
 # define mytextbackground textbackground
+# define mygetdigits getdigits
+# define myclreol clreol
+# define myclrscr clrscr
+# define myinsline insline
+# define mydelline delline
 #endif
 
 static const struct
@@ -364,16 +506,19 @@ mch_update_cursor(void)
     /*
      * How the cursor is drawn depends on the current mode.
      */
-    idx = get_cursor_idx();
+    idx = get_shape_idx(FALSE);
 
-    if (cursor_table[idx].shape == SHAPE_BLOCK)
+    if (shape_table[idx].shape == SHAPE_BLOCK)
 	thickness = 7;
     else
-	thickness = (7 * cursor_table[idx].percentage + 90) / 100;
+	thickness = (7 * shape_table[idx].percentage + 90) / 100;
     mch_set_cursor_shape(thickness);
 }
 #endif
 
+/*
+ * Return amount of memory currently available.
+ */
     long_u
 mch_avail_mem(int special)
 {
@@ -384,7 +529,7 @@ mch_avail_mem(int special)
 #endif
 }
 
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 
 /*
  * Set area where mouse can be moved to: The whole screen.
@@ -537,9 +682,9 @@ WaitForChar(long msec)
 
     for (;;)
     {
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 	long		clicktime;
-	static int	last_status = 0;
+	static int	old_status = 0;
 
 	if (mouse_avail && mouse_active && mouse_click < 0)
 	{
@@ -548,9 +693,9 @@ WaitForChar(long msec)
 		/* only recognize button-down and button-up event */
 	    x = regs.x.cx / mouse_x_div;
 	    y = regs.x.dx / mouse_y_div;
-	    if ((last_status == 0) != (regs.x.bx == 0))
+	    if ((old_status == 0) != (regs.x.bx == 0))
 	    {
-		if (last_status)	/* button up */
+		if (old_status)	/* button up */
 		    mouse_click = MOUSE_RELEASE;
 		else			/* button down */
 		{
@@ -586,9 +731,9 @@ WaitForChar(long msec)
 		    SET_NUM_MOUSE_CLICKS(mouse_click, mouse_click_count);
 		}
 	    }
-	    else if (last_status && (x != mouse_x || y != mouse_y))
+	    else if (old_status && (x != mouse_x || y != mouse_y))
 		mouse_click = MOUSE_DRAG;
-	    last_status = regs.x.bx;
+	    old_status = regs.x.bx;
 	    if (mouse_hidden && mouse_x >= 0 && (mouse_x != x || mouse_y != y))
 	    {
 		mouse_hidden = FALSE;
@@ -602,7 +747,7 @@ WaitForChar(long msec)
 	if ((p_consk ? cons_kbhit()
 				 : p_biosk ? bioskey(bioskey_ready) : kbhit())
 		|| cbrk_pressed
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 						    || mouse_click >= 0
 #endif
 		)
@@ -681,7 +826,14 @@ mch_write(
 		WaitForChar(p_wd);
 
 	    if (s[0] == '\n')
+#ifdef DJGPP
+	    {
+		myflush();
+		S_iCurrentColumn = S_iLeft - 1;
+	    }
+#else
 		myputch('\r');
+#endif
 	    else if (s[0] == ESC && len > 1 && s[1] == '|')
 	    {
 		switch (s[2])
@@ -690,16 +842,32 @@ mch_write(
 		case 'B':   ScreenVisualBell();
 			    goto got3;
 #endif
-		case 'J':   clrscr();
+		case 'J':
+#ifdef DJGPP
+			    myflush();
+#endif
+			    myclrscr();
 			    goto got3;
 
-		case 'K':   clreol();
+		case 'K':
+#ifdef DJGPP
+			    myflush();
+#endif
+			    myclreol();
 			    goto got3;
 
-		case 'L':   insline();
+		case 'L':
+#ifdef DJGPP
+			    myflush();
+#endif
+			    myinsline();
 			    goto got3;
 
-		case 'M':   delline();
+		case 'M':
+#ifdef DJGPP
+			    myflush();
+#endif
+			    mydelline();
 got3:			    s += 3;
 			    len -= 2;
 			    continue;
@@ -714,17 +882,20 @@ got3:			    s += 3;
 		case '7':
 		case '8':
 		case '9':   p = s + 2;
-			    row = getdigits(&p);    /* no check for length! */
+			    row = mygetdigits(&p);    /* no check for length! */
 			    if (p > s + len)
 				break;
 			    if (*p == ';')
 			    {
 				++p;
-				col = getdigits(&p); /* no check for length! */
+				col = mygetdigits(&p); /* no check for length! */
 				if (p > s + len)
 				    break;
 				if (*p == 'H' || *p == 'r')
 				{
+#ifdef DJGPP
+				    myflush();
+#endif
 				    if (*p == 'H')  /* set cursor position */
 					mygotoxy(col, row);
 				    else	    /* set scroll region  */
@@ -779,7 +950,7 @@ mch_inchar(
     int		c;
     int		tmp_c;
     static int	nextchar = 0;	    /* may keep character when maxlen == 1 */
-#ifdef AUTOCMD
+#ifdef FEAT_AUTOCMD
     static int	once_already = 0;
 #endif
 
@@ -803,7 +974,7 @@ mch_inchar(
 	return 1;
     }
 
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
     if (time != 0)
 	show_mouse(TRUE);
 #endif
@@ -811,10 +982,10 @@ mch_inchar(
     {
 	if (WaitForChar(time) == 0)	/* no character available */
 	{
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 	    show_mouse(FALSE);
 #endif
-#ifdef AUTOCMD
+#ifdef FEAT_AUTOCMD
 	    once_already = 0;
 #endif
 	    return 0;
@@ -822,7 +993,11 @@ mch_inchar(
     }
     else    /* time == -1 */
     {
-#ifdef AUTOCMD
+#ifdef DJGPP
+	myflush();
+	gotoxy(S_iCurrentColumn + 1, S_iCurrentRow + 1);
+#endif
+#ifdef FEAT_AUTOCMD
 	if (once_already == 2)
 	    updatescript(0);
 	else if (once_already == 1)
@@ -839,7 +1014,7 @@ mch_inchar(
 	 */
 	    if (WaitForChar(p_ut) == 0)
 	{
-#ifdef AUTOCMD
+#ifdef FEAT_AUTOCMD
             if (has_cursorhold() && get_real_state() == NORMAL_BUSY)
             {
                 apply_autocmds(EVENT_CURSORHOLD, NULL, NULL, FALSE, curbuf);
@@ -865,7 +1040,7 @@ mch_inchar(
      * implies a key hit.
      */
     cbrk_pressed = FALSE;
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
     if (mouse_click >= 0 && maxlen >= 5)
     {
 	len = 5;
@@ -879,7 +1054,7 @@ mch_inchar(
     else
 #endif
     {
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 	mouse_hidden = TRUE;
 #endif
 	if (p_biosk && !p_consk)
@@ -969,12 +1144,12 @@ mch_inchar(
 	    }
 	}
     }
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
     show_mouse(FALSE);
 #endif
 
     beep_count = 0;	    /* may beep again now that we got some chars */
-#ifdef AUTOCMD
+#ifdef FEAT_AUTOCMD
     once_already = 0;
 #endif
     return len;
@@ -1099,7 +1274,7 @@ extern int _fmode;
  * Prepare window for use by Vim.
  */
     void
-mch_windinit(void)
+mch_shellinit(void)
 {
     union REGS regs;
 
@@ -1132,13 +1307,13 @@ mch_windinit(void)
     get_screenbase();
 #endif
 
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 /* find out if a MS compatible mouse is available */
     regs.x.ax = 0;
     (void)int86(0x33, &regs, &regs);
     mouse_avail = regs.x.ax;
     /* best guess for mouse coordinate computations */
-    mch_get_winsize();
+    mch_get_shellsize();
     if (Columns <= 40)
 	mouse_x_div = 16;
     if (Rows == 30)
@@ -1261,9 +1436,9 @@ mch_get_host_name(
     int		len)
 {
 #ifdef DJGPP
-    STRNCPY(s, "PC (32 bits Vim)", len);
+    STRNCPY(s, _("PC (32 bits Vim)"), len);
 #else
-    STRNCPY(s, "PC (16 bits Vim)", len);
+    STRNCPY(s, _("PC (16 bits Vim)"), len);
 #endif
 }
 
@@ -1541,7 +1716,7 @@ mch_isdir(char_u *name)
 }
 
 /*
- * Careful: mch_windexit() may be called before mch_windinit()!
+ * Careful: mch_windexit() may be called before mch_shellinit()!
  */
     void
 mch_windexit(int r)
@@ -1569,7 +1744,7 @@ mch_settmode(int tmode)
 {
 }
 
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
     void
 mch_setmouse(int on)
 {
@@ -1604,7 +1779,7 @@ mch_screenmode(char_u *arg)
     }
     if (mode == -1)
     {
-	EMSG("Unsupported screen mode");
+	EMSG(_("Unsupported screen mode"));
 	return FAIL;
     }
     textmode(mode);		    /* use Borland function */
@@ -1616,7 +1791,7 @@ mch_screenmode(char_u *arg)
     /* Screen colors may have changed. */
     out_str(T_ME);
 
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
     if (mode <= 1 || mode == 4 || mode == 5 || mode == 13 || mode == 0x13)
 	mouse_x_div = 16;
     else
@@ -1627,8 +1802,7 @@ mch_screenmode(char_u *arg)
 	mouse_y_div = 14;
     else
 	mouse_y_div = 8;
-    ui_get_winsize();	    /* Rows is used in mouse_area() */
-    mouse_area();	    /* set area where mouse can go */
+    shell_resized();
 #endif
     return OK;
 }
@@ -1645,14 +1819,15 @@ extern struct text_info _video;
  * return FAIL for failure, OK otherwise
  */
     int
-mch_get_winsize(void)
+mch_get_shellsize(void)
 {
     struct text_info textinfo;
-/*
- * The screenwidth is returned by the BIOS OK.
- * The screenheight is in a location in the bios RAM, if the display is EGA or
- * VGA.
- */
+
+    /*
+     * The screenwidth is returned by the BIOS OK.
+     * The screenheight is in a location in the bios RAM, if the display is
+     * EGA or VGA.
+     */
     if (!term_console)
 	return FAIL;
     gettextinfo(&textinfo);
@@ -1663,13 +1838,6 @@ mch_get_winsize(void)
 	Rows = *(char far *)MK_FP(0x40, 0x84) + 1;
 #endif
 
-    /*
-     * don't call set_window() when not doing full screen, since it will move
-     * the cursor.  Also skip this when exiting.
-     */
-    if (full_screen && !exiting)
-	set_window();
-
     if (Columns < MIN_COLUMNS || Rows < MIN_LINES)
     {
 	/* these values are overwritten by termcap size or default */
@@ -1677,12 +1845,54 @@ mch_get_winsize(void)
 	Rows = 25;
 	return FAIL;
     }
-    check_winsize();
 #ifdef DJGPP
     mytextinit(&textinfo);   /* Added by JML, 1/15/98 */
 #endif
 
     return OK;
+}
+
+/*
+ * Set the active window for delline/insline.
+ */
+    static void
+set_window(void)
+{
+    if (term_console)
+    {
+#ifndef DJGPP
+	_video.screenheight = Rows;
+#endif
+	mywindow(1, 1, Columns, Rows);
+    }
+    screen_start();
+}
+
+    void
+mch_set_shellsize(void)
+{
+    /* Should try to set the window size to Rows and Columns.
+     * May involve switching display mode....
+     * We assume the user knows the size and just use it. */
+}
+
+/*
+ * Rows and/or Columns has changed.
+ */
+    void
+mch_new_shellsize()
+{
+#ifdef FEAT_MOUSE
+    /* best guess for mouse coordinate computations */
+    if (Columns <= 40)
+	mouse_x_div = 16;
+    if (Rows == 30)
+	mouse_y_div = 16;
+#endif
+    set_window();
+#ifdef FEAT_MOUSE
+    mouse_area();	/* set area where mouse can go */
+#endif
 }
 
 #if defined(DJGPP) || defined(PROTO)
@@ -1701,33 +1911,6 @@ mch_check_columns()
 	Columns = (unsigned)regs.h.ah;
 }
 #endif
-
-/*
- * Set the active window for delline/insline.
- */
-    void
-set_window(void)
-{
-    if (term_console)
-    {
-#ifndef DJGPP
-	_video.screenheight = Rows;
-#endif
-	mywindow(1, 1, Columns, Rows);
-    }
-    screen_start();
-}
-
-    void
-mch_set_winsize(void)
-{
-    /* should try to set the window size to Rows and Columns */
-    /* may involve switching display mode.... */
-
-#ifdef USE_MOUSE
-    mouse_area();	    /* set area where mouse can go */
-#endif
-}
 
 /*
  * call shell, return FAIL for failure, OK otherwise
@@ -1792,10 +1975,9 @@ mch_call_shell(
     {
 	msg_putchar('\n');
 	msg_outnum((long)x);
-	MSG_PUTS(" returned\n");
+	MSG_PUTS(_(" returned\n"));
     }
 
-    (void)ui_get_winsize();	    /* display mode may have been changed */
     return x;
 }
 
@@ -1856,10 +2038,10 @@ namelowcpy(
  */
     static int
 dos_expandpath(
-    struct growarray	*gap,
-    char_u		*path,
-    char_u		*wildc,
-    int			flags)		/* EW_* flags */
+    garray_t	*gap,
+    char_u	*path,
+    char_u	*wildc,
+    int		flags)		/* EW_* flags */
 {
     char_u		*buf;
     char_u		*p, *s, *e;
@@ -1954,9 +2136,9 @@ dos_expandpath(
 
     int
 mch_expandpath(
-    struct growarray	*gap,
-    char_u		*path,
-    int			flags)		/* EW_* flags */
+    garray_t	*gap,
+    char_u	*path,
+    int		flags)		/* EW_* flags */
 {
     return dos_expandpath(gap, path, path, flags);
 }
@@ -2072,7 +2254,7 @@ mch_getenv(char_u *name)
     return (char_u *)getenv((char *)name);
 }
 
-#ifdef DJGPP
+#if defined(DJGPP) || defined(PROTO)
 /*
  * setlocale() for DJGPP with MS-DOS codepage support
  * Author: Cyril Slobin <slobin@fe.msk.ru>
@@ -2089,7 +2271,7 @@ mch_getenv(char_u *name)
 #define UPCASE (__dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER)
 #define LOCASE (__dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISLOWER)
 
-    void
+    char *
 djgpp_setlocale(void)
 {
     __dpmi_regs regs;
@@ -2107,13 +2289,13 @@ djgpp_setlocale(void)
     __dpmi_int(0x21, &regs);
 
     if (regs.x.flags & 1)
-	return;
+	return NULL;
 
     dosmemget(__tb, 5, &info);
     dosmemget((info.seg << 4) + info.off, 0x82, buffer);
 
     if (*(short *)buffer != 0x80)
-	return;
+	return NULL;
 
     /* Fix problem of underscores being replaced with y-umlaut. (Levin) */
     if (buffer[26] == 0x5f)
@@ -2134,6 +2316,6 @@ djgpp_setlocale(void)
 	}
     }
 
-    return;
+    return "C";
 }
 #endif /* DJGPP */

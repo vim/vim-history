@@ -45,10 +45,10 @@
 
 /* Only include this when using the file browser */
 
-#ifdef USE_BROWSE
+#ifdef FEAT_BROWSE
 
 /* Weird complication: for "make lint" Text.h doesn't combine with Xm.h */
-#if defined(USE_GUI_MOTIF) && defined(FMT8BIT)
+#if defined(FEAT_GUI_MOTIF) && defined(FMT8BIT)
 # undef FMT8BIT
 #endif
 
@@ -147,7 +147,7 @@ static XtAppContext SFapp;
 
 static int	SFpathScrollWidth, SFvScrollHeight, SFhScrollWidth;
 
-#ifdef USE_FONTSET
+#ifdef FEAT_XFONTSET
 static char	SFtextBuffer[MAXPATHL*sizeof(wchar_t)];
 #else
 static char	SFtextBuffer[MAXPATHL];
@@ -285,7 +285,7 @@ static void SFunreadableDir __ARGS((SFDir *dir));
 SFunreadableDir(dir)
     SFDir	*dir;
 {
-    char	*cannotOpen = "<cannot open> ";
+    char	*cannotOpen = _("<cannot open> ");
 
     dir->entries = (SFEntry *) XtMalloc(sizeof(SFEntry));
     dir->entries[0].statDone = 1;
@@ -1038,7 +1038,7 @@ SFstatChar(statBuf)
 
 #include <X11/Xaw/Cardinals.h>
 
-#ifdef USE_FONTSET
+#ifdef FEAT_XFONTSET
 #define SF_DEFAULT_FONT "-misc-fixed-medium-r-normal--14-*"
 #else
 #define SF_DEFAULT_FONT "9x15"
@@ -1058,7 +1058,7 @@ static GC SFlineGC, SFscrollGC, SFinvertGC, SFtextGC;
 
 static XtResource textResources[] =
 {
-#ifdef USE_FONTSET
+#ifdef FEAT_XFONTSET
 	{XtNfontSet, XtCFontSet, XtRString, sizeof (char *),
 		XtOffsetOf(TextData, fontname), XtRString, SF_DEFAULT_FONT},
 #else
@@ -1067,7 +1067,7 @@ static XtResource textResources[] =
 #endif
 };
 
-#ifdef USE_FONTSET
+#ifdef FEAT_XFONTSET
 static XFontSet SFfont;
 #else
 static XFontStruct *SFfont;
@@ -1083,7 +1083,7 @@ static void SFinitFont __ARGS((void));
 SFinitFont()
 {
     TextData	*data;
-#ifdef USE_FONTSET
+#ifdef FEAT_XFONTSET
     XFontSetExtents *extents;
     char **missing, *def_str;
     int  num_missing;
@@ -1094,7 +1094,7 @@ SFinitFont()
     XtGetApplicationResources(selFileForm, (XtPointer) data, textResources,
 	    XtNumber(textResources), (Arg *) NULL, ZERO);
 
-#ifdef USE_FONTSET
+#ifdef FEAT_XFONTSET
     SFfont = XCreateFontSet(SFdisplay, data->fontname,
 			    &missing, &num_missing, &def_str);
 #else
@@ -1102,7 +1102,7 @@ SFinitFont()
 #endif
     if (!SFfont)
     {
-#ifdef USE_FONTSET
+#ifdef FEAT_XFONTSET
 	SFfont = XCreateFontSet(SFdisplay, SF_DEFAULT_FONT,
 					    &missing, &num_missing, &def_str);
 #else
@@ -1112,13 +1112,13 @@ SFinitFont()
 	{
 	    char	sbuf[256];
 
-	    (void)sprintf(sbuf, "vim_SelFile: can't get font %s",
+	    (void)sprintf(sbuf, _("vim_SelFile: can't get font %s"),
 			   SF_DEFAULT_FONT);
 	    XtAppError(SFapp, sbuf);
 	}
     }
 
-#ifdef USE_FONTSET
+#ifdef FEAT_XFONTSET
     extents = XExtentsOfFontSet(SFfont);
     SFcharWidth = extents->max_logical_extent.width;
     SFcharAscent = -extents->max_logical_extent.y;
@@ -1161,14 +1161,14 @@ SFcreateGC()
 
     gcValues.foreground = SFfore;
     gcValues.background = SFback;
-#ifndef USE_FONTSET
+#ifndef FEAT_XFONTSET
     gcValues.font = SFfont->fid;
 #endif
 
     SFtextGC = XCreateGC(
 	    SFdisplay,
 	    XtWindow(selFileLists[0]),
-#ifdef USE_FONTSET
+#ifdef FEAT_XFONTSET
 	    (unsigned long)GCForeground | GCBackground,
 #else
 	    (unsigned long)GCForeground | GCBackground | GCFont,
@@ -1386,7 +1386,7 @@ SFdrawStrings(w, dir, from, to)
 		continue;
 	    }
 	}
-#ifdef USE_FONTSET
+#ifdef FEAT_XFONTSET
 	XmbDrawImageString(
 		SFdisplay,
 		w,
@@ -1459,7 +1459,7 @@ SFdrawList(n, doScroll)
     {
 	dir = &(SFdirs[SFdirPtr + n]);
 	w = XtWindow(selFileLists[n]);
-#ifdef USE_FONTSET
+#ifdef FEAT_XFONTSET
 	XmbDrawImageString(
 		SFdisplay,
 		w,
@@ -2460,7 +2460,7 @@ SFcreateWidgets(toplevel, prompt, ok, cancel)
     static void
 SFtextChanged()
 {
-#if defined(USE_FONTSET) && defined(XtNinternational)
+#if defined(FEAT_XFONTSET) && defined(XtNinternational)
     if (_XawTextFormat((TextWidget)selFileField) == XawFmtWide)
     {
 	wchar_t *wcbuf=(wchar_t *)SFtextBuffer;
@@ -2504,7 +2504,7 @@ SFtextChanged()
     static char *
 SFgetText()
 {
-#if defined(USE_FONTSET) && defined(XtNinternational)
+#if defined(FEAT_XFONTSET) && defined(XtNinternational)
     char *buf;
 
     if (_XawTextFormat((TextWidget)selFileField) == XawFmtWide)
@@ -2532,7 +2532,7 @@ SFprepareToReturn()
     XtUnmapWidget(selFile);
     XtRemoveTimeOut(SFdirModTimerId);
     if (SFchdir(SFstartDir))
-	XtAppError(SFapp, "vim_SelFile: can't return to current directory");
+	XtAppError(SFapp, _("vim_SelFile: can't return to current directory"));
 }
 
     char *
@@ -2542,14 +2542,14 @@ vim_SelFile(toplevel, prompt, init_path, show_entry, x, y, fg, bg)
     char	*init_path;
     int		(*show_entry)();
     int		x, y;
-    GuiColor	fg, bg;
+    guicolor_t	fg, bg;
 {
     static int	firstTime = 1;
     XEvent	event;
     char	*name_return;
 
     if (prompt == NULL)
-	prompt = "Pathname:";
+	prompt = _("Pathname:");
     SFfore = fg;
     SFback = bg;
 
@@ -2557,7 +2557,7 @@ vim_SelFile(toplevel, prompt, init_path, show_entry, x, y, fg, bg)
     {
 	firstTime = 0;
 	SFdisplay = XtDisplay(toplevel);
-	SFcreateWidgets(toplevel, prompt, "OK", "Cancel");
+	SFcreateWidgets(toplevel, prompt, _("OK"), _("Cancel"));
     }
     else
 	XtVaSetValues(selFilePrompt, XtNlabel, prompt, NULL);
@@ -2566,7 +2566,7 @@ vim_SelFile(toplevel, prompt, init_path, show_entry, x, y, fg, bg)
     XtMapWidget(selFile);
 
     if (mch_dirname((char_u *)SFstartDir, MAXPATHL) == FAIL)
-	XtAppError(SFapp, "vim_SelFile: can't get current directory");
+	XtAppError(SFapp, _("vim_SelFile: can't get current directory"));
     (void)strcat(SFstartDir, "/");
     (void)strcpy(SFcurrentDir, SFstartDir);
 
@@ -2621,4 +2621,4 @@ vim_SelFile(toplevel, prompt, init_path, show_entry, x, y, fg, bg)
     }
 }
 
-#endif /* USE_BROWSE */
+#endif /* FEAT_BROWSE */

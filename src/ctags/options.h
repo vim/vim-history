@@ -1,7 +1,7 @@
 /*****************************************************************************
 *   $Id$
 *
-*   Copyright (c) 1998-1999, Darren Hiebert
+*   Copyright (c) 1998-2000, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -20,9 +20,10 @@
 /*============================================================================
 =   Include files
 ============================================================================*/
+#include "general.h"	/* must always come first */
+
 #include "args.h"
-#include "general.h"
-#include "ctags.h"
+#include "parse.h"
 #include "strlist.h"
 #include "vstring.h"
 
@@ -48,6 +49,12 @@ typedef struct sCookedArgs {
  */
 typedef struct sOptionValues {
     struct sInclude {		/* include tags for: */
+	struct sBetaInclude {
+	    boolean    patterns;
+	    boolean    virtuals;
+	    boolean    fragments;
+	    boolean    slots;
+	} betaTypes;
 	struct sCInclude {
 	    boolean	classNames;
 	    boolean	defines;
@@ -118,8 +125,6 @@ typedef struct sOptionValues {
     boolean if0;	    /* --if0  examine code within "#if 0" branch */
     boolean kindLong;	    /* --kind-long */
     langType language;	    /* --lang specified language override */
-    stringList* langMap[(int)LANG_COUNT];
-			    /* --langmap  language-extension map */
     boolean followLinks;    /* --link  follow symbolic links? */
     boolean filter;	    /* --filter  behave as filter: files in, tags out */
     char* filterTerminator; /* --filter-terminator  string to output */
@@ -139,6 +144,11 @@ extern CONST_OPTION optionValues	Option;
 /*============================================================================
 =   Function prototypes
 ============================================================================*/
+extern void freeList __ARGS((stringList** const pString));
+extern void setDefaultTagFileName __ARGS((void));
+extern void checkOptions __ARGS((void));
+extern void testEtagsInvocation __ARGS((void));
+
 extern cookedArgs* cArgNewFromString __ARGS((const char* string));
 extern cookedArgs* cArgNewFromArgv __ARGS((char* const* const argv));
 extern cookedArgs* cArgNewFromFile __ARGS((FILE* const fp));
@@ -149,9 +159,7 @@ extern boolean cArgIsOption __ARGS((cookedArgs* const current));
 extern const char* cArgItem __ARGS((cookedArgs* const current));
 extern void cArgForth __ARGS((cookedArgs* const current));
 
-extern void setDefaultTagFileName __ARGS((void));
-extern void checkOptions __ARGS((void));
-extern void testEtagsInvocation __ARGS((void));
+extern const char *findExtension __ARGS((const char *const fileName));
 extern boolean isFileHeader __ARGS((const char *const fileName));
 extern langType getFileLanguage __ARGS((const char *const fileName));
 extern boolean isIgnoreToken __ARGS((const char *const name, boolean *const pIgnoreParens, const char **const replacement));

@@ -56,29 +56,34 @@ TCL_LIBS	= @TCL_LIBS@
 HANGULIN_SRC	= @HANGULIN_SRC@
 HANGULIN_OBJ	= @HANGULIN_OBJ@
 
+WORKSHOP_SRC	= @WORKSHOP_SRC@
+WORKSHOP_OBJ	= @WORKSHOP_OBJ@
+
 AWK		= @AWK@
 
 STRIP		= @STRIP@
 
+### Line break character as octal number for "tr"
+NL   		= @line_break@
+
 ### Top directory for everything
-prefix		= @prefix@
+prefix		= $(DESTDIR)@prefix@
 
 ### Top directory for the binary
-exec_prefix	= @exec_prefix@
+exec_prefix	= $(DESTDIR)@exec_prefix@
 
 ### Prefix for location of data files
-BINDIR		= @bindir@
+BINDIR		= $(DESTDIR)@bindir@
 
 ### Prefix for location of data files
-DATADIR		= @datadir@
+DATADIR		= $(DESTDIR)@datadir@
 
 ### Prefix for location of man pages
-MANDIR		= @mandir@
+MANDIR		= $(DESTDIR)@mandir@
 
 ### Do we have a GUI
 GUI_INC_LOC	= @GUI_INC_LOC@
 GUI_LIB_LOC	= @GUI_LIB_LOC@
-GUI_INCL	= $(@GUITYPE@_INCL)
 GUI_SRC		= $(@GUITYPE@_SRC)
 GUI_OBJ		= $(@GUITYPE@_OBJ)
 GUI_DEFS	= $(@GUITYPE@_DEFS)
@@ -96,3 +101,10 @@ MOTIF_LIBNAME	= @MOTIF_LIBNAME@
 ### Any OS dependent extra source and object file
 OS_EXTRA_SRC	= @OS_EXTRA_SRC@
 OS_EXTRA_OBJ	= @OS_EXTRA_OBJ@
+
+### If the *.po files are to be translated to *.mo files.
+MAKEMO		= @MAKEMO@
+
+# Make sure that "make first" will run "make all" once configure has done its
+# work.  This is needed when using the Makefile in the top directory.
+first: all

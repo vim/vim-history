@@ -27,7 +27,7 @@
 # define USR_EXRC_FILE2		"$VIM\\_exrc"
 #endif
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 # ifndef USR_GVIMRC_FILE
 #  define USR_GVIMRC_FILE	"$HOME\\_gvimrc"
 # endif
@@ -43,7 +43,7 @@
 # define SYS_OPTWIN_FILE	"$VIMRUNTIME\\optwin.vim"
 #endif
 
-#ifdef VIMINFO
+#ifdef FEAT_VIMINFO
 # ifndef VIMINFO_FILE
 #  define VIMINFO_FILE		"$HOME\\_viminfo"
 # endif
@@ -60,7 +60,7 @@
 # define EXRC_FILE	"_exrc"
 #endif
 
-#ifdef USE_GUI
+#ifdef FEAT_GUI
 # ifndef GVIMRC_FILE
 #  define GVIMRC_FILE	"_gvimrc"
 # endif
@@ -71,10 +71,16 @@
 #endif
 
 #ifndef FILETYPE_FILE
-# define FILETYPE_FILE	"$VIMRUNTIME\\filetype.vim"
+# define FILETYPE_FILE	"filetype.vim"
+#endif
+#ifndef SETTINGS_FILE
+# define SETTINGS_FILE	"settings.vim"
 #endif
 #ifndef FTOFF_FILE
-# define FTOFF_FILE	"$VIMRUNTIME\\ftoff.vim"
+# define FTOFF_FILE	"ftoff.vim"
+#endif
+#ifndef SETSOFF_FILE
+# define SETSOFF_FILE	"setsoff.vim"
 #endif
 
 #ifndef SYNTAX_FNAME

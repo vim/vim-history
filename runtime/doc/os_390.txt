@@ -1,0 +1,366 @@
+*os_390.txt*    For Vim version 6.0d.  Last change: 2000 Jul 07
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+							*OS390* *os390*
+This file contains the particularities for the OS/390 Unix version of Vim.
+
+REMEMBER: VIM on OS/390 Unix is still a A L P H A Version.
+
+1) Your feedback is needed		|OS390-feedback|
+2) Building VIM for OS/390 Unix		|OS390-building|
+3) Changes				|OS390-changes|
+4) Xterm Problems			|OS390-xterm|
+5) Motif Problems			|OS390-Motif|
+6) Known weaknesses			|OS390-weaknesses|
+7) Porting VIM to OS/390 Unix		|OS390-porting|
+
+The port to OS/390 Unix was done by Ralf Schandl <schandl@de.ibm.com>.
+
+DISCLAIMER:
+Also I am an IBMer, IBM is not responsible for this port, this is my
+private fun. If you have problems with this port, please contact me.
+
+							*OS390-feedback*
+1) Your feedback is needed
+
+The changes for Vim on OS/390 Unix are not part of the Vim distribution yet.
+Adding this much changes to a programm does only make sense if there are a
+reasonable amount of users using Vim on 390. So if you are using it and you
+want support for upcoming versions send me a mail to the adress above.
+
+
+							*OS390-building*
+2) Building VIM for OS/390 Unix
+
+ATTENTION:
+    After the file configure was created with autoconf, it has been
+    handedited to make a certain X11 test work!
+    DO NOT run autoconf again!!
+
+
+A word on debugging code first:
+
+The normal run of configure adds the flag '-g' to the compiler options,
+to include debugging information into the executable. This information
+are normally removed from the executable with the strip command during
+installation. On OS/390 Unix, it is not possible to remove this from
+the executable. The strip command exists on OS/390 Unix and is called
+during the installation, but in fact it just does nothing.
+
+If you want to build Vim without debugging code, do this:
+After you ran configure remove the flag '-g' from the definition of
+CFLAGS in the file config.mk. Then call make.
+
+Without X11
+If you build VIM without X11 support, compiling and building is nearly
+straightforward. The only restriction is, that you can't call make from the
+VIM toplevel directory. Change to the src directory first and call make from
+there. Something like: >
+    $ export _CC_CCMODE=1
+    $./configure --enable-max-features --without-x --enable-gui=no
+    $ cd src
+    $ make
+    $ make test
+<
+      Note: Test 28 will be reported as failed. This is because diff can't
+	    compare files containing '\0' characters. Test 11 will fail if you
+	    don't have gzip.
+>
+    $ make install
+<
+With X11
+There are two ways for building VIM with X11 support. You can link it with
+statically with the X11 libraries or can bind it with the X11 DLLs. The
+statical link results in a huge executable (~13Mb), the dynamical linked
+executable is mutch smaller (~4.5Mb). Here is what you do, if you want Motif:
+
+  a) Static link >
+	$ export LDFLAGS="-W l,dll"
+	$ export _CC_CCMODE=1
+	$ configure --enable-max-features --enable-gui=motif
+	$ cd src
+	$ make
+<
+     VIM is now linked statically with the X11 libraries.
+
+  b) Dynamic link:
+     Make VIM as described above. Then change the contense of the 'link.sed'
+     file to the following: >
+
+	s%-lXext  *%%g
+	s%-lXmu  *%%g
+	s%-lXt	*%%g
+	s%-lXm	*%/usr/lib/Xm.x %g
+	s%-lX11  *%/usr/lib/X11.x %g
+	s%-lSM	*%/usr/lib/SM.x %g
+	s%-lICE  *%/usr/lib/ICE.x %g
+<
+     Then do: >
+	$ rm vim
+	$ make
+<
+     Now Vim is linked with the X11-DLLs.
+
+     See the Makefile and the file link.sh on how link.sed is used.
+
+							*OS390-changes*
+3) Changes
+
+5.6-390d:
+  Cleaned up some hacks.
+
+5.6-390c:
+
+  I greped thru the source and examined every spot with a character
+  involved in a operation (+-). I hope I now found all EBCDIC/ASCII
+  stuff, but ....
+
+  Fixed:
+    - fixed warning message in do_fixdel()
+    - fixed translation from Ctrl-Char to symbolic name (like ^h to CTRL-H)
+	    for :help
+    - fixed yank/delete/... into register
+    - fixed :register command
+    - fixed viminfo register storing
+    - fixed quick-access table in findoptions()
+    - fixed 'g^H' select mode
+    - fixed tgetstr() 'get terminal capability string', ESC and
+	    Ctrl chars where wrong. (Not used on OS 390 Unix)
+
+
+  ctags:
+    - added trigraphs support (used in prolog of system header files)
+	    (get.c)
+    - fixed sorting order with LC_COLLATE=S390 to force EBCDIC sorting.
+	    (sort.c)
+
+
+5.6-390b:
+  Changed:
+    - configure.in:
+	- added test for OS/390 Unix
+	- added special compiler and linker options if building with X11
+    - configure:
+	- after created via autoconf handedited it to make the test for
+	  ICEConnectionNumber work. This is a autoconf problem. OS/390 Unix
+	  needs -lX11 for this.
+    - Makefile
+	- Don't include the lib directories ('-L...') into the variable
+	  ALL_LIBS. Use own variable ALL_LIB_DIRS instead. A fully POSIX
+	  compliant compiler must not accept objects/libraries and options
+	  mixed. Now we can call the linker like this:
+
+	    $(CC) $(LDFLAGS) $(ALL_LIB_DIRS) $(OBJ) $(ALL_LIBS)
+
+  Fixed:
+    - Double quote couldn't be entered
+      Missed ASCII dependencies while setting up terminal
+      In ASCII 127 is the delete char, in EBCDIC codepage 1047 the value 127
+      is the double quote.
+    - fixed ':fixdel'
+
+5.6-390a:
+  first alpha release for OS/390 Unix.
+
+  Addition:
+    - For the internal script language I added the feature "ebcdic".
+      This can be queried with the has()-function of the internal
+      script language.
+
+
+							*OS390-xterm*
+4) XTerm problems
+
+At least on  problem seems to exist with XTerm on OS390 Unix.  The terminal
+code for moving the cursor to the left is wrong in the termlib database.
+Perhapse not wrong, but it doesn't work with VIM syntax highlighting and
+command line cursor movement.
+
+If the highlighting is messed up while you type, but is ok after you refreshed
+the screen with <C-L> or if you can't move to the left with the cursor key on
+the command line, try adding >
+
+	:set t_le=^H
+
+to your .vimrc. NOTE: '^H' is one character, hit <C-V><C-H> to get it.
+
+							*OS390-Motif*
+5) Motif Problems
+
+It seems that in the Motif library a translation from EBCDIC to ASCII for
+Mnemonic chars of the menues were forgotten. Even after I added some
+conversion by hand, it still only works for opening menues (like <Alt-F> to
+open the file menu), but doesn't work for the menue items (like <Alt-F>O to
+open the file browser).
+
+							*OS390-weaknesses*
+6) Known weaknesses
+
+- No binary search in tag files (see |OS390-porting|).
+
+- Perl interface never tried or tested		(|perl|)
+- Hangul imput never tried or tested		(|hangul|)
+- Cscope interface never tried or tested	(|cscope|)
+- Encryption support never tested		(|encryption|)
+- Langmap never tested				(|'langmap'|)
+- Python support never tried or tested		(|Python|)
+- Right-to-left mode never tested		(|'rightleft'|)
+- SNiFF+ interface never tried or tested	(|sniff|)
+- TCL interface never tried or tested		(|tcl|)
+
+
+
+
+							*OS390-porting*
+7) Porting VIM to OS/390 Unix
+
+The main problem porting VIM were the heavy ASCII dependencies in the code.
+
+To detect that the current machine uses EBCDIC a test was added to the
+configure script:
+
+    dnl This test for EBCDIC is shamelessly stolen from the Lynx
+    dnl port to OS/390 Unix, done by Paul Gilmartin
+    AC_MSG_CHECKING(if character set is EBCDIC)
+    AC_TRY_COMPILE([ ],
+    [ /* TryCompile function for CharSet.
+    Treat any failure as ASCII for compatibility with existing art.
+    Use compile-time rather than run-time tests for cross-compiler
+    tolerance.  */
+    #if '0'!=240
+    make an error "Character set is not EBCDIC"
+    #endif ],
+    [ # TryCompile action if true
+    cf_cv_ebcdic=yes ],
+    [ # TryCompile action if false
+    cf_cv_ebcdic=no])
+    # end of TryCompile ])
+    # end of CacheVal CvEbcdic
+    AC_MSG_RESULT($cf_cv_ebcdic)
+    case "$cf_cv_ebcdic" in  #(vi
+	yes) AC_DEFINE(EBCDIC)
+	    line_break='"\\\\025"'
+	    ;;
+	*)   line_break='"\\\\012"';;
+    esac
+    AC_SUBST(line_break)
+
+
+With this the macro EBCDIC is defined in config.h and can be used for #ifdef's
+in the code.
+
+A problem was the way control characters are calculated:
+
+    #define Ctrl(x) ((x) & 0x1f)
+
+For a constant x this evaluates to a constant expression during compile time
+and can hence be used in case lables. In EBCDIC there is no way to calculate
+the control character from a given character, so a lookup table was needed:
+
+    #define Ctrl(x) (CtrlTable[x])
+
+As this doesn't evaluate to a constant expression, it can't be used in case
+lables. For this we had to define Ctrl_A, Ctrl_B and so on. This constants are
+also defined for ASCII, to minimize #ifdef's in the code.
+
+We also added lookup tables to look up meta characters and to translate a
+control character back to the corresponding character:
+
+    #define CtrlChar(x) ((x<' ')?CtrlCharTable[x]:0)
+    #define MetaChar(x) ((x<' ')?MetaCharTable[(x)]:0)
+
+Example:
+    Ctrl('A')      == 0x01
+    CtrlChar(0x01) == 'A'
+
+
+To calculate the position of a character in the alphabet be added the
+following macro:
+
+    #ifdef EBCDIC
+    # define CharOrd__(c,a,j,s)		\
+	    ((c)<(j)?(c)-(a):((c)<(s)?(c)-(a)-7:(c)-(a)-7-8))
+    # define CharOrd(x)			\
+	    (isupper(x)?CharOrd__((x),'A','J','S'):CharOrd__((x),'a','j','s'))
+    #else
+    # define CharOrd(x) (isupper(x)?(x)-'A':(x)-'a')
+    #endif
+
+Printable and nonprintable characters
+in EBCDIC all characters above and including space (code 64) are printable for
+VIM (they can be displayed as one character on the screen).
+
+Digraphs
+For EBCDIC a new digraph table has been added. This table is codepage
+IBM-1047 dependent. Use the command :digraphs to see the actual characters.
+
+Hardcoded character values
+At a lot of places hardcoded character values where found in strings. Like:
+
+    "\026x"
+
+This are the chars Ctrl-V and 'x'. This kind of strings have be replaced by:
+
+    #ifdef EBCDIC
+    # define CTRL_V_STR "\062"
+    #else
+    # define CTRL_V_STR "\062"
+    #endif
+
+    CTRL_V_STR "x"
+
+Remeber that consecutive strings in the code are concatenated by the
+compiler.
+
+The same procedure was used for the often used character ESCAPE.
+
+Eval
+For the internal script language we added the feature "ebcdic". With you can
+fix ASCII dependent scripts like this:
+
+    if(has("ebcdic"))
+        let space = 64
+    else
+        let space = 32
+    endif
+
+Tag search
+VIM has the ability to do a binary search on a sorted tag file.As /bin/sort on
+OS/390 Unix simulates a ASCII sort program, the lines are NOT sorted by the
+EBCDIC character values, but by the ASCII character values. With this kind of
+sorting the binary search doesn't work.
+
+For this reason binary search is turned of if EBCDIC is detected. The tag
+files are only searched linear, which is a bit slower. This might be a
+permanent restriction.
+
+Options
+The default values for several options had to be changed for EBCDIC. Some of
+these needs some rework.
+
+The format for c89 error messages has been added to the 'errorformat' option.
+
+Regular Expressions
+As in EBCDIC the ranges a-z and A-Z containes nonalphabetic characters, the
+code for this ranges was fixed to ignore the nonalphabetic characters.
+
+Tests
+The following tests had to be modified, as they contained ASCII character
+values:
+    test2
+    test14
+    test17
+    test26
+
+Configure
+Before you run configure you have to do a few things:
+    export CC=cc
+    export CFLAGS="-D_ALL_SOURCE -W c,dll"
+    export LDFLAGS="-W l,dll"
+
+
+------------------------------------------------------------------------------
+ vim:tw=78:fo=tcq2

@@ -12,7 +12,7 @@
 
 #include "vim.h"
 
-#ifdef DIGRAPHS
+#ifdef FEAT_DIGRAPHS
 
 static int getexactdigraph __ARGS((int, int, int));
 static void printdigraph __ARGS((char_u *));
@@ -24,7 +24,7 @@ static int	digraphcount = 0;	    /* number of added digraphs */
  * Note: Characters marked with XX are not included literally, because some
  * compilers cannot handle them (Amiga SAS/C is the most picky one).
  */
-#if (defined(MSDOS) || defined(WIN32) || defined(OS2)) && !defined(USE_GUI_MSWIN)
+#if (defined(MSDOS) || defined(WIN32) || defined(OS2)) && !defined(FEAT_GUI_MSWIN)
 char_u	digraphdefault[][3] =	    /* standard MSDOS digraphs */
        {{'C', ',', 128},	/* ~@ XX */
 	{'u', '"', 129},	/* Å */
@@ -254,7 +254,115 @@ char_u	digraphdefault[][3] =	    /* different HPUX digraphs */
 	};
 
 #  else	/* !HPUX_DIGRAPHS */
-#   ifdef macintosh
+
+#   ifdef EBCDIC
+	/* TODO: EBCDIC Table is Code-Page 1047 */
+char_u	digraphdefault[][3] =	    /* standard ISO digraphs */
+       {{'a', '^',    66},	/* ‚ */
+	{'a', '"',    67},	/* ‰ */
+	{'a', '`',    68},	/* ‡ */
+	{'a', '\'',   69},	/* · */
+	{'a', '~',    70},	/* „ */
+	{'a', '@',    71},	/* Â */
+	{'a', 'a',    71},	/* Â */
+	{'c', ',',    72},	/* Á */
+	{'n', '~',    73},	/* Ò */
+	{'c', '|',    74},	/* ¢ */
+	{'e', '\'',   81},	/* È */
+	{'e', '^',    82},	/* Í */
+	{'e', '"',    83},	/* Î */
+	{'e', '`',    84},	/* Ë */
+	{'i', '\'',   85},	/* Ì */
+	{'i', '^',    86},	/* Ó */
+	{'i', '"',    87},	/* Ô */
+	{'i', '`',    88},	/* Ï */
+	{'s', 's',    89},	/* ﬂ */
+	{'A', '^',    98},	/* ¬ */
+	{'A', '"',    99},	/* ƒ */
+	{'A', '`',   100},	/* ¿ */
+	{'A', '\'',  101},	/* ¡ */
+	{'A', '~',   102},	/* √ */
+	{'A', '@',   103},	/* ≈ */
+	{'A', 'A',   103},	/* ≈ */
+	{'C', ',',   104},	/* « */
+	{'N', '~',   105},	/* — */
+	{'|', '|',   106},	/* ¶ */
+	{'o', '/',   112},	/* ¯ */
+	{'E', '\'',  113},	/* … */
+	{'E', '^',   114},	/*   */
+	{'E', '"',   115},	/* À */
+	{'E', '`',   116},	/* » */
+	{'I', '\'',  117},	/* Õ */
+	{'I', '^',   118},	/* Œ */
+	{'I', '"',   119},	/* œ */
+	{'I', '`',   120},	/* Ã */
+	{'O', '/',   128},	/* 0/ XX */
+	{'<', '<',   138},	/* ´ */
+	{'>', '>',   139},	/* ª */
+	{'d', '-',   140},	/*  */
+	{'y', '\'',  141},	/* ˝ */
+	{'i', 'p',   142},	/* ˛ */
+	{'+', '-',   143},	/* ± */
+	{'~', 'o',   144},	/* ∞ */
+	{'a', '-',   154},	/* ™ */
+	{'o', '-',   155},	/* ∫ */
+	{'a', 'e',   156},	/* Ê */
+	{',', ',',   157},	/* , XX */
+	{'A', 'E',   158},	/* ∆ */
+	{'o', 'x',   159},	/* § - currency symbol in ISO 8859-1 */
+	{'e', '=',   159},	/* § - euro symbol in ISO 8859-15 */
+	{'j', 'u',   160},	/* µ */
+	{'y', '"',   167},	/* x XX */
+        {'~', '!',   170},	/* ° */
+	{'~', '?',   171},	/* ø */
+	{'D', '-',   172},	/* – */
+	{'I', 'p',   174},	/* ﬁ */
+	{'r', 'O',   175},	/* Æ */
+	{'-', ',',   176},	/* ¨ */
+	{'$', '$',   177},	/* £ */
+	{'Y', '-',   178},	/* • */
+	{'~', '.',   179},	/* ∑ */
+	{'c', 'O',   180},	/* © */
+	{'p', 'a',   181},	/* ß */
+	{'p', 'p',   182},	/* ∂ */
+	{'1', '4',   183},	/* º */
+	{'1', '2',   184},	/* Ω */
+	{'3', '4',   185},	/* æ */
+	{'Y', '\'',  186},	/* › */
+	{'"', '"',   187},	/* ® */
+	{'-', '=',   188},	/* Ø */
+	{'\'', '\'', 190},	/* ¥ */
+	{'O', 'E',   191},	/* ◊ - OE in ISO 8859-15 */
+	{'/', '\\',  191},	/* ◊ - multiplication symbol in ISO 8859-1 */
+	{'-', '-',   202},	/* ≠ */
+	{'o', '^',   203},	/* Ù */
+	{'o', '"',   204},	/* ˆ */
+	{'o', '`',   205},	/* Ú */
+	{'o', '\'',  206},	/* Û */
+	{'o', '~',   207},	/* ı */
+	{'1', '1',   218},	/* π */
+	{'u', '^',   219},	/* ˚ */
+	{'u', '"',   220},	/* ¸ */
+	{'u', '`',   221},	/* ˘ */
+	{'u', '\'',  222},	/* ˙ */
+	{':', '-',   225},	/* ˜ - division symbol in ISO 8859-1 */
+	{'o', 'e',   225},	/* ˜ - oe in ISO 8859-15 */
+	{'2', '2',   234},	/* ≤ */
+	{'O', '^',   235},	/* ‘ */
+	{'O', '"',   236},	/* ÷ */
+	{'O', '`',   237},	/* “ */
+	{'O', '\'',  238},	/* ” */
+	{'O', '~',   239},	/* ’ */
+	{'3', '3',   250},	/* ≥ */
+	{'U', '^',   251},	/* € */
+	{'U', '"',   252},	/* ‹ */
+	{'U', '`',   253},	/* Ÿ */
+	{'U', '\'',  254},	/* ⁄ */
+	{NUL, NUL, NUL}
+	};
+
+#   else
+#    ifdef macintosh
 
 char_u	digraphdefault[][3] =	/* different Macintosh digraphs */
        {{'a', 't', 64},		/* @ */
@@ -380,8 +488,7 @@ char_u	digraphdefault[][3] =	/* different Macintosh digraphs */
 	{NUL, NUL, NUL}
 	};
 
-#   else	/* !macintosh */
-
+#    else	/* !macintosh */
 
 char_u	digraphdefault[][3] =	    /* standard ISO digraphs */
        {{'~', '!', 161},	/* ° */
@@ -486,7 +593,9 @@ char_u	digraphdefault[][3] =	    /* standard ISO digraphs */
 	{'y', '"', 255},	/* x XX */
 	{NUL, NUL, NUL}
 	};
-#   endif /* Macintosh */
+
+#    endif /* Macintosh */
+#   endif /* EBCDIC */
 #  endif    /* !HPUX_DIGRAPHS */
 # endif	/* !__MINT__ */
 #endif	/* !MSDOS && !WIN32 */
@@ -510,7 +619,7 @@ do_digraph(c)
 	if (backspaced >= 0)
 	    c = getdigraph(backspaced, c, FALSE);
 	backspaced = -1;
-	if ((c == K_BS || c == Ctrl('H')) && lastchar >= 0)
+	if ((c == K_BS || c == Ctrl_H) && lastchar >= 0)
 	    backspaced = lastchar;
     }
     lastchar = c;
@@ -599,13 +708,13 @@ putdigraph(str)
 	    return;
 	if (char1 == ESC || char2 == ESC)
 	{
-	    EMSG("Escape not allowed in digraph");
+	    EMSG(_("Escape not allowed in digraph"));
 	    return;
 	}
 	str = skipwhite(str);
 	if (!isdigit(*str))
 	{
-	    emsg(e_number);
+	    EMSG(_(e_number));
 	    return;
 	}
 	n = getdigits(&str);
@@ -654,7 +763,7 @@ listdigraphs()
 	ui_breakcheck();
     }
     must_redraw = CLEAR;    /* clear screen, because some digraphs may be
-			       wrong, in which case we messed up NextScreen */
+			       wrong, in which case we messed up ScreenLines */
 }
 
     static void
@@ -681,4 +790,4 @@ printdigraph(p)
     }
 }
 
-#endif /* DIGRAPHS */
+#endif /* FEAT_DIGRAPHS */

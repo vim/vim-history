@@ -97,7 +97,7 @@
 
 #ifdef sgi
 # include <sys/sysmacros.h>
-#endif /* sgi */
+#endif
 
 #if defined(_INCLUDE_HPUX_SOURCE) && !defined(hpux)
 # define hpux
@@ -111,6 +111,11 @@
 #endif
 #ifndef PTYRANGE1
 # define PTYRANGE1 "0123456789abcdef"
+#endif
+
+/* SVR4 pseudo ttys don't seem to work with SCO-5 */
+#ifdef M_UNIX
+# undef HAVE_SVR4_PTYS
 #endif
 
 #if !(defined(sequent) || defined(_SEQUENT_) || defined(SVR4))
@@ -128,7 +133,7 @@ static char TtyProto[] = "/dev/ttyXY";
 # endif
 #endif
 
-static void initpty __ARGS((int));
+static void initmaster __ARGS((int));
 
 /*
  *  Open all ptys with O_NOCTTY, just to be on the safe side
@@ -139,7 +144,7 @@ static void initpty __ARGS((int));
 #endif
 
     static void
-initpty(f)
+initmaster(f)
     int f;
 {
 #ifndef VMS
@@ -147,14 +152,40 @@ initpty(f)
     tcflush(f, TCIOFLUSH);
 # else
 #  ifdef TIOCFLUSH
-    (void) ioctl(f, TIOCFLUSH, (char *) 0);
+    (void)ioctl(f, TIOCFLUSH, (char *) 0);
 #  endif
 # endif
 # ifdef LOCKPTY
-    (void) ioctl(f, TIOCEXCL, (char *) 0);
+    (void)ioctl(f, TIOCEXCL, (char *) 0);
 # endif
 #endif
 }
+
+/*
+ * This causes a hang on some systems, but is required for a properly working
+ * pty on others.  Needs to be tuned...
+ */
+    int
+SetupSlavePTY(fd)
+    int fd;
+{
+    if (fd < 0)
+	return 0;
+#if defined(I_PUSH) && defined(HAVE_SVR4_PTYS) && !defined(sgi) && !defined(linux) && !defined(__osf__) && !defined(M_UNIX)
+# if HAVE_SYS_PTEM_H
+    if (ioctl(fd, I_PUSH, "ptem") != 0)
+	return -1;
+# endif
+    if (ioctl(fd, I_PUSH, "ldterm") != 0)
+	return -1;
+# ifdef sun
+    if (ioctl(fd, I_PUSH, "ttcompat") != 0)
+	return -1;
+# endif
+#endif
+    return 0;
+}
+
 
 #if defined(OSX) && !defined(PTY_DONE)
 #define PTY_DONE
@@ -167,7 +198,7 @@ OpenPTY(ttyn)
 
     if ((f = open_controlling_pty(TtyName)) < 0)
 	return -1;
-    initpty(f);
+    initmaster(f);
     *ttyn = TtyName;
     return f;
 }
@@ -192,7 +223,7 @@ OpenPTY(ttyn)
 #endif
     strncpy(PtyName, m, sizeof(PtyName));
     strncpy(TtyName, s, sizeof(TtyName));
-    initpty(f);
+    initmaster(f);
     *ttyn = TtyName;
     return f;
 }
@@ -218,7 +249,7 @@ OpenPTY(ttyn)
 
     if (name == 0)
 	return -1;
-    initpty(f);
+    initmaster(f);
     *ttyn = name;
     return f;
 }
@@ -243,13 +274,13 @@ OpenPTY(ttyn)
 	return -1;
     }
     sprintf(TtyName, "/dev/ttyq%d", minor(buf.st_rdev));
-    initpty(f);
+    initmaster(f);
     *ttyn = TtyName;
     return f;
 }
 #endif
 
-#if defined(SVR4) && !defined(PTY_DONE)
+#if defined(HAVE_SVR4_PTYS) && !defined(PTY_DONE)
 
 /* NOTE: Even though HPUX can have /dev/ptmx, the code below doesn't work! */
 #define PTY_DONE
@@ -280,7 +311,7 @@ OpenPTY(ttyn)
     }
     signal(SIGCHLD, sigcld);
     strncpy(TtyName, m, sizeof(TtyName));
-    initpty(f);
+    initmaster(f);
     *ttyn = TtyName;
     return f;
 }
@@ -302,7 +333,7 @@ OpenPTY(ttyn)
     static char TtyName[32];
 
     /* a dumb looking loop replaced by mycrofts code: */
-    if ((f = open ("/dev/ptc", O_RDWR | O_NOCTTY | O_EXTRA)) < 0)
+    if ((f = open("/dev/ptc", O_RDWR | O_NOCTTY | O_EXTRA)) < 0)
 	return -1;
     strncpy(TtyName, ttyname(f), sizeof(TtyName));
     if (geteuid() && mch_access(TtyName, R_OK | W_OK))
@@ -310,7 +341,7 @@ OpenPTY(ttyn)
 	close(f);
 	return -1;
     }
-    initpty(f);
+    initmaster(f);
 # ifdef _IBMR2
     if (aixhack >= 0)
 	close(aixhack);
@@ -336,7 +367,7 @@ OpenPTY(ttyn)
     static char PtyName[32];
     static char TtyName[32];
 
-    debug("OpenPTY: Using BSD style ptys.\n");
+    debug(_("OpenPTY: Using BSD style ptys.\n"));
     strcpy(PtyName, PtyProto);
     strcpy(TtyName, TtyProto);
     for (p = PtyName; *p != 'X'; p++)
@@ -347,7 +378,7 @@ OpenPTY(ttyn)
     {
 	for (d = PTYRANGE1; (p[1] = *d) != '\0'; d++)
 	{
-	    debug1("OpenPTY tries '%s'\n", PtyName);
+	    debug1(_("OpenPTY tries '%s'\n"), PtyName);
 #ifdef macintosh
 	    if ((f = open(PtyName, O_RDWR | O_NOCTTY | O_EXTRA)) == -1)
 #else
@@ -378,7 +409,7 @@ OpenPTY(ttyn)
 		}
 	    }
 #endif
-	    initpty(f);
+	    initmaster(f);
 	    *ttyn = TtyName;
 	    return f;
 	}
@@ -386,34 +417,6 @@ OpenPTY(ttyn)
     return -1;
 }
 #endif
-
-/*
- * This causes a hang on some systems, but is required for a properly working
- * pty on others.  Needs to be tuned...
- */
-#if defined(SVR4) && !defined(__sgi) && !defined(_AIX) && !defined(SCO)
-# define USE_USG_PTYS
-#endif
-
-/*ARGSUSED*/
-    int
-SetupSlavePTY(fd)
-    int fd;
-{
-#if defined(USE_USG_PTYS) && defined(I_PUSH)
-# if HAVE_SYS_PTEM_H
-    if (ioctl(fd, I_PUSH, "ptem") < 0)
-	return -1;
-# endif
-    if (ioctl(fd, I_PUSH, "ldterm") < 0)
-	return -1;
-# ifdef SVR4
-    if (ioctl(fd, I_PUSH, "ttcompat") < 0)
-	return -1;
-# endif
-#endif
-    return 0;
-}
 
 /* putenv.c */
 

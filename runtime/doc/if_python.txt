@@ -1,4 +1,4 @@
-*if_python.txt* For Vim version 5.7.  Last change: 1999 Oct 28
+*if_python.txt* For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -33,13 +33,13 @@ range.
 In the case of :python, the code to execute is specified on the command-line.
 In the case of :pyfile, the code to execute is the contents of the given file.
 
-Here are some examples					*python-examples*
+Here are some examples					*python-examples*  >
 
->	:python from vim import *
->	:python from string import upper
->	:python current.line = upper(current.line)
->	:python print "Hello"
->	:python str = current.buffer[42]
+	:python from vim import *
+	:python from string import upper
+	:python current.line = upper(current.line)
+	:python print "Hello"
+	:python str = current.buffer[42]
 
 (Note that changes - like the imports - persist from one command to the next,
 just like in the Python interpreter).
@@ -51,58 +51,58 @@ Python code gets all of its access to vim (with one exception - see
 |python-output| below) via the "vim" module. The vim module implements two
 methods, three constants, and one error object.
 
-Overview
->	print "Hello"			# displays a message
->	vim.command(cmd)		# execute an ex command
->	w = vim.windows[n]		# gets window "n"
->	cw = vim.current.window	# gets the current window
->	b = vim.buffers[n]		# gets buffer "n"
->	cb = vim.current.buffer	# gets the current buffer
->	w.height = lines		# sets the window height
->	w.cursor = (row, col)		# sets the window cursor position
->	pos = w.cursor			# gets a tuple (row, col)
->	name = b.name			# gets the buffer file name
->	line = b[n]			# gets a line from the buffer
->	lines = b[n:m]			# gets a list of lines
->	num = len(b)			# gets the number of lines
->	b[n] = str			# sets a line in the buffer
->	b[n:m] = [str1, str2, str3]	# sets a number of lines at once
->	del b[n]			# deletes a line
->	del b[n:m]			# deletes a number of lines
+Overview >
+	print "Hello"			# displays a message
+	vim.command(cmd)		# execute an ex command
+	w = vim.windows[n]		# gets window "n"
+	cw = vim.current.window	# gets the current window
+	b = vim.buffers[n]		# gets buffer "n"
+	cb = vim.current.buffer	# gets the current buffer
+	w.height = lines		# sets the window height
+	w.cursor = (row, col)		# sets the window cursor position
+	pos = w.cursor			# gets a tuple (row, col)
+	name = b.name			# gets the buffer file name
+	line = b[n]			# gets a line from the buffer
+	lines = b[n:m]			# gets a list of lines
+	num = len(b)			# gets the number of lines
+	b[n] = str			# sets a line in the buffer
+	b[n:m] = [str1, str2, str3]	# sets a number of lines at once
+	del b[n]			# deletes a line
+	del b[n:m]			# deletes a number of lines
 
 Methods
 	vim.command(str)				*python-command*
 	Executes the vim (ex-mode) command str. Returns None.
-	Examples:
->		vim.command("set tw=72")
->		vim.command("%s/aaa/bbb/g")
-	To execute normal-mode commands, the following definition could be
-	used:
->		def normal(str):
->			vim.command("normal "+str)
->		# Note the use of '...' to delimit a string containing double
->		# quotes
->		normal('"a2dd"aP')
-
+	Examples: >
+		vim.command("set tw=72")
+		vim.command("%s/aaa/bbb/g")
+<	To execute normal-mode commands, the following definition could be
+	used: >
+		def normal(str):
+			vim.command("normal "+str)
+		# Note the use of '...' to delimit a string containing double
+		# quotes
+		normal('"a2dd"aP')
+<
 	vim.eval(str)					*python-eval*
 	Evaluates the expression str using the vim internal expression
 	evaluator (see |expression|). Returns the expression result as a
 	string.
-	Examples:
->		text_width = vim.eval("'tw'")
->		str = vim.eval("12+12")		# NB result is a string! Use
->						# string.atoi() to convert to
->						# a number.
+	Examples: >
+		text_width = vim.eval("'tw'")
+		str = vim.eval("12+12")		# NB result is a string! Use
+						# string.atoi() to convert to
+						# a number.
 
 Error object
 	vim.error					*python-error*
 	All vim errors encountered by Python are raised as exceptions of type
 	vim.error.
-	Example:
->		try:
->			vim.command("put a")
->		except vim.error:
->			# nothing in register a
+	Example: >
+		try:
+			vim.command("put a")
+		except vim.error:
+			# nothing in register a
 
 Constants
 	Note that these are not actually constants - in theory you could
@@ -111,20 +111,20 @@ Constants
 
 	vim.buffers					*python-buffers*
 	A sequence object providing access to the list of vim buffers. The
-	following operations are supported:
->		b = vim.buffers[i]	# Indexing (read-only)
->		b in vim.buffers	# Membership test
->		n = len(vim.buffers)	# Number of elements
->		for b in vim.buffers:	# Sequential access
-
+	following operations are supported: >
+		b = vim.buffers[i]	# Indexing (read-only)
+		b in vim.buffers	# Membership test
+		n = len(vim.buffers)	# Number of elements
+		for b in vim.buffers:	# Sequential access
+<
 	vim.windows					*python-windows*
 	A sequence object providing access to the list of vim windows. The
-	following operations are supported:
->		w = vim.windows[i]	# Indexing (read-only)
->		w in vim.windows	# Membership test
->		n = len(vim.windows)	# Number of elements
->		for w in vim.windows:	# Sequential access
-
+	following operations are supported: >
+		w = vim.windows[i]	# Indexing (read-only)
+		w in vim.windows	# Membership test
+		n = len(vim.windows)	# Number of elements
+		for w in vim.windows:	# Sequential access
+<
 	vim.current					*python-current*
 	An object providing access (via specific attributes) to various
 	"current" objects available in vim:
@@ -193,17 +193,17 @@ The buffer object methods are:
 			represents the part of the given buffer between line
 			numbers s and e (inclusive).
 
-Examples (assume b is the current buffer)
->	print b.name		# write the buffer file name
->	b[0] = "hello!!!"	# replace the top line
->	b[:] = None		# delete the whole buffer
->	del b[:]		# delete the whole buffer (same as above)
->	b[0:0] = "add a line"	# add a line at the top
->	del b[2]		# delete a line (the third)
->	b.append("bottom")	# add a line at the bottom
->	n = len(b)		# number of lines
->	(row,col) = b.mark('a') # named mark
->	r = b.range(1,5)	# a sub-range of the buffer
+Examples (assume b is the current buffer) >
+	print b.name		# write the buffer file name
+	b[0] = "hello!!!"	# replace the top line
+	b[:] = None		# delete the whole buffer
+	del b[:]		# delete the whole buffer (same as above)
+	b[0:0] = "add a line"	# add a line at the top
+	del b[2]		# delete a line (the third)
+	b.append("bottom")	# add a line at the bottom
+	n = len(b)		# number of lines
+	(row,col) = b.mark('a') # named mark
+	r = b.range(1,5)	# a sub-range of the buffer
 
 ==============================================================================
 4. Range objects					*python-range*
@@ -240,4 +240,4 @@ Window attributes are
 	height (read-write)	The window height, in rows
 
 ==============================================================================
- vim:tw=78:ts=8:sw=8:
+ vim:tw=78:

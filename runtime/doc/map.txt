@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 5.7.  Last change: 2000 Jun 14
+*map.txt*       For Vim version 6.0d.  Last change: 2000 Jul 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -54,9 +54,9 @@ modes.
 			map command applies.  The mapping may remain defined
 			for other modes where it applies.
 			Note: Trailing spaces are included in the {lhs}.  This
-			unmap does NOT work:
->				:map @@ foo
->				:unmap @@ | print
+			unmap does NOT work: >
+				:map @@ foo
+				:unmap @@ | print
 
 :mapc[lear]						*:mapc*   *:mapclear*
 :nmapc[lear]						*:nmapc*  *:nmapclear*
@@ -96,11 +96,19 @@ characters.  You can use this to put command sequences under function keys,
 translate one key into another, etc.  See |:mkexrc| for how to save and
 restore the current mappings.
 
+						*:map-local* *:map-<buffer>*
+If the first argument to one of these commands is "<buffer>" it will aply to
+mappings locally to the current buffer only.  Example: >
+	:map <buffer>  ,w  /[.,;]<CR>
+Then you can map ",w" to something else in another buffer: >
+	:map <buffer>  ,w  /[#&!]<CR>
+The local buffer mappings are used before the global ones.
+
 There are five sets of mappings
 - For Normal mode: When typing commands.
 - For Visual mode: When typing commands while the Visual area is highlighted.
 - For Operator-pending mode: When an operator is pending (after "d", "y", "c",
-  etc.).
+  etc.).  Example: ":omap { w" makes "y{" work like "yw" ad "d{" like "dw".
 - For Insert mode. These are also used in Replace mode.
 - For Command-line mode: When entering a ":" or "/" command.
 
@@ -185,10 +193,10 @@ file.
 							*<Nop>*
 A easier way to get a mapping that doesn't produce anything, is to use "<Nop>"
 for the {rhs}.  This only works when the |<>| notation is enabled.  For
-example, to make sure that function key 8 does nothing at all:
->	:map  <F8>  <Nop>
->	:map! <F8>  <Nop>
-
+example, to make sure that function key 8 does nothing at all: >
+	:map  <F8>  <Nop>
+	:map! <F8>  <Nop>
+<
 							*map-comments*
 It is not possible to put a comment after these commands, because the '"'
 character is considered to be part of the {lhs} or {rhs}.
@@ -214,8 +222,8 @@ illogical when compared to other commands.
 							*map_return*
 When you have a mapping that contains an Ex command, you need to put a line
 terminator after it to have it executed.  The use of <CR> is recommended for
-this (see |<>|).  Example:
->  :map  _ls  :!ls -l %<CR>:echo "the end"<CR>
+this (see |<>|).  Example: >
+   :map  _ls  :!ls -l %<CR>:echo "the end"<CR>
 
 To avoid mapping of the characters you type in insert or Command-line mode,
 type a CTRL-V first.  The mapping in Insert mode is disabled if the 'paste'
@@ -249,13 +257,13 @@ out about, ^D is CTRL-D).
 
 							*map-examples*
 A few examples (given as you type them, for "<CR>" you type four characters;
-the '<' flag must not be present in 'cpoptions' for this to work).
+the '<' flag must not be present in 'cpoptions' for this to work). >
 
->  :map <F3>  o#include
->  :map <M-g> /foo<CR>cwbar<Esc>
->  :map _x    d/END/e<CR>
->  :map! qq   quadrillion questions
-
+   :map <F3>  o#include
+   :map <M-g> /foo<CR>cwbar<Esc>
+   :map _x    d/END/e<CR>
+   :map! qq   quadrillion questions
+<
 							*map-typing*
 Vim will compare what you type with the start of a mapped sequence.  If there
 is an incomplete match, it will get more characters until there either is a
@@ -282,13 +290,13 @@ There are two actions needed to avoid this problem:
 - When using <F1> to <F4> the actual key code generated may correspond to
   <xF1> to <xF4>.  There are mappings from <xF1> to <F1>, <xF2> to <F2>, etc.,
   but these are not recognized after another half a mapping.  Make sure the
-  key codes for <F1> to <F4> are correct:
->	:set <F1>=<type CTRL-V><type F1>
-  Type the <F1> as four characters.  The part after the "=" must be done with
+  key codes for <F1> to <F4> are correct: >
+	:set <F1>=<type CTRL-V><type F1>
+< Type the <F1> as four characters.  The part after the "=" must be done with
   the actual keys, not the literal text.
 Another solution is to use the actual key code in the mapping for the second
-special key:
->	:map <F1><Esc>OP :echo "yes"<CR>
+special key: >
+	:map <F1><Esc>OP :echo "yes"<CR>
 Don't type a real <Esc>, Vim will recognize the key code and replace it with
 <F1> anyway.
 
@@ -301,22 +309,22 @@ only problem is that the only way to stop this is by causing an error.  The
 macros to solve a maze uses this, look there for an example.  There is one
 exception: If the {rhs} starts with {lhs}, the first character is not mapped
 again (this is Vi compatible).
-For example:
->  :map ab abcd
+For example: >
+   :map ab abcd
 will execute the "a" command and insert "bcd" in the text.  The "ab" in the
 {rhs} will not be mapped again.
 
 If you want to exchange the meaning of two keys you should use the :noremap
-command.  For example:
->  :noremap k j
->  :noremap j k
+command.  For example: >
+   :noremap k j
+   :noremap j k
 This will exchange the cursor up and down commands.
 
 With the normal :map command, when the 'remap' option is on, mapping takes
 place until the text is found not to be a part of a {lhs}.  For example, if
-you use:
->  :map x y
->  :map y x
+you use: >
+   :map x y
+   :map y x
 Vim will replace x with y, and then y with x, etc.  When this has happened
 'maxmapdepth' times (default 1000), Vim will give the error message
 "recursive mapping".
@@ -346,9 +354,9 @@ There are three ways to map a special key:
    function key zero on some keyboards.  The <> form cannot be used when
    'cpoptions' includes the '<' flag.
 3. Use the termcap entry, with the form <t_xx>, where "xx" is the name of the
-   termcap entry.  Any string entry can be used.  For example:
->    :map <t_F3> G
-   Maps function key 13 to "G".  This does not work if 'cpoptions' includes
+   termcap entry.  Any string entry can be used.  For example: >
+     :map <t_F3> G
+<  Maps function key 13 to "G".  This does not work if 'cpoptions' includes
    the '<' flag.
 
 The advantage of the second and third method is that the mapping will work on
@@ -406,9 +414,9 @@ after the expanded abbreviation.  An exception to this is the character <C-]>,
 which is used to expand an abbreviation without inserting any extra
 characters.
 
-Example:
->   :ab hh	hello
-	    "hh<Space>" is expanded to "hello<Space>"
+Example: >
+   :ab hh	hello
+<	    "hh<Space>" is expanded to "hello<Space>"
 	    "hh<C-]>" is expanded to "hello"
 
 The characters before the cursor must match the abbreviation.  Each type has
@@ -425,18 +433,18 @@ end-id	  In front of the match is a keyword character, or a space or a <Tab>,
 non-id	  In front of the match is a space, <Tab> or the start of the line or
 	  the insertion.
 
-Examples: ({CURSOR} is where you type a non-keyword character)
->  :ab foo   four old otters
-		" foo{CURSOR}"	  is expanded to " four old otters"
+Examples: ({CURSOR} is where you type a non-keyword character) >
+   :ab foo   four old otters
+<		" foo{CURSOR}"	  is expanded to " four old otters"
 		" foobar{CURSOR}" is not expanded
 		"barfoo{CURSOR}"  is not expanded
-
->  :ab #i #include
-		"#i{CURSOR}"	  is expanded to "#include"
+>
+   :ab #i #include
+<		"#i{CURSOR}"	  is expanded to "#include"
 		">#i{CURSOR}"	  is not expanded
-
->  :ab ;; <endofline>"
-		"test;;"	  is not expanded
+>
+   :ab ;; <endofline>"
+<		"test;;"	  is not expanded
 		"test ;;"	  is expanded to "test <endofline>"
 
 To avoid the abbreviation in insert mode: Type part of the abbreviation, exit
@@ -446,8 +454,8 @@ To avoid the abbreviation in Command-line mode: Type CTRL-V twice somewhere in
 the abbreviation to avoid it to be replaced.  A CTRL-V in front of a normal
 character is mostly ignored otherwise.
 
-It is possible to move the cursor after an abbreviation:
->  :iab if if ()<Left>
+It is possible to move the cursor after an abbreviation: >
+   :iab if if ()<Left>
 This does not work if 'cpoptions' includes the '<' flag. |<>|
 
 There are no default abbreviations.
@@ -580,14 +588,14 @@ When using a user-defined command, the command can be abbreviated. However, if
 an abbreviation is not unique, an error will be issued. Furthermore, a
 built-in command will always take precedence.
 
-Example:
->	:command Rename ...
->	:command Renumber ...
->	:Rena				" Means "Rename"
->	:Renu				" Means "Renumber"
->	:Ren				" Error - ambiguous
->	:command Paste ...
->	:P				" The built-in :Print
+Example: >
+	:command Rename ...
+	:command Renumber ...
+	:Rena				" Means "Rename"
+	:Renu				" Means "Renumber"
+	:Ren				" Error - ambiguous
+	:command Paste ...
+	:P				" The built-in :Print
 
 It is recommended that full names for user-defined commands are used in
 scripts.
@@ -650,10 +658,14 @@ completion can be enabled:
 	-complete=buffer	buffer names
 	-complete=command	Ex command (and arguments)
 	-complete=dir		directory names
+	-complete=environment	environment variable names
 	-complete=event		autocommand events
+	-complete=expression	Vim expression
 	-complete=file		file and directory names
+	-complete=function	function name
 	-complete=help		help subjects
 	-complete=highlight	highlight groups
+	-complete=mapping	mapping name
 	-complete=menu		menus
 	-complete=option	options
 	-complete=tag		tags
@@ -736,48 +748,48 @@ sequence is replaced by the comma-separated list of quoted arguments.  See the
 Mycmd example below.  When there is no argument, <f-args> also has no
 argument.
 
-Examples
+Examples >
 
->   " Delete everything after here to the end
->   :com Ddel +,$d
+   " Delete everything after here to the end
+   :com Ddel +,$d
 
->   " Rename the current buffer
->   :com -nargs=1 -bang -complete=file Ren f <args>|w<bang>
+   " Rename the current buffer
+   :com -nargs=1 -bang -complete=file Ren f <args>|w<bang>
 
->   " Replace a range with the contents of a file
->   " (Enter this all as one line)
->   :com -range -nargs=1 -complete=file
->	 Replace <line1>-pu_|<line1>,<line2>d|r <args>|<line1>d
+   " Replace a range with the contents of a file
+   " (Enter this all as one line)
+   :com -range -nargs=1 -complete=file
+	 Replace <line1>-pu_|<line1>,<line2>d|r <args>|<line1>d
 
->   " Count the number of lines in the range
->   com! -range -nargs=0 Lines :echo <line2> - <line1> + 1 "lines"
+   " Count the number of lines in the range
+   :com! -range -nargs=0 Lines :echo <line2> - <line1> + 1 "lines"
 
->   " Call a user function (example of <f-args>)
->   :com -nargs=* Mycmd call Myfunc(<f-args>)
+   " Call a user function (example of <f-args>)
+   :com -nargs=* Mycmd call Myfunc(<f-args>)
 
-When executed as:
->	:Mycmd arg1 arg2
-This will invoke:
->	:call Myfunc("arg1","arg2")
+When executed as: >
+	:Mycmd arg1 arg2
+This will invoke: >
+	:call Myfunc("arg1","arg2")
 
->   " A more substantial example
->   :function Allargs(command)
->   :	let i = 0
->   :	while i < argc()
->   :	   if filereadable(argv(i))
->   :        execute "e " . argv(i)
->   :	     execute a:command
->   :      endif
->   :      let i = i + 1
->   :   endwhile
->   :endfunction
->   :command -nargs=+ -complete=command Allargs call Allargs(<q-args>)
+   :" A more substantial example
+   :function Allargs(command)
+   :	let i = 0
+   :	while i < argc()
+   :	   if filereadable(argv(i))
+   :        execute "e " . argv(i)
+   :	     execute a:command
+   :      endif
+   :      let i = i + 1
+   :   endwhile
+   :endfunction
+   :command -nargs=+ -complete=command Allargs call Allargs(<q-args>)
 
 The command Allargs takes any Vim command(s) as argument and executes it on all
 files in the argument list.  Usage example (note use of the "e" flag to ignore
-errors and the "update" command to write modified buffers):
->	:Allargs %s/foo/bar/ge|update
-This will invoke:
->	:call Allargs("%s/foo/bar/ge|update")
-
- vim:tw=78:ts=8:sw=8:
+errors and the "update" command to write modified buffers): >
+	:Allargs %s/foo/bar/ge|update
+This will invoke: >
+	:call Allargs("%s/foo/bar/ge|update")
+<
+ vim:tw=78:

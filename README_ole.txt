@@ -1,9 +1,9 @@
-README_ole.txt for version 5.7 of Vim: Vi IMproved.
+README_ole.txt for version 6.0d of Vim: Vi IMproved.
 
 This archive contains gvim.exe with OLE interface and VisVim.
 It is only for MS-Windows 95/98 and MS-Windows NT.
 
-Also see the README_dosbin.txt, README_dos.txt and README.txt files.
+Also see the README_bindos.txt, README_dos.txt and README.txt files.
 
 Be careful not to overwrite the OLE gvim.exe with the non-OLE gvim.exe when
 unpacking another binary archive!  Check the output of ":version":

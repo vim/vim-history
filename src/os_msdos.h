@@ -39,21 +39,8 @@
 #define BREAKCHECK_SKIP	    1	/* call mch_breakcheck() each time, it's fast */
 #define HAVE_AVAIL_MEM
 
-#ifndef MIN_FEAT
+#ifdef FEAT_NORMAL
 # define VIM_BACKTICK		/* internal backtick expansion */
-#endif
-
-#ifdef DJGPP
-# ifndef USE_GUI_GTK		/* avoid problems when generating prototypes */
-#  define SIZEOF_INT 4		/* 32 bit ints */
-# endif
-# define DOS32
-#else
-# ifndef USE_GUI_GTK		/* avoid problems when generating prototypes */
-#  define SIZEOF_INT 2		/* 16 bit ints */
-# endif
-# define SMALL_MALLOC		/* 16 bit storage allocation */
-# define DOS16
 #endif
 
 /*

@@ -718,7 +718,13 @@ char *argv[];
 	}
       if (ebcdic)
         e = (e < 64) ? '.' : etoa64[e-64];
-      l[11 + (grplen * cols - 1)/octspergrp + p] = (e > 31 && e < 127) ? e : '.';
+      l[11 + (grplen * cols - 1)/octspergrp + p] =
+#ifdef __MVS__
+	  (e >= 64)
+#else
+	  (e > 31 && e < 127)
+#endif
+	  ? e : '.';
       if (e)
         nonzero++;
       n++;

@@ -34,19 +34,12 @@
 #  define HAVE_DATE_TIME
 # endif
 
-#ifndef MIN_FEAT
+#ifdef FEAT_NORMAL
 # define VIM_BACKTICK		/* internal backtick expansion */
 #endif
 
 #define ERRORFILE	"AztecC.Err"
 #define MAKEEF		"t:vim##.Err"
-
-/*
- * Be conservative about sizeof(int). It could be 4 too.
- */
-#ifndef USE_GUI_GTK	/* avoid problems when generating prototypes */
-# define SIZEOF_INT  2
-#endif
 
 #define BASENAMELEN	26	/* Amiga */
 
@@ -71,7 +64,7 @@ typedef long off_t;
 /*
  * arpbase.h must be included before functions.h
  */
-#ifndef NO_ARP
+#ifdef FEAT_ARP
 # include <libraries/arpbase.h>
 #endif
 
@@ -98,10 +91,16 @@ typedef long off_t;
 # define VIM_HLP	"$VIMRUNTIME/doc/help.txt"
 #endif
 #ifndef FILETYPE_FILE
-# define FILETYPE_FILE	"$VIMRUNTIME/filetype.vim"
+# define FILETYPE_FILE	"filetype.vim"
+#endif
+#ifndef SETTINGS_FILE
+# define SETTINGS_FILE	"settings.vim"
 #endif
 #ifndef FTOFF_FILE
-# define FTOFF_FILE	"$VIMRUNTIME/ftoff.vim"
+# define FTOFF_FILE	"ftoff.vim"
+#endif
+#ifndef SETSOFF_FILE
+# define SETSOFF_FILE	"setsoff.vim"
 #endif
 #ifndef SYNTAX_FNAME
 # define SYNTAX_FNAME	"$VIMRUNTIME/syntax/%s.vim"
@@ -134,11 +133,11 @@ typedef long off_t;
 # define USR_GVIMRC_FILE3 "$VIM/.gvimrc"
 #endif
 
-#ifdef VIMINFO
+#ifdef FEAT_VIMINFO
 #ifndef VIMINFO_FILE
 # define VIMINFO_FILE	"s:.viminfo"
 #endif
-#endif /* VIMINFO */
+#endif /* FEAT_VIMINFO */
 
 #ifndef EXRC_FILE
 # define EXRC_FILE	".exrc"

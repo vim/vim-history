@@ -1,4 +1,4 @@
-*os_unix.txt*   For Vim version 5.7.  Last change: 1999 Sep 14
+*os_unix.txt*   For Vim version 6.0d.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -42,14 +42,14 @@ can also be achieved via the 'ttymouse' option if your xterm is new enough.
 
 							*terminal-colors*
 To use colors in Vim you can use the following example (if your terminal
-supports colors, but "T_Co" is empty or zero):
->  :set t_me=^[[0;1;36m     " normal mode (undoes t_mr and t_md)
->  :set t_mr=^[[0;1;33;44m  " reverse (invert) mode
->  :set t_md=^[[1;33;41m    " bold mode
->  :set t_se=^[[1;36;40m    " standout end
->  :set t_so=^[[1;32;45m    " standout mode
->  :set t_ue=^[[0;1;36m     " underline end
->  :set t_us=^[[1;32m       " underline mode start
+supports colors, but "T_Co" is empty or zero): >
+   :set t_me=^[[0;1;36m     " normal mode (undoes t_mr and t_md)
+   :set t_mr=^[[0;1;33;44m  " reverse (invert) mode
+   :set t_md=^[[1;33;41m    " bold mode
+   :set t_se=^[[1;36;40m    " standout end
+   :set t_so=^[[1;32;45m    " standout mode
+   :set t_ue=^[[0;1;36m     " underline end
+   :set t_us=^[[1;32m       " underline mode start
 [the ^[ is an <Esc>, type CTRL-V <Esc> to enter it]
 
 For real color terminals the ":highlight" command can be used.
@@ -57,4 +57,4 @@ For real color terminals the ":highlight" command can be used.
 The file "tools/Vim132" is a shell script that can be used to put Vim in 132
 column mode on a vt100 and lookalikes.
 
- vim:ts=8:sw=8:tw=78:
+ vim:tw=78:

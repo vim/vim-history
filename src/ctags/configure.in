@@ -13,7 +13,7 @@ AC_CONFIG_HEADER(config.h)
 
 dnl Report system info
 dnl ------------------
-echo 'Exuberant Ctags, version 3.5.1'
+echo 'Exuberant Ctags, version 4.0'
 uname -mrsv 2>/dev/null
 
 dnl Define convenience macros
@@ -134,7 +134,8 @@ AC_CHECK_PROG(STRIP, strip, strip, :)
 dnl Checks for header files
 dnl -----------------------
 
-AC_CHECK_HEADERS(dirent.h stdlib.h string.h time.h unistd.h)
+AC_CHECK_HEADERS(dirent.h fcntl.h stat.h stdlib.h string.h)
+AC_CHECK_HEADERS(time.h types.h unistd.h)
 AC_CHECK_HEADERS(sys/dir.h sys/stat.h sys/times.h sys/types.h)
 
 
@@ -174,6 +175,18 @@ dnl -----------------------------------
 
 AC_C_CONST
 
+AC_MSG_CHECKING(if struct stat contains st_ino)
+AC_TRY_COMPILE([#include <sys/stat.h>], [
+int main(){
+	struct stat st;
+	stat(".", &st);
+	if (st.st_ino > 0)
+		exit(0);
+}], have_st_ino=yes, have_st_ino=no)
+AC_MSG_RESULT($have_st_ino)
+if test yes = "$have_st_ino"; then
+	AC_DEFINE(HAVE_STAT_ST_INO)
+fi
 
 dnl Checks for library functions
 dnl ----------------------------

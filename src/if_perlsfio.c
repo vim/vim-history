@@ -17,7 +17,6 @@
 /*
  * Avoid clashes between Perl and Vim namespace.
  */
-#undef MAGIC
 #undef NORMAL
 #undef STRLEN
 #undef FF
@@ -29,6 +28,10 @@
 #endif
 #ifdef MIN
 # undef MIN
+#endif
+/* We use _() for gettext(), Perl uses it for function prototypes... */
+#ifdef _
+# undef _
 #endif
 
 #include <EXTERN.h>

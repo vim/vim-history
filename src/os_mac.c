@@ -23,11 +23,11 @@
  */
     int
 mac_expandpath(
-    struct growarray	*gap,
-    char_u		*path,
-    int			flags,		/* EW_* flags */
-    short		start_at,
-    short		as_full)
+    garray_t	*gap,
+    char_u	*path,
+    int		flags,		/* EW_* flags */
+    short	start_at,
+    short	as_full)
 {
     /*
      * TODO:
@@ -50,7 +50,7 @@ mac_expandpath(
     int		start_len, c;
     char	dummy;
     char_u	*pat;
-    vim_regexp	*prog;
+    regmatch_t	regmatch;
     int		matches;
 
     start_len = gap->ga_len;
@@ -108,10 +108,10 @@ mac_expandpath(
 
     /* compile the regexp into a program */
     reg_ic = FALSE;				/* Don't ever ignore case */
-    prog = vim_regcomp(pat, TRUE);
+    regmatch.regprog = vim_regcomp(pat, TRUE);
     vim_free(pat);
 
-    if (prog == NULL)
+    if (regmatch.regprog == NULL)
     {
 	vim_free(buf);
 	return 0;
@@ -170,7 +170,7 @@ mac_expandpath(
 	{
 	    STRNCPY (cfilename, &dirname[1], dirname[0]);
 	    cfilename[dirname[0]] = 0;
-	    if (vim_regexec(prog, cfilename, TRUE))
+	    if (vim_regexec(&regmatch, cfilename, (colnr_t)0))
 	    {
 		if (s[-1] != ':')
 		{
@@ -220,7 +220,7 @@ mac_expandpath(
 	    {
 		STRNCPY (cfilename, &dirname[1], dirname[0]);
 		cfilename[dirname[0]] = 0;
-		if (vim_regexec(prog, cfilename, TRUE))
+		if (vim_regexec(&regmatch, cfilename, (colnr_t)0))
 		{
 		    STRCPY(s, cfilename);
 		    STRCAT(buf, path);
@@ -228,10 +228,10 @@ mac_expandpath(
 			(void)mac_expandpath(gap, s, flags, 0, FALSE);
 		    else
 		    {
-    #ifdef DONT_ADD_PATHSEP_TO_DIR
+#ifdef DONT_ADD_PATHSEP_TO_DIR
 /*			if ((gMyCPB.hFileInfo.ioFlAttrib & ioDirMask) !=0 )
 */			    STRCAT(buf, PATHSEPSTR);
-    #endif
+#endif
 			addfile(gap, s, flags);
 		    }
 #if 0
@@ -245,7 +245,7 @@ mac_expandpath(
 	while (gErr == noErr);
     }
 
-    vim_free(prog);
+    vim_free(regmatch.regprog);
 
     return gap->ga_len - start_len;
 }
@@ -257,9 +257,9 @@ mac_expandpath(
  */
     int
 mch_expandpath(
-    struct growarray	*gap,
-    char_u		*path,
-    int			flags)		/* EW_* flags */
+    garray_t	*gap,
+    char_u	*path,
+    int		flags)		/* EW_* flags */
 {
 
     char_u first = *path;
@@ -300,7 +300,7 @@ mch_breakcheck()
     EventRecord theEvent;
 
     if (EventAvail (keyDownMask, &theEvent))
-	if ((theEvent.message & charCodeMask) == Ctrl('C'))
+	if ((theEvent.message & charCodeMask) == Ctrl_C)
 	    got_int = TRUE;
 #if 0
     short	i = 0;
@@ -316,7 +316,7 @@ mch_breakcheck()
 	    found = false;
 	  if ((theEvent.what == keyDown))
 	    found = false;
-	  if ((theEvent.message & charCodeMask) == Ctrl('C'))
+	  if ((theEvent.message & charCodeMask) == Ctrl_C)
 	    {
 		found = false;
 		got_int = TRUE;
@@ -328,6 +328,9 @@ mch_breakcheck()
 
 }
 
+/*
+ * Return amount of memory currently available.
+ */
     long_u
 mch_avail_mem(special)
     int     special;
@@ -362,7 +365,7 @@ mch_delay(msec, ignoreinput)
 }
 
     void
-mch_windinit()
+mch_shellinit()
 {
     /*
      *  TODO: Verify if needed, or override later.
@@ -397,7 +400,7 @@ mch_input_isatty()
     return OK;
 }
 
-#ifdef WANT_TITLE
+#ifdef FEAT_TITLE
 /*
  * Set the window title and icon.
  * (The icon is not taken care of).
@@ -853,7 +856,7 @@ mch_settmode(tmode)
      */
 }
 
-#ifdef USE_MOUSE
+#ifdef FEAT_MOUSE
 /*
  * set mouse clicks on or off (only works for xterms)
  */
@@ -874,7 +877,7 @@ mch_setmouse(on)
 mch_screenmode(arg)
     char_u	 *arg;
 {
-    EMSG("Screen mode setting not supported");
+    EMSG(_("Screen mode setting not supported"));
     return FAIL;
 }
 

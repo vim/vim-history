@@ -1,4 +1,10 @@
-/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+/*
+ * config.h.in.  Generated automatically from configure.in by autoheader, and
+ * manually changed after that.
+ */
+
+/* Define if we have EBCDIC code */
+#undef EBCDIC
 
 /* Define unless no X support found */
 #undef HAVE_X11
@@ -83,6 +89,22 @@
 /* Define if you can safely include both <sys/time.h> and <sys/select.h>.  */
 #undef SYS_SELECT_WITH_SYS_TIME
 
+/* Define if you have /dev/ptc */
+#undef HAVE_DEV_PTC
+
+/* Define if you have Sys4 ptys */
+#undef HAVE_SVR4_PTYS
+
+/* Define to range of pty names to try */
+#undef PTYRANGE0
+#undef PTYRANGE1
+
+/* Define mode for pty */
+#undef PTYMODE
+
+/* Define group for pty */
+#undef PTYGROUP
+
 /* Define as the return type of signal handlers (int or void).  */
 #undef RETSIGTYPE
 
@@ -128,6 +150,9 @@
 /* Define if you have the getpwuid() function. */
 #undef HAVE_GETPWUID
 
+/* Define if you have the getrlimit() function. */
+#undef HAVE_GETRLIMIT
+
 /* Define if you have the gettimeofday() function. */
 #undef HAVE_GETTIMEOFDAY
 
@@ -169,6 +194,9 @@
 
 /* Define if you have the sigset() function.  */
 #undef HAVE_SIGSET
+
+/* Define if you have the sigsetjmp() function.  */
+#undef HAVE_SIGSETJMP
 
 /* Define if you have the strcasecmp() function.  */
 #undef HAVE_STRCASECMP
@@ -277,8 +305,14 @@
 /* Define if you have the <Xm/Xm.h> header file (only used by configure). */
 #undef HAVE_XM_XM_H
 
+/* Define if you have the <X11/xpm.h> header file. */
+#undef HAVE_X11_XPM_H
+
 /* Define if strings.h cannot be included when strings.h already is */
 #undef NO_STRINGS_WITH_STRING_H
+
+/* Define if you have the <sys/resource.h> header file. */
+#undef HAVE_SYS_RESOURCE_H
 
 /* Define if you have the <sys/systeminfo.h> header file. */
 #undef HAVE_SYS_SYSTEMINFO_H
@@ -316,41 +350,77 @@
 /* Define if you have the <sys/param.h> header file. */
 #undef HAVE_SYS_PARAM_H
 
-/* Define if you want maximal features. */
-#undef MAX_FEAT
+/* Define if you have the <libintl.h> header file. */
+#undef HAVE_LIBINTL_H
 
-/* Define if you want minimal features. */
-#undef MIN_FEAT
+/* Define if you want tiny features. */
+#undef FEAT_TINY
+
+/* Define if you want small features. */
+#undef FEAT_SMALL
+
+/* Define if you want normal features. */
+#undef FEAT_NORMAL
+
+/* Define if you want big features. */
+#undef FEAT_BIG
+
+/* Define if you want huge features. */
+#undef FEAT_HUGE
 
 /* Define if you want to include the Perl interpreter. */
-#undef HAVE_PERL_INTERP
+#undef FEAT_PERL
 
 /* Define if you want to include the Python interpreter. */
-#undef HAVE_PYTHON
+#undef FEAT_PYTHON
 
 /* Define if you want to include the Tcl interpreter. */
-#undef HAVE_TCL
+#undef FEAT_TCL
 
 /* Define if you want to add support of GPM (Linux console mouse daemon) */
 #undef HAVE_GPM
 
 /* Define if you want to include the Cscope interface. */
-#undef USE_CSCOPE
+#undef FEAT_CSCOPE
 
 /* Define if you want to include multibyte support. */
-#undef MULTI_BYTE
+#undef FEAT_MBYTE
 
 /* Define if you want to include fontset support. */
-#undef USE_FONTSET
+#undef FEAT_XFONTSET
 
 /* Define if you want to include XIM support. */
-#undef USE_XIM
+#undef FEAT_XIM
 
 /* Define if you want to include Hangul input support. */
-#undef HANGUL_INPUT
+#undef FEAT_HANGULIN
 
-/* Define if your libc doesn't work POSIX.2 locale function correctly */
-#undef BROKEN_LOCALE
+/* Define if you use GTK and want GNOME support. */
+#undef FEAT_GUI_GNOME
 
 /* Define if your X has own locale library */
 #undef X_LOCALE
+
+/* Define if we have dlfcn.h. */
+#undef HAVE_DLFCN_H
+
+/* Define if there is a working gettext(). */
+#undef HAVE_GETTEXT
+
+/* Define if we have dlopen() */
+#undef HAVE_DLOPEN
+
+/* Define if we have dl.h. */
+#undef HAVE_DL_H
+
+/* Define if we have shl_load() */
+#undef HAVE_SHL_LOAD
+
+/* Define if you have the <setjmp.h> header file. */
+#undef HAVE_SETJMP_H
+
+/* Define if you want to include Sun Visual Workshop support. */
+#undef FEAT_SUN_WORKSHOP
+
+/* Define if you have the <X11/Sunkeysym.h> header file. */
+#undef HAVE_X11_SUNKEYSYM_H
