@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.3a.  Last change: 2004 Apr 29
+*options.txt*	For Vim version 6.3a.  Last change: 2004 May 14
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -1663,9 +1663,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 			   'l' excluded: "/[ \t]"  finds <Space> and <Tab>
 								*cpo-L*
 		L	When the 'list' option is set, 'wrapmargin',
-			'textwidth' and Virtual Replace mode (see |gR|) count
-			a <Tab> as two characters, instead of the normal
-			behavior of a <Tab>.
+			'textwidth', 'softtabstop' and Virtual Replace mode
+			(see |gR|) count a <Tab> as two characters, instead of
+			the normal behavior of a <Tab>.
 								*cpo-m*
 		m	When included, a showmatch will always wait half a
 			second.  When not included, a showmatch will wait half
@@ -5430,6 +5430,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	'softtabstop' is set to 0 when the 'paste' option is set.
 	See also |ins-expandtab|.  When 'expandtab' is not set, the number of
 	spaces is minimized by using <Tab>s.
+	The 'L' flag in 'cpoptions' changes how tabs are used when 'list' is
+	set.
 	NOTE: This option is set to 0 when 'compatible' is set.
 
 			*'splitbelow'* *'sb'* *'nosplitbelow'* *'nosb'*
