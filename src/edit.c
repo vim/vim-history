@@ -1367,10 +1367,16 @@ ins_ctrl_v()
  * Put a character directly onto the screen.  It's not stored in a buffer.
  * Used while handling CTRL-K, CTRL-V, etc. in Insert mode.
  */
-static int  pc_char;
-#define PC_CHAR_UNSET	0	/* pc_char was not set */
-#define PC_CHAR_RIGHT	1	/* right halve of double-wide char */
-#define PC_CHAR_LEFT	2	/* left halve of double-wide char */
+static int  pc_status;
+#define PC_STATUS_UNSET	0	/* pc_bytes was not set */
+#define PC_STATUS_RIGHT	1	/* right halve of double-wide char */
+#define PC_STATUS_LEFT	2	/* left halve of double-wide char */
+#define PC_STATUS_SET	3	/* pc_bytes was filled */
+#ifdef FEAT_MBYTE
+static char_u pc_bytes[MB_MAXBYTES + 1]; /* saved bytes */
+#else
+static char_u pc_bytes[2];		/* saved bytes */
+#endif
 static int  pc_attr;
 static int  pc_row;
 static int  pc_col;
@@ -1393,7 +1399,7 @@ edit_putchar(c, highlight)
 	pc_row = W_WINROW(curwin) + curwin->w_wrow;
 	pc_col = W_WINCOL(curwin);
 #if defined(FEAT_RIGHTLEFT) || defined(FEAT_MBYTE)
-	pc_char = PC_CHAR_UNSET;
+	pc_status = PC_STATUS_UNSET;
 #endif
 #ifdef FEAT_RIGHTLEFT
 	if (curwin->w_p_rl)
@@ -1408,7 +1414,7 @@ edit_putchar(c, highlight)
 		{
 		    screen_putchar(' ', pc_row, fix_col, attr);
 		    --curwin->w_wcol;
-		    pc_char = PC_CHAR_RIGHT;
+		    pc_status = PC_STATUS_RIGHT;
 		}
 	    }
 # endif
@@ -1419,15 +1425,18 @@ edit_putchar(c, highlight)
 	    pc_col += curwin->w_wcol;
 #ifdef FEAT_MBYTE
 	    if (mb_lefthalve(pc_row, pc_col))
-		pc_char = PC_CHAR_LEFT;
+		pc_status = PC_STATUS_LEFT;
 #endif
 	}
 
 	/* save the character to be able to put it back */
 #if defined(FEAT_RIGHTLEFT) || defined(FEAT_MBYTE)
-	if (pc_char == PC_CHAR_UNSET)
+	if (pc_status == PC_STATUS_UNSET)
 #endif
-	    pc_char = screen_getchar(pc_row, pc_col, &pc_attr);
+	{
+	    screen_getbytes(pc_row, pc_col, pc_bytes, &pc_attr);
+	    pc_status = PC_STATUS_SET;
+	}
 	screen_putchar(c, pc_row, pc_col, attr);
     }
 }
@@ -1438,16 +1447,16 @@ edit_putchar(c, highlight)
     void
 edit_unputchar()
 {
-    if (pc_char != PC_CHAR_UNSET && pc_row >= msg_scrolled)
+    if (pc_status != PC_STATUS_UNSET && pc_row >= msg_scrolled)
     {
 #if defined(FEAT_MBYTE)
-	if (pc_char == PC_CHAR_RIGHT)
+	if (pc_status == PC_STATUS_RIGHT)
 	    ++curwin->w_wcol;
-	if (pc_char == PC_CHAR_RIGHT || pc_char == PC_CHAR_LEFT)
+	if (pc_status == PC_STATUS_RIGHT || pc_status == PC_STATUS_LEFT)
 	    redrawWinline(curwin->w_cursor.lnum, FALSE);
 	else
 #endif
-	    screen_putchar(pc_char, pc_row - msg_scrolled, pc_col, pc_attr);
+	    screen_puts(pc_bytes, pc_row - msg_scrolled, pc_col, pc_attr);
     }
 }
 
@@ -5709,7 +5718,7 @@ ins_reg()
     /*
      * If we are going to wait for a character, show a '"'.
      */
-    pc_char = PC_CHAR_UNSET;
+    pc_status = PC_STATUS_UNSET;
     if (redrawing() && !char_avail())
     {
 	/* may need to redraw when no more chars available now */
@@ -7186,7 +7195,7 @@ ins_digraph()
     int	    c;
     int	    cc;
 
-    pc_char = PC_CHAR_UNSET;
+    pc_status = PC_STATUS_UNSET;
     if (redrawing() && !char_avail())
     {
 	/* may need to redraw when no more chars available now */

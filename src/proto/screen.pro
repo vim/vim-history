@@ -19,7 +19,7 @@ void win_redr_status __ARGS((win_T *wp));
 int stl_connected __ARGS((win_T *wp));
 int get_keymap_str __ARGS((win_T *wp, char_u *buf, int len));
 void screen_putchar __ARGS((int c, int row, int col, int attr));
-int screen_getchar __ARGS((int row, int col, int *attrp));
+void screen_getbytes __ARGS((int row, int col, char_u *bytes, int *attrp));
 void screen_puts __ARGS((char_u *text, int row, int col, int attr));
 void screen_stop_highlight __ARGS((void));
 void reset_cterm_colors __ARGS((void));

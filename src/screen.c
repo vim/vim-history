@@ -5117,13 +5117,13 @@ screen_putchar(c, row, col, attr)
 }
 
 /*
- * Get a single character directly from ScreenLines.
+ * Get a single character directly from ScreenLines into "bytes[]".
  * Also return its attribute in *attrp;
- * For multi-byte chars only the first byte is obtained!
  */
-    int
-screen_getchar(row, col, attrp)
+    void
+screen_getbytes(row, col, bytes, attrp)
     int	    row, col;
+    char_u  *bytes;
     int	    *attrp;
 {
     unsigned off;
@@ -5133,9 +5133,25 @@ screen_getchar(row, col, attrp)
     {
 	off = LineOffset[row] + col;
 	*attrp = ScreenAttrs[off];
-	return ScreenLines[off];
+	bytes[0] = ScreenLines[off];
+	bytes[1] = NUL;
+
+#ifdef FEAT_MBYTE
+	if (enc_utf8 && ScreenLinesUC[off] != 0)
+	    bytes[utfc_char2bytes(off, bytes)] = NUL;
+	else if (enc_dbcs == DBCS_JPNU && ScreenLines[off] == 0x8e)
+	{
+	    bytes[0] = ScreenLines[off];
+	    bytes[1] = ScreenLines2[off];
+	    bytes[2] = NUL;
+	}
+	else if (enc_dbcs && MB_BYTE2LEN(bytes[0]) > 1)
+	{
+	    bytes[1] = ScreenLines[off + 1];
+	    bytes[2] = NUL;
+	}
+#endif
     }
-    return 0;
 }
 
 /*
