@@ -1,7 +1,8 @@
 " Vim syntax support file
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2003 Nov 13
+" Last Change: 2004 May 05
 "	       (modified by David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>)
+"	       (XHTML support by Panagiotis Issaris <takis@lumumba.luc.ac.be>)
 
 " Transform a file into HTML, using the current syntax highlighting.
 
@@ -168,11 +169,15 @@ setlocal et
 set report=1000000
 
 " Split window to create a buffer with the HTML file.
+let s:orgbufnr = winbufnr(0)
 if expand("%") == ""
   new Untitled.html
 else
   new %.html
 endif
+let s:newwin = winnr()
+let s:orgwin = bufwinnr(s:orgbufnr)
+
 set modifiable
 %d
 let s:old_paste = &paste
@@ -180,13 +185,20 @@ set paste
 let s:old_magic = &magic
 set magic
 
+if exists("use_xhtml")
+  exe "normal! a<?xml version=\"1.0\"?>\n\e"
+  let tag_close = '/>'
+else
+  let tag_close = '>'
+endif
+
 " HTML header, with the title and generator ;-). Left free space for the CSS,
 " to be filled at the end.
 exe "normal! a<html>\n<head>\n<title>\e"
 exe "normal! a" . expand("%:p:~") . "</title>\n\e"
-exe "normal! a<meta name=\"Generator\" content=\"Vim/" . version/100 . "." . version %100 . "\">\n\e"
+exe "normal! a<meta name=\"Generator\" content=\"Vim/" . v:version/100 . "." . v:version %100 . '"' . tag_close . "\n\e"
 if s:html_encoding != ""
-  exe "normal! a<meta http-equiv=\"content-type\" content=\"text/html; charset=" . s:html_encoding . "\">\n\e"
+  exe "normal! a<meta http-equiv=\"content-type\" content=\"text/html; charset=" . s:html_encoding . '"' . tag_close . "\n\e"
 endif
 if exists("html_use_css")
   exe "normal! a<style type=\"text/css\">\n<!--\n-->\n</style>\n\e"
@@ -197,7 +209,7 @@ else
   exe "normal! a</head>\n<body>\n<pre>\n\e"
 endif
 
-wincmd p
+exe s:orgwin . "wincmd w"
 
 " List of all id's
 let s:idlist = ","
@@ -274,17 +286,24 @@ while s:lnum <= s:end
   endwhile
 
   if exists("html_no_pre")
-    let s:new = substitute(s:new, '  ', '\&nbsp;\&nbsp;', 'g') . '<br>'
+    if exists("use_xhtml")
+      let s:new = substitute(s:new, '  ', '\&#x20;\&#x20;', 'g') . '<br/>'
+    else
+      let s:new = substitute(s:new, '  ', '\&nbsp;\&nbsp;', 'g') . '<br>'
+    endif
   endif
-  exe "normal! \<C-W>pa" . strtrans(s:new) . "\n\e\<C-W>p"
+  exe s:newwin . "wincmd w"
+  exe "normal! a" . strtrans(s:new) . "\n\e"
+  exe s:orgwin . "wincmd w"
   let s:lnum = s:lnum + 1
   +
 endwhile
 " Finish with the last line
+exe s:newwin . "wincmd w"
 if exists("html_no_pre")
-  exe "normal! \<C-W>pa\n</body>\n</html>\e"
+  exe "normal! a\n</body>\n</html>\e"
 else
-  exe "normal! \<C-W>pa</pre>\n</body>\n</html>\e"
+  exe "normal! a</pre>\n</body>\n</html>\e"
 endif
 
 
@@ -375,14 +394,15 @@ let &icon = s:old_icon
 let &paste = s:old_paste
 let &magic = s:old_magic
 let @/ = s:old_search
-wincmd p
+exe s:orgwin . "wincmd w"
 let &l:et = s:old_et
-wincmd p
+exe s:newwin . "wincmd w"
 
-" Save a little bit of memory (worths doing?)
+" Save a little bit of memory (worth doing?)
 unlet s:old_et s:old_paste s:old_icon s:old_report s:old_title s:old_search
 unlet s:whatterm s:idlist s:lnum s:end s:fgc s:bgc s:old_magic
 unlet! s:col s:id s:attr s:len s:line s:new s:did_retab s:numblines
+unlet s:orgwin s:newwin s:orgbufnr
 delfunc s:HtmlColor
 delfunc s:CSS1
 if !exists("html_use_css")
