@@ -2664,7 +2664,7 @@ gui_mch_beep()
 }
 
     void
-gui_mch_flash()
+gui_mch_flash(int msec)
 {
     /* Do a visual beep by reversing the foreground and background colors */
 
@@ -2674,7 +2674,7 @@ gui_mch_flash()
 	gui.vimTextArea->SetDrawingMode(B_OP_INVERT);
 	gui.vimTextArea->FillRect(rect);
 	gui.vimTextArea->Sync();
-	snooze(20 * 1000);	 /* wait 1/50 of a second */
+	snooze(msec * 1000);	 /* wait for a few msec */
 	gui.vimTextArea->FillRect(rect);
 	gui.vimTextArea->SetDrawingMode(B_OP_COPY);
 	gui.vimTextArea->Flush();

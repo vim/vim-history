@@ -2551,7 +2551,7 @@ gui_mch_beep()
 }
 
 void
-gui_mch_flash()
+gui_mch_flash(int msec)
 {
     GdkGCValues values;
     GdkGC *invert_gc;
@@ -2587,7 +2587,7 @@ gui_mch_flash()
 		       FILL_Y((int) Rows) + gui.border_offset);
 
     gdk_flush();
-    ui_delay(20L, TRUE);	/* wait 1/50 of a second */
+    ui_delay((long)msec, TRUE);	/* wait so many msec */
     gdk_draw_rectangle(gui.drawarea->window, invert_gc,
 		       TRUE,
 		       0, 0,

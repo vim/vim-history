@@ -34,7 +34,7 @@ void ImeSetEnglishMode __ARGS((void));
 void gui_mch_draw_string __ARGS((int row, int col, char_u *s, int len, int flags));
 int gui_mch_haskey __ARGS((char_u *name));
 void gui_mch_beep __ARGS((void));
-void gui_mch_flash __ARGS((void));
+void gui_mch_flash __ARGS((int msec));
 void gui_mch_invert_rectangle __ARGS((int r, int c, int nr, int nc));
 void gui_mch_iconify __ARGS((void));
 void gui_mch_set_foreground __ARGS((void));

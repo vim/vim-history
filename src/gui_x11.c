@@ -1898,14 +1898,15 @@ gui_mch_beep()
 }
 
     void
-gui_mch_flash()
+gui_mch_flash(msec)
+    int		msec;
 {
     /* Do a visual beep by reversing the foreground and background colors */
     XFillRectangle(gui.dpy, gui.wid, gui.invert_gc, 0, 0,
 	    FILL_X((int)Columns) + gui.border_offset,
 	    FILL_Y((int)Rows) + gui.border_offset);
     XSync(gui.dpy, False);
-    ui_delay(20L, TRUE);	/* wait 1/50 of a second */
+    ui_delay((long)msec, TRUE);	/* wait for a few msec */
     XFillRectangle(gui.dpy, gui.wid, gui.invert_gc, 0, 0,
 	    FILL_X((int)Columns) + gui.border_offset,
 	    FILL_Y((int)Rows) + gui.border_offset);

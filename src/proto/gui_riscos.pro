@@ -20,7 +20,7 @@ void gui_mch_set_colors (GuiColor gf, GuiColor bg);
 void gui_mch_draw_string (int row, int col, char_u *s, int len, int flags);
 int gui_mch_haskey (char_u *name);
 void gui_mch_beep (void);
-void gui_mch_flash (void);
+void gui_mch_flash (int msec);
 void gui_mch_invert_rectangle (int r, int c, int nr, int nc);
 void gui_mch_iconify (void);
 void gui_mch_draw_hollow_cursor (GuiColor color);

@@ -1304,8 +1304,9 @@ gui_mch_beep(void)
  * Visual bell.
  */
     void
-gui_mch_flash(void)
+gui_mch_flash(int msec)
 {
+    /* TODO */
 }
 
 
