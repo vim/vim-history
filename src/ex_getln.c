@@ -1403,6 +1403,7 @@ getcmdline(firstc, count, indent)
 	    if (has_mbyte)
 	    {
 		j = (*mb_char2bytes)(c, IObuff);
+		IObuff[j] = NUL;	/* exclude composing chars */
 		put_on_cmdline(IObuff, j, TRUE);
 	    }
 	    else
@@ -2152,11 +2153,11 @@ draw_cmdline(start, len)
 		return;	/* out of memory */
 	}
 
-	for (j = start; j < len; j += mb_l)
+	for (j = start; j < start + len; j += mb_l)
 	{
 	    p = ccline.cmdbuff + j;
-	    u8c = utfc_ptr2char(p, &u8c_c1, &u8c_c2);
-	    mb_l = (*mb_ptr2len_check)(p);
+	    u8c = utfc_ptr2char_len(p, &u8c_c1, &u8c_c2, start + len - j);
+	    mb_l = utfc_ptr2len_check_len(p, start + len - j);
 	    if (ARABIC_CHAR(u8c))
 	    {
 		/* Do Arabic shaping. */
@@ -2166,12 +2167,19 @@ draw_cmdline(start, len)
 		    pc = prev_c;
 		    pc1 = prev_c1;
 		    prev_c1 = u8c_c1;
-		    nc = utf_ptr2char(p + mb_l);
+		    if (j + mb_l >= start + len)
+			nc = NUL;
+		    else
+			nc = utf_ptr2char(p + mb_l);
 		}
 		else
 		{
 		    /* displaying from left to right */
-		    pc = utfc_ptr2char(p + mb_l, &pc1, &dummy);
+		    if (j + mb_l >= start + len)
+			pc = NUL;
+		    else
+			pc = utfc_ptr2char_len(p + mb_l, &pc1, &dummy,
+						      start + len - j - mb_l);
 		    nc = prev_c;
 		}
 		prev_c = u8c;
