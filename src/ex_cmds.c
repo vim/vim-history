@@ -5690,7 +5690,6 @@ ex_drop(eap)
     int		split = FALSE;
     int		incurwin = FALSE;
     char_u	*arg;
-    int		two_or_more = FALSE;
     char_u	*first = NULL;
     win_T	*wp;
     buf_T	*buf;
@@ -5707,7 +5706,6 @@ ex_drop(eap)
     if (arg != NULL)
     {
 	/* Get the first argument, remove quotes, make it a full path. */
-	two_or_more = (*do_one_arg(arg) != NUL);
 	first = fix_fname(arg);
 	if (first != NULL)
 	{
