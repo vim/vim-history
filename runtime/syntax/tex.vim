@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:	TeX
-" Version:	5.4-8
-" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	November 29, 1999
+" Language   : TeX
+" Version    : 5.6-4
+" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
+" Last Change: April 7, 2000
 "
 " Notes:
 " 1. If you have a \begin{verbatim} that appears to overrun its boundaries,
@@ -26,7 +26,7 @@ syn clear
 " --------
 syn cluster texCmdGroup	contains=texCmdBody,texComment,texDelimiter,texDocumentType,texDocumentTypeArgs,texInput,texLength,texLigature,texMathDelim,texMathError,texMathOper,texNewCmd,texNewEnv,texRefZone,texSection,texSectionMarker,texSectionName,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle
 syn cluster texEnvGroup	contains=texMatcher,texMathDelim,texSpecialChar,texStatement
-syn cluster texMatchGroup	contains=@texMathZones,texAccent,texBadMath,texComment,texDefCmd,texDelimiter,texDocumentType,texInput,texLength,texLigature,texMatcher,texNewCmd,texNewEnv,texOnlyMath,texParen,texRefZone,texSection,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle,texZone,texInputGfx
+syn cluster texMatchGroup	contains=@texMathZones,texAccent,texBadMath,texComment,texDefCmd,texDelimiter,texDocumentType,texInput,texLength,texLigature,texMatcher,texNewCmd,texNewEnv,texOnlyMath,texParen,texRefZone,texSection,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle,texZone,texInputFile
 syn cluster texMathDelimGroup	contains=texMathDelimBad,texMathDelimKey,texMathDelimSet1,texMathDelimSet2
 syn cluster texMathMatchGroup contains=@texMathZones,texComment,texDefCmd,texDelimiter,texDocumentType,texInput,texLength,texLigature,texMathDelim,texMathError,texMathMatcher,texMathOper,texNewCmd,texNewEnv,texRefZone,texSection,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle,texZone
 syn cluster texMathZoneGroup	contains=texComment,texDelimiter,texLength,texMathDelim,texMathError,texMathMatcher,texMathOper,texRefZone,texSpecialChar,texStatement,texTypeSize,texTypeStyle
@@ -35,7 +35,7 @@ syn cluster texMathZones	contains=texMathZoneA,texMathZoneB,texMathZoneC,texMath
 " Try to flag {}, [], and () mismatches
 syn region texMatcher	matchgroup=Delimiter start="{" skip="\\\\\|\\[{}]"	end="}"	contains=@texMatchGroup
 syn region texMatcher	matchgroup=Delimiter start="\["		end="]"	contains=@texMatchGroup
-syn region texParen	start="("				end=")"	contains=@texMatchGroup
+syn region texParen	start="("		   		end=")"	contains=@texMatchGroup
 syn match  texError	"[}\])]"
 syn match  texMathError	"}"	contained
 syn region texMathMatcher	matchgroup=Delimiter start="{"  skip="\\\\\|\\}"  end="}" end="%stopzone" contained contains=@texMathMatchGroup
@@ -64,9 +64,10 @@ syn match texDocumentType "\\documentclass\|\\documentstyle\|\\usepackage"		next
 syn region texDocumentTypeArgs matchgroup=Delimiter start="\[" end="]" contained	nextgroup=texSectionName
 
 " TeX input
-syn match texInput	"\\input\s\+[a-zA-Z/.0-9]\+"hs=s+7	contains=texStatement
-syn match texInputGfx	"\\includegraphics\s*{.\{-}}"		contains=texStatement,texInputCurlies
-syn match texInputCurlies	"[{}]"			contained
+syn match texInput	"\\input\s\+[a-zA-Z/.0-9]\+"hs=s+7		contains=texStatement
+syn match texInputFile	"\\include\(graphics\|list\)\=\(\[.\{-}\]\)\=\s*{.\{-}}"	contains=texStatement,texInputCurlies
+syn match texInputFile	"\\\(epsfig\|input\|usepackage\)\s*{.\{-}}"		contains=texStatement,texInputCurlies
+syn match texInputCurlies	"[{}]"				contained
 
 " Type Styles (LaTeX 2.09)
 syn match texTypeStyle	"\\rm\>"
@@ -161,8 +162,9 @@ syn match texMathOper	"[_^=]" contained
 
 " \left..something.. and \right..something.. support
 syn match   texMathDelimBad	contained	"."
-syn match   texMathDelim		"\\\(left\|right\)"	nextgroup=texMathDelimSet1,texMathDelimSet2,texMathDelimBad
-syn match   texMathDelim		"\\\(left\|right\)arrow"
+syn match   texMathDelim		"\\\(left\|right\)\>"	nextgroup=texMathDelimSet1,texMathDelimSet2,texMathDelimBad
+syn match   texMathDelim		"\\\(left\|right\)arrow\>"
+syn match   texMathDelim		"\\lefteqn\>"
 syn match   texMathDelimSet2	contained	"\\"	nextgroup=texMathDelimKey,texMathDelimBad
 syn match   texMathDelimSet1	contained	"[<>()[\]|/.]\|\\[{}|]"
 syn keyword texMathDelimKey	contained	Downarrow	Uparrow	downarrow	lceil	rangle	uparrow

@@ -2,7 +2,7 @@
 " Language:	PostScript - all Levels, selectable
 " Maintainer:	Mike Williams <mrw@netcomuk.co.uk>
 " Filenames:	*.ps,*.eps
-" Last Change:  10th January 2000
+" Last Change:  6th June 2000
 " URL:          http://www.netcomuk.co.uk/~mrw/vim
 "
 " Options Flags:
@@ -653,14 +653,14 @@ if exists("postscr_ghostscript")
   syn keyword postscrOperator   .setaccuratecurves .currentaccuratecurves .setclipoutside
   syn keyword postscrOperator   .setdashadapt .currentdashadapt .setdefaultmatrix .setdotlength
   syn keyword postscrOperator   .currentdotlength .setfilladjust2 .currentfilladjust2
-  syn keyword postscrOperator   .currentclipoutside
+  syn keyword postscrOperator   .currentclipoutside .setcurvejoin .currentcurvejoin
 
   " GS path operators
   syn keyword postscrOperator   .dashpath
 
   " GS painting operators
   syn keyword postscrOperator   .setrasterop .currentrasterop .setsourcetransparent
-  syn keyword postscrOperator   .settexttransparent .currenttexturetransparent
+  syn keyword postscrOperator   .settexturetransparent .currenttexturetransparent
   syn keyword postscrOperator   .currentsourcetransparent
 
   " GS character operators
@@ -695,16 +695,16 @@ if exists("postscr_ghostscript")
   syn keyword postscrConstant   contained zlibDecode PNGPredictorEncode PFBDecode
 
   " GS filter keys
-  syn keyword postscrConstant   contained InitialCodeLength FirstBitLowOrder BlockData DecodeByteAlign
+  syn keyword postscrConstant   contained InitialCodeLength FirstBitLowOrder BlockData DecodedByteAlign
 
   " GS device parameters
-  syn keyword postscrConstant   contained BitsPerPixel .HWMargins HWSize Name Colors GrayValues
+  syn keyword postscrConstant   contained BitsPerPixel .HWMargins HWSize Name GrayValues
   syn keyword postscrConstant   contained ColorValues TextAlphaBits GraphicsAlphaBits BufferSpace
   syn keyword postscrConstant   contained OpenOutputFile PageCount BandHeight BandWidth BandBufferSpace
   syn keyword postscrConstant   contained ViewerPreProcess GreenValues BlueValues OutputFile
   syn keyword postscrConstant   contained MaxBitmap RedValues
 
-endif " Ghostscript highlighting
+endif " GhostScript highlighting
 
 
 if !exists("did_postscr_syntax_inits")

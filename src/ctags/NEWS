@@ -1,4 +1,30 @@
-Current Version: 3.4
+Current Version: 3.5.1
+
+ctags-3.5.1 (Sun Apr 23 2000)
+* Fixed infinite loop in writing Emacs-style TAGS file on platforms using
+  tmpnam() instead of mkstemp() [Win32].
+* Fixed minor problems in Borland makefiles [Win32].
+* Fixed compiler warning [DJGPP].
+
+ctags-3.5 (Fri Apr 14 2000)
+* Fixed core dump when including access field in tag file [Java].
+* Fixed failure to identify end of statement for block statements [Java].
+* Fixed bug with lone "end" in feature adaptation part of inheritance clause
+  [Eiffel].
+* Fixed problem preventing const functions from being recognized as pure
+  virtual [C/C++].
+* Fixed problem with no tags found after certain macro calls [C/C++].
+* Fixed bug in descrip.mms build file [VMS].
+* Changed to use mkstemp() (when available) to create temporary files for
+  security reasons and allow configuring default temporary directory, and to
+  override this directory at run-time by setting TMPDIR environment variable.
+* Added support for extracting inheritance information into new "inherits"
+  extension flag [C++, Java].
+* Added Makefile.bc5 for Borland C++ version 5.5 compiler (free version).
+* Added new question to FAQ regarding Xemacs.
+* Updated FAQ regarding new release of NEdit.
+* Renamed Borland 3.1 makefile from Makefile.bcc to Makefile.bc3.
+* Renamed Microsoft Visual C++ makefile from Makefile.w32 to Makefile.mvc.
 
 ctags-3.4 (Thu Jan 13 2000)
 * Fixed sorting problems when LC_ALL environment variable was set to foreign

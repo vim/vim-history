@@ -643,7 +643,7 @@ static struct vimoption options[] =
     {"isprint",	    "isp",  P_STRING|P_VI_DEF|P_RALL|P_COMMA,
 			    (char_u *)&p_isp,
 			    {
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+#if defined(MSDOS) || defined(MSWIN) || defined(OS2) || defined(macintosh)
 			    (char_u *)"@,~-255",
 #else
 			    (char_u *)"@,161-255",
@@ -812,7 +812,11 @@ static struct vimoption options[] =
 #if defined(MSDOS) || defined(MSWIN)
 				(char_u *)"popup",
 #else
-				(char_u *)"extend",/* TODO: macintosh: "mac" */
+# if defined(macintosh)
+				(char_u *)"popup_setpos",
+# else
+				(char_u *)"extend",
+# endif
 #endif
 				(char_u *)0L}},
     {"mousetime",   "mouset",	P_NUM|P_VI_DEF,
@@ -1275,7 +1279,7 @@ static struct vimoption options[] =
     {"undolevels",  "ul",   P_NUM|P_VI_DEF,
 			    (char_u *)&p_ul,
 			    {
-#if defined(UNIX) || defined(WIN32) || defined(OS2)
+#if defined(UNIX) || defined(WIN32) || defined(OS2) || defined(VMS)
 			    (char_u *)1000L,
 #else
 			    (char_u *)100L,

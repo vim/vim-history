@@ -90,3 +90,5 @@ void gui_win_new_height __PARMS((WIN *wp));
 void gui_win_comp_pos __PARMS((void));
 void gui_win_free __PARMS((WIN *wp));
 void gui_win_alloc __PARMS((WIN *wp));
+
+void mch_post_buffer_write (BUF *buf);

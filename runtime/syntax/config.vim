@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		configure.in script: M4 with sh
 " Maintainer:	Christian Hammesr <ch@lathspell.westend.com>
-" Last Change:	1999 Apr 21
+" Last Change:	2000 Apr 15
 
 " Well, I actually even do not know much about m4. This explains why there
 " is probably very much missing here, yet !
@@ -16,7 +16,7 @@ syn clear
 syn match   configdelimiter "[()\[\];,]"
 syn match   configoperator  "[=|&\*\+\<\>]"
 syn match   configcomment   "\(dnl.*\)\|\(#.*\)"
-syn match   configfunction  "\<[A-Z_]*\>"
+syn match   configfunction  "\<[A-Z_][A-Z0-9_]*\>"
 syn match   confignumber    "[-+]\=\<\d\+\(\.\d*\)\=\>"
 syn keyword configkeyword   if then else fi test for in do done
 syn keyword configspecial   cat rm eval

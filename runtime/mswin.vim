@@ -1,7 +1,7 @@
 " Set options and add mapping such that Vim behaves a lot like MS-Windows
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Aug 09
+" Last change:	2000 Jun 02
 
 " make 'cpoptions' empty
 if 1	" only do this when compiled with expression evaluation
@@ -16,18 +16,18 @@ behave mswin
 set backspace=2 whichwrap+=<,>,[,]
 
 " backspace in Visual mode deletes selection
-vmap <BS> d
+vnoremap <BS> d
 
 " CTRL-X and SHIFT-Del are Cut
-vmap <C-X> "*x
-vmap <S-Del> "*x
+vnoremap <C-X> "*x
+vnoremap <S-Del> "*x
 
 " CTRL-C and CTRL-Insert are Copy
-vmap <C-C> "*y
-vmap <C-Insert> "*y
+vnoremap <C-C> "*y
+vnoremap <C-Insert> "*y
 
 " CTRL-V and SHIFT-Insert are Paste
-nm \\Paste\\ "=@*.'xy'<CR>gPFx"_2x:echo<CR>
+nnoremap \\Paste\\ "=@*.'xy'<CR>gPFx"_2x:echo<CR>
 map <C-V>				\\Paste\\
 map <S-Insert>				\\Paste\\
 if has("gui")
@@ -62,36 +62,36 @@ noremap <C-Q> <C-V>
 set guioptions-=a
 
 " CTRL-Z is Undo
-map <C-Z> u
-imap <C-Z> <C-O>u
-cmap <C-Z> <C-C><C-Z>
+noremap <C-Z> u
+inoremap <C-Z> <C-O>u
+cnoremap <C-Z> <C-C>u
 
 " CTRL-Y is Redo (although not repeat)
-map <C-Y> <C-R>
-imap <C-Y> <C-O><C-R>
-cmap <C-Y> <C-C><C-Y>
+noremap <C-Y> <C-R>
+inoremap <C-Y> <C-O><C-R>
+cnoremap <C-Y> <C-C><C-R>
 
 " Alt-Space is System menu
 if has("gui")
-  map <M-Space> :simalt ~<CR>
-  imap <M-Space> <C-O>:simalt ~<CR>
-  cmap <M-Space> <C-C><M-Space>
+  noremap <M-Space> :simalt ~<CR>
+  inoremap <M-Space> <C-O>:simalt ~<CR>
+  cnoremap <M-Space> <C-C>:simalt ~<CR>
 endif
 
 " CTRL-A is Select all
-map <C-A> gggH<C-O>G
-imap <C-A> <C-O>gg<C-O>gH<C-O>G
-cmap <C-A> <C-C><C-A>
+noremap <C-A> gggH<C-O>G
+inoremap <C-A> <C-O>gg<C-O>gH<C-O>G
+cnoremap <C-A> <C-C>gggH<C-O>G
 
 " CTRL-Tab is Next window
-map <C-Tab> <C-W>w
-imap <C-Tab> <C-O><C-W>w
-cmap <C-Tab> <C-C><C-Tab>
+noremap <C-Tab> <C-W>w
+inoremap <C-Tab> <C-O><C-W>w
+cnoremap <C-Tab> <C-C><C-W>w
 
 " CTRL-F4 is Close window
-map <C-F4> <C-W>c
-imap <C-F4> <C-O><C-W>c
-cmap <C-F4> <C-C><C-F4>
+noremap <C-F4> <C-W>c
+inoremap <C-F4> <C-O><C-W>c
+cnoremap <C-F4> <C-C><C-W>c
 
 " restore 'cpoptions'
 set cpoptions&

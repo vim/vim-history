@@ -60,11 +60,10 @@
 # undef EXTERNAL_SORT
 #endif
 
-/*  If you are using the system sort utility (i.e. external sort), define
- *  this label to be the name of your awk program, which is used to report
- *  duplicate tags when the -W option is specified.
+/* If you wish to change the directory in which temporary files are stored,
+ * define this label to the directory desired.
  */
-#define AWK "awk"
+#undef TMPDIR
 
 /*  This corrects the problem of missing prototypes for certain functions
  *  in some GNU installations (e.g. SunOS 4.1.x).

@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 5.6.  Last change: 1999 Jul 05
+*message.txt*   For Vim version 5.7a.  Last change: 2000 Jun 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -27,6 +27,8 @@ The number of remembered messages is fixed at 20.
 When an error message is displayed, but it is removed before you could read
 it, you can see it again with:
 >  echo errmsg
+or view a list of recent messages with:
+>  :messages
 
 
 >  Ambiguous mapping, conflicts with "..."
@@ -59,6 +61,17 @@ This can also be done with a line in your Xdefaults file:
 >	Netscape*installColormap: Yes
 or
 >	Netscape*maxImageColors:  64
+
+
+>  Can't open errorfile <filename>
+
+When using the ":make" or ":grep" commands: The file used to save the error
+messages or grep output cannot be opened.  This can have several causes:
+- 'shellredir' has a wrong value.
+- The shell used changes directory, causing the error file to be written in
+  another directory.  This could be fixed by changing 'makeef', but then the
+  make command is still executed in the wrong directory.
+- 'makeef' has a wrong value.
 
 
 >  Command not allowed from exrc/vimrc in current dir or tag search
@@ -96,6 +109,12 @@ You are running a version of Vim that doesn't include the GUI code.  Therefore
 You are using a mark that has a line number that doesn't exist.  This can
 happen when you have a mark in another file, and some other program has
 deleted lines from it.
+
+
+>  ml_get: invalid lnum:
+
+This is an internal Vim error.  Please try to find out how it can be
+reproduced, and submit a bug report |bugreport.vim|.
 
 
 >  No alternate file
@@ -145,26 +164,6 @@ adding a '!' character just after the command you used.  Example:
 >	:e other_file
 changes to:
 >	:e! other_file
-
-
->  Warning: File "{filename}" has changed since editing started
-
-The file which you have started editing has got another timestamp.  This
-probably means that some other program changed the file.  You will have to
-find out what happened, and decide which version of the file you want to keep.
-There is one situation where you get this message even though there is nothing
-wrong: If you save a file in Windows on the day the daylight saving time
-starts.  It can be fixed by adding this line in your autoexec.bat:
->	   SET TZ=-1
-Adjust the "-1" for your time zone.  Or just write the file again the next
-day.
-
-
->  Warning: File "{filename}" no longer available
-
-The file which you have started editing has disappeared, or is no longer
-accessible.  Make sure you write the buffer somewhere to avoid loosing
-changes.
 
 
 >  Only one file name allowed
@@ -225,10 +224,34 @@ When expanding file names, more than one match was found.  Only one match is
 allowed.
 
 
->  ml_get: invalid lnum:
+>  Warning: File "{filename}" has changed since editing started
 
-This is an internal Vim error.  Please try to find out how it can be
-reproduced, and submit a bug report |bugreport.vim|.
+The file which you have started editing has got another timestamp.  This
+probably means that some other program changed the file.  You will have to
+find out what happened, and decide which version of the file you want to keep.
+There is one situation where you get this message even though there is nothing
+wrong: If you save a file in Windows on the day the daylight saving time
+starts.  It can be fixed by adding this line in your autoexec.bat:
+>	   SET TZ=-1
+Adjust the "-1" for your time zone.  Or just write the file again the next
+day.
+
+
+>  Warning: File "{filename}" no longer available
+
+The file which you have started editing has disappeared, or is no longer
+accessible.  Make sure you write the buffer somewhere to avoid loosing
+changes.
+
+
+						*connection-refused*
+> Xlib: connection to "<machine-name:0.0" refused by server
+
+This happens when Vim tries to connect to the X server, but the X server does
+not allow a connection.  The connection to the X server is needed to be able
+to restore the title and for the xterm clipboard support.  Unfortunately this
+error message cannot be avoided, except by disabling the |+xterm_clipboard|
+and |+X11| features.
 
 ==============================================================================
 3. Messages						*messages*

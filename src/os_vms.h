@@ -156,6 +156,16 @@
 # define W_OK 2			/* for systems that don't have W_OK in unistd.h */
 #endif
 
+/*
+ * System definitions
+ */
+
+/* Open VMS is case insensitive */
+#define CASE_INSENSITIVE_FILENAME
+
+/* Use binary fileio */
+#define BINARY_FILE_IO
+
 /* #define USE_TMPNAM */		/* use tmpnam() instead of mktemp() */
 
 /*

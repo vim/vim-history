@@ -1,14 +1,14 @@
-README_extra.txt for version 5.6 of Vim: Vi IMproved.
+README_extra.txt for version 5.7a of Vim: Vi IMproved.
 
-This is the extra archive of Vim.  It is to be used in combination with the
-source archive (vim-5.5-src.tar.gz).  The extra archive is useless without it.
+The extra archive of Vim is to be used in combination with the source archive
+(vim-5.7-src.tar.gz).  The extra archive is useless without it.
 
-For more information, see the README.txt file that comes with the runtime
-archive (vim-5.5-rt.tar.gz).  To be able to run Vim you MUST get the runtime
+For more information, see the "README.txt" file that comes with the runtime
+archive (vim-5.7-rt.tar.gz).  To be able to run Vim you MUST get the runtime
 archive too!
 
-This archive plus the source and runtime achives make up the complete sources
-of Vim for all systems.
+The extra archive plus the source and runtime achives make up the complete
+sources of Vim for all systems.
 
 
 The extra archive contains:

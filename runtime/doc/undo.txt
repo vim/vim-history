@@ -1,4 +1,4 @@
-*undo.txt*      For Vim version 5.6.  Last change: 1999 Dec 21
+*undo.txt*      For Vim version 5.7a.  Last change: 1999 Dec 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

@@ -1,4 +1,4 @@
-*if_ole.txt*    For Vim version 5.6.  Last change: 1999 Sep 14
+*if_ole.txt*    For Vim version 5.7a.  Last change: 2000 Mar 21
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -10,6 +10,7 @@ The OLE Interface to Vim				*ole-interface*
 2. Methods			|ole-methods|
 3. The "normal" command		|ole-normal|
 4. Registration			|ole-registration|
+5. MS Visual Studio integration	|MSVisualStudio|
 
 {Vi does not have any of these commands}
 
@@ -74,13 +75,13 @@ Note that this doesn't work halfway a Vim command
 Eval(expr)		Evaluate an expression.
 
 This method takes a single parameter, which is an expression in Vim's normal
-format (see |expression|). It returns a string, which is the result of
+format (see |expression|).  It returns a string, which is the result of
 evaluating the expression.
 
 Examples (Visual Basic syntax)
->	Line20 = Vim.Expr("getline(20)")
->	Twelve = Vim.Expr("6 + 6")		' Note this is a STRING
->	Font = Vim.Expr("&guifont")
+>	Line20 = Vim.Eval("getline(20)")
+>	Twelve = Vim.Eval("6 + 6")		' Note this is a STRING
+>	Font = Vim.Eval("&guifont")
 
 							*ole-setforeground*
 SetForeground()		Make the Vim window come to the foreground
@@ -121,6 +122,14 @@ sessions open that should not react to OLE commands, use the non-OLE version,
 and put it in a different directory.  The OLE version should then be put in a
 directory that is not in your normal path, so that typing "gvim" will start
 the non-OLE version.
+
+==============================================================================
+5. MS Visual Studio integration			*MSVisualStudio* *VisVim*
+
+The OLE version can be used to run Vim as the editor in Microsoft Visual
+Studio.  This is called "VisVim".  It is included in the archive that contains
+the OLE version.  The documentation can be found in the VisVim directory, the
+README.txt file.
 
 ==============================================================================
  vim:tw=78:ts=8:sw=8:

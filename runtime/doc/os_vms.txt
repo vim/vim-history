@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 5.6   Last change: 2000 Mar 31
+*os_vms.txt*    For Vim version 5.7a   Last change: 2000 Jun 07
 
 
 		  VIM REFERENCE MANUAL
@@ -10,15 +10,15 @@ You can reach this information file by typing :help VMS in Vim command
 prompt.
 
  1. Getting started	|vms-started|
- 2. Download files      |vms-download|
- 3. Compiling           |vms-compiling|
- 4. Problems            |vms-problems|
- 5. Deploy			|vms-deploy|
- 6. Practical usage     |vms-usage|
+ 2. Download files	|vms-download|
+ 3. Compiling		|vms-compiling|
+ 4. Problems		|vms-problems|
+ 5. Deploy		|vms-deploy|
+ 6. Practical usage	|vms-usage|
  7. GUI mode questions	|vms-gui|
- 8. Useful notes        |vms-notes|
- 9. Changes             |vms-changes|
-10. Authors 		|vms-authors|
+ 8. Useful notes	|vms-notes|
+ 9. Changes		|vms-changes|
+10. Authors		|vms-authors|
 
 ==============================================================================
 
@@ -153,14 +153,14 @@ It should work without problems.
 Note: Remember, system rc files (default for all users) does not have leading
 "." So, system rc files are:
 
->       VIM$:vimrc
->       VIM$:gvimrc
->       VIM$:menu.vim
+>	VIM$:vimrc
+>	VIM$:gvimrc
+>	VIM$:menu.vim
 
 and user's customised rc files are:
 
->       sys$login:.vimrc
->       sys$login:.gvimrc
+>	sys$login:.vimrc
+>	sys$login:.gvimrc
 
 You can check that everything is on the right place with the :version command.
 
@@ -175,13 +175,13 @@ Note: This set-up should be enough, if you are working on standalone server or
 clustered environment, but if you want to use Vim as internode editor, it
 will satiate you as well. You just have to define the "whole" path:
 
->       $ define VIM "<server_name>[""user password""]::device:<path>"
->       $ vi*m :== "mcr VIM:VIM.EXE"
+>	$ define VIM "<server_name>[""user password""]::device:<path>"
+>	$ vi*m :== "mcr VIM:VIM.EXE"
 
 as for example:
 
->       $ define VIM "PLUTO::RF10:[UTIL.VIM]"
->       $ define VIM "PLUTO""ZAY mypass""::RF10:[UTIL.VIM]" ! if passwd required
+>	$ define VIM "PLUTO::RF10:[UTIL.VIM]"
+>	$ define VIM "PLUTO""ZAY mypass""::RF10:[UTIL.VIM]" ! if passwd required
 
 You can also use $VIMRUNTIME logical to point to proper version of Vim if you
 have installed more versions in the same time. If $VIMRUNTIME is not defined
@@ -211,9 +211,9 @@ VMS is not a native X window environment, so you can not start Vim in GUI mode
    type: help set disp in VMS prompt.
    Examples:
 
->       $ set disp/create/node=192.168.5.159             ! default trans is DECnet
->       $ set disp/create/node=192.168.5.159/trans=tcpip ! TCP/IP network
->       $ set disp/create/node=192.168.5.159/trans=local ! display on the same node
+>	$ set disp/create/node=192.168.5.159             ! default trans is DECnet
+>	$ set disp/create/node=192.168.5.159/trans=tcpip ! TCP/IP network
+>	$ set disp/create/node=192.168.5.159/trans=local ! display on the same node
 
 Note: you should define just one of these.
 For more information type $help set disp in VMS prompt.
@@ -265,15 +265,15 @@ Vim 5.6 )
 Vim will internally convert any unix-style paths and even mixed unix/VMS
 paths into VMS style paths. Some typical conversions resemble:
 
-	/abc/def/ghi	      -> abc:[def]ghi.
-	/abc/def/ghi.j	      -> abc:[def]ghi.j
-	/abc/def/ghi.j;2        -> abc:[def]ghi.j;2
-        /abc/def/ghi/jkl/mno  -> abc:[def.ghi.jkl]mno.
-	abc:[def.ghi]jkl/mno    -> abc:[def.ghi.jkl]mno.
-	  ./		      	-> current directoty
-	  ../		      	-> relative parent directory
-	  [.def.ghi]	      -> relative child directory
-         ./def/ghi            -> relative child directory
+	/abc/def/ghi		-> abc:[def]ghi.
+	/abc/def/ghi.j		-> abc:[def]ghi.j
+	/abc/def/ghi.j;2	-> abc:[def]ghi.j;2
+	/abc/def/ghi/jkl/mno	-> abc:[def.ghi.jkl]mno.
+	abc:[def.ghi]jkl/mno	-> abc:[def.ghi.jkl]mno.
+	  ./			-> current directoty
+	  ../			-> relative parent directory
+	  [.def.ghi]		-> relative child directory
+	   ./def/ghi		-> relative child directory
 
 Note: You may use <,> brackets as well (device:<path>file.ext;version) as
 rf10:<user.zay.work>test.c;1
@@ -286,10 +286,10 @@ rf10:<user.zay.work>test.c;1
 It is possible to use Vim as an internode editor.
 1. Edit some file from remote node:
 
->       vi "<server>""username passwd""::<device>:<path><filename>;<version>"
+>	vi "<server>""username passwd""::<device>:<path><filename>;<version>"
 
 example:
->       vi "pluto""zay passwd""::RF10:<USER.ZAY.WORK>TEST.C;1"
+>	vi "pluto""zay passwd""::RF10:<USER.ZAY.WORK>TEST.C;1"
 
 Note: syntax is very important, otherwise VMS will recognise more parameters
 instead of one (resulting with: file not found)
@@ -298,16 +298,16 @@ instead of one (resulting with: file not found)
 just set up your IP address, full Vim path including the server name and run
 the command procedure below:
 
->       $ if (p1 .eqs. "") .OR. (p2 .eqs. "") then goto usage
->       $ set disp/create/node=<your_IP_here>/trans=tcpip
->       $ define "VIM "<vim_server>""''p1' ''p2'""::<device>:<vim_path>"
->       $  vi*m :== "mcr VIM:VIM.EXE"
->       $ gv*im :== "spawn/nowait mcr VIM:VIM.EXE -g"
->       $ goto end
->       $ usage:
->       $ write sys$output " Please enter username and password as a parameter."
->       $ write sys$output " Example: @SETVIM.COM username passwd"
->       $ end:
+>	$ if (p1 .eqs. "") .OR. (p2 .eqs. "") then goto usage
+>	$ set disp/create/node=<your_IP_here>/trans=tcpip
+>	$ define "VIM "<vim_server>""''p1' ''p2'""::<device>:<vim_path>"
+>	$  vi*m :== "mcr VIM:VIM.EXE"
+>	$ gv*im :== "spawn/nowait mcr VIM:VIM.EXE -g"
+>	$ goto end
+>	$ usage:
+>	$ write sys$output " Please enter username and password as a parameter."
+>	$ write sys$output " Example: @SETVIM.COM username passwd"
+>	$ end:
 
 Note: Never use it in clustered environment (you do not need it), and load could
 be very-very slow, but even faster then a local Emacs. :-)
@@ -336,40 +336,40 @@ defaulting to 'vt320'
 ---
 The solution is to define default terminal name:
 
->       $ ! unknown terminal name. let us use vt320 or ansi instead.
->       $ ! Note: it's case sensitive
->       $ define term "vt320"
+>	$ ! unknown terminal name. let us use vt320 or ansi instead.
+>	$ ! Note: it's case sensitive
+>	$ define term "vt320"
 
 Terminals from VT100 to VT320 (as V300, VT220, VT200 ) do not need any extra
 keyboard mappings. They should work perfect as they are, including arrows,
 Ins, Del buttons etc. Except Backspace in GUI mode. To solve it, add to
 .gvimrc:
 
->       inoremap <Del> <BS>
+>	inoremap <Del> <BS>
 
 Vim will also recognise that they are fast terminals.
 
 If you have some annoying line jumping on the screen between windows add to
 your .vimrc file:
 
->       set ttyfast                 " set fast terminal
+>	set ttyfast	" set fast terminal
 
 Note: if you're using Vim on remote host or through very slow connection, it's
 recommended to avoid fast terminal option with:
 
 >	set nottyfast
 
-(Zoltan Arpadffy, Vim 5.6-3(VMS))
+(Zoltan Arpadffy, <arpadffy@altavista.net> Vim 5.6-3(VMS))
 
 ==============================================================================
 
-9. Changes 						*vms-changes*
+9. Changes						*vms-changes*
 
-Version 5.6-4(VMS) (2000 Mar 27)
+Version 5.6 patches 46-70 (2000 May 5)
 - VMS filename related changes:
-        - version handling (open everything, save to new version)
-        - correct file extension matching for syntax (version problem)
-        - handle <,> characters and passwords in directory definition
+	- version handling (open everything, save to new version)
+	- correct file extension matching for syntax (version problem)
+	- handle <,> characters and passwords in directory definition
 	- handle internode/remote invocation and editing with passwords
 	- OpenVMS files will be treated case insensitive from now
 	- corrected response of expand("%:.") etc path related functions
@@ -380,16 +380,18 @@ Version 5.6-4(VMS) (2000 Mar 27)
 	- added user and host information
 	- resolving $VIM and $VIMRUNTIME logicals
 - VMS port is in MAX_FEAT (maximum features) club with Unix, Win32 and OS/2.
+	- enabled farsi, rightleft etc. features
+	- undo level raised up to 1000
 - Updated OS_VMS.MMS file.
-        - maximum features ON is default
-        - Vim is compilable with +perl, +python and +tcl features.
-        - improved MMK compatibility
+	- maximum features ON is default
+	- Vim is compilable with +perl, +python and +tcl features.
+	- improved MMK compatibility
 - Created MAKEFILE_VMS.MMS, makefile for testing Vim during development.
 - Defined DEC terminal VT320
-        - compatibility for VT3*0, VT2*0 and VT1*0 - ANSI terminals
+	- compatibility for VT3*0, VT2*0 and VT1*0 - ANSI terminals
 	  backwards, but not VT340 and newer with colour capability.
-        - VT320 is default terminal for OpenVMS
-        - these new terminals are also fast ttys (default for OpenVMS).
+	- VT320 is default terminal for OpenVMS
+	- these new terminals are also fast ttys (default for OpenVMS).
 	- allowed dec_mouse ttym
 - Updated files vimrc and gvimrc with VMS specific suggestions.
 - OS_VMS.TXT updated with new features.
@@ -424,7 +426,7 @@ Version 4.5 (1996 Dec 16)
 
 ==============================================================================
 
-10. Authors 						*vms-authors*
+10. Authors						*vms-authors*
 
 In alphabetical order:
 	Zoltan Arpadffy <arpadffy@altavista.net>

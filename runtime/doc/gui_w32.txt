@@ -1,4 +1,4 @@
-*gui_w32.txt*   For Vim version 5.6.  Last change: 2000 Jan 01
+*gui_w32.txt*   For Vim version 5.7a.  Last change: 2000 Jun 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -45,8 +45,8 @@ Setting the menu height doesn't work for the Win32 GUI.
 
 							*gui-win32-maximized*
 If you want Vim to start with a maximized window, add this command to your
-gvimrc file:
->	simalt ~x
+vimrc or gvimrc file:
+>	au GUIEnter * simalt ~x
 
 								*gui-w32s*
 There is a specific version of gvim.exe that runs under the Win32s subsystem
@@ -98,6 +98,14 @@ You can also install Vim in the "Send To" menu:
 When you 'send a file to Vim', Vim changes to that file's directory.  Note,
 however, that any long directory names will appear in their short (MS-DOS)
 form.  This is a limitation of the Windows "Send To" mechanism.
+
+						*notepad*
+You could replace notepad.exe with gvim.exe, but that has a few side effects.
+For example, some programs rely on notepad arguments, which are not recognized
+by Vim.  And Vim uses notepad for printing.  You could fix that by adjusting
+the File/Print menu item, but if other applications also use notepad for
+printing, that will fail.  It's better to leave notepad where it is and use
+another way to start Vim.
 
 						*win32-popup-menu*
 A more drastic approach is to install an "Edit with Vim" entry in the popup

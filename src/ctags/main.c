@@ -28,11 +28,9 @@
 #include <string.h>
 #include <errno.h>
 
-#ifndef HAVE_FGETPOS
-# include <stdio.h>		/* to declare SEEK_SET (hopefully) */
-# if defined(HAVE_UNISTD_H)
-#  include <unistd.h>		/* to declare SEEK_SET on SunOS 4.1.x */
-# endif
+#include <stdio.h>		/* to declare SEEK_SET (hopefully) */
+#if defined(HAVE_UNISTD_H)
+# include <unistd.h>	/* to declare mkstemp(), and SEEK_SET on SunOS 4.1.x */
 #endif
 
 #ifdef AMIGA
@@ -170,6 +168,11 @@ static const char PathDelimiters[] = ":/\\";
 static const char PathDelimiters[] = ":]>";
 #endif
 
+#ifndef TMPDIR
+# define TMPDIR "/tmp"
+#endif
+
+static const char *ExecutableProgram = NULL;
 static const char *ExecutableName = NULL;
 
 static struct { long files, lines, bytes; } Totals = { 0, 0, 0 };
@@ -332,6 +335,28 @@ static boolean isNormalFile( name )
     return isNormal;
 }
 
+#ifdef HAVE_MKSTEMP
+
+static boolean isSetUID __ARGS((const char *const name));
+
+static boolean isSetUID( name )
+    const char *const name;
+{
+#if defined(__vms) || defined(MSDOS) || defined(WIN32) || defined(__EMX__) || defined(AMIGA)
+    return FALSE;
+#else
+    struct stat fileStatus;
+    boolean result = FALSE;
+
+    if (stat(name, &fileStatus) == 0)
+	result = (boolean)((fileStatus.st_mode & S_ISUID) != 0);
+
+    return result;
+#endif
+}
+
+#endif
+
 static boolean isDirectory( name )
     const char *const name;
 {
@@ -424,6 +449,41 @@ extern boolean isDestinationStdout()
     return toStdout;
 }
 
+extern FILE *tempFile( mode, pName )
+    const char *const mode;
+    char **const pName; 
+{
+    char *name;
+    FILE *fp;
+#ifdef HAVE_MKSTEMP
+    int fd;
+    const char *const template = "tags.XXXXXX";
+    const char *tmpdir = NULL;
+    if (! isSetUID(ExecutableProgram))
+	tmpdir = getenv("TMPDIR");
+    if (tmpdir == NULL)
+	tmpdir = TMPDIR;
+    name = (char*)eMalloc(strlen(tmpdir) + 1 + strlen(template) + 1);
+    sprintf(name, "%s%c%s", tmpdir, PATH_SEPARATOR, template);
+    fd = mkstemp(name);
+    if (fd == -1)
+	error(FATAL | PERROR, "cannot open temporary file");
+    fp = fdopen(fd, mode);
+#else
+    name = (char*)eMalloc((size_t)L_tmpnam);
+    if (tmpnam(name) != name)
+	error(FATAL | PERROR, "cannot assign temporary file name");
+    fp = fopen(name, mode);
+#endif
+    if (fp == NULL)
+	error(FATAL | PERROR, "cannot open temporary file");
+    DebugStatement(
+	debugPrintf(DEBUG_STATUS, "opened temporary file %s\n", name); )
+    Assert(*pName == NULL);
+    *pName = name;
+    return fp;
+}
+
 /*----------------------------------------------------------------------------
  *  Pathname manipulation (O/S dependent!!!)
  *--------------------------------------------------------------------------*/
@@ -463,7 +523,7 @@ extern boolean isAbsolutePath( path )
 	    (isalpha(path[0])  &&  path[1] == ':'));
 #else
 # ifdef __vms
-    return (boolean)strchr(path, ':');
+    return (boolean)(strchr(path, ':') != NULL);
 # else
     return (boolean)(path[0] == PATH_SEPARATOR);
 # endif
@@ -1023,6 +1083,7 @@ static void makeTags( args )
 static void setExecutableName( path )
     const char *const path;
 {
+    ExecutableProgram = path;
     ExecutableName = baseFilename(path);
 }
 

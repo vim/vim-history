@@ -31,7 +31,7 @@
 /*============================================================================
 =   Macros
 ============================================================================*/
-#define MaxFields   2
+#define MaxFields   6
 
 #define stringValue(a)		#a
 #define activeToken(st)		((st)->token[(int)(st)->tokenIndex])
@@ -156,7 +156,7 @@ typedef struct sMemberInfo {
 typedef struct sTokenInfo {
     tokenType     type;
     keywordId     keyword;
-    vString *     name;		/* the name of the token */
+    vString*      name;		/* the name of the token */
     unsigned long lineNumber;	/* line number of tag */
     fpos_t        filePosition;	/* file position of line containing name */
 } tokenInfo;
@@ -185,6 +185,7 @@ typedef struct sStatementInfo {
     tokenInfo*	context;	/* accumulated scope of current statement */
     tokenInfo*	blockName;	/* name of current block */
     memberInfo	member;		/* information regarding parent class/struct */
+    vString*	parentClasses;	/* parent classes */
     struct sStatementInfo *parent;  /* statement we are nested within */
 } statementInfo;
 
@@ -300,15 +301,15 @@ static const char *implementationString __ARGS((const impType imp));
 static boolean isContextualKeyword __ARGS((const tokenInfo *const token));
 static boolean isContextualStatement __ARGS((const statementInfo *const st));
 static boolean isMember __ARGS((const statementInfo *const st));
-static void reinitStatement __ARGS((statementInfo *const st, const boolean comma));
 static void initMemberInfo __ARGS((statementInfo *const st));
+static void reinitStatement __ARGS((statementInfo *const st, const boolean comma));
 static void initStatement __ARGS((statementInfo *const st, statementInfo *const parent));
 static const char *tagName __ARGS((const tagType type));
 static int tagLetter __ARGS((const tagType type));
 static boolean includeTag __ARGS((const tagType type, const boolean isFileScope));
 static tagType declToTagType __ARGS((const declType declaration));
 static const char* accessField __ARGS((const statementInfo *const st));
-static int addOtherFields __ARGS((const tagType type, const statementInfo *const st, vString *const scope, const char *(*otherFields)[2]));
+static int addOtherFields __ARGS((const tagType type, const statementInfo *const st, vString *const scope, const char *(*otherFields)[MaxFields]));
 static void addContextSeparator __ARGS((vString *const scope));
 static void findScopeHierarchy __ARGS((vString *const string, const statementInfo *const st));
 static void makeExtraTagEntry __ARGS((tagEntryInfo *const e, vString *const scope));
@@ -320,7 +321,6 @@ static void qualifyFunctionDeclTag __ARGS((const statementInfo *const st, const 
 static void qualifyCompoundTag __ARGS((const statementInfo *const st, const tokenInfo *const nameToken));
 static void qualifyBlockTag __ARGS((statementInfo *const st, const tokenInfo *const nameToken));
 static void qualifyVariableTag __ARGS((const statementInfo *const st, const tokenInfo *const nameToken));
-static int skipToCharacter __ARGS((const int target));
 static int skipToNonWhite __ARGS((void));
 static void skipToFormattedBraceMatch __ARGS((void));
 static void skipToMatch __ARGS((const char *const pair));
@@ -334,6 +334,8 @@ static void readOperator __ARGS((statementInfo *const st));
 static void copyToken __ARGS((tokenInfo *const dest, const tokenInfo *const src));
 static void setAccess __ARGS((statementInfo *const st, const accessType access));
 static void discardTypeList __ARGS((tokenInfo *const token));
+static void addParentClass __ARGS((statementInfo *const st, tokenInfo *const token));
+static void readParents __ARGS((statementInfo *const st, const int qualifier));
 static void readPackage __ARGS((tokenInfo *const token));
 static void processName __ARGS((statementInfo *const st));
 static void processToken __ARGS((tokenInfo *const token, statementInfo *const st));
@@ -637,40 +639,6 @@ static boolean isMember( st )
     return result;
 }
 
-static void reinitStatement( st, partial )
-    statementInfo *const st;
-    const boolean partial;
-{
-    unsigned int i;
-
-    if (! partial)
-    {
-	st->scope = SCOPE_GLOBAL;
-	if (isContextualStatement(st->parent))
-	    st->declaration = DECL_BASE;
-	else
-	    st->declaration = DECL_NONE;
-    }
-    st->gotParenName	= FALSE;
-    st->isPointer	= FALSE;
-    st->implementation	= IMP_DEFAULT;
-    st->gotArgs		= FALSE;
-    st->gotName		= FALSE;
-    st->haveQualifyingName = FALSE;
-    st->tokenIndex	= 0;
-
-    for (i = 0  ;  i < (unsigned int)NumTokens  ;  ++i)
-	initToken(st->token[i]);
-
-    initToken(st->context);
-    initToken(st->blockName);
-
-    /*  Init member info.
-     */
-    if (! partial)
-	st->member.access = st->member.accessDefault;
-}
-
 static void initMemberInfo( st )
     statementInfo *const st;
 {
@@ -700,6 +668,41 @@ static void initMemberInfo( st )
     }
     st->member.accessDefault = accessDefault;
     st->member.access	     = accessDefault;
+}
+
+static void reinitStatement( st, partial )
+    statementInfo *const st;
+    const boolean partial;
+{
+    unsigned int i;
+
+    if (! partial)
+    {
+	st->scope = SCOPE_GLOBAL;
+	if (isContextualStatement(st->parent))
+	    st->declaration = DECL_BASE;
+	else
+	    st->declaration = DECL_NONE;
+    }
+    st->gotParenName	= FALSE;
+    st->isPointer	= FALSE;
+    st->implementation	= IMP_DEFAULT;
+    st->gotArgs		= FALSE;
+    st->gotName		= FALSE;
+    st->haveQualifyingName = FALSE;
+    st->tokenIndex	= 0;
+
+    for (i = 0  ;  i < (unsigned int)NumTokens  ;  ++i)
+	initToken(st->token[i]);
+
+    initToken(st->context);
+    initToken(st->blockName);
+    vStringClear(st->parentClasses);
+
+    /*  Init member info.
+     */
+    if (! partial)
+	st->member.access = st->member.accessDefault;
 }
 
 static void initStatement( st, parent )
@@ -853,6 +856,7 @@ static int addOtherFields( type, st, scope, otherFields )
 	    if (isMember(st) &&
 		! (type == TAG_ENUMERATOR  &&  vStringLength(scope) == 0))
 	    {
+		Assert(numFields < MaxFields);
 		if (isType(st->context, TOKEN_NAME))
 		    otherFields[0][numFields] = tagName(TAG_CLASS);
 		else
@@ -864,9 +868,18 @@ static int addOtherFields( type, st, scope, otherFields )
 		otherFields[1][numFields] = vStringValue(scope);
 		++numFields;
 	    }
+	    if ((type == TAG_CLASS  ||  type == TAG_STRUCT) &&
+		vStringLength(st->parentClasses) > 0)
+	    {
+		Assert(numFields < MaxFields);
+		otherFields[0][numFields] = "inherits";
+		otherFields[1][numFields] = vStringValue(st->parentClasses);
+		++numFields;
+	    }
 	    if (st->implementation != IMP_DEFAULT &&
 		(isLanguage(LANG_CPP) || isLanguage(LANG_JAVA)))
 	    {
+		Assert(numFields < MaxFields);
 		otherFields[0][numFields] = "implementation";
 		otherFields[1][numFields] = implementationString(st->implementation);
 		++numFields;
@@ -877,15 +890,12 @@ static int addOtherFields( type, st, scope, otherFields )
 	    {
 		if (accessField(st) != NULL)
 		{
+		    Assert(numFields < MaxFields);
 		    otherFields[0][numFields] = "access";
 		    otherFields[1][numFields] = accessField(st);
 		    ++numFields;
 		}
 	    }
-	    break;
-
-	case TAG_VARIABLE:
-	    Assert("Shouldn't happen" == NULL);
 	    break;
     }
     return numFields;
@@ -1090,11 +1100,6 @@ static void qualifyBlockTag( st, nameToken )
 	case DECL_UNION:
 	    qualifyCompoundTag(st, nameToken);
 	    break;
-
-	case DECL_FUNCTION:
-	    qualifyFunctionTag(st, nameToken);
-	    break;
-
 	default: break;
     }
 }
@@ -1140,20 +1145,6 @@ static void qualifyVariableTag( st, nameToken )
 /*----------------------------------------------------------------------------
 *-	Parsing functions
 ----------------------------------------------------------------------------*/
-
-/*  Skip to the next non-white character.
- */
-static int skipToCharacter( target )
-    const int target;
-{
-    int c;
-
-    do
-	c = cppGetc();
-    while (c != target  &&  c != EOF);
-
-    return c;
-}
 
 /*  Skip to the next non-white character.
  */
@@ -1441,9 +1432,6 @@ static void discardTypeList( token )
     tokenInfo *const token;
 {
     int c = skipToNonWhite();
-
-    /*  Read and discard interface or class type-list (ident[, ident]).
-     */
     while (isident1(c))
     {
 	readIdentifier(token, c);
@@ -1454,13 +1442,50 @@ static void discardTypeList( token )
     cppUngetc(c);
 }
 
+static void addParentClass( st, token )
+    statementInfo *const st;
+    tokenInfo *const token;
+{
+    if (vStringLength(st->parentClasses) > 0)
+	vStringPut(st->parentClasses, ',');
+    vStringCat(st->parentClasses, token->name);
+}
+
+static void readParents ( st, qualifier )
+    statementInfo *const st;
+    const int qualifier;
+{
+    tokenInfo *const token = newToken();
+    tokenInfo *const parent = newToken();
+    int c;
+
+    do
+    {
+	c = skipToNonWhite();
+	if (isident1(c))
+	{
+	    readIdentifier(token, c);
+	    if (isType(token, TOKEN_NAME))
+		vStringCat(parent->name, token->name);
+	}
+	else if (c == qualifier)
+	    vStringPut(parent->name, c);
+	else if (isType(token, TOKEN_NAME))
+	{
+	    addParentClass(st, parent);
+	    initToken(parent);
+	}
+    } while (c != '{');
+    cppUngetc(c);
+    deleteToken(parent);
+    deleteToken(token);
+}
+
 static void readPackage( token )
     tokenInfo *const token;
 {
-    const int c = skipToNonWhite();
-
     Assert(isType(token, TOKEN_KEYWORD));
-    readPackageName(token, c);
+    readPackageName(token, skipToNonWhite());
     token->type = TOKEN_PACKAGE;
 }
 
@@ -1491,10 +1516,12 @@ static void processToken( token, st )
 	case KEYWORD_CONST:	st->declaration = DECL_BASE;		break;
 	case KEYWORD_DOUBLE:	st->declaration = DECL_BASE;		break;
 	case KEYWORD_ENUM:	st->declaration = DECL_ENUM;		break;
-	case KEYWORD_EXTENDS:	discardTypeList(token);			break;
+	case KEYWORD_EXTENDS:	readParents(st, '.');
+				setToken(st, TOKEN_NONE);		break; 
 	case KEYWORD_FLOAT:	st->declaration = DECL_BASE;		break;
 	case KEYWORD_FRIEND:	st->scope	= SCOPE_FRIEND;		break;
-	case KEYWORD_IMPLEMENTS:discardTypeList(token);			break;
+	case KEYWORD_IMPLEMENTS:readParents(st, '.');
+				setToken(st, TOKEN_NONE);		break; 
 	case KEYWORD_IMPORT:	st->declaration = DECL_IGNORE;		break;
 	case KEYWORD_INT:	st->declaration = DECL_BASE;		break;
 	case KEYWORD_INTERFACE: st->declaration = DECL_INTERFACE;	break;
@@ -1629,6 +1656,7 @@ static boolean skipPostArgumentStuff( st, info )
 	case ')':				break;
 	case ':': skipMemIntializerList(token);	break;	/* ctor-initializer */
 	case '[': skipToMatch("[]");		break;
+	case '=': cppUngetc(c); end = TRUE;	break;
 	case '{': cppUngetc(c); end = TRUE;	break;
 	case '}': cppUngetc(c); end = TRUE;	break;
 
@@ -1991,8 +2019,7 @@ static void processColon( st )
 	if (isLanguage(LANG_CPP)  && (
 	    st->declaration == DECL_CLASS  ||  st->declaration == DECL_STRUCT))
 	{
-	    const int d = skipToCharacter('{');
-	    cppUngetc(d);
+	    readParents(st, ':');
 	}
     }
 }
@@ -2094,17 +2121,6 @@ static void parseGeneralToken( st, c )
 	st->declaration = DECL_NOMANGLE;
 	st->scope = SCOPE_GLOBAL;
     }
-    if (isLanguage(LANG_JAVA)  &&
-	(st->declaration == DECL_CLASS  ||  st->declaration == DECL_INTERFACE))
-    {
-	if (prev->keyword == KEYWORD_CLASS ||
-	    prev->keyword == KEYWORD_INTERFACE)
-	{
-	    if (isType(activeToken(st), TOKEN_NAME))
-		copyToken(st->blockName, activeToken(st));
-	    qualifyBlockTag(st, activeToken(st));
-	}
-    }
 }
 
 /*  Reads characters from the pre-processor and assembles tokens, setting
@@ -2154,6 +2170,7 @@ static statementInfo *newStatement( parent )
 
     st->context = newToken();
     st->blockName = newToken();
+    st->parentClasses = vStringNew();
 
     initStatement(st, parent);
     CurrentStatement = st;
@@ -2168,10 +2185,12 @@ static void deleteStatement()
     unsigned int i;
 
     for (i = 0  ;  i < (unsigned int)NumTokens  ;  ++i)
-	deleteToken(st->token[i]);
-
-    deleteToken(st->blockName);
-    deleteToken(st->context);
+    {
+	deleteToken(st->token[i]);        st->token[i] = NULL;
+    }
+    deleteToken(st->blockName);           st->blockName = NULL;
+    deleteToken(st->context);             st->context = NULL;
+    vStringDelete(st->parentClasses);     st->parentClasses = NULL;
     eFree(st);
     CurrentStatement = parent;
 }
@@ -2190,11 +2209,8 @@ static boolean isStatementEnd( st )
 
     if (isType(token, TOKEN_SEMICOLON))
 	isEnd = TRUE;
-    else if (isType(token, TOKEN_BRACE_CLOSE)  &&
-	     (st->declaration == DECL_FUNCTION  ||
-	      st->declaration == DECL_NAMESPACE ||
-	      st->declaration == DECL_NOMANGLE))
-	isEnd = TRUE;
+    else if (isType(token, TOKEN_BRACE_CLOSE))
+	isEnd = (boolean)(! isContextualStatement(st));
     else
 	isEnd = FALSE;
 
@@ -2272,10 +2288,10 @@ static void tagCheck( st )
 		    st->declaration = DECL_FUNCTION;
 		    if (isType (prev, TOKEN_NAME))
 			copyToken(st->blockName, prev2);
-		    qualifyBlockTag(st, prev2);
+		    qualifyFunctionTag(st, prev2);
 		}
 	    }
-	    else if (! isLanguage(LANG_JAVA) && isContextualStatement(st))
+	    else if (isContextualStatement(st))
 	    {
 		if (isType (prev, TOKEN_NAME))
 		    copyToken(st->blockName, prev);

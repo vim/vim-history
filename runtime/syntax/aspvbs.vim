@@ -2,7 +2,7 @@
 " Language:	Microsoft VBScript Web Content (ASP)
 " Maintainer:	Devin Weaver <ktohg@tritarget.com>
 " URL:		http://www.tritarget.com/vim/syntax
-" Last Change:	1999 Sep 18
+" Last Change:	2000 May 01
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -38,7 +38,7 @@ syn match AspVBSError contained "\<Option\s\+\(Base\|Compare\|Private\s\+Module\
 syn match AspVBSError contained "\<Property\s\+\(Get\|Let\|Set\)\>"
 
 " AspVBScript Reserved Words.
-syn match AspVBSStatement contained "\<On\s\+Error\s\+Resume\s\+Next\>\|\<Next\>"
+syn match AspVBSStatement contained "\<On\s\+Error\s\+\(Resume\s\+Next\|goto\s\+0\)\>\|\<Next\>"
 syn match AspVBSStatement contained "\<End\s\+\(If\|For\|Select\|Function\|Sub\)\>"
 syn match AspVBSStatement contained "\<Exit\s\+\(Do\|For\|Sub\|Function\)\>"
 syn match AspVBSStatement contained "\<Option\s\+Explicit\>"
@@ -113,7 +113,8 @@ syn match   AspVBSError  contained "[a-zA-Z0-9_]%\($\|[^>]\)"ms=s+1
 syn cluster AspVBScriptTop contains=AspVBSStatement,AspVBSFunction,AspVBSMethods,AspVBSNumber,AspVBSString,AspVBSComment,AspVBSError
 
 " Define AspVBScript delimeters
-syn region  AspVBScriptInsideHtmlTags keepend matchgroup=Delimiter start=+<%+ skip=+".*%>.*"+ end=+%>+ contains=@AspVBScriptTop
+" <%= func("string_with_%>_in_it") %> This is illegal in ASP syntax.
+syn region  AspVBScriptInsideHtmlTags keepend matchgroup=Delimiter start=+<%=\=+ end=+%>+ contains=@AspVBScriptTop
 syn region  AspVBScriptInsideHtmlTags keepend matchgroup=Delimiter start=+<script\s\+language="\=vbscript"\=[^>]*\s\+runatserver[^>]*>+ end=+</script>+ contains=@AspVBScriptTop
 
 " Synchronization

@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 5.6.  Last change: 2000 Apr 01
+*cmdline.txt*   For Vim version 5.7a.  Last change: 2000 Apr 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -311,6 +311,12 @@ If you like tcsh's autolist completion, you can use this mapping:
 (Where X is the command key to use, <C-L> is CTRL-L and <C-D> is CTRL-D)
 This will find the longest match and then list all matching files.
 
+If you like tcsh's autolist completion, you can use the 'wildmode' option to
+emulate it.  For example, this mimics autolist=ambiguous:
+        :set wildmode=longest,list
+This will find the longest match with the first 'wildchar', then list all
+matching files with the next.
+
 							*suffixes*
 For file name completion you can use the 'suffixes' option to set a priority
 between files with almost the same name.  If there are multiple matches,
@@ -572,7 +578,13 @@ Note: the next four are typed literally, these are not special keys!
 		   <afile> only when the file name isn't used to match with
 		   (for FileType and Syntax events).
 	<sfile>    when executing a ":source" command, is replaced with the
-		   file name of the sourced file.
+		   file name of the sourced file;
+		   when executing a function, is replaced with
+		   "function {function-name}"; function call nesting is
+		   indicated like this:
+		   "function {function-name1}->{function-name2}".  Note that
+		   filename-modifiers are useless when <sfile> is used inside
+		   a function.
 
 							 *filename-modifiers*
 		 *:_%:* *::p* *::.* *::~* *::h* *::t* *::r* *::e* *::s* *::gs*

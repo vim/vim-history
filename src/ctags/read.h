@@ -85,7 +85,7 @@ extern boolean fileOpen __ARGS((const char *const fileName, const langType langu
 extern void fileClose __ARGS((void));
 extern int fileGetc __ARGS((void));
 extern void fileUngetc __ARGS((int c));
-extern char *readSourceLine __ARGS((vString *const vLine, const fpos_t *const pLocation, long *const pSeekValue));
+extern char *readSourceLine __ARGS((vString *const vLine, fpos_t location, long *const pSeekValue));
 
 #endif	/* _READ_H */
 

@@ -33,12 +33,12 @@
 /*  Maintains the state of the tag file.
  */
 typedef struct eTagFile {
-    const char *name;
+    char *name;
     FILE *fp;
     struct sNumTags { unsigned long added, prev; } numTags;
     struct sMax { size_t line, tag, file; } max;
     struct sEtags {
-	char name[L_tmpnam];
+	char *name;
 	FILE *fp;
 	size_t byteCount;
     } etags;

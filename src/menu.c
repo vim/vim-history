@@ -631,7 +631,6 @@ free_menu(menup)
     VimMenu *menu;
 
     menu = *menup;
-    *menup = menu->next;
 
 #ifdef USE_GUI
     /* Free machine specific menu structures (only when already created) */
@@ -639,6 +638,10 @@ free_menu(menup)
     if (gui.in_use)
 	gui_mch_destroy_menu(menu);
 #endif
+
+    /* Don't change *menup until after calling gui_mch_destroy_menu(). The
+     * MacOS code needs the original structure to properly delete the menu. */
+    *menup = menu->next;
     vim_free(menu->name);
     vim_free(menu->dname);
     vim_free(menu->actext);

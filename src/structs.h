@@ -412,7 +412,9 @@ struct buffer
     int		     b_dev;		/* device number (-1 if not set) */
     ino_t	     b_ino;		/* inode number */
 #endif
-
+#ifdef macintosh
+    FSSpec	     b_FSSpec;		/* MacOS File Identification */
+#endif
 #ifdef USE_SNIFF
     int		     b_sniff;		/* file was loaded through Sniff */
 #endif

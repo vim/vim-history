@@ -1,4 +1,4 @@
-*if_sniff.txt*	For Vim version 5.6.  Last change: 2000 Jan 01
+*if_sniff.txt*	For Vim version 5.7a.  Last change: 2000 Jan 01
 
 
 		  VIM REFERENCE MANUAL

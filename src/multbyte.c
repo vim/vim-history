@@ -40,7 +40,7 @@ IsLeadByte(c)
      * CodePage identifier, which we can pass directly in to Windows API*/
     return IsDBCSLeadByteEx(is_dbcs, (BYTE)c);
 #else
-# ifdef BROKEN_LOCALE
+# if defined(BROKEN_LOCALE) || defined(macintosh)
     /*
      * if mblen is not available, character which MSB is turned on are treated
      * as leading byte character. (note : This assumption is not always true.)

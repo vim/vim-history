@@ -25,7 +25,7 @@
 #	  Athena but don't want to make gvim (the GUI version of Vim with nice
 #	  menus and scrollbars, but makes Vim bigger and startup slower).
 #	- Uncomment the line "CONF_OPT_X = --without-x" if you have X11 but
-#	  want to disable using X11 libraries.  This speeds up starting Vim,
+#	  want to disable using X11 libraries.	This speeds up starting Vim,
 #	  but the window title will not be set and the X11 selection can not
 #	  used.
 #	- Uncomment the line with --enable-perlinterp to enable Perl.  Makes
@@ -122,7 +122,7 @@
 # 6. Use Vim until a new version comes out.
 #
 # 7. "make uninstall_runtime"
-#	Will remove the runtime files for the current version.  This is safe
+#	Will remove the runtime files for the current version.	This is safe
 #	to use while another version is being used, only version-specific
 #	files will be deleted.
 #	To remove the runtime files of another version:
@@ -208,7 +208,7 @@
 #Solaris 2.6 (sun4u)  gcc 2.7.2.3    +X11 +GUI_Motif	5.2	 D. Rothkamp
 #Solaris 2.6 (sun4u)  cc (SC4.2)     +X11R6 +GUI (CDE)	5.0v	 Andrew Large
 #Solaris 2.6	      gcc 2.8.1      ncursus		5.3  (G) Larry W. Virden
-#Solaris with -lthread                                  5.5  (W) K. Nagano
+#Solaris with -lthread					5.5  (W) K. Nagano
 #SunOS_5.5.1	      gcc 2.7.2      +X11 +Motif	5.0s	 Karsten Sievert
 #SunOS 4.1.x			     +X11 -GUI		5.1b (J) Bram Moolenaar
 #SunOS 4.1.3_U1 (sun4c) gcc	     +X11 +GUI Athena	5.0w (J) Darren Hiebert
@@ -330,7 +330,7 @@ include config.mk
 # PERL - For creating Vim with Perl interface
 # Uncomment this when you want to include the Perl interface.
 # The Perl option sometimes causes problems, because it adds extra flags
-# to the command line.  If you see strange flags during compilation, check in
+# to the command line.	If you see strange flags during compilation, check in
 # config.mk where they come from.  If it's PERL_CFLAGS, try commenting the
 # next line.
 # When you get an error for a missing "perl.exp" file, try creating an emtpy
@@ -480,7 +480,7 @@ LINT_OPTIONS = -beprxzF
 #EXTRA_DEFS = -DHPUX_DIGRAPHS
 
 ### (2) For HP-UX: 9.04 cpp default macro definition table of 128000 bytes
-###	is too small to compile many routines.  It produces too much defining
+###	is too small to compile many routines.	It produces too much defining
 ###	and no space errors.
 ###	Uncomment the following to specify a larger macro definition table.
 #CFLAGS = -Wp,-H256000
@@ -594,7 +594,7 @@ LINT_OPTIONS = -beprxzF
 #EXTRA_DEFS = -D_XPG_IV
 
 ### (I) Reliant-Unix (aka SINIX) 5.44 with standard cc
-#       Use both "-F O3" lines for optimization or the "-g" line for debugging
+#	Use both "-F O3" lines for optimization or the "-g" line for debugging
 #EXTRA_LIBS = -lgen -lsocket -lnsl -lSM -lICE
 #CFLAGS = -F O3 -DSINIXN
 #LDFLAGS = -F O3
@@ -643,8 +643,9 @@ LINT_OPTIONS = -beprxzF
 #LDFLAGS= -OPT:Olimit=3500 -O -n32 -mips3 -IPA:aggr_cprop=ON -INLINE:dfe=ON:list=ON:must=screen_char,out_char,ui_write,out_flush
 
 ### (K) for SGI Irix machines with 64 bit pointers ("uname -s" says IRIX64)
-###	suggested by Jon Wright <jon@gate.sinica.edu.tw>
-###	tested on R8000 IRIX6.1 Power Indigo2
+###	Suggested by Jon Wright <jon@gate.sinica.edu.tw>.
+###	Tested on R8000 IRIX6.1 Power Indigo2.
+###	Check /etc/compiler.defaults for your compiler settings.
 # either (for 64 bit pointers) uncomment the following line
 #GUI_LIB_LOC = /usr/lib64
 # then
@@ -683,7 +684,7 @@ LINT_OPTIONS = -beprxzF
 ### (O)  For LynxOS 2.5.0, tested on PC.
 #EXTRA_LIBS = -lXext -lSM -lICE -lbsd
 
-### (V)  For CX/UX 6.2  (on Harris/Concurrent NightHawk 4800, 5800). Remove
+### (V)  For CX/UX 6.2	(on Harris/Concurrent NightHawk 4800, 5800). Remove
 ###	 -Qtarget if only in a 5800 environment.  (Kipp E. Howard)
 #CFLAGS = -O -Qtarget=m88110compat
 #EXTRA_LIBS = -lgen
@@ -745,7 +746,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim56
+VIMRTDIR = /vim57a
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 MACROSUBDIR = /macros
@@ -814,7 +815,7 @@ SYS_OPTWIN_FILE = $(SCRIPTLOC)/optwin.vim
 # Program to install the program in the target directory.  Could also be "mv".
 INSTALL_PROG	= cp
 
-# Program to install the data in the target directory.  Cannot be "mv"!
+# Program to install the data in the target directory.	Cannot be "mv"!
 INSTALL_DATA	= cp
 INSTALL_DATA_R	= cp -r
 
@@ -1202,7 +1203,8 @@ PRO_AUTO = \
 	$(TCL_PRO) \
 	$(PERL_PRO)
 
-PRO_MANUAL = os_amiga.pro os_msdos.pro os_win32.pro os_beos.pro os_vms.pro
+PRO_MANUAL = os_amiga.pro os_msdos.pro os_win32.pro os_beos.pro os_vms.pro \
+	os_riscos.pro
 
 # Default target is making the executable and tools
 all: $(VIMTARGET) $(TOOLS)

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C++
-" Maintainer:	Ken Shan <ken@digitas.harvard.edu>
-" Last Change:	1999 Jan 24
+" Maintainer:	Ken Shan <ccshan@post.harvard.edu>
+" Last change:	2000 Apr 12
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -23,11 +23,16 @@ syn keyword cppStructure	class typename template namespace
 syn keyword cppNumber	NPOS
 syn keyword cppBoolean	true false
 
+" The minimum and maximum operators in GNU C++
+
+syn match cppMinMax "[<>]?"
+
 if !exists("did_cpp_syntax_inits")
   let did_cpp_syntax_inits = 1
   hi link cppAccess	cppStatement
   hi link cppCast	cppStatement
   hi link cppExceptions	cppStatement
+  hi link cppOperator	cppStatement
   hi link cppStatement	Statement
   hi link cppType	Type
   hi link cppStorageClass	StorageClass

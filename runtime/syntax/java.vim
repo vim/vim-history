@@ -2,7 +2,7 @@
 " Language:	Java
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:	1999 Dec 27
+" Last Change:	2000 Jan 30
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -113,7 +113,7 @@ syn cluster javaTop contains=javaExternal,javaError,javaError,javaBranch,javaLab
 
 " Comments
 syn keyword javaTodo             contained TODO FIXME XXX
-syn region  javaCommentString    contained start=+"+ end=+"+ end=+\*/+me=s-1,he=s-1 contains=javaSpecial,javaCommentStar,javaSpecialChar,@Spell
+syn region  javaCommentString    contained start=+"+ end=+"+ end=+$+ end=+\*/+me=s-1,he=s-1 contains=javaSpecial,javaCommentStar,javaSpecialChar,@Spell
 syn region  javaComment2String   contained start=+"+  end=+$\|"+  contains=javaSpecial,javaSpecialChar,@Spell
 syn match   javaCommentCharacter contained "'\\[^']\{1,6\}'" contains=javaSpecialChar
 syn match   javaCommentCharacter contained "'\\''" contains=javaSpecialChar
@@ -149,7 +149,7 @@ syn match   javaComment          "/\*\*/"
 syn match   javaSpecialError     contained "\\."
 syn match   javaSpecialCharError contained "[^']"
 syn match   javaSpecialChar      contained "\\\([4-9]\d\|[0-3]\d\d\|[\"\\'ntbrf]\|u\x\{4\}\)"
-syn match   javaString           +"[^"]*"+  contains=javaSpecialChar,javaSpecialError,@Spell
+syn region   javaString          start=+"+ end=+"+ end=+$+ contains=javaSpecialChar,javaSpecialError,@Spell
 syn match   javaStringError      +"\([^"\\]\|\\.\)*$+
 syn match   javaCharacter        "'[^']*'" contains=javaSpecialChar,javaSpecialCharError
 syn match   javaCharacter        "'\\''" contains=javaSpecialChar

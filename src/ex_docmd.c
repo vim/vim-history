@@ -4037,6 +4037,9 @@ backslash_halve_save(p)
 }
 
 #ifdef QUICKFIX
+/*
+ * Used for ":make" and ":grep".
+ */
     static void
 do_make(arg, errorformat)
     char_u *arg;

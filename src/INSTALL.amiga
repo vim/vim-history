@@ -1,4 +1,4 @@
-INSTALL.amiga - Installation of Vim on Amiga
+INSTALL.amiga - Installation of Vim from source on Amiga
 
 This file contains instructions for compiling Vim. If you already have an
 executable version of Vim, you don't need this.
@@ -20,7 +20,7 @@ The SAS compiler can be used. Older versions (6.0 to 6.3) don't work with the
 optimizer switched on. This seems to be fixed with 6.5 or 6.56, but this has
 not been tested much.
 
-The DICE makefile works, but it has only been tested by one person.
+The DICE makefile has been reported to work by one person only.
 
 You will have to set the "VIM" environment variable to the location of the
 documentation files.

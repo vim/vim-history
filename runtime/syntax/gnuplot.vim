@@ -70,12 +70,16 @@ syn keyword gnuplotType		noy2tics zero zeroaxis nozeroaxis xzeroaxis
 syn keyword gnuplotType		noxzeroaxis yzeroaxis noyzeroaxis x2zeroaxis
 syn keyword gnuplotType		nox2zeroaxis y2zeroaxis noy2zeroaxis angles
 
-" comments + strings
-syn region gnuplotComment	start="\"" end="\""
+" strings
+syn region gnuplotString	start=+"+ skip=+\\"+ end=+"+
+syn region gnuplotString	start=+'+ skip=+\\'+ end=+'+
+
+" comments
 syn region gnuplotComment	start="^\s*#\s*" skip="\\$" end="$"
 
 if !exists("did_gnuplot_syntax_inits")
   let did_gnuplot_syntax_inits = 1
+  hi link gnuplotString		String
   hi link gnuplotStatement	Statement
   hi link gnuplotConditional	Conditional
   hi link gnuplotNumber		Number

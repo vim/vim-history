@@ -104,7 +104,7 @@ debug: $(OBJ) version.c version.h
 	${CC} $(CFLAGS) version.c -o o/version.o
 	${LD} -s -o Vim $(OBJ) o/version.o $(LIBS)
 
-ctags:
+tags:
 	csh -c ctags $(SRC) *.h
 
 clean:

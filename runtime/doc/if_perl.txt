@@ -1,4 +1,4 @@
-*if_perl.txt*   For Vim version 5.6.  Last change: 1999 Sep 17
+*if_perl.txt*   For Vim version 5.7a.  Last change: 2000 Jun 07
 
 
 		  VIM REFERENCE MANUAL    by Sven Verdoolaege
@@ -62,7 +62,7 @@ http://www.perl.com/CPAN-local/ports/nt/Standard/x86/
 Here are some things you can try:
 
 >  :perl $a=1
->  :perldo $_=reverse($_);1
+>  :perldo $_ = reverse($_);1
 >  :perl VIM::Msg("hello")
 >  :perl $line = $curbuf->Get(42)
 
@@ -74,15 +74,22 @@ Here is an overview of the functions that are available to Perl:
 >  :perl VIM::Msg("Error", "ErrorMsg")	# displays an error message
 >  :perl VIM::Msg("remark", "Comment")	# displays a highlighted message
 >  :perl VIM::SetOption("ai")		# sets a vim option
->  :perl ($v, $success) = VIM::Eval('&path') # $v=option 'path', $success=1
->  :perl ($v, $success) = VIM::Eval('&xyz')  # $v='' and $success=0 (no option)
->  :perl $v = VIM::Eval('expand("<cfile>")')   # expand <cfile>
+>  :perl $nbuf = VIM::Buffers()		# returns the number of buffers
+>  :perl @buflist = VIM::Buffers()	# returns array of all buffers
+>  :perl $mybuf = (VIM::Buffers('qq.c'))[0] # returns buffer object for 'qq.c'
+>  :perl @winlist = VIM::Windows()	# returns array of all windows
+>  :perl $nwin = VIM::Windows()		# returns the number of windows
+>  :perl ($success, $v) = VIM::Eval('&path') # $v: option 'path', $success: 1
+>  :perl ($success, $v) = VIM::Eval('&xyz')  # $v: '' and $success: 0
+>  :perl $v = VIM::Eval('expand("<cfile>")') # expands <cfile>
 >  :perl $curwin->SetHeight(10)		# sets the window height
 >  :perl @pos = $curwin->Cursor()	# returns (row, col) array
 >  :perl @pos = (10, 10)
 >  :perl $curwin->Cursor(@pos)		# sets cursor to @pos
 >  :perl $curwin->Cursor(10,10)		# sets cursor to row 10 col 10
+>  :perl $mybuf = $curwin->Buffer()	# returns the buffer object for window
 >  :perl $curbuf->Name()		# returns buffer name
+>  :perl $curbuf->Number()		# returns buffer number
 >  :perl $curbuf->Count()		# returns the number of lines
 >  :perl $l = $curbuf->Get(10)		# returns line 10
 >  :perl @l = $curbuf->Get(1 .. 5)	# returns lines 1 through 5

@@ -293,6 +293,12 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, flags)
 		(void)mch_setperm(curbuf->b_ml.ml_mfp->mf_fname,
 					  (long)((st.st_mode & 0777) | 0600));
 #endif
+#ifdef macintosh
+	    /* Get the FSSpec on MacOS
+	     * TODO: Update it properly when the buffer name changes
+	     */
+	    (void) GetFSSpecFromPath(curbuf->b_ffname, &curbuf->b_FSSpec);
+#endif
 	}
 	else
 	{
@@ -2231,7 +2237,10 @@ nofail:
 	    curbuf = curwin->w_buffer;
     }
 #endif
-
+#ifdef macintosh
+    /* Update machine specific information. */
+    mch_post_buffer_write(buf);
+#endif
     return retval;
 }
 

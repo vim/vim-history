@@ -311,16 +311,16 @@ extern void fileUngetc( c )
 /*  Places into the line buffer the contents of the line referenced by
  *  "location".
  */
-extern char *readSourceLine( vLine, pLocation, pSeekValue )
+extern char *readSourceLine( vLine, location, pSeekValue )
     vString *const vLine;
-    const fpos_t *const pLocation;
+    fpos_t location;
     long *const pSeekValue;
 {
     fpos_t orignalPosition;
     char *line;
 
     fgetpos(File.fp, &orignalPosition);
-    fsetpos(File.fp, pLocation);
+    fsetpos(File.fp, &location);
     if (pSeekValue != NULL)
 	*pSeekValue = ftell(File.fp);
     line = readLine(vLine, File.fp);

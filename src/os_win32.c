@@ -829,6 +829,9 @@ decode_mouse_event(
     if (pmer->dwControlKeyState & (RIGHT_ALT_PRESSED  | LEFT_ALT_PRESSED))
 	g_nMouseClick |= MOUSE_ALT;
 
+    if (nButton != MOUSE_DRAG && nButton != MOUSE_RELEASE)
+	SET_NUM_MOUSE_CLICKS(g_nMouseClick, s_cClicks);
+
     /* only pass on interesting (i.e., different) mouse events */
     if (s_xOldMouse == g_xMouse
 	    && s_yOldMouse == g_yMouse
@@ -838,15 +841,10 @@ decode_mouse_event(
 	return FALSE;
     }
 
-    g_nMouseClick |= 0x20;
-
     s_xOldMouse = g_xMouse;
     s_yOldMouse = g_yMouse;
     s_old_topline = curwin->w_topline;
     s_nOldMouseClick = g_nMouseClick;
-
-    if (nButton != MOUSE_DRAG && nButton != MOUSE_RELEASE)
-	SET_NUM_MOUSE_CLICKS(g_nMouseClick, s_cClicks);
 
     return TRUE;
 }
@@ -1837,7 +1835,6 @@ mch_setperm(
     perm |= FILE_ATTRIBUTE_ARCHIVE;	/* file has changed, set archive bit */
     return SetFileAttributes((char *)name, perm) ? OK : FAIL;
 }
-
 
 /*
  * Set hidden flag for "name".

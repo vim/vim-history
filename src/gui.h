@@ -315,6 +315,9 @@ typedef struct Gui
 #endif
 #ifdef USE_GUI_MAC
     WindowPtr	VimWindow;
+    MenuHandle	MacOSHelpMenu;	    /* Help menu provided by the MacOS */
+    int		MacOSHelpItems;	    /* Nr of help-items supplied by MacOS */
+    int		MacOSHaveCntxMenu;  /* Contextual menu available */
     GuiColor	menu_fg_pixel;	    /* Color of menu and dialog foregound */
     GuiColor	menu_bg_pixel;	    /* Color of menu and dialog backgound */
     GuiColor	scroll_fg_pixel;    /* Color of scrollbar foregrnd */

@@ -2962,8 +2962,16 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	case STL_BYTEVAL_X:
 	    base= 'X';
 	case STL_BYTEVAL:
-	    num = ((State & INSERT) || empty_line) ?
-		   0 : linecont[wp->w_cursor.col];
+	    if ((State & INSERT) || empty_line)
+		num = 0;
+	    else
+	    {
+		num = linecont[wp->w_cursor.col];
+#ifdef MULTI_BYTE
+		if (is_dbcs && IsLeadByte((int)num))
+		    num = (num << 8) + linecont[wp->w_cursor.col + 1];
+#endif
+	    }
 	    if (num == NL)
 		num = 0;
 	    else if (num == CR && get_fileformat(wp->w_buffer) == EOL_MAC)
@@ -6449,7 +6457,7 @@ retnomove:
     return IN_BUFFER | CURSOR_MOVED;	/* Cursor has moved */
 }
 
-#if defined(USE_GUI_MOTIF) || defined(USE_GUI_GTK) \
+#if defined(USE_GUI_MOTIF) || defined(USE_GUI_GTK) || defined (USE_GUI_MAC) \
 	|| defined(USE_GUI_ATHENA) || defined(USE_GUI_MSWIN) || defined(PROTO)
 /*
  * Translate window coordinates to buffer position without any side effects

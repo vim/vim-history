@@ -15,12 +15,15 @@
 
 #define VIM_VERSION_MAJOR		 5
 #define VIM_VERSION_MAJOR_STR		"5"
-#define VIM_VERSION_MINOR		 6
-#define VIM_VERSION_MINOR_STR		"6"
-#define VIM_VERSION_BUILD		 62
-#define VIM_VERSION_BUILD_STR		"62"
+#define VIM_VERSION_MINOR		 7
+#define VIM_VERSION_MINOR_STR		"7"
+#define VIM_VERSION_BUILD		 63
+#define VIM_VERSION_BUILD_BCD	       0x63
+#define VIM_VERSION_BUILD_STR		"63"
 #define VIM_VERSION_PATCHLEVEL		 0
 #define VIM_VERSION_PATCHLEVEL_STR	"0"
+/* Used by MacOS port should be one of: development, alpha, beta, final */
+#define VIM_VERSION_RELEASE		beta
 
 /*
  * VIM_VERSION_NODOT is used for the runtime directory name.
@@ -28,8 +31,8 @@
  * VIM_VERSION_MEDIUM is used for the startup-screen.
  * VIM_VERSION_LONG is used for the ":version" command and "Vim -h".
  */
-#define VIM_VERSION_NODOT	"vim56"
-#define VIM_VERSION_SHORT	"5.6"
-#define VIM_VERSION_MEDIUM	"5.6"
-#define VIM_VERSION_LONG	"VIM - Vi IMproved 5.6 (2000 Jan 16)"
-#define VIM_VERSION_LONG_DATE	"VIM - Vi IMproved 5.6 (2000 Jan 16, compiled "
+#define VIM_VERSION_NODOT	"vim57a"
+#define VIM_VERSION_SHORT	"5.7a"
+#define VIM_VERSION_MEDIUM	"5.7a BETA"
+#define VIM_VERSION_LONG	"VIM - Vi IMproved 5.7a BETA (2000 Jun 10)"
+#define VIM_VERSION_LONG_DATE	"VIM - Vi IMproved 5.7a BETA (2000 Jun 10, compiled "

@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 5.6.  Last change: 2000 Apr 02
+*tagsearch.txt* For Vim version 5.7a.  Last change: 2000 Jun 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -446,8 +446,8 @@ Some programs that generate tags files:
 ctags			As found on most Unix systems.  Only supports C.  Only
 			does the basic work.
 exuberant ctags		Included with the Vim distribution.  This a very good
-			one.  It works for C, C++, Java and Eiffel.  It can
-			generate tags for many items.
+			one.  It works for C, C++, Java, Fortran and Eiffel.
+			It can generate tags for many items.
 etags			Connected to Emacs.  Supports many languages.
 JTags			For Java, in Java.  It can be found at
 			http://www.fleiner.com/jtags/.
@@ -558,7 +558,7 @@ If the command is a normal search command (it starts and ends with "/" or
   names with a type prepended.  {the extra searches are not in Vi}.
 
 ==============================================================================
-6. Include file searches				*include-search*
+6. Include file searches		*include-search* *definition-search*
 
 These commands look for a string in the current file and in all encountered
 included files (recursively).  This can be used to find the definition of a
@@ -755,6 +755,8 @@ Common arguments for the commands above:
 >		   foobar */
       A match for "foobar" is found, because this line is not recognized as a
       comment (even though syntax highlighting does recognize it).
+      Note: Since a macro definition mostly doesn't look like a comment, the
+      [!] makes no difference for ":dlist", ":dsearch" and ":djump".
 [/]   A pattern can be surrounded by '/'.  Without '/' only whole words are
       matched, using the pattern "\<pattern\>".  Only after the second '/' a
       next command can be appended with '|'.  Examples:

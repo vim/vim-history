@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Verilog
 " Maintainer:	Mun Johl <mj@core.rose.hp.com>
-" Last Update:	Tue Jun 30 09:25:12 PDT 1998
+" Last Update:	Tue Feb  1 14:39:57 PST 2000
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -50,6 +50,10 @@ syn region  verilogString start=+"+  end=+"+
 syn match   verilogDirective   "//\s*synopsys\>.*$"
 syn region  verilogDirective   start="/\*\s*synopsys\>" end="\*/"
 syn region  verilogDirective   start="//\s*synopsys dc_script_begin\>" end="//\s*synopsys dc_script_end\>"
+
+syn match   verilogDirective   "//\s*\$s\>.*$"
+syn region  verilogDirective   start="/\*\s*\$s\>" end="\*/"
+syn region  verilogDirective   start="//\s*\$s dc_script_begin\>" end="//\s*\$s dc_script_end\>"
 
 "Modify the following as needed.  The trade-off is performance versus
 "functionality.

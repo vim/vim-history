@@ -833,7 +833,6 @@ do_tags()
  * TAG_REGEXP	use "pat" as a regexp
  * TAG_NOIC	don't always ignore case
  */
-
     int
 find_tags(pat, num_matches, matchesp, flags, mincount)
     char_u	*pat;			/* pattern to search for */

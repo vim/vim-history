@@ -261,14 +261,14 @@ CFLAGS = -w- -w-aus -w-par -I$(INCLUDE) -P- -d -x- -RT- -k- -Oi $(HEADERS) -N- -
 
 CC1 = -c
 CC2 = -o
-CC = $(CC) +$(OBJDIR)\bcc.cfg
+CCARG = +$(OBJDIR)\bcc.cfg
 
 # implicit rules:
 .c.obj:
-	$(CC) $(CC1) $(CC2)$@ $*.c
+	$(CC) $(CCARG) $(CC1) $(CC2)$@ $*.c
 
 .cpp.obj:
-	$(CC) $(CC1) $(CC2)$@ $*.cpp
+	$(CC) $(CCARG) $(CC1) $(CC2)$@ $*.cpp
 
 !if ($(OSTYPE)==DOS16)
 !else # win32:
@@ -392,37 +392,48 @@ TARGETS = $(TARGETS) $(TARGET)
 # Targets:
 all: vim vimrun.exe install.exe xxd ctags
 
-vim: dirs $(OBJDIR)\bcc.cfg $(TARGETS)
+vim: $(OSTYPE) $(OBJDIR) $(OBJDIR)\bcc.cfg $(TARGETS)
 	@del $(OBJDIR)\version.obj
 
-dirs:
-    -@md $(OSTYPE)
-    -@md $(OBJDIR)
+$(OSTYPE):
+	-@md $(OSTYPE)
+
+$(OBJDIR):
+	-@md $(OBJDIR)
 
 xxd:
 	@cd xxd
-	$(MAKE) /f Makefile.bor BOR="$(BOR)" CC="$(CC)"
+	$(BOR)\bin\make /f Makefile.bor BOR="$(BOR)" BCC="$(CC)"
 	@cd ..
 
 ctags:
 	@cd ctags
-	$(MAKE) /f Makefile.bc5
+	$(BOR)\bin\make /f Makefile.bc5 BOR="$(BOR)" BCC="$(CC)"
 	@cd ..
 
 install.exe: dosinst.c
 !if ($(OSTYPE)==WIN32)
-	$(CC) -WC -DWIN32 -einstall dosinst.c
+	$(CC) $(CCARG) -WC -DWIN32 -einstall dosinst.c
 !else
-	$(CC) -WC -einstall dosinst.c
+	$(CC) $(CCARG) -WC -einstall dosinst.c
 !endif
 
 clean:
-	-@echo y | del $(OBJDIR)\*.*
+#	For Windows NT/2000, doesn't work on Windows 95/98...
+	-@rmdir /s /q $(OBJDIR)
+#	For Windows 95/98, doesn't work on Windows NT/2000...
+	-@deltree /y $(OBJDIR)
 	-@del *.res
 	-@del *.dll
 	-@del *vim*.exe
 	-@del *.csm
 	-@del *.map
+	@cd xxd
+	$(BOR)\bin\make /f Makefile.bor BOR="$(BOR)" clean
+	@cd ..
+	@cd ctags
+	$(BOR)\bin\make /f Makefile.bc5 BOR="$(BOR)" clean
+	@cd ..
 
 $(DLLTARGET): $(OBJDIR) $(vimdllobj)
   $(LINK) @&&|
@@ -570,14 +581,10 @@ $(OBJDIR)\os_w32dll.obj: os_w32dll.c
 $(OBJDIR)\if_ole.obj: if_ole.cpp
 
 $(OBJDIR)\os_w32exe.obj: os_w32exe.c
-	$(CC) $(CC1) -WE $(CC2)$@ os_w32exe.c
-
-$(OBJDIR):
-	-@if not exist $(OBJDIR)\nul mkdir $(OSTYPE)
-	-@if not exist $(OBJDIR)\nul mkdir $(OBJDIR)
+	$(CC) $(CCARG) $(CC1) -WE $(CC2)$@ os_w32exe.c
 
 $(OBJDIR)\if_perl.obj: if_perl.c
-	$(CC) $(CC1) $(CC2)$@ -pc if_perl.c
+	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc if_perl.c
 
 
 if_perl.c: if_perl.xs typemap

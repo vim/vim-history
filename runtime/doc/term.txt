@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 5.6.  Last change: 2000 Apr 07
+*term.txt*      For Vim version 5.7a.  Last change: 2000 May 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -308,7 +308,7 @@ Note: Use the <> form if possible
 	t_F7	<F17>		function key 17		*<F17>*	*t_F7* *'t_F7'*
 	t_F8	<F18>		function key 18		*<F18>*	*t_F8* *'t_F8'*
 	t_F9	<F19>		function key 19		*<F19>*	*t_F9* *'t_F9'*
-		<S-F1)		shifted function key 1
+		<S-F1>		shifted function key 1
 		<S-xF1>		alternate <S-F1>		*<S-xF1>*
 		<S-F2>		shifted function key 2		*<S-F2>*
 		<S-xF2>		alternate <S-F2>		*<S-xF2>*
@@ -331,10 +331,10 @@ Note: Use the <> form if possible
 	t_kD	<Del>		delete key			*t_kD* *'t_kD'*
 	t_kb	<BS>		backspace key			*t_kb* *'t_kb'*
 	t_kh	<Home>		home key			*t_kh* *'t_kh'*
-		<S-Home>	shifted home key		*<S-Home>*
+	t_#2	<S-Home>	shifted home key     *<S-Home>* *t_#2* *'t_#2'*
 		<xHome>		alternate home key		*<xHome>*
 	t_@7	<End>		end key				*t_@7* *'t_@7'*
-		<S-End>		shifted end key			*<S-End>*
+	t_*7	<S-End>		shifted end key	*<S-End>* *t_star7* *'t_star7'*
 		<xEnd>		alternate end key		*<xEnd>*
 	t_kP	<PageUp>	page-up key			*t_kP* *'t_kP'*
 	t_kN	<PageDown>	page-down key			*t_kN* *'t_kN'*
@@ -344,6 +344,7 @@ Note: Use the <> form if possible
 	t_K5	<kPageDown>	keypad page-down key		*t_K5* *'t_K5'*
 	t_K6	<kPlus>		keypad plus key	      *<kPlus>*	*t_K6* *'t_K6'*
 	t_K7	<kMinus>	keypad minus key     *<kMinus>*	*t_K7* *'t_K7'*
+	t_K8	<kDivide>	keypad divide	    *<kDivide>* *t_K8* *'t_K8'*
 	t_K9	<kMultiply>	keypad multiply   *<kMultiply>* *t_K9* *'t_K9'*
 	t_KA	<kEnter>	keypad enter key     *<kEnter>*	*t_KA* *'t_KA'*
 		<Mouse>		leader of mouse code		*<Mouse>*
@@ -578,6 +579,7 @@ make it possible to do the mouse commands that require the ctrl modifier, the
 	"g<LeftMouse>"	is "<C-LeftMouse>	(jump to tag under mouse click)
 	"g<RightMouse>" is "<C-RightMouse>	("CTRL-T")
 
+					*mouse-mode-table* *mouse-overview*
 A short overview of what the mouse buttons do, when 'mousemodel' is "extend":
 
 Normal Mode:

@@ -29,7 +29,7 @@ int old_cursor_state = -1;
 /* Convert a DOS colour number to an RGB palette entry.
  * Mappings from X11 rgb/txt file.
  */
-    int
+    static int
 map_colour(dos)
     int dos;		/* Standard DOS colour number. */
 {
@@ -55,14 +55,14 @@ map_colour(dos)
     return rgb(100,100,100);
 }
 
-    void
+    static void
 text_fg(fg)
     int fg;		/* Foregound colour in the form &BBGGRR00 */
 {
     xswi(ColourTrans_SetTextColour, fg, 0, 0, 0);
 }
 
-    void
+    static void
 text_bg(bg)
     int		bg;	/* Backgound colour in the form &BBGGRR00 */
 {
@@ -817,7 +817,7 @@ mch_expandpath(gap, path, flags)
  *
  * Returns number of items added to gap.
  */
-    int
+    static int
 expand_section(gap, root, rest, flags)
     struct growarray	*gap;
     char_u		*root;	/* Non-wildcarded path to search */

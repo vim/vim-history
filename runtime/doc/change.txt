@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 5.6.  Last change: 1999 Dec 21
+*change.txt*    For Vim version 5.7a.  Last change: 2000 Jun 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -479,9 +479,11 @@ not recognize a comment (starting with '"') after the ":!" command.
 
 						*:snomagic*
 :[range]sno[magic] ...	Same as ":substitute", but always use 'nomagic'.
+			{not in Vi}
 
 						*:smagic*
 :[range]sm[agic] ...	Same as ":substitute", but always use 'magic'.
+			{not in Vi}
 
 							*:s_flags*
 The arguments that you can use for the substitute commands:
@@ -586,10 +588,10 @@ magic	nomagic	  action    ~
       \t	  <Tab>
 
 Examples:
->  :s/a\|b/xxx\0xxx/g		 modifies "a b"	     in "xxxaxxx xxxbxxx"
->  :s/\([abc]\)\([efg]\)/\2\1/g  modifies "af fa bg" in "fa fa gb"
->  :s/abcde/abc^Mde/		 modifies "abcde"    in "abc", "de" (two lines)
->  :s/$/^V^M/			 modifies "abcde"    in "abcde^M"
+>  :s/a\|b/xxx\0xxx/g		 modifies "a b"	     to "xxxaxxx xxxbxxx"
+>  :s/\([abc]\)\([efg]\)/\2\1/g  modifies "af fa bg" to "fa fa gb"
+>  :s/abcde/abc^Mde/		 modifies "abcde"    to "abc", "de" (two lines)
+>  :s/$/^V^M/			 modifies "abcde"    to "abcde^M"
 
 Note: To insert a ^M you have to type CTRL-V <CR>.  To insert a ^V you have
 to type CTRL-V CTRL-V.  So to insert the ^V^M in the last example you have to
@@ -601,10 +603,15 @@ steps:
 >  :s/foo/^Vxxxx/
 >  :s/xxxx/^M/
 
+The numbering of "\1", "\2" etc. is done based on which "\(" comes first in
+the pattern (going left to right).  When a parentheses group matches several
+times, the last one will be used for "\1", "\2", etc.  Example:
+>  :s/\(\(a[a-d] \)*\)/\2/      modifies "aa ab x" to "ab x"
+
 When using parentheses in combination with '|', like in \([ab]\)\|\([cd]\),
 either the first or second pattern in parentheses did not match, so either
 \1 or \2 is empty.  Example:
->  :s/\([ab]\)\|\([cd]\)/\1x/g   modifies "a b c d"  in "ax bx x x"
+>  :s/\([ab]\)\|\([cd]\)/\1x/g   modifies "a b c d"  to "ax bx x x"
 
 						*:pro* *:promptfind*
 :promptf[ind] [string]
@@ -625,15 +632,16 @@ either the first or second pattern in parentheses did not match, so either
 			tabstop size, Vim uses the current value of 'tabstop'.
 			The current value of 'tabstop' is always used to
 			compute the width of existing tabs.
-			With !, Vim also replaces strings of normal spaces
-			with tabs where appropriate.  With 'expandtab' on, Vim
-			replaces all tabs with the appropriate number of
-			spaces.  This command sets 'tabstop' to the new
-			value given, and if performed on the whole file,
-			which is default, should not make any visible
-			change.  Careful: This command modifies any <Tab>
-			characters inside of strings in a C program.  Use
-			"\t" to avoid this (that's a good habit anyway).
+			With !, Vim also replaces strings of only normal
+			spaces with tabs where appropriate.
+			With 'expandtab' on, Vim replaces all tabs with the
+			appropriate number of spaces.
+			This command sets 'tabstop' to the new value given,
+			and if performed on the whole file, which is default,
+			should not make any visible change.
+			Careful: This command modifies any <Tab> characters
+			inside of strings in a C program.  Use "\t" to avoid
+			this (that's a good habit anyway).
 			":retab!" may also change a sequence of spaces by
 			<Tab> characters, which can mess up a printf().
 			{not in Vi}
@@ -841,8 +849,11 @@ and ":put" commands and with CTRL-R.  {not in Vi}
 							*quote_#* *quote#*
 	"#	Contains the name of the alternate file.
 							*quote_:* *quote:*
-	":	Contains the most recent command-line.  Example: Use "@:"
-		to repeat the most recent command-line.
+	":	Contains the most recent executed command-line.  Example: Use
+		"@:" to repeat the previous command-line command.
+		The command-line is only stored in this register when at least
+		one character of it was typed.  Thus it remains unchanged of
+		the command was completely from a mapping.
 
 6. Expression register "=				*quote_=* *quote=*
 This is not really a register that stores text, but is a way to use an
@@ -869,7 +880,7 @@ nothing is returned.  {not in Vi}
 
 9. Last search pattern register	"/			*quote_/* *quote/*
 Contains the most recent search-pattern.  This is used for "n" and 'hlsearch'.
-{not in Vi}
+It is read-only.  {not in Vi}
 
 							*@/*
 You can write to a register with a ":let" command |:let-@|.  Example:

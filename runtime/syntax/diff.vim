@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Diff (context or unified)
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	1999 Dec 10
+" Last Change:	2000 Feb 08
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -19,7 +19,8 @@ syn match diffAdded	"^+.*"
 syn match diffAdded	"^>.*"
 syn match diffChanged	"^! .*"
 
-syn match diffLine	"^@.*"
+syn match diffSubname	" @@..*" contained
+syn match diffLine	"^@.*" contains=diffSubname
 syn match diffLine	"^\<\d\+\>.*"
 syn match diffLine	"^\*\*\*\*.*"
 
@@ -49,6 +50,7 @@ if !exists("did_diff_syntax_inits")
   hi link diffChanged	PreProc
   hi link diffAdded	Identifier
   hi link diffLine	Statement
+  hi link diffSubname	PreProc
   hi link diffComment	Comment
 endif
 

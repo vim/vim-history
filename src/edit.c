@@ -172,6 +172,10 @@ int	    revins_legal;	    /* was the last char 'legal'? */
 int	    revins_scol;	    /* start column of revins session */
 #endif
 
+#if defined(MULTI_BYTE) && defined(macintosh)
+static short	previous_script = smRoman;
+#endif
+
 /*
  * edit(): Start inserting text.
  *
@@ -286,6 +290,9 @@ edit(cmdchar, startln, count)
 	State = INSERT;
 #if defined(USE_GUI_WIN32) && defined(MULTI_BYTE_IME)
     ImeSetOriginMode();
+#endif
+#if defined(MULTI_BYTE) && defined(macintosh)
+    KeyScript(previous_script);
 #endif
 
     /*
@@ -4552,6 +4559,10 @@ ins_esc(count, need_redraw, cmdchar)
 	push_raw_key(composing_hangul_buffer, 2);
 	composing_hangul = 0;
     }
+#endif
+#if defined(MULTI_BYTE) && defined(macintosh)
+    previous_script = GetScriptManagerVariable(smKeyScript);
+    KeyScript(smKeyRoman); /* or smKeySysScript */
 #endif
 
     temp = curwin->w_cursor.col;

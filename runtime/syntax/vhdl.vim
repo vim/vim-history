@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	VHDL
 " Maintainer:	Czo <Olivier.Sirol@lip6.fr>
-" Credits:	Stephan Hegel <ea273@fen.baynet.de>
+" Credits:	Stephan Hegel <stephan.hegel@snc.siemens.com.cn>
 " $Id$
 
 " VHSIC Hardware Description Language
@@ -25,10 +25,10 @@ syn keyword vhdlStatement architecture array attribute
 syn keyword vhdlStatement begin block body buffer bus
 syn keyword vhdlStatement case component configuration constant
 syn keyword vhdlStatement disconnect downto
-syn keyword vhdlStatement else elsif end entity exit
+syn keyword vhdlStatement elsif end entity exit
 syn keyword vhdlStatement file for function
 syn keyword vhdlStatement generate generic group guarded
-syn keyword vhdlStatement if impure in inertial inout is
+syn keyword vhdlStatement impure in inertial inout is
 syn keyword vhdlStatement label library linkage literal loop
 syn keyword vhdlStatement map
 syn keyword vhdlStatement new next null
@@ -41,6 +41,12 @@ syn keyword vhdlStatement then to transport type
 syn keyword vhdlStatement unaffected units until use
 syn keyword vhdlStatement variable wait when while with
 syn keyword vhdlStatement note warning error failure
+
+" Special match for "if" and "else" since "else if" shouldn't be highlighted.
+" The right keyword is "elsif"
+syn match   vhdlStatement "\<\(if\|else\)\>"
+syn match   vhdlNone      "\<else\s\+if\>$"
+syn match   vhdlNone      "\<else\s\+if\>\s"
 
 " Predifined VHDL types
 syn keyword vhdlType bit bit_vector

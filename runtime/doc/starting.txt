@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 5.6.  Last change: 1999 Sep 07
+*starting.txt*  For Vim version 5.7a.  Last change: 2000 Feb 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -169,7 +169,7 @@ argument.
 		so that writing files is disabled.  The 'write' option can be
 		set to enable writing again.
 
-							*-Z*
+							*-Z* *restricted-mode*
 -Z		Restricted mode.  All commands that make use of an external
 		shell are disabled.  This includes suspending with CTRL-Z,
 		":sh", filtering, etc.

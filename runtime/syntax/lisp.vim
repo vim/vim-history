@@ -1,8 +1,9 @@
 " Vim syntax file
 " Language:	Lisp
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	July 13, 1999
-" Version:	1.03
+" Last Change:	March 21, 2000
+" Version:	1.04
+"  1.04: Mar 21 2000 : added Todo
 
 " remove any old syntax stuff hanging around
 syn clear
@@ -228,7 +229,9 @@ syn match lispConcat	"\s\.\s"
 syn match lispParenError	")"
 
 " Comments
-syn match lispComment	";.*$"
+syn match lispComment	";.*$"	contains=lispTodo
+syn keyword lispTodo contained	COMBAK	TODO	Todo
+syn keyword lispTodo contained	COMBAK:	TODO:	Todo:
 
 " synchronization
 syn sync lines=100
@@ -251,6 +254,7 @@ if !exists("did_lisp_syntax_inits")
   hi link lispParenError	Error
   hi link lispSpecial	Type
   hi link lispString		String
+  hi link lispTodo		Todo
   hi link lispVar		Statement
   endif
 

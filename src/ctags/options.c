@@ -714,9 +714,7 @@ extern const char *getLanguageName( language )
 	"auto", "C", "C++", "Eiffel", "Fortran", "Java"
     };
 
-    DebugStatement( if (sizeof(names)/sizeof(names[0]) != LANG_COUNT)
-	error(FATAL, "LangNames array not consistent with LANG enumeration"); )
-
+    Assert(sizeof(names)/sizeof(names[0]) == LANG_COUNT);
     return names[(int)language];
 }
 

@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 5.6.  Last change: 2000 Jan 02
+*syntax.txt*    For Vim version 5.7a.  Last change: 2000 Jun 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -202,6 +202,43 @@ with your own.
 If you are setting up a system with many users, and you don't want each user
 to add the same syntax file, consider creating a vimrc file that is used for
 all everybody.  See |system-vimrc|.
+
+
+ADDING TO AN EXISTING SYNTAX FILE			*mysyntaxfile-add*
+
+If you are mostly satisfied with an existing syntax file, but would like to
+add a few items or change the highlighting, follow these steps:
+
+1. In your vimrc file, set "mysyntaxfile":
+>	let mysyntaxfile = "/home/someone/vim/mysyntax.vim"
+
+2. In the "mysyntax.vim" file, put an autocommand to source your extra syntax
+   items:
+>	" FooBar language
+>	:autocmd Syntax foobar		source /home/someone/vim/foobar.vim
+   Check: if you do ":autocmd Syntax foobar" you wil see both the original
+   syntax file and the one you just added:
+>	Syntax
+>	   foobar	so $VIMRUNTIME/syntax/foobar.vim
+>	   foobar	source /home/someone/vim/foobar.vim
+
+3. In the additional language file, put the items you want to add:
+>	syntax keyword foobarType	Short Long
+>	hi link foobarType	Type
+>	hi foobarComment guifg=Green
+
+
+REPLACING AN EXISTING SYNTAX FILE			*mysyntaxfile-replace*
+
+If you don't like a distributed syntax file, or you have downloaded a new
+version, follow the same steps as above, but at the second item add a "!" to
+the autocmd:
+>	" FooBar language
+>	:autocmd! Syntax foobar		source /home/someone/vim/foobar.vim
+Check: If you do ":autocmd Syntax foobar" you will only see the syntax file
+you just added:
+>	Syntax
+>	   foobar	source /home/someone/vim/foobar.vim
 
 
 NAMING CONVENTIONS
@@ -412,6 +449,20 @@ language:
 As a last resort, if nothing is defined, the "asm" syntax is used.
 
 
+Netwide assembler (nasm.vim) optional highlighting ~
+
+To enable a feature:
+>	let   {variable}=1|set syntax=nasm
+To disable a feature:
+>	unlet {variable}  |set syntax=nasm
+
+Variable		Highlight ~
+nasm_loose_syntax	unofficial parser allowed syntax not as Error
+			  (parser dependend; not recommended)
+nasm_ctx_outside_macro	contexts outside macro not as Error
+nasm_no_warn		potentially risky syntax not as ToDo
+
+
 							*basic.vim* *vb.vim*
 Both Visual Basic and "normal" basic use the extension ".bas".  To detect
 which one should be used, Vim checks for the string "VB_Name" in the first
@@ -559,21 +610,112 @@ your .vimrc:
 >	let erlang_characters=1
 
 
+FORM                                                 *form.vim*
+
+The coloring scheme for syntax elements in the FORM file uses the default
+modes Conditional, Number, Statement, Comment, PreProc, Type, and String,
+following the language specifications in 'Symbolic Manipulation with FORM'' by
+J.A.M. Vermaseren, CAN, Netherlands, 1991.
+
+If you want include your own changes to the default colors, you have to
+redefine the following syntax groups:
+
+    - formConditional
+    - formNumber
+    - formStatement
+    - formHeaderStatement
+    - formComment
+    - formPreProc
+    - formDirective
+    - formType
+    - formString
+
+Note that the form.vim syntax file implements FORM preprocessor commands and
+directives per default in the same syntax group.
+
+A predefined enhanced color mode for FORM is available to distinguish between
+header statements and statements in the body of a FORM program. To activate
+this mode define the following variable in your vimrc file
+
+>   let form_enhanced_color=1
+
+The enhanced mode also takes advantage of additional color features for a dark
+gvim display. Here, statements are colored LightYellow instead of Yellow, and
+conditionals are LightBlue for better distinction.
+
+
+FORTRAN							*fortran.vim*
+
+Five dialects of Fortran are recognized by the fortran.vim script: f95,
+f90, f77, the Lahey subset elf90, and the Imagine1 subset F.
+
+If you need only f95, f90 and f77, the chances are that the default
+dialect selection scheme will work correctly for you. It is based on
+file extensions as follows:
+Extension	Dialect ~
+.f95		f95
+.f90		f90
+.f,.for,.fpp	f77
+any other	f90
+none		f90
+
+If you consistently use a different file extension convention, then the
+defaults can be over ruled most conveniently by setting the variable
+fortran_dialect in your .vimrc with an autocommand placed prior to the
+:syntax on command. For example, if all your .f90 files are written in
+the elf subset, then "let fortran_dialect=elf" for all .f90 files. The
+permissible values of fortran_dialect are case-sensitive and must be
+"f95", "f90", "f77", "elf" or "F". Invalid values of fortran_dialect are
+ignored.
+
+If the dialect is f95 or f90, the Fortran code can be in either free or
+fixed source form. The syntax file attempts to determine which form your
+file uses by examining the first five columns of its first five lines.
+The algorithm should work in the vast majority of cases. In some rare
+cases, it may incorrectly decide that the fortran code is in fixed form.
+If that happens, just add a comment beginning anywhere in the first five
+columns of the first five lines, save and then reload the file.
+
+If the dialect is elf or F, the Fortran source code is assumed to be in
+free source form as required by these dialects. If the dialect is f77,
+the Fortran source code is assumed to be in fixed source form as
+required by the Fortran 77 standard. You may find that f77 code with
+extensions, such as free source form or the MIL STD 1753 extensions, is
+colored better if you declare it to be f90.
+
+Finer control is necessary if the file extension does not uniquely
+identify the dialect. For example, your older .f files may be written in
+f77 but your newer ones may be F codes. Then you can over ride the file
+extension rules, on a file-by-file basis, by including a comment with
+the directive "fortran_dialect=F" in one of the first three lines in
+your file. Only three such directives are recognized: fortran_dialect=F
+in .f files, and fortran_dialect=elf and fortran_dialect=F in .f90
+files. F overrides elf if both directives are present in an .f90 file.
+
+Limitations: Parenthesis checking does not catch too few closing
+parentheses. Multiline strings and F90 statement labels are colored
+sloppily. Hollerith strings are not recognized. Some keywords may be
+highlighted incorrectly because Fortran90 has no reserved words.
+
+
 FVWM CONFIGURATION FILES				*fvwm.vim*
 
-In order for VIM to recognize Fvwm configuration files that do not match the
-patterns *fvwmrc* or *fvwm2rc*, you must put additional patterns appropriate
-to your system in your "myfiletypes.vim" file.  For example, to make VIM
-identify all files in /etc/X11/fvwm2/ as Fvwm2 configuration files, add the
-following:
+In order for Vim to recognize Fvwm configuration files that do not match
+the patterns *fvwmrc* or *fvwm2rc*, you must put additional patterns
+appropriate to your system in your myfiletypes.vim file.  For these
+patterns, you must set the variable "b:fvwm_version" to the major version
+number of Fvwm, and the 'filetype' option to fvwm.
 
->  au! BufNewFile,BufRead /etc/X11/fvwm2/*
->	\ let use_fvwm_2 = 1 | let use_fvwm_1 = 0 | set ft=fvwm
+For example, to make Vim identify all files in /etc/X11/fvwm2/
+as Fvwm2 configuration files, add the following:
 
-If you'd like Vim to highlight all valid color names, tell it where to find
-the color database (rgb.txt) on your system.  Do this by setting "rgb_file" to
-it's location.  Assuming your color database is located in /usr/X11/lib/X11/,
-you should add the line
+>  au! BufNewFile,BufRead /etc/X11/fvwm2/*  let b:fvwm_version = 2 |
+>                                         \ set filetype=fvwm
+
+If you'd like Vim to highlight all valid color names, tell it where to
+find the color database (rgb.txt) on your system.  Do this by setting
+"rgb_file" to its location.  Assuming your color database is located
+in /usr/X11/lib/X11/, you should add the line
 
 >  let rgb_file = "/usr/X11/lib/X11/rgb.txt"
 
@@ -804,6 +946,18 @@ set "msql_minlines" to the value you desire.  Example:
 >  let msql_minlines = 200
 
 
+NCF							*ncf.vim*
+
+There is one option for NCF syntax highlighting.
+
+If you want to have unrecognized (by ncf.vim) statements highlighted as
+errors, use this:
+
+>  let ncf_highlight_unknowns = 1
+
+If you don't want to highlight these errors, leave it unset.
+
+
 PERL							*perl.vim*
 
 There are a number of possible options to the perl syntax highlighting.
@@ -935,17 +1089,46 @@ postscr_andornot_binary as follows:
 >  let postscr_andornot_binary=1
 
 
-PRINTCAP + TERMCAP		*ptcap.vim* *termcap-syntax* *printcap*
+PRINTCAP + TERMCAP		*ptcap.vim* *termcap-syntax* *printcap-syntax*
 
 This syntax file applies to the printcap and termcap databases.
+
+In order for Vim to recognize printcap/termcap files that do not match
+the patterns *printcap*, or *termcap*, you must put additional patterns
+appropriate to your system in your |myfiletypefile| file.  For these
+patterns, you must set the variable "b:ptcap_type" to either "print" or
+"term", and then the 'filetype' option to ptcap.
+
+For example, to make Vim identify all files in /etc/termcaps/ as termcap
+files, add the following:
+
+>  au BufNewFile,BufRead /etc/termcaps/* let b:ptcap_type = "term" |
+>                                       \ set filetype=ptcap
 
 If you notice highlighting errors while scrolling backwards, which
 are fixed when redrawing with CTRL-L, try setting the "ptcap_minlines"
 internal variable to a larger number:
 
->  let ptcap_minlines = 50
+  let ptcap_minlines = 50
 
 (The default is 20 lines.)
+
+PYTHON							*python.vim*
+
+There are four options to control Python syntax highlighting.
+
+For highlighted numbers:
+>  let python_highlight_numbers = 1
+
+For highlighted builtin functions:
+>  let python_highlight_builtins = 1
+
+For highlighted standard exceptions:
+>  let python_highlight_exceptions = 1
+
+If you want all possible Python highlighting (the same as setting the
+preceding three options):
+>  let python_highlight_all = 1
 
 
 REXX							*rexx.vim*
@@ -957,6 +1140,31 @@ to a larger number:
 This will make the syntax synchronization start 50 lines before the first
 displayed line.  The default value is 10.  The disadvantage of using a larger
 number is that redrawing can become slow.
+
+
+RUBY							*ruby.vim*
+
+There are a few options to the Ruby syntax highlighting.
+
+By default, the "end" keyword is colorized according to the opening statement
+of the block it closes. While useful, this feature can be expensive: if you
+experience slow redrawing (or you are on a terminal with poor color support)
+you may want to turn it off by defining the "ruby_no_expensive" variable:
+>   let ruby_no_expensive = 1
+In this case the same color will be used for all control keywords.
+
+If you do want this feature enabled, but notice highlighting errors while
+scrolling backwards, which are fixed when redrawing with CTRL-L, try setting
+the "ruby_minlines" variable to a value larger than 50:
+>   let ruby_minlines = 100
+Ideally, this value should be a number of lines large enough to embrace your
+largest class or module.
+
+Finally, if you do not like to see too many color items around, you can define
+"ruby_no_identifiers":
+>   let ruby_no_identifiers = 1
+This will prevent highlighting of special identifiers like "ConstantName",
+"$global_var", "@instace_var", "| iterator |", and ":symbol".
 
 
 SED							*sed.vim*
@@ -988,6 +1196,10 @@ This covers the "normal" Unix sh, bash and the korn shell.  If you're working
 on a system where bash is called sh, you will benefit to define the vim
 variable 'bash_is_sh' in your '.vimrc' file:
 >  let bash_is_sh = 1
+If some buffers use bash for sh, use the buffer-local variable:
+>  let b:is_bash = 1
+You can force using the korn shell by sett a buffer-local variable:
+>  let b:is_kornshell = 1
 
 To choose between the two ways to treat single-quotes inside a pair of
 double-quotes, I have introduced a Vim variable "highlight_balanced_quotes".
@@ -1265,8 +1477,9 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 	patterns.  The last one that matches is used.  The same is true for
 	the end patterns.
 
-	The search for the end pattern starts at the start of the region.
-	This implies that it can also match inside the start pattern!
+	The search for the end pattern starts right after the start pattern.
+	Offsets are not used for this.  This implies that the match for the
+	end pattern will never overlap with the start pattern.
 
 	Note: The decision to start a region is only based on a matching start
 	pattern.  There is no check for a matching end pattern.  This does NOT
@@ -1326,11 +1539,11 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 	until the next "matchgroup".  Use "matchgroup=NONE" to go back to not
 	using a matchgroup.
 
-	It is not possible to have a contained match in a start or end pattern
-	that is highlighted with "matchgroup".  This can be used to avoid that
-	a contained item matches in the start or end pattern.
-	When using "transparent", it does not apply to a start or end pattern
-	that is highlighted with "matchgroup".
+	In a start or end pattern that is highlighted with "matchgroup" the
+	contained items of the region are not used.  This can be used to avoid
+	that a contained item matches in the start or end pattern.  When using
+	"transparent", it does not apply to a start or end pattern that is
+	highlighted with "matchgroup".
 
 	Here is an example, which highlights three levels of parentheses in
 	different colors:
@@ -1456,8 +1669,9 @@ group names.
 
 The contained groups will also match in the start and end patterns of a
 region.  If this is not wanted, the "matchgroup" argument can be used
-|:syn-matchgroup|.  The "rs=" and "re=" offsets can be used to change the
-region where contained items do match.
+|:syn-matchgroup|.  The "ms=" and "me=" offsets can be used to change the
+region where contained items do match.  Note that this may also limit the
+area that is highlighted
 
 
 nextgroup={groupname},..				*:syn-nextgroup*
@@ -1709,8 +1923,11 @@ redrawing starts.
 There are three ways to synchronize:
 1. Based on C-style comments.  Vim understands how C-comments work and can
    figure out if the current line starts inside or outside a comment.
+   |:syn-sync-first|
 2. Jumping back a certain number of lines and start parsing there.
+   |:syn-sync-second|
 3. Searching backwards in the text for a pattern to sync on.
+   |:syn-sync-third|
 
 				*:syn-sync-maxlines* *:syn-sync-minlines*
 For all three methods, the line range where the parsing can start is limited
@@ -1727,7 +1944,7 @@ slow machine.  Example:
 >  :syntax sync ccomment maxlines=500
 
 
-First syncing method:					*:syn-sync-ccomment*
+First syncing method:			*:syn-sync-first* *:syn-sync-ccomment*
 
 For the first method, only the "ccomment" argument needs to be given.
 Example:
@@ -1754,7 +1971,7 @@ chance of a "*/" appearing inside a comment is very small, this restriction
 is hardly ever noticed.
 
 
-Second syncing method:
+Second syncing method:				*:syn-sync-second*
 
 For the second method, only the "minlines={N}" argument needs to be given.
 Vim will subtract {N} from the line number and start parsing there.  This
@@ -1765,7 +1982,7 @@ Example:
 "lines" is equivalent to "minlines" (used by older versions).
 
 
-Third syncing method:
+Third syncing method:				*:syn-sync-third*
 
 The idea is to synchronize on the end of a few specific regions, called a
 sync pattern.  Only regions can cross lines, so when we find the end of some
@@ -1773,7 +1990,7 @@ region, we might be able to know in which syntax item we are.  The search
 starts in the line just above the one where redrawing starts.  From there
 the search continues backwards in the file.
 
-This works just like the non-syncing syntax ltems.  You can use contained
+This works just like the non-syncing syntax items.  You can use contained
 matches, nextgroup, etc.  But there are a few differences:
 - Keywords cannot be used.
 - The syntax items with the "sync" keyword form a completely separated group
@@ -1885,6 +2102,11 @@ There are two types of highlight groups:
   linked to a group of the second type.
 - The ones used for all languages.  These are also used for the 'highlight'
   option.
+							*hitest.vim*
+You can see all the groups currently active with this command:
+>   :so $VIMRUNTIME/syntax/hitest.vim
+This will open a new window containing all highlight group names, displayed
+in their own color.
 
 :hi[ghlight]		List all the current highlight groups that have
 			attributes set.
@@ -2071,6 +2293,7 @@ gui={attr-list}						*highlight-gui*
 	See |attr-list| for a description.
 	Note that "bold" can be used here and by using a bold font.  They
 	have the same effect.
+	Note that the attributes are ignored for the "Normal" group.
 
 font={font-name}					*highlight-font*
 	font-name is the name of a font, as it is used on the system Vim
@@ -2287,6 +2510,7 @@ be wrong.
 							*xiterm* *rxvt*
 The above settings have been mentioned to work for xiterm and rxvt too.
 
+							*colortest.vim*
 To test your color setup, a file has been included in the Vim distribution.
 To use it, execute these commands:
 >  :e $VIMRUNTIME/syntax/colortest.vim

@@ -1,4 +1,4 @@
-*if_cscope.txt* For Vim version 5.6.  Last change: 1999 Sep 17
+*if_cscope.txt* For Vim version 5.7a.  Last change: 2000 May 06
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
@@ -354,8 +354,12 @@ for any matches.
 7. Cscope availability and information			*cscope-info*
 
 If you do not already have cscope (it did not come with your compiler
-license), then you will probably have to buy it.  According to the nvi
-documentation:
+license or OS distribution), then you can download it for free from:
+	http://cscope.sourceforge.net/
+This is released by SCO under the BSD license.
+
+If you want a newer version of cscope, you will probably have to buy it.
+According to the nvi documentation:
 
 	You can buy version 13.3 source with an unrestricted license
 	for $400 from AT&T Software Solutions by calling +1-800-462-8146.
@@ -368,11 +372,11 @@ SGI developers can also get it.  Currently a tardist file can be found at:
 	https://toolbox.sgi.com/toolbox/utilities/cscope/
 The second one is for those who have a password for the SGI toolbox.
 
-There is an older version of cscope sources available on the net.  It might or
-might not work with Vim...
+There is source to an older version of a cscope clone (called "cs") available
+on the net.  Due to various reasons, this is not supported with Vim.
 
 The cscope interface/support for Vim was originally written by
-Andy Kahn <kahn@zk3.dec.com>.  The original structure (as well as a tiny
+Andy Kahn <ackahn@netapp.com>.  The original structure (as well as a tiny
 bit of code) was adapted from the cscope interface in nvi.  Please report
 any problems, suggestions, patches, et al., you have for the usage of
 cscope within Vim to him.

@@ -208,7 +208,7 @@ debug: scoption protos $(OBJ) version.c version.h
 
 proto: $(PRO)
 
-ctags:
+tags: $(SRC)
 	spat ctags $(SRC) *.h
 	#csh -c ctags $(SRC) *.h
 
@@ -334,8 +334,3 @@ amiga.o:	amiga.c $(DEP) amiga.h
 amiga.pro:	amiga.c $(DEP) amiga.h
 gui.o:		gui.c   $(DEP)
 gui.pro:	gui.c  $(DEP)
-
-
-tags: clean $(SRC)
-	ctags *.c *.h
-

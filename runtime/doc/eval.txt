@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 5.6.  Last change: 2000 Jan 08
+*eval.txt*      For Vim version 5.7a.  Last change: 2000 Jun 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -381,7 +381,7 @@ is deleted when the window is closed.
 Inside functions global variables are accessed with "g:".
 
 Predefined Vim variables:
-				    *v:count-variable* *count-variable*
+					*v:count* *count-variable*
 v:count		The count given for the last Normal mode command.  Can be used
 		to get the count before a mapping.  Read-only.  Example:
 >	:map _x :<C-U>echo "the count is " . count<CR>
@@ -389,11 +389,11 @@ v:count		The count given for the last Normal mode command.  Can be used
 		get when typing ':' after a count.
 		"count" also works, for backwards compatibility.
 
-						    *v:count1-variable*
+					*v:count1* *count1-variable*
 v:count1	Just like "v:count", but defaults to one when no count is
 		used.
 
-				    *v:errmsg-variable* *errmsg-variable*
+					*v:errmsg* *errmsg-variable*
 v:errmsg	Last given error message.  It's allowed to set this variable.
 		Example:
 >	:let errmsg = ""
@@ -402,13 +402,13 @@ v:errmsg	Last given error message.  It's allowed to set this variable.
 >	:  ...
 		"errmsg" also works, for backwards compatibility.
 
-						    *v:warningmsg-variable*
+					*v:warningmsg* *warningmsg-variable*
 v:warningmsg	Last given warning message.  It's allowed to set this variable.
 
-						    *v:statusmsg-variable*
+					*v:statusmsg* *statusmsg-variable*
 v:statusmsg	Last given status message.  It's allowed to set this variable.
 
-			    *v:shell_error-variable* *shell_error-variable*
+			    		*v:shell_error* *shell_error-variable*
 v:shell_error	Result of the last shell command.  When non-zero, the last
 		shell command had an error.  When zero, there was no problem.
 		This only works when the shell returns the error code to Vim.
@@ -421,13 +421,13 @@ v:shell_error	Result of the last shell command.  When non-zero, the last
 >	:endif
 		"shell_error" also works, for backwards compatibility.
 
-			    *v:this_session-variable* *this_session-variable*
+				*v:this_session* *this_session-variable*
 v:this_session	Full filename of the last loaded or saved session file.  See
 		|:mksession|.  It is allowed to set this variable.  When no
 		session file has been saved, this variable is empty.
 		"this_session" also works, for backwards compatibility.
 
-				    *v:version-variable* *version-variable*
+				*v:version* *version-variable*
 v:version	Version number of Vim: Major version number times 100 plus
 		minor version number.  Version 5.0 is 500.  Version 5.1 (5.01)
 		is 501.  Read-only.  "version" also works, for backwards
@@ -659,7 +659,8 @@ confirm({msg}, {choices} [, {default} [, {type}]])
 		The optional {type} argument gives the type of dialog.  This
 		is only used for the icon of the Win32 GUI.  It can be one of
 		these values: "Error", "Question", "Info", "Warning" or
-		"Generic".  Only the first character is relevant.
+		"Generic".  Only the first character is relevant.  When {type}
+		is omitted, "Generic" is used.
 		If the user aborts the dialog by pressing <Esc>, CTRL-C,
 		or another valid interrupt key, confirm() returns 0.
 
@@ -718,9 +719,9 @@ exists({expr})	The result is a Number, which is 1 if {var} is defined, zero
 >			exists("bufcount")
 		There must be no space between the symbol &/$/* and the name.
 		Note that the argument must be a string, not the name of the
-		variable itself!  This doesn't check for existence of the
-		"bufcount" variable, but gets the contents of "bufcount", and
-		checks if that exists:
+		variable itself!  This example doesn't check for existence of
+		the "bufcount" variable, but gets the contents of "bufcount",
+		and checks if that exists:
 			exists(bufcount)
 
 							*expand()*
@@ -818,6 +819,7 @@ getftime({fname})
 		the given file {fname}.  The value is measured as seconds
 		since 1st Jan 1970, and may be passed to strftime().  See also
 		|localtime()| and |strftime()|.
+		If the file {fname} can't be found -1 is returned.
 
 							*getline()*
 getline({lnum}) The result is a String, which is line {lnum} from the current
@@ -978,8 +980,9 @@ input({prompt})						*input()*
 		versions that only run in GUI mode (e.g., the Win32 GUI).
 
 		Example:
->	:let choice = input("What is your choice? ")
-
+>	:if input("Coffee or beer? ") == "beer"
+>	:  echo "Cheers!"
+>	:endif
 							*isdirectory()*
 isdirectory({directory})
 		The result is a Number, which is TRUE when a directory with
@@ -995,8 +998,26 @@ libcall({libname}, {funcname}, {argument})
 		int; if {param} is a string, it is passed as a null-terminated
 		string.  If the function returns NULL, this will appear as an
 		empty string "" to Vim.
+
+		libcall() allows you to write your own 'plug-in' extensions to
+		Vim without having to recompile the program.  It is NOT a
+		means to call system functions!  If you try to do so Vim will
+		very probably crash.
+
+		For Win32, the functions you write must be placed in a DLL
+		and use the normal C calling convention (NOT Pascal which is
+		used in Windows System DLLs).  The function must take exactly
+		one parameter, either a character pointer or a long integer,
+		and must return a character pointer or NULL.  The character
+		pointer returned must point to memory that will remain valid
+		after the function has returned (e.g. in static data in the
+		DLL).  If it points to allocated memory, that memory will
+		leak away.  Using a static buffer in the function should work,
+		it's then freed when the DLL is unloaded.
+
 		WARNING: If the function returns a non-valid pointer, Vim will
-		crash!  This also happens if the function returns a number.
+		crash!  This also happens if the function returns a number,
+		because Vim thinks it's a pointer.
 		For Win32 systems, {libname} should be the filename of the DLL
 		without the ".DLL" suffix.  A full path is only required if
 		the DLL is not in the usual places.
@@ -1232,7 +1253,8 @@ synIDattr({synID}, {what} [, {mode}])
 synIDtrans({synID})
 		The result is a Number, which is the translated syntax ID of
 		{synID}.  This is the syntax group ID of what is being used to
-		highlight the character.  Highlight links are followed.
+		highlight the character.  Highlight links given with
+		":highlight link" are followed.
 
 							*system()*
 system({expr})	Get the output of the shell command {expr}.  Note: newlines
@@ -1246,6 +1268,7 @@ system({expr})	Get the output of the shell command {expr}.  Note: newlines
 		Depending on 'shell', you might be able to capture stdout with
 		">" and stdout plus stderr with ">&" (csh) or use "2>" to
 		capture stderr (sh).
+		The resulting error code can be found in |v:shell_error|.
 
 						*tempname()* *temp-file-name*
 tempname()
@@ -1473,9 +1496,9 @@ the name of the script, e.g., "HTMLcolor()".
 			When the [range] argument is added, the function is
 			expected to take care of a range itself.  The range is
 			passed as "a:firstline" and "a:lastline".  If [range]
-			is excluded, a ":call" with a range will call the
-			function for each line, with the cursor on the start
-			of each line.
+			is excluded, ":{range}call" will call the function for
+			each line in the range, with the cursor on the start
+			of each line.  See |function-range-example|.
 			When the [abort] argument is added, the function will
 			abort as soon as an error is detected.
 			The last used search pattern and the redo command "."
@@ -1522,7 +1545,7 @@ To return more than one value, pass the name of a global variable:
 >  :  if a:n2 == 0
 >  :    return "fail"
 >  :  endif
->  :  exe "let " . a:divname . " = ". a:n1 / a:n2
+>  :  exe "let g:" . a:divname . " = ". a:n1 / a:n2
 >  :  return "ok"
 >  :endfunction
 
@@ -1531,6 +1554,20 @@ This function can then be called with:
 >  :if success == "ok"
 >  :  echo div
 >  :endif
+
+An alternative is to return a command that can be executed.  This also works
+with local variables in a calling function.  Example:
+>  :function Foo()
+>  :  execute Bar()
+>  :  echo "line " . lnum . " column " . col
+>  :endfunction
+>
+>  :function Bar()
+>  :  return "let lnum = " . line(".") . " | let col = " . col(".")
+>  :endfunction
+
+The names "lnum" and "col" could also be passed as argument to Bar(), to allow
+the caller to set the names.
 
 							*:cal* *:call*
 :[range]cal[l] {name}([arguments])
@@ -1546,11 +1583,26 @@ This function can then be called with:
 		is left at the last line (possibly moved by the last function
 		call).  The arguments are re-evaluated for each line.  Thus
 		this works:
-
+						*function-range-example*
 >	:function Mynumber(arg)
 >	:  echo line(".") . " " . a:arg
 >	:endfunction
 >	:1,5call Mynumber(getline("."))
+
+		The "a:firstline" and "a:lastline" are defined anyway, they
+		can be used to do something different at the start or end of
+		the range.
+
+		Example of a function that handles the range itself:
+
+>	:function Cont() range
+>	:  execute (a:firstline + 1) . "," . a:lastline . 's/^/\t\\ '
+>	:endfunction
+>	:4,8call Cont()
+
+		This function inserts the continuation character "\" in front
+		of all the lines in the range, except the first one.
+
 
 The recursiveness of user functions is restricted with the |'maxfuncdepth'|
 option.
@@ -1804,6 +1856,23 @@ with different comparison functions in order to sort according to date etc.
 >
 > " :Sort takes a range of lines and sorts them.
 > command! -nargs=0 -range Sort <line1>,<line2>call Sort("Strcmp")
+
+							*sscanf*
+There is no sscanf() function in Vim.  If you need to extract parts from a
+line, you can use matchstr() and substitute() to do it  This example shows
+how to get the file name, line number and column number out of a line like
+"foobar.txt, 123, 45".
+>  " Set up the match bit
+>  let mx='\(\f\+\),\s*\(\d\+\),\s*\(\d\+\)'
+>  "get the part matching the whole expression
+>  let l = matchstr(line, mx)
+>  "get each item out of the match
+>  let file = substitute(l, mx, '\1', '')
+>  let lnum = substitute(l, mx, '\2', '')
+>  let col = substitute(l, mx, '\3', '')
+
+The input is in the variable "line", the results in the variables "file",
+"lnum" and "col". (idea from Michael Geddes)
 
 ==============================================================================
 8. No +eval feature				*no-eval-feature*

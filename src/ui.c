@@ -1293,6 +1293,7 @@ fill_input_buf(exit_on_error)
     inbufcount = 0;
 #  else
 
+    len = 0;	/* to avoid gcc warning */
     for (try = 0; try < 100; ++try)
     {
 	len = read(read_cmd_fd, (char *)inbuf + inbufcount,
@@ -1530,7 +1531,8 @@ clip_x11_request_selection(myShell, dpy)
 	XtGetSelectionValue(myShell, XA_PRIMARY, type,
 	    clip_x11_request_selection_cb, (XtPointer)&success, CurrentTime);
 
-	/* Do we need this?: */
+	/* Make sure the request for the selection goes out before waiting for
+	 * a response. */
 	XFlush(dpy);
 
 	/*
@@ -1543,7 +1545,7 @@ clip_x11_request_selection(myShell, dpy)
 	    if (XCheckTypedEvent(dpy, SelectionNotify, &event))
 		break;
 
-	    /* Do we need this?: */
+	    /* Do we need this?  Probably not. */
 	    XSync(dpy, False);
 	}
 

@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 5.6.  Last change: 1999 Aug 24
+*tips.txt*      For Vim version 5.7a.  Last change: 2000 Feb 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -15,6 +15,7 @@ Scrolling in Insert mode			|scroll-insert|
 Smooth scrolling				|scroll-smooth|
 Correcting common typing mistakes		|type-mistakes|
 Counting words, lines, etc.			|count-items|
+Restoring the cursor position			|restore-position|
 Renaming files					|rename-files|
 Speeding up external commands			|speed-up|
 Useful mappings					|useful-mappings|
@@ -264,6 +265,24 @@ number of substitutions is the number of items.  Examples:
 >	:%s/\<the\>/&/g		"the" as a word
 
 You might want to reset 'hlsearch' or do ":nohlsearch".
+
+==============================================================================
+Restoring the cursor position				*restore-position*
+
+Sometimes you want to write a mapping that makes a change somewhere in the
+file and restores the cursor position, without scrolling the text.  For
+example, to change the date mark in a file:
+>   map <F2> msHmtgg/Last [cC]hange:\s*/e+1<CR>"_D"=strftime("%Y %b %d")<CR>p'tzt`s
+
+Breaking up saving the position:
+	ms	store cursor position in the 's' mark
+	H	go to the first line in the window
+	mt	store this position in the 't' mark
+
+Breaking up restoring the position:
+	't	go to the line previously at the top of the window
+	zt	scroll to move this line to the top of the window
+	`s	jump to the original position of the cursor
 
 ==============================================================================
 Renaming files						*rename-files*

@@ -34,6 +34,7 @@
 #ifdef MIN
 # undef MIN
 #endif
+
 #include <EXTERN.h>
 #include <perl.h>
 #include <XSUB.h>
@@ -472,7 +473,7 @@ Buffers(...)
 	    else
 	    {
 		char_u *pat;
-		int len;
+		STRLEN len;
 
 		pat = (char_u *)SvPV(sv, len);
 		++emsg_off;

@@ -156,7 +156,7 @@ char osver[] = "";
 #endif
 
 #ifndef __P
-# ifdef __STDC__
+# if defined(__STDC__) || defined(MSDOS) || defined(WIN32) || defined(OS2)
 #  define __P(a) a
 # else
 #  define __P(a) ()

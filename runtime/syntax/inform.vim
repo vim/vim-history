@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Inform
-" Maintainer:	Stephen Thomas (stephent@isltd.insignia.com)
-" Last Change:	1999 Oct 16th
+" Maintainer:	Stephen Thomas (stephent@insignia.com)
+" Last Change:	2000 March 5th
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -208,11 +208,26 @@ syn region informGrammarSection matchgroup=informGramPreProc start="\<Verb\|Exte
 
 " Special character forms.
 
-syn match informSpecChar contained "@[''\:c~o^]\|@@\d\d*\|@{\d*}\|@.."
+syn match informBadAccent contained "@[^{[:digit:]]\D"
+syn match informBadAccent contained "@{[^}]*}"
+syn match informAccent contained "@:[aouAOUeiyEI]"
+syn match informAccent contained "@'[aeiouyAEIOUY]"
+syn match informAccent contained "@`[aeiouAEIOU]"
+syn match informAccent contained "@\^[aeiouAEIOU]"
+syn match informAccent contained "@\~[anoANO]"
+syn match informAccent contained "@/[oO]"
+syn match informAccent contained "@ss\|@<<\|@>>\|@oa\|@oA\|@ae\|@AE\|@cc\|@cC"
+syn match informAccent contained "@th\|@et\|@Th\|@Et\|@LL\|@oe\|@OE\|@!!\|@\?\?"
+syn match informAccent contained "@{\x\{1,4}}"
+syn match informBadStrUnicode contained "@@\D"
+syn match informStringUnicode contained "@@\d\+"
+syn match informStringCode contained "@\d\d"
 
-" String and Character constants
-syn region informString start=+"+ skip=+\\\\+ end=+"+ contains=informSpecChar
-syn region informDictString start="'" skip="@'" end="'"
+" String and Character constants.  Ordering is important here.
+syn region informString start=+"+ skip=+\\\\+ end=+"+ contains=informAccent,informStringUnicode,informStringCode,informBadAccent,informBadStrUnicode
+syn region informDictString start="'" end="'" contains=informAccent,informBadAccent
+syn match informBadDictString "''"
+syn match informDictString "'''"
 
 " Catch errors caused by wrong parenthesis
 syn region informParen transparent start='(' end=')' contains=ALLBUT,informParenError,informTodo,informGrammar
@@ -220,8 +235,9 @@ syn match informParenError ")"
 syn match informInParen contained "[{}]"
 
 " Integer numbers: decimal, hexadecimal and binary.
+set iskeyword+=$
 syn match informNumber "\<\d\+\>"
-syn match informNumber "\<\$[0-9A-Za-z]\+\>"
+syn match informNumber "\<\$\x\+\>"
 syn match informNumber "\<\$\$[01]\+\>"
 
 " Comments
@@ -256,7 +272,9 @@ if !exists("did_inform_syntax_inits")
   hi link informError		Error
   hi link informString		String
   hi link informComment		Comment
-  hi link informSpecChar	Special
+  hi link informAccent		Special
+  hi link informStringUnicode	Special
+  hi link informStringCode	Special
   hi link informTodo		Todo
   if !exists("inform_highlight_simple")
     hi link informLibAttrib	Identifier
@@ -269,6 +287,9 @@ if !exists("did_inform_syntax_inits")
   endif
   hi link informParenError	informError
   hi link informInParen		informError
+  hi link informBadDictString	informError
+  hi link informBadAccent	informError
+  hi link informBadStrUnicode	informError
 endif
 
 let current_syntax = "inform"

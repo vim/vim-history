@@ -94,7 +94,7 @@ vim.exe: $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) version.c
 	$(LINK) /c /m $(LIB)\C0l @vimresp,vim,vim,$(LIB)\emu $(LIB)\Cl
 
-ctags:
+tags:
 	command /c ctags $(SRC) $(INCL)
 
 clean:

@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	AML (ARC/INFO Arc Macro Language)	
-" Written by:	Nikki Knuit <Nikki.Knuit@gems3.gov.bc.ca>
+" Written By:	Nikki Knuit <Nikki.Knuit@gems3.gov.bc.ca>
 " Maintainer:	Todd Glover <todd.glover@gems9.gov.bc.ca>
 " Last Change:	1999-November-04 
 
