@@ -949,7 +949,7 @@ ex_let(eap)
 	    /*
 	     * List variables.
 	     */
-	    while (!ends_excmd(*arg))
+	    while (!ends_excmd(*arg) && !got_int)
 	    {
 		char_u	*temp_string = NULL;
 		int	arg_len;
@@ -8732,13 +8732,13 @@ ex_function(eap)
 	eap->nextcmd = check_nextcmd(p);
 	if (eap->nextcmd != NULL)
 	    *p = NUL;
-	if (!eap->skip)
+	if (!eap->skip && !got_int)
 	{
 	    fp = find_func(name);
 	    if (fp != NULL)
 	    {
 		list_func_head(fp, TRUE);
-		for (j = 0; j < fp->lines.ga_len; ++j)
+		for (j = 0; j < fp->lines.ga_len && !got_int; ++j)
 		{
 		    msg_putchar('\n');
 		    msg_outnum((long)(j + 1));
@@ -8747,8 +8747,14 @@ ex_function(eap)
 		    if (j < 99)
 			msg_putchar(' ');
 		    msg_prt_line(FUNCLINE(fp, j));
+		    out_flush();	/* show a line at a time */
+		    ui_breakcheck();
 		}
-		MSG("   endfunction");
+		if (!got_int)
+		{
+		    msg_putchar('\n');
+		    msg_puts((char_u *)"   endfunction");
+		}
 	    }
 	    else
 		EMSG2(_("E123: Undefined function: %s"), eap->arg);
