@@ -3914,6 +3914,25 @@ nv_screengo(oap, dir, dist)
 nv_mousescroll(cap)
     cmdarg_T	*cap;
 {
+# if defined(FEAT_GUI) && defined(FEAT_WINDOWS)
+    win_T *old_curwin;
+
+    old_curwin = curwin;
+
+    /* Currently we only get the mouse coordinates in the GUI. */
+    if (gui.in_use && mouse_row >= 0 && mouse_col >= 0)
+    {
+	int row, col;
+
+	row = mouse_row;
+	col = mouse_col;
+
+	/* find the window at the pointer coordinates */
+	curwin = mouse_find_win(&row, &col);
+	curbuf = curwin->w_buffer;
+    }
+# endif
+
     if (mod_mask & (MOD_MASK_SHIFT | MOD_MASK_CTRL))
     {
 	(void)onepage(cap->arg ? FORWARD : BACKWARD, 1L);
@@ -3924,6 +3943,13 @@ nv_mousescroll(cap)
 	cap->count0 = 3;
 	nv_scroll_line(cap);
     }
+
+# if defined(FEAT_GUI) && defined(FEAT_WINDOWS)
+    curwin->w_redr_status = TRUE;
+
+    curwin = old_curwin;
+    curbuf = curwin->w_buffer;
+# endif
 }
 
 /*

@@ -2487,8 +2487,8 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
     static int	    prev_row = 0, prev_col = 0;
     static int	    prev_button = -1;
     static int	    num_clicks = 1;
-    char_u	    string[6];
-    char_u	    button_char;
+    char_u	    string[10];
+    enum key_extra  button_char;
     int		    row, col;
 #ifdef FEAT_CLIPBOARD
     int		    checkfor;
@@ -2519,9 +2519,18 @@ button_set:
 
 		string[3] = CSI;
 		string[4] = KS_EXTRA;
-		string[5] = button_char;
+		string[5] = (int)button_char;
+
+		/* Pass the pointer coordinates of the scroll event so that we
+		 * know which window to scroll. */
+		row = gui_xy2colrow(x, y, &col);
+		string[6] = (char_u)(col / 128 + ' ' + 1);
+		string[7] = (char_u)(col % 128 + ' ' + 1);
+		string[8] = (char_u)(row / 128 + ' ' + 1);
+		string[9] = (char_u)(row % 128 + ' ' + 1);
+
 		if (modifiers == 0)
-		    add_to_input_buf(string + 3, 3);
+		    add_to_input_buf(string + 3, 7);
 		else
 		{
 		    string[0] = CSI;
@@ -2533,7 +2542,7 @@ button_set:
 			string[2] |= MOD_MASK_CTRL;
 		    if (modifiers & MOUSE_ALT)
 			string[2] |= MOD_MASK_ALT;
-		    add_to_input_buf(string, 6);
+		    add_to_input_buf(string, 10);
 		}
 		return;
 	    }
