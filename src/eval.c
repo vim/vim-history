@@ -8241,6 +8241,31 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
 				     DOCMD_NOWAIT|DOCMD_VERBOSE|DOCMD_REPEAT);
 
     --RedrawingDisabled;
+
+    /* when the function was aborted because of an error, return -1 */
+    if ((did_emsg && (fp->flags & FC_ABORT)) || retvar->var_type == VAR_UNKNOWN)
+    {
+	clear_var(retvar);
+	retvar->var_type = VAR_NUMBER;
+	retvar->var_val.var_number = -1;
+    }
+
+    /* when being verbose, mention the return value */
+    if (p_verbose >= 12)
+    {
+	++no_wait_return;
+	msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
+	if (fc.retvar->var_type == VAR_NUMBER)
+	    smsg((char_u *)_("%s returning #%ld"), sourcing_name,
+				       (long)fc.retvar->var_val.var_number);
+	else if (fc.retvar->var_type == VAR_STRING)
+	    smsg((char_u *)_("%s returning \"%s\""), sourcing_name,
+						 get_var_string(fc.retvar));
+	msg_puts((char_u *)"\n");   /* don't overwrite this either */
+	cmdline_row = msg_row;
+	--no_wait_return;
+    }
+
     vim_free(sourcing_name);
     sourcing_name = save_sourcing_name;
     sourcing_lnum = save_sourcing_lnum;
@@ -8256,13 +8281,6 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
 	--no_wait_return;
     }
 
-    /* when the function was aborted because of an error, return -1 */
-    if ((did_emsg && (fp->flags & FC_ABORT)) || retvar->var_type == VAR_UNKNOWN)
-    {
-	clear_var(retvar);
-	retvar->var_type = VAR_NUMBER;
-	retvar->var_val.var_number = -1;
-    }
     did_emsg |= save_did_emsg;
     current_funccal = save_fcp;
 
@@ -8375,21 +8393,6 @@ get_func_line(c, cookie, indent)
     {
 	retval = vim_strsave(((char_u **)(gap->ga_data))[fcp->linenr++]);
 	sourcing_lnum = fcp->linenr;
-    }
-
-    if (p_verbose >= 12 && retval == NULL)
-    {
-	++no_wait_return;
-	msg_scroll = TRUE;	    /* always scroll up, don't overwrite */
-	if (fcp->retvar->var_type == VAR_NUMBER)
-	    smsg((char_u *)_("%s returning #%ld"), sourcing_name,
-				       (long)fcp->retvar->var_val.var_number);
-	else if (fcp->retvar->var_type == VAR_STRING)
-	    smsg((char_u *)_("%s returning \"%s\""), sourcing_name,
-						 get_var_string(fcp->retvar));
-	msg_puts((char_u *)"\n");   /* don't overwrite this either */
-	cmdline_row = msg_row;
-	--no_wait_return;
     }
 
     /* Did we encounter a breakpoint? */
