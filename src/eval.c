@@ -3682,8 +3682,10 @@ f_foldtext(argvars, retvar)
 	if (s[0] == '/' && (s[1] == '*' || s[1] == '/'))
 	    s = skipwhite(s + 2);
 	txt = _("+-%s%3ld lines: ");
-	r = alloc((unsigned)(STRLEN(s)
-			 + STRLEN(vimvars[VV_FOLDDASHES].val) + STRLEN(txt)));
+	r = alloc((unsigned)(STRLEN(txt)
+		    + STRLEN(vimvars[VV_FOLDDASHES].val)    /* for %s */
+		    + 20				    /* for %3ld */
+		    + STRLEN(s)));			    /* concatenated */
 	if (r != NULL)
 	{
 	    sprintf((char *)r, txt, vimvars[VV_FOLDDASHES].val,
