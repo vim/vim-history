@@ -4197,6 +4197,10 @@ screen_line(row, coloff, endcol, clear_width
 	    {
 		ScreenLines[off_to] = c;
 		ScreenAttrs[off_to] = hl;
+# ifdef FEAT_MBYTE
+		if (enc_utf8)
+		    ScreenLinesUC[off_to] = 0;
+# endif
 		screen_char(off_to, row, col + coloff);
 	    }
 	}
