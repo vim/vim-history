@@ -517,7 +517,10 @@ staterr:
     {
 	if (cs_create_connection(i) == CSCOPE_FAILURE
 		|| cs_read_prompt(i) == CSCOPE_FAILURE)
+	{
+	    cs_release_csp(i, TRUE);
 	    goto add_err;
+	}
 
 	if (p_csverbose)
 	{
@@ -1095,7 +1098,19 @@ cs_find_common(opt, pat, forceit, verbose)
 	fclose(f);
 	/* '-' starts a new error list */
 	if (qf_init(tmp, (char_u *)"%f%*\\t%l%*\\t%m", *qfpos == '-') > 0)
+	{
+# ifdef FEAT_WINDOWS
+	    if (postponed_split != 0)
+	    {
+		win_split(postponed_split > 0 ? postponed_split : 0, 0);
+#  ifdef FEAT_SCROLLBIND
+		curwin->w_p_scb = FALSE;
+#  endif
+		postponed_split = 0;
+	    }
+# endif
 	    qf_jump(0, 0, forceit);
+	}
 	mch_remove(tmp);
 	vim_free(tmp);
 	return TRUE;
@@ -1794,9 +1809,9 @@ cs_pathcomponents(path)
 #endif
 		)
 	    ;
-    if (s > path && *s == '/'
+    if ((s > path && *s == '/')
 #ifdef WIN32
-	|| s > path && *s == '\\'
+	|| (s > path && *s == '\\')
 #endif
 	    )
 	++s;
@@ -2081,10 +2096,14 @@ cs_release_csp(i, freefnpp)
     /*
      * Trying to exit normally (not sure whether it is fit to UNIX cscope
      */
-    (void)fputs("q\n", csinfo[i].to_fp);
-    (void)fflush(csinfo[i].to_fp);
+    if (csinfo[i].to_fp != NULL)
+    {
+	(void)fputs("q\n", csinfo[i].to_fp);
+	(void)fflush(csinfo[i].to_fp);
+    }
     /* give cscope chance to exit normally */
-    if (WaitForSingleObject(csinfo[i].hProc, 1000) == WAIT_TIMEOUT)
+    if (csinfo[i].hProc > 0
+	    && WaitForSingleObject(csinfo[i].hProc, 1000) == WAIT_TIMEOUT)
 	TerminateProcess(csinfo[i].hProc, 0);
 #endif
 

@@ -11,7 +11,16 @@
  * ex_cmds2.c: some more functions for command line commands
  */
 
+#if defined(WIN32) && defined(FEAT_CSCOPE)
+# include <io.h>
+#endif
+
 #include "vim.h"
+
+#if defined(WIN32) && defined(FEAT_CSCOPE)
+# include <fcntl.h>
+#endif
+
 #include "version.h"
 
 static void	cmd_source __ARGS((char_u *fname, exarg_T *eap));
@@ -2016,6 +2025,25 @@ static garray_T script_names = {0, 0, sizeof(struct scriptstuff), 4, NULL};
 #define SCRIPT_INO(id) (((struct scriptstuff *)script_names.ga_data)[(id) - 1].ino)
 #endif
 
+#if defined(WIN32) && defined(FEAT_CSCOPE)
+static FILE *fopen_noinh_readbin __ARGS((char *filename));
+
+/*
+ * Special function to open a file without handle inheritance.
+ */
+    static FILE *
+fopen_noinh_readbin(filename)
+    char    *filename;
+{
+    int	fd_tmp = open(filename, O_RDONLY | O_BINARY | O_NOINHERIT);
+
+    if (fd_tmp == -1)
+	return NULL;
+    return fdopen(fd_tmp, READBIN);
+}
+#endif
+
+
 /*
  * do_source: Read the file "fname" and execute its lines as EX commands.
  *
@@ -2070,7 +2098,11 @@ do_source(fname, check_other, is_vimrc)
 	goto theend;
     }
 
+#if defined(WIN32) && defined(FEAT_CSCOPE)
+    cookie.fp = fopen_noinh_readbin((char *)fname_exp);
+#else
     cookie.fp = mch_fopen((char *)fname_exp, READBIN);
+#endif
     if (cookie.fp == NULL && check_other)
     {
 	/*
@@ -2087,7 +2119,11 @@ do_source(fname, check_other, is_vimrc)
 		*p = '.';
 	    else
 		*p = '_';
+#if defined(WIN32) && defined(FEAT_CSCOPE)
+	    cookie.fp = fopen_noinh_readbin((char *)fname_exp);
+#else
 	    cookie.fp = mch_fopen((char *)fname_exp, READBIN);
+#endif
 	}
     }
 
