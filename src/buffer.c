@@ -1835,7 +1835,7 @@ fileinfo(fullname, shorthelp, dont_truncate)
 		   (int)curwin->w_cursor.col + 1, (int)curwin->w_virtcol + 1);
     }
 
-    (void)append_arg_number(buffer, !shortmess(SHM_FILE), IOSIZE);
+    (void)append_arg_number(curwin, buffer, !shortmess(SHM_FILE), IOSIZE);
 
     if (dont_truncate)
     {
@@ -1971,7 +1971,7 @@ maketitle()
 		STRCPY(t_name, "VIM - ");
 		home_replace(curbuf, curbuf->b_ffname,
 			     t_name + 6, IOSIZE - 106, TRUE);
-		append_arg_number(t_name, FALSE, IOSIZE - 100);
+		append_arg_number(curwin, t_name, FALSE, IOSIZE - 100);
 		if (maxlen)
 		{
 		    len = STRLEN(t_name);
@@ -2058,7 +2058,8 @@ resettitle()
  * Return TRUE if it was appended.
  */
     int
-append_arg_number(buf, add_file, maxlen)
+append_arg_number(wp, buf, add_file, maxlen)
+    WIN	    *wp;
     char_u  *buf;
     int	    add_file;		/* Add "file" before the arg number */
     int	    maxlen;		/* maximum nr of chars in buf or zero*/
@@ -2078,8 +2079,8 @@ append_arg_number(buf, add_file, maxlen)
 	STRCPY(p, "file ");
 	p += 5;
     }
-    sprintf((char *)p, curwin->w_arg_idx_invalid ? "(%d) of %d)" :
-			  "%d of %d)", curwin->w_arg_idx + 1, arg_file_count);
+    sprintf((char *)p, wp->w_arg_idx_invalid ? "(%d) of %d)"
+			    : "%d of %d)", wp->w_arg_idx + 1, arg_file_count);
     return TRUE;
 }
 

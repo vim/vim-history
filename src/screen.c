@@ -2858,7 +2858,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 
 	case STL_ARGLISTSTAT:
 	    tmp[0] = 0;
-	    if (append_arg_number(tmp, FALSE, (int)sizeof(tmp)))
+	    if (append_arg_number(wp, tmp, FALSE, (int)sizeof(tmp)))
 		str = tmp;
 	    break;
 

@@ -30,7 +30,7 @@ void cursor_pos_info __ARGS((void));
 void col_print __ARGS((char_u *buf, int col, int vcol));
 void maketitle __ARGS((void));
 void resettitle __ARGS((void));
-int append_arg_number __ARGS((char_u *buf, int add_file, int maxlen));
+int append_arg_number __ARGS((WIN *wp, char_u *buf, int add_file, int maxlen));
 char_u *fix_fname __ARGS((char_u *fname));
 void fname_expand __ARGS((char_u **ffname, char_u **sfname));
 void do_arg_all __ARGS((int count, int forceit));
