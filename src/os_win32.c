@@ -4460,15 +4460,12 @@ getout:
     int
 mch_open(char *name, int flags, int mode)
 {
+    /* _wopen() does not work with Borland C 5.5: creates a read-only file. */
+# ifndef __BORLANDC__
     WCHAR	*wn;
     int		f;
 
-    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage
-# ifdef __BORLANDC__
-	    /* Wide functions of Borland C 5.5 do not work on Windows 98. */
-	    && g_PlatformId == VER_PLATFORM_WIN32_NT
-# endif
-       )
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
     {
 	wn = enc_to_ucs2(name, NULL);
 	if (wn != NULL)
@@ -4482,6 +4479,7 @@ mch_open(char *name, int flags, int mode)
 	     * the _wopen() fails for missing wide functions. */
 	}
     }
+# endif
 
     return open(name, flags, mode);
 }
