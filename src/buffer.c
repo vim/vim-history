@@ -693,8 +693,11 @@ handle_swap_exists(old_curbuf)
 	swap_exists_action = SEA_NONE;	/* don't want it again */
 	close_buffer(curwin, curbuf, DOBUF_UNLOAD);
 	if (!buf_valid(old_curbuf) || old_curbuf == curbuf)
-	    old_curbuf = buflist_new(NULL, NULL, 1L, BLN_CURBUF | BLN_LISTED);
-	enter_buffer(old_curbuf);
+	    old_curbuf = buflist_new(NULL, NULL, 1L,
+					 BLN_CURBUF | BLN_LISTED | BLN_FORCE);
+	if (old_curbuf != NULL)
+	    enter_buffer(old_curbuf);
+	/* If "old_curbuf" is NULL we are in big trouble here... */
     }
     else if (swap_exists_action == SEA_RECOVER)
     {
@@ -1377,6 +1380,7 @@ enter_buffer(buf)
  * If (flags & BLN_CURBUF) is TRUE, may use current buffer.
  * If (flags & BLN_LISTED) is TRUE, add new buffer to buffer list.
  * If (flags & BLN_DUMMY) is TRUE, don't count it as a real buffer.
+ * If (flags & BLN_FORCE) is TRUE, don't abort on an error.
  * This is the ONLY way to create a new buffer.
  */
 static int  top_file_num = 1;		/* highest file number */
@@ -1451,7 +1455,8 @@ buflist_new(ffname, sfname, lnum, flags)
 	if (buf == curbuf)
 	    apply_autocmds(EVENT_BUFWIPEOUT, NULL, NULL, FALSE, curbuf);
 # ifdef FEAT_EVAL
-	if (aborting())	    /* autocmds may abort script processing */
+	/* autocmds may abort script processing */
+	if (!(flags & BLN_FORCE) && aborting())
 	    return NULL;
 # endif
 #endif
@@ -1504,7 +1509,8 @@ buflist_new(ffname, sfname, lnum, flags)
 	if (buf != curbuf)	 /* autocommands deleted the buffer! */
 	    return NULL;
 #if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
-	if (aborting())	    /* autocmds may abort script processing */
+	/* autocmds may abort script processing */
+	if (!(flags & BLN_FORCE) && aborting())
 	    return NULL;
 #endif
 	/* buf->b_nwindows = 0; why was this here? */
@@ -1580,7 +1586,8 @@ buflist_new(ffname, sfname, lnum, flags)
 	if (flags & BLN_LISTED)
 	    apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, buf);
 # ifdef FEAT_EVAL
-	if (aborting())	    /* autocmds may abort script processing */
+	/* autocmds may abort script processing */
+	if (!(flags & BLN_FORCE) && aborting())
 	    return NULL;
 # endif
     }
