@@ -564,9 +564,6 @@ buf_freeall(buf, del_buf, wipe_buf)
 #ifdef FEAT_SYN_HL
     syntax_clear(buf);		    /* reset syntax info */
 #endif
-#ifdef FEAT_SIGNS
-    buf_delete_signs(buf);	    /* delete any signs */
-#endif
 }
 
 /*
@@ -608,6 +605,9 @@ free_buffer_stuff(buf, free_options)
 #endif
 #ifdef FEAT_USR_CMDS
     uc_clear(&buf->b_ucmds);		/* clear local user commands */
+#endif
+#ifdef FEAT_SIGNS
+    buf_delete_signs(buf);		/* delete any signs */
 #endif
 #ifdef FEAT_LOCALMAP
     map_clear_int(buf, MAP_ALL_MODES, TRUE, FALSE);  /* clear local mappings */
