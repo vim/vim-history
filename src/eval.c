@@ -2348,7 +2348,7 @@ static struct fst
     {"char2nr",		1, 1, f_char2nr},
     {"cindent",		1, 1, f_cindent},
     {"col",		1, 1, f_col},
-    {"confirm",		2, 4, f_confirm},
+    {"confirm",		1, 4, f_confirm},
     {"cscope_connection",0,3, f_cscope_connection},
     {"delete",		1, 1, f_delete},
     {"did_filetype",	0, 0, f_did_filetype},
@@ -3095,7 +3095,7 @@ f_col(argvars, retvar)
 	{
 	    char_u	*p = ml_get_cursor();
 
-	    if (curwin->w_cursor.coladd >= chartabsize(p,
+	    if (curwin->w_cursor.coladd >= (colnr_T)chartabsize(p,
 				 curwin->w_virtcol - curwin->w_cursor.coladd))
 	    {
 # ifdef FEAT_MBYTE
@@ -3125,7 +3125,7 @@ f_confirm(argvars, retvar)
 {
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
     char_u	*message;
-    char_u	*buttons;
+    char_u	*buttons = NULL;
     char_u	buf[NUMBUFLEN];
     char_u	buf2[NUMBUFLEN];
     int		def = 0;
@@ -3133,24 +3133,30 @@ f_confirm(argvars, retvar)
     int		c;
 
     message = get_var_string(&argvars[0]);
-    buttons = get_var_string_buf(&argvars[1], buf);
-    if (argvars[2].var_type != VAR_UNKNOWN)
+    if (argvars[1].var_type != VAR_UNKNOWN)
     {
-	def = get_var_number(&argvars[2]);
-	if (argvars[3].var_type != VAR_UNKNOWN)
+	buttons = get_var_string_buf(&argvars[1], buf);
+	if (argvars[2].var_type != VAR_UNKNOWN)
 	{
-	    /* avoid that TO_UPPER calls get_var_string_buf() twice */
-	    c = *get_var_string_buf(&argvars[3], buf2);
-	    switch (TO_UPPER(c))
+	    def = get_var_number(&argvars[2]);
+	    if (argvars[3].var_type != VAR_UNKNOWN)
 	    {
-		case 'E': type = VIM_ERROR; break;
-		case 'Q': type = VIM_QUESTION; break;
-		case 'I': type = VIM_INFO; break;
-		case 'W': type = VIM_WARNING; break;
-		case 'G': type = VIM_GENERIC; break;
+		/* avoid that TO_UPPER calls get_var_string_buf() twice */
+		c = *get_var_string_buf(&argvars[3], buf2);
+		switch (TO_UPPER(c))
+		{
+		    case 'E': type = VIM_ERROR; break;
+		    case 'Q': type = VIM_QUESTION; break;
+		    case 'I': type = VIM_INFO; break;
+		    case 'W': type = VIM_WARNING; break;
+		    case 'G': type = VIM_GENERIC; break;
+		}
 	    }
 	}
     }
+
+    if (buttons == NULL || *buttons == NUL)
+	buttons = (char_u *)_("&Ok");
 
     retvar->var_val.var_number = do_dialog(type, NULL, message, buttons,
 								   def, NULL);

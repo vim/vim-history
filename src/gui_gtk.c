@@ -1386,15 +1386,18 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 
     vim_free(names);
 
-    --butcount;
-    --def_but;		/* 1 is first button */
-    if (def_but < 0)
-	def_but = 0;
-    if (def_but > butcount)
-	def_but = butcount;
+    if (butcount > 0)
+    {
+	--def_but;		/* 1 is first button */
+	if (def_but < 0)
+	    def_but = 0;
+	if (def_but >= butcount)
+	    def_but = butcount - 1;
 
-    gtk_widget_grab_focus(button[def_but]);
-    gtk_widget_grab_default(button[def_but]);
+	gtk_widget_grab_focus(button[def_but]);
+	gtk_widget_grab_default(button[def_but]);
+    }
+
     if (textfield != NULL)
 	gtk_window_set_focus(GTK_WINDOW(dialog), dialog_textentry);
 
