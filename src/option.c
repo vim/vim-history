@@ -292,6 +292,7 @@ struct vimoption
 
 #define P_SECURE	0x40000L/* cannot change in modeline or secure mode */
 #define P_GETTEXT	0x80000L/* expand default value with _() */
+#define P_NOGLOB       0x100000L/* do not use local value for global vimrc */
 
 /*
  * options[] is initialized here.
@@ -479,7 +480,7 @@ static struct vimoption
 			    {(char_u *)0L, (char_u *)0L}
 #endif
 			    },
-    {"bufhidden",   "bh",   P_STRING|P_ALLOCED|P_VI_DEF,
+    {"bufhidden",   "bh",   P_STRING|P_ALLOCED|P_VI_DEF|P_NOGLOB,
 #if defined(FEAT_QUICKFIX)
 			    (char_u *)&p_bh, PV_BH,
 			    {(char_u *)"", (char_u *)0L}
@@ -488,11 +489,11 @@ static struct vimoption
 			    {(char_u *)0L, (char_u *)0L}
 #endif
 			    },
-    {"buflisted",   "bl",   P_BOOL|P_VI_DEF,
+    {"buflisted",   "bl",   P_BOOL|P_VI_DEF|P_NOGLOB,
 			    (char_u *)&p_bl, PV_BL,
 			    {(char_u *)1L, (char_u *)0L}
 			    },
-    {"buftype",	    "bt",   P_STRING|P_ALLOCED|P_VI_DEF,
+    {"buftype",	    "bt",   P_STRING|P_ALLOCED|P_VI_DEF|P_NOGLOB,
 #if defined(FEAT_QUICKFIX)
 			    (char_u *)&p_bt, PV_BT,
 			    {(char_u *)"", (char_u *)0L}
@@ -716,7 +717,7 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)"", (char_u *)0L}},
-    {"diff",	    NULL,   P_BOOL|P_VI_DEF|P_RWIN,
+    {"diff",	    NULL,   P_BOOL|P_VI_DEF|P_RWIN|P_NOGLOB,
 #ifdef FEAT_DIFF
 			    (char_u *)VAR_WIN, PV_DIFF,
 #else
@@ -845,7 +846,7 @@ static struct vimoption
     {"fileformats", "ffs",  P_STRING|P_VIM|P_COMMA|P_NODUP,
 			    (char_u *)&p_ffs, PV_NONE,
 			    {(char_u *)DFLT_FFS_VI, (char_u *)DFLT_FFS_VIM}},
-    {"filetype",    "ft",   P_STRING|P_ALLOCED|P_VI_DEF,
+    {"filetype",    "ft",   P_STRING|P_ALLOCED|P_VI_DEF|P_NOGLOB,
 #ifdef FEAT_AUTOCMD
 			    (char_u *)&p_ft, PV_FT,
 			    {(char_u *)"", (char_u *)0L}
@@ -1462,7 +1463,7 @@ static struct vimoption
     {"modelines",   "mls",  P_NUM|P_VI_DEF,
 			    (char_u *)&p_mls, PV_NONE,
 			    {(char_u *)5L, (char_u *)0L}},
-    {"modifiable",  "ma",   P_BOOL|P_VI_DEF,
+    {"modifiable",  "ma",   P_BOOL|P_VI_DEF|P_NOGLOB,
 			    (char_u *)&p_ma, PV_MA,
 			    {(char_u *)TRUE, (char_u *)0L}},
     {"modified",    "mod",  P_BOOL|P_NO_MKRC|P_VI_DEF|P_RSTAT,
@@ -1587,7 +1588,7 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)12L, (char_u *)0L}},
-    {"previewwindow", "pvw", P_BOOL|P_VI_DEF|P_RSTAT,
+    {"previewwindow", "pvw", P_BOOL|P_VI_DEF|P_RSTAT|P_NOGLOB,
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 			    (char_u *)VAR_WIN, PV_PVW,
 #else
@@ -1657,7 +1658,7 @@ static struct vimoption
     {"prompt",	    NULL,   P_BOOL|P_VI_DEF,
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
-    {"readonly",    "ro",   P_BOOL|P_VI_DEF|P_RSTAT,
+    {"readonly",    "ro",   P_BOOL|P_VI_DEF|P_RSTAT|P_NOGLOB,
 			    (char_u *)&p_ro, PV_RO,
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"redraw",	    NULL,   P_BOOL|P_VI_DEF,
@@ -1980,7 +1981,7 @@ static struct vimoption
     {"switchbuf",   "swb",  P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
 			    (char_u *)&p_swb, PV_NONE,
 			    {(char_u *)"", (char_u *)0L}},
-    {"syntax",	    "syn",  P_STRING|P_ALLOCED|P_VI_DEF,
+    {"syntax",	    "syn",  P_STRING|P_ALLOCED|P_VI_DEF|P_NOGLOB,
 #ifdef FEAT_SYN_HL
 			    (char_u *)&p_syn, PV_SYN,
 			    {(char_u *)"", (char_u *)0L}
@@ -7351,6 +7352,11 @@ makeset(fd, opt_flags, local_only)
 	{
 	    /* skip global option when only doing locals */
 	    if (p->indir == PV_NONE && !(opt_flags & OPT_GLOBAL))
+		continue;
+
+	    /* Do not store options like 'bufhidden' and 'syntax' in a vimrc
+	     * file, they are always buffer-specific. */
+	    if ((opt_flags & OPT_GLOBAL) && (p->flags & P_NOGLOB))
 		continue;
 
 	    /* Global values are only written when not at the default value. */
