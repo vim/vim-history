@@ -2918,6 +2918,13 @@ msg_show_console_dialog(message, buttons, dfltbutton)
 		    + 3;		/* for the ": " and NUL */
 	    lenhotkey++;		/* for the NUL */
 
+	    /* If no hotkey is specified first char is used. */
+	    if (!has_hotkey[0])
+	    {
+		first_hotkey = TRUE;
+		len += 2;		/* "x" -> "[x]" */
+	    }
+
 	    /*
 	     * Now allocate and load the strings
 	     */
@@ -2938,10 +2945,6 @@ msg_show_console_dialog(message, buttons, dfltbutton)
 
 	    /* define first default hotkey */
 	    (void)copy_char(buttons, hotkp, TRUE);
-
-	    /* If no hotkey is specified first char is used. */
-	    if (!has_hotkey[0])
-		first_hotkey = TRUE;
 
 	    /* Remember where the choices start, displaying starts here when
 	     * "hotkp" typed at the more prompt. */
