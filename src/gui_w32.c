@@ -1741,12 +1741,10 @@ gui_mch_draw_string(
 	vim_free(unicodebuf);
 	unicodebuf = (WCHAR *)alloc(len * sizeof(WCHAR));
 
-	vim_free(unicodepdy);
-	unicodepdy = (int *)alloc(len * sizeof(int) * 2);
-	if (unicodepdy == NULL)
+	if (os_version.dwPlatformId == VER_PLATFORM_WIN32_NT)
 	{
-	    vim_free(unicodebuf);
-	    unicodebuf = NULL;
+	    vim_free(unicodepdy);
+	    unicodepdy = (int *)alloc(len * sizeof(int) * 2);
 	}
 
 	unibuflen = len;
@@ -1764,13 +1762,19 @@ gui_mch_draw_string(
 	cells = 0;
 	/* Add ETO_PDY to make characters fit as we expect, even when the font
 	 * uses different widths (e.g., bold character is wider). */
-	foptions |= ETO_PDY;
+	if (unicodepdy != NULL)
+	    foptions |= ETO_PDY;
 	for (clen = 0; i < len; )
 	{
 	    unicodebuf[clen] = utf_ptr2char(text + i);
 	    cw = utf_char2cells(unicodebuf[clen]);
-	    unicodepdy[clen * 2] = cw * gui.char_width;
-	    unicodepdy[clen * 2 + 1] = 0;
+	    if (cw > 2)		/* don't use 4 for unprintable char */
+		cw = 1;
+	    if (unicodepdy != NULL)
+	    {
+		unicodepdy[clen * 2] = cw * gui.char_width;
+		unicodepdy[clen * 2 + 1] = 0;
+	    }
 	    cells += cw;
 	    i += utfc_ptr2len_check_len(text + i, len - i);
 	    ++clen;
