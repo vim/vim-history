@@ -204,7 +204,7 @@ msg_strtrunc(s)
 }
 
 /*
- * Truncate a string "s"  to "buf" with cell width "room".
+ * Truncate a string "s" to "buf" with cell width "room".
  * "s" and "buf" may be equal.
  */
     void
@@ -226,6 +226,12 @@ trunc_string(s, buf, room)
     /* First part: Start of the string. */
     for (e = 0; len < half; ++e)
     {
+	if (s[e] == NUL)
+	{
+	    /* text fits without truncating! */
+	    buf[e] = NUL;
+	    return;
+	}
 	n = ptr2cells(s + e);
 	if (len + n >= half)
 	    break;
