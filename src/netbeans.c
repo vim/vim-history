@@ -839,6 +839,7 @@ nb_reply_nil(int cmdno)
 
 /*
  * Send a response with text.
+ * "result" must have been quoted already (using nb_quote()).
  */
     static void
 nb_reply_text(int cmdno, char_u *result)
@@ -2136,7 +2137,7 @@ netbeans_file_opened(char *filename)
 
     sprintf(buffer, "0:fileOpened=%d \"%s\" %s %s\n",
 	    0,
-	    filename,
+	    nb_quote((char_u *)filename),
 	    "F",  /* open in NetBeans */
 	    "F"); /* modified */
 
@@ -2354,7 +2355,9 @@ netbeans_keycommand(int key)
     if (bufno == -1)
     {
 	nbdebug(("got keycommand for non-NetBeans buffer, opening...\n"));
-	sprintf(buf, "0:fileOpened=%d \"%s\" %s %s\n", 0, curbuf->b_ffname,
+	sprintf(buf, "0:fileOpened=%d \"%s\" %s %s\n", 0,
+		curbuf->b_ffname == NULL ? (char_u *)""
+						 : nb_quote(curbuf->b_ffname),
 		"T",  /* open in NetBeans */
 		"F"); /* modified */
 	nbdebug(("EVT: %s", buf));
