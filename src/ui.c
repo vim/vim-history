@@ -2726,6 +2726,13 @@ ui_focus_change(in_focus)
 	}
 	cursor_on();	    /* redrawing may have switched it off */
 	out_flush();
+# ifdef FEAT_GUI
+	if (gui.in_use)
+	{
+	    gui_update_cursor(FALSE, TRUE);
+	    gui_update_scrollbars(FALSE);
+	}
+# endif
     }
 }
 #endif
