@@ -928,6 +928,9 @@ qf_jump(dir, errornr, forceit)
     linenr_T		i;
     buf_T		*old_curbuf;
     linenr_T		old_lnum;
+    char_u		*old_swb = p_swb;
+    colnr_T		screen_col;
+    colnr_T		char_col;
     char_u		*line;
 #ifdef FEAT_WINDOWS
     int			opened_window = FALSE;
@@ -1048,6 +1051,7 @@ qf_jump(dir, errornr, forceit)
 	    if (win_split(0, WSP_ABOVE) == FAIL)
 		goto failed;		/* not enough room for window */
 	    opened_window = TRUE;	/* close it when fail */
+	    p_swb = empty_option;	/* don't split again */
 	}
 	else
 	{
@@ -1111,13 +1115,21 @@ qf_jump(dir, errornr, forceit)
 		/*
 		 * Check each character from the beginning of the error
 		 * line up to the error column.  For each tab character
-		 * found, reduce the error column value tabstop - 1
-		 * characters.
+		 * found, reduce the error column value by the length of
+		 * a tab character.
 		 */
 		line = ml_get_curline();
-		for (len = 0; len < (int)curwin->w_cursor.col; ++len)
-		    if (line[len] == '\t')
-			curwin->w_cursor.col -= (curwin->w_buffer->b_p_ts - 1);
+		screen_col = 0;
+		for (char_col = 0; char_col < curwin->w_cursor.col; ++char_col)
+		{
+		    if (*line++ == '\t')
+		    {
+			curwin->w_cursor.col -= 7 - (screen_col % 8);
+			screen_col += 8 - (screen_col % 8);
+		    }
+		    else
+			++screen_col;
+		}
 	    }
 	    check_cursor();
 	}
@@ -1177,6 +1189,17 @@ failed:
 theend:
     qf_lists[qf_curlist].qf_ptr = qf_ptr;
     qf_lists[qf_curlist].qf_index = qf_index;
+#ifdef FEAT_WINDOWS
+    if (p_swb != old_swb && opened_window)
+    {
+	/* Restore old 'switchbuf' value, but not when an autocommand or
+	 * modeline has changed the value. */
+	if (p_swb == empty_option)
+	    p_swb = old_swb;
+	else
+	    free_string_option(old_swb);
+    }
+#endif
 }
 
 /*

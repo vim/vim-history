@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0ak.  Last change: 2001 Jun 17
+*options.txt*   For Vim version 6.0al.  Last change: 2001 Jun 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -3312,6 +3312,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 						*'linespace'* *'lsp'*
 'linespace' 'lsp'	number	(default 0, 1 for Win32 GUI)
 			global
+			{not in Vi}
 			{only in the GUI}
 	Number of pixel lines inserted between characters.  Useful if the font
 	uses the full character cell height, making lines touch eachother.
@@ -3326,12 +3327,19 @@ A jump table for the options with a short description can be found at |Q_op|.
 	the next line to Lisp standards (well, sort of).  Also happens with
 	"cc" or "S".  'autoindent' must also be on for this to work.  The 'p'
 	flag in 'cpoptions' changes the method of indenting: Vi compatible or
-	better.
+	better.  Also see 'lispwords'.
 	The '-' character is included in keyword characters.  Redefines the
 	"=" operator to use this same indentation algorithm rather than
 	calling an external program if 'equalprg' is empty.
 	This option is not used when 'paste' is set.
 	{Vi: Does it a little bit differently}
+
+						*'lispwords'* *'lw'*
+'lispwords' 'lw'	string	(default is very long)
+			{not in Vi}
+			{not available when compiled without the |+lispindent|
+			feature}
+	Comma separated list of words that influence the Lisp indenting.
 
 						*'list'* *'nolist'*
 'list'			boolean	(default off)

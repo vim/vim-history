@@ -48,4 +48,5 @@ int sign_get_attr __ARGS((int typenr, int line));
 char_u *sign_get_text __ARGS((int typenr));
 void *sign_get_image __ARGS((int typenr));
 char_u *sign_typenr2name __ARGS((int typenr));
+void ex_drop __ARGS((exarg_T *eap));
 /* vim: set ft=c : */

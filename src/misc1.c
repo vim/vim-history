@@ -1541,9 +1541,13 @@ ins_char_bytes(buf, newlen)
 
 #ifdef FEAT_VIRTUALEDIT
     /* Break tabs if needed. */
-    if (virtual_active()
-	    && (chartabsize(ml_get_cursor(), curwin->w_cursor.col) > 1))
-	coladvance_force(getviscol());
+    if (virtual_active())
+    {
+	char_u *p = ml_get_cursor();
+
+	if (*p == NUL || (*p == TAB && (chartabsize(p, curwin->w_cursor.col) > 1)))
+	    coladvance_force(getviscol());
+    }
 #endif
 
     col = curwin->w_cursor.col;
@@ -5889,31 +5893,15 @@ static int lisp_match __ARGS((char_u *p));
 lisp_match(p)
     char_u	*p;
 {
-    static char *(tab[]) =
-    {	"defun", "define", "defmacro", "set!", "lambda", "if", "case", "let",
-	"flet", "let*", "letrec", "do", "do*", "define-syntax", "let-syntax",
-	"letrec-syntax",
-	/* the following taken from the indenting rules for cmucl's hemlock */
-	"destructuring-bind", "defpackage", "defparameter", "defstruct",
-	"deftype", "defvar", "do-all-symbols", "do-external-symbols",
-	"do-symbols", "dolist", "dotimes", "ecase", "etypecase", "eval-when",
-	"labels", "macrolet", "multiple-value-bind", "multiple-value-call",
-	"multiple-value-prog1", "multiple-value-setq", "prog1", "progv",
-	"typecase", "unless", "unwind-protect", "when",
-	"with-input-from-string", "with-open-file", "with-open-stream",
-	"with-output-to-string", "with-package-iterator", "define-condition",
-	"handler-bind", "handler-case", "restart-bind", "restart-case",
-	"with-simple-restart", "store-value", "use-value", "muffle-warning",
-	"abort", "continue", "with-slots", "with-slots*", "with-accessors",
-	"with-accessors*", "defclass", "defmethod", "print-unreadable-object"
-    };
-    int		i;
+    char_u	buf[LSIZE];
     int		len;
+    char_u	*word = p_lispwords;
 
-    for (i = 0; i < sizeof(tab) / sizeof(char *); ++i)
+    while (*word != NUL)
     {
-	len = (int)STRLEN(tab[i]);
-	if (STRNCMP(tab[i], p, len) == 0 && p[len] == ' ')
+	(void)copy_option_part(&word, buf, LSIZE, ",");
+	len = (int)STRLEN(buf);
+	if (STRNCMP(buf, p, len) == 0 && p[len] == ' ')
 	    return TRUE;
     }
     return FALSE;

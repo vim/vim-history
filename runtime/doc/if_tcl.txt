@@ -1,4 +1,4 @@
-*if_tcl.txt*    For Vim version 6.0ak.  Last change: 2001 May 12
+*if_tcl.txt*    For Vim version 6.0al.  Last change: 2001 Jun 24
 
 
 		  VIM REFERENCE MANUAL    by Ingo Wilken
@@ -67,6 +67,8 @@ Example: >
 
 Note that Tcl objects (like variables) persist from one command to the next,
 just as in the Tcl shell.
+
+Executing Tcl commands is not possible in the |sandbox|.
 
 ==============================================================================
 2. Tcl commands						*tcl-commands*

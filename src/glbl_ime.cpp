@@ -202,9 +202,7 @@ global_ime_status_evacuate()
 {
     HIMC    hImc;
 
-    if (pIApp == NULL)
-	return;
-    if (SUCCEEDED(pIApp->GetContext(s_hWnd, &hImc)))
+    if (pIApp != NULL && SUCCEEDED(pIApp->GetContext(s_hWnd, &hImc)))
     {
 	s_bStatus = (pIApp->GetOpenStatus(hImc) == 0) ? TRUE : FALSE;
 	pIApp->SetOpenStatus(hImc, FALSE);
@@ -220,9 +218,7 @@ global_ime_status_restore()
 {
     HIMC    hImc;
 
-    if (pIApp == NULL)
-	return;
-    if (SUCCEEDED(pIApp->GetContext(s_hWnd, &hImc)))
+    if (pIApp != NULL && SUCCEEDED(pIApp->GetContext(s_hWnd, &hImc)))
     {
 	pIApp->SetOpenStatus(hImc, s_bStatus);
 	pIApp->ReleaseContext(s_hWnd, hImc);
@@ -234,9 +230,9 @@ global_ime_set_status(int status)
 {
     HIMC    hImc;
 
-    if (pIApp && SUCCEEDED(pIApp->GetContext(s_hWnd, &hImc)))
+    if (pIApp != NULL && SUCCEEDED(pIApp->GetContext(s_hWnd, &hImc)))
     {
-	pIApp->GetOpenStatus(hImc, status ? TRUE : FALSE);
+	pIApp->SetOpenStatus(hImc, status ? TRUE : FALSE);
 	pIApp->ReleaseContext(s_hWnd, hImc);
     }
 }
@@ -247,7 +243,7 @@ global_ime_get_status()
     int status = 0;
     HIMC    hImc;
 
-    if (pIApp && SUCCEEDED(pIApp->GetContext(s_hWnd, &hImc)))
+    if (pIApp != NULL && SUCCEEDED(pIApp->GetContext(s_hWnd, &hImc)))
     {
 	status = pIApp->GetOpenStatus(hImc) ? 1 : 0;
 	pIApp->ReleaseContext(s_hWnd, hImc);

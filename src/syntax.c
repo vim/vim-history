@@ -85,14 +85,14 @@ static int hl_has_settings __ARGS((int idx, int check_link));
 static void highlight_clear __ARGS((int idx));
 
 #ifdef FEAT_GUI
-static void gui_do_one_color __ARGS((int idx, int do_menu));
-static int  set_group_colors __ARGS((char_u *name, guicolor_T *fgp, guicolor_T *bgp, int do_menu, int use_norm));
+static void gui_do_one_color __ARGS((int idx, int do_menu, int do_tooltip));
+static int  set_group_colors __ARGS((char_u *name, guicolor_T *fgp, guicolor_T *bgp, int do_menu, int use_norm, int do_tooltip));
 static guicolor_T color_name2handle __ARGS((char_u *name));
 static GuiFont font_name2handle __ARGS((char_u *name));
 # ifdef FEAT_XFONTSET
 static GuiFontset fontset_name2handle __ARGS((char_u *name));
 # endif
-static void hl_do_font __ARGS((int idx, char_u *arg, int do_normal, int do_menu));
+static void hl_do_font __ARGS((int idx, char_u *arg, int do_normal, int do_menu, int do_tooltip));
 #endif
 
 /*
@@ -5928,8 +5928,10 @@ do_highlight(line, forceit, init)
 #ifdef FEAT_GUI_X11
     int		is_menu_group = FALSE;		/* "Menu" group */
     int		is_scrollbar_group = FALSE;	/* "Scrollbar" group */
+    int		is_tooltip_group = FALSE;	/* "Tooltip" group */
 #else
 # define is_menu_group 0
+# define is_tooltip_group 0
 #endif
 
     /*
@@ -6099,6 +6101,8 @@ do_highlight(line, forceit, init)
 	is_menu_group = TRUE;
     else if (STRCMP(HL_TABLE()[idx].sg_name_u, "SCROLLBAR") == 0)
 	is_scrollbar_group = TRUE;
+    else if (STRCMP(HL_TABLE()[idx].sg_name_u, "TOOLTIP") == 0)
+	is_tooltip_group = TRUE;
 #endif
 
     /* Clear the highlighting for ":hi clear {group}" and ":hi clear". */
@@ -6276,7 +6280,8 @@ do_highlight(line, forceit, init)
 # ifdef FEAT_XFONTSET
 		HL_TABLE()[idx].sg_fontset = NOFONTSET;
 # endif
-		hl_do_font(idx, arg, is_normal_group, is_menu_group);
+		hl_do_font(idx, arg, is_normal_group, is_menu_group,
+							    is_tooltip_group);
 
 # ifdef FEAT_XFONTSET
 		if (HL_TABLE()[idx].sg_fontset != NOFONTSET)
@@ -6499,6 +6504,10 @@ do_highlight(line, forceit, init)
 		    gui.menu_fg_pixel = i - 1;
 		if (is_scrollbar_group)
 		    gui.scroll_fg_pixel = i - 1;
+#  if (defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF)) && defined(FEAT_BEVAL)
+		if (is_tooltip_group)
+		    gui.balloonEval_fg_pixel = i - 1;
+#  endif
 # endif
 	    }
 	  }
@@ -6527,6 +6536,10 @@ do_highlight(line, forceit, init)
 		    gui.menu_bg_pixel = i - 1;
 		if (is_scrollbar_group)
 		    gui.scroll_bg_pixel = i - 1;
+#  if (defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF)) && defined(FEAT_BEVAL)
+		if (is_tooltip_group)
+		    gui.balloonEval_bg_pixel = i - 1;
+#  endif
 # endif
 	    }
 	  }
@@ -6664,6 +6677,13 @@ do_highlight(line, forceit, init)
 	    if (gui.in_use)
 		gui_new_scrollbar_colors();
 	}
+# ifdef FEAT_MENU
+	else if (is_tooltip_group)
+	{
+	    if (gui.in_use)
+		gui_mch_new_tooltip_colors();
+	}
+# endif
 #endif
 	else
 	    set_hl_attr(idx);
@@ -6753,28 +6773,43 @@ highlight_clear(idx)
 #ifdef FEAT_GUI
 /*
  * Set the normal foreground and background colors according to the "Normal"
- * highlighighting group.  For X11 also set "Menu" and "Scrollbar" colors.
+ * highlighighting group.  For X11 also set "Menu", "Scrollbar", and
+ * "Tooltip" colors.
  */
     void
 set_normal_colors()
 {
     if (set_group_colors((char_u *)"Normal",
-			       &gui.norm_pixel, &gui.back_pixel, FALSE, TRUE))
+			       &gui.norm_pixel, &gui.back_pixel, FALSE, TRUE,
+			       FALSE))
     {
 	gui_mch_new_colors();
 	must_redraw = CLEAR;
     }
 #ifdef FEAT_GUI_X11
     if (set_group_colors((char_u *)"Menu",
-			 &gui.menu_fg_pixel, &gui.menu_bg_pixel, TRUE, FALSE))
+			 &gui.menu_fg_pixel, &gui.menu_bg_pixel, TRUE, FALSE,
+			 FALSE))
     {
 # ifdef FEAT_MENU
 	gui_mch_new_menu_colors();
 # endif
 	must_redraw = CLEAR;
     }
+# ifdef FEAT_BEVAL
+    if (set_group_colors((char_u *)"Tooltip",
+			 &gui.balloonEval_fg_pixel, &gui.balloonEval_bg_pixel,
+			 FALSE, FALSE, TRUE))
+    {
+# ifdef FEAT_TOOLBAR
+	gui_mch_new_tooltip_colors();
+# endif
+	must_redraw = CLEAR;
+    }
+#endif
     if (set_group_colors((char_u *)"Scrollbar",
-		    &gui.scroll_fg_pixel, &gui.scroll_bg_pixel, FALSE, FALSE))
+		    &gui.scroll_fg_pixel, &gui.scroll_bg_pixel, FALSE, FALSE,
+		    FALSE))
     {
 	gui_new_scrollbar_colors();
 	must_redraw = CLEAR;
@@ -6783,22 +6818,23 @@ set_normal_colors()
 }
 
 /*
- * Set the colors for "Normal", "Menu" or "Scrollbar".
+ * Set the colors for "Normal", "Menu", "Tooltip" or "Scrollbar".
  */
     static int
-set_group_colors(name, fgp, bgp, do_menu, use_norm)
+set_group_colors(name, fgp, bgp, do_menu, use_norm, do_tooltip)
     char_u	*name;
     guicolor_T	*fgp;
     guicolor_T	*bgp;
     int		do_menu;
     int		use_norm;
+    int		do_tooltip;
 {
     int		idx;
 
     idx = syn_name2id(name) - 1;
     if (idx >= 0)
     {
-	gui_do_one_color(idx, do_menu);
+	gui_do_one_color(idx, do_menu, do_tooltip);
 
 	if (HL_TABLE()[idx].sg_gui_fg > 0)
 	    *fgp = HL_TABLE()[idx].sg_gui_fg - 1;
@@ -6947,11 +6983,12 @@ fontset_name2handle(name)
  */
 /*ARGSUSED*/
     static void
-hl_do_font(idx, arg, do_normal, do_menu)
+hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
     int		idx;
     char_u	*arg;
     int		do_normal;	/* set normal font */
     int		do_menu;	/* set menu font */
+    int		do_tooltip;	/* set tooltip font */
 {
 # ifdef FEAT_XFONTSET
     /* If 'guifontset' is not empty, first try using the name as a
@@ -6969,6 +7006,16 @@ hl_do_font(idx, arg, do_normal, do_menu)
 	{
 	    gui.menu_font = HL_TABLE()[idx].sg_fontset;
 	    gui_mch_new_menu_font();
+	}
+	if (do_tooltip)
+	{
+# ifdef FEAT_GUI_MOTIF
+	    gui.balloonEval_fontList = gui_motif_create_fontlist_from_fontset(
+				    (XFontSet *)&HL_TABLE()[idx].sg_fontset);
+# else
+	    gui.balloonEval_fontList = (XFontSet)HL_TABLE()[idx].sg_fontset;
+# endif
+	    gui_mch_new_tooltip_font();
 	}
 #endif
     }
@@ -7720,21 +7767,23 @@ highlight_gui_started()
     set_normal_colors();
 
     for (idx = 0; idx < highlight_ga.ga_len; ++idx)
-	gui_do_one_color(idx, FALSE);
+	gui_do_one_color(idx, FALSE, FALSE);
 
     highlight_changed();
 }
 
     static void
-gui_do_one_color(idx, do_menu)
+gui_do_one_color(idx, do_menu, do_tooltip)
     int		idx;
     int		do_menu;	/* TRUE: might set the menu font */
+    int		do_tooltip;	/* TRUE: might set the tooltip font */
 {
     int		didit = FALSE;
 
     if (HL_TABLE()[idx].sg_font_name != NULL)
     {
-	hl_do_font(idx, HL_TABLE()[idx].sg_font_name, FALSE, do_menu);
+	hl_do_font(idx, HL_TABLE()[idx].sg_font_name, FALSE, do_menu,
+		   do_tooltip);
 	didit = TRUE;
     }
     if (HL_TABLE()[idx].sg_gui_fg_name != NULL)

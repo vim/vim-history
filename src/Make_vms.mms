@@ -2,7 +2,7 @@
 # Makefile for Vim on OpenVMS
 #
 # Maintainer:   Zoltan Arpadffy <arpadffy@altavista.net>
-# Last change:  2001 May 23
+# Last change:  2001 Jun 18
 #
 # This has script been tested on VMS 6.2 to 7.2 on DEC Alpha and VAX
 # with MMS and MMK
@@ -186,14 +186,14 @@ ALL_LIBS = $(LIBS) $(GUI_LIB_DIR) $(X_LIB_DIR) $(GUI_LIB) $(X_LIB) $(EXTRA_LIB)\
 	   $(PERL_LIB) $(PYTHON_LIB) $(TCL_LIB) $(SNIFF_LIB) $(RUBY_LIB) 
 
 SRC =	buffer.c charset.c diff.c digraph.c edit.c eval.c ex_cmds.c ex_cmds2.c ex_docmd.c \
-	ex_getln.c fileio.c fold.c getchar.c main.c mark.c menu.c mbyte.c \
+	ex_getln.c if_xcmdsrv.c fileio.c fold.c getchar.c main.c mark.c menu.c mbyte.c \
 	memfile.c memline.c message.c misc1.c misc2.c move.c normal.c ops.c option.c \
 	pty.c quickfix.c regexp.c search.c syntax.c tag.c term.c termlib.c \
 	ui.c undo.c version.c screen.c window.c os_unix.c os_vms.c pathdef.c \
 	$(GUI_SRC) $(PERL_SRC) $(PYTHON_SRC) $(TCL_SRC) $(SNIFF_SRC) $(RUBY_SRC) $(HANGULIN_SRC)
 
 OBJ =	buffer.obj charset.obj diff.obj digraph.obj edit.obj eval.obj ex_cmds.obj ex_cmds2.obj \
-	ex_docmd.obj ex_getln.obj fileio.obj fold.obj getchar.obj \
+	ex_docmd.obj ex_getln.obj if_xcmdsrv.obj fileio.obj fold.obj getchar.obj \
 	main.obj mark.obj menu.obj memfile.obj memline.obj message.obj misc1.obj \
 	misc2.obj move.obj mbyte.obj normal.obj ops.obj option.obj pty.obj quickfix.obj \
 	regexp.obj search.obj syntax.obj tag.obj term.obj termlib.obj ui.obj \

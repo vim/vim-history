@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.0ak.  Last change: 2001 Jun 16
+*gui_x11.txt*   For Vim version 6.0al.  Last change: 2001 Jun 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -522,14 +522,20 @@ servers on the standard output (stdout) and exit.
 
 Commands
 --------
-					*:servers* *:serversend* *E240* *E241*
-:servers[end] {name} {keys}	Send {keys} to the Vim instance named {name}
-				That may be ourselves.
-
 							*:ser* *:serverlist*
 :ser[verlist]		    	Print a list of command servers. The local
 				name (if any) is marked with a '>' in the
 				first column.
+
+					*:servers* *:serversend* *E240* *E241*
+:servers[end] {name} {keys}	Send {keys} to the Vim instance named {name}
+				That may be ourselves (not very useful though).
+				Example: >
+
+				    :serversend gvim :drop version.c^M
+<
+				This edits the file "version.c" in the server
+				"gvim".  The ^M is typed as CTRL-V <CR>.
 
 See also the explanation of |CTRL-\_CTRL-N|.  Very useful as a leading key
 sequence.

@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Feb 28
+" Last Change:	2001 Jun 18
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -19,3 +19,8 @@ setlocal fo-=t fo+=croql
 
 " Set 'comments' to format dashed lists in comments.
 setlocal comments=sO:*\ -,mO:*\ \ ,exO:*/,s1:/*,mb:*,ex:*/,://
+
+" In VMS C keywords contain '$' characters.
+if has("vms")
+  setlocal iskeyword+=$
+endif

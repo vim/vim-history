@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0ak.  Last change: 2001 Jun 17
+*version6.txt*  For Vim version 6.0al.  Last change: 2001 Jun 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1060,6 +1060,8 @@ Options: ~
 'debug'		When set to "msg" it will print error messages that would
 		otherwise be omitted.  Useful for debugging 'indentexpr' and
 		'foldexpr'.
+'lispwords'	List of words used for lisp indenting.  It was previously hard
+		coded.
 'fold...'	Many new options for folding.
 'modifiable'	When off, it is impossible to make changes to a buffer.
 		The %m and %M items in 'statusline' show a '-'.
@@ -1289,6 +1291,9 @@ Merz)
 Added ":filetype detect".  Try detecting the filetype again.  Helps when
 writing a new shell script, after adding "#!/bin/csh".
 
+Added "vimtutor.bat": script to start Vim on a copy of the tutor file. (Dan
+Sharp)
+
 ==============================================================================
 IMPROVEMENTS						*improvements-6*
 
@@ -1400,6 +1405,9 @@ Security:
 - 'makeef' can be empty, which means that an internally generated file name is
   used.  The old default was "/tmp/file", which is a security risk.
 - The command from a tags file is executed in the sandbox for better security.
+- The Ruby, Tcl and Python interfaces cannot be used from the sandbox.  They
+  might do dangerous things.  Perl is still possible, but limited to the Safe
+  environment. (Donnie Smith)
 
 Reduced the amount of stack space used by regmatch() to allow it to handle
 complicated patterns on a longer text.
@@ -1493,8 +1501,10 @@ GUI:
   or deleted.  The Win32 dialog allows deleting and renaming files.
 - Motif and Athena: Added support for "editres". (Martin Dalecki)
 - Motif and Athena: Added "menuFont" to be able to specify a font or fontset
-  for the menus.  Useful when the locale is different from 'encoding'. (David
-  Harrison)
+  for the menus.  Can also be set with the "Menu" highlight group.  Useful
+  when the locale is different from 'encoding'. (David Harrison)
+- Highlighting and font for the tooltips can be specified with the "Tooltip"
+  highlight group. (David Harrison)
 - The Cmdline-mode menus can be used at the more-prompt.  This mostly works
   fine, because they start with a CTRL-C.  The "Copy" menu works to copy the
   modeless selection.  Allows copying the output of ":set all" or ":intro"
@@ -1575,6 +1585,7 @@ VMS:
 - Command line arguments are always uppercase.  Interpret a "-X" argument as
   "-x" and "-/X" as "-X".
 - Set 'makeprg' and 'grepprg' to meaningful defaults. (Zoltan Arpadffy)
+- Use the X-clipboard feature and the X command server. (Zoltan Arpadffy)
 
 Options:
 - When using set += or ^= , check for strings used twice.  Duplicates are
@@ -1791,6 +1802,9 @@ Motif: (Martin Dalecki)
 - For the menus, change "iso-8859" to "iso_8859", Linux appears to need this.
 - Added icon to dialogs, like for GTK.
 - Use XPM bitmaps for the icon when possible.
+- Change the shadow of the toolbar items to get a visual feedback of it being
+  pressed on non-LessTiff.
+- Use gadgets instead of windows for some items for speed.
 
 Sniff interface: (Anton Leherbauer)
 - fixed windows code, esp. the event handling stuff
@@ -1802,6 +1816,10 @@ key is used.
 
 ":find" accepts a count, which means that the count'th match in 'path' is
 used.
+
+":ls" and ":buffers" output shows modified/readonly/modifiable flag.  When a
+buffer is loaded, show "l" instead of nothing.  When a buffer isn't loaded
+show nothing instead of "-".
 
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
@@ -2724,5 +2742,14 @@ do this when w_curswant is MAXCOL.
 
 Win32: When the gvim window was maximized and selecting another font, the
 window would no longer fill the screen.
+
+The line with 'pastetoggle' in ":options" didn't show the right value when it
+is a special key.  Hitting <CR> didn't work either.
+
+Formatting text, resulting in a % landing in the first line, repeated the % in
+the following lines, like it's the start of a comment.
+
+GTK: When adding a toolbar item while gvim is already running, it wasn't
+possible to use the tooltip.  Now it works by adding the tooltip first.
 
  vim:tw=78:

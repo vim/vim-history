@@ -1,4 +1,4 @@
-README_ami.txt for version 6.0ak of Vim: Vi IMproved.
+README_ami.txt for version 6.0al of Vim: Vi IMproved.
 
 This file explains the installation of Vim on Amiga systems.
 See README.txt for general information about Vim.

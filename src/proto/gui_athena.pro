@@ -8,6 +8,8 @@ void gui_mch_enable_menu __ARGS((int flag));
 void gui_mch_set_menu_pos __ARGS((int x, int y, int w, int h));
 void gui_mch_add_menu __ARGS((vimmenu_T *menu, int idx));
 void gui_mch_new_menu_font __ARGS((void));
+void gui_mch_new_tooltip_font __ARGS((void));
+void gui_mch_new_tooltip_colors __ARGS((void));
 void gui_mch_add_menu_item __ARGS((vimmenu_T *menu, int idx));
 void gui_mch_show_toolbar __ARGS((int showit));
 int gui_mch_compute_toolbar_height __ARGS((void));

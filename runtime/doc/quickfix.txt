@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0ak.  Last change: 2001 Jun 17
+*quickfix.txt*  For Vim version 6.0al.  Last change: 2001 Jun 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -213,8 +213,8 @@ Others are invalid.
 	%c		column number (finds a number representing character
 			column of the error, (1 <tab> == 1 character column))
 	%v		virtual column number (finds a number representing
-			screen column of the error (1 <tab> == |'tabstop'|
-			screen columns)
+			screen column of the error (1 <tab> == 8 screen
+			columns)
 	%t		error type (finds a single character)
 	%n		error number (finds a number)
 	%m		error message (finds a string)

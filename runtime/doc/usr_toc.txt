@@ -1,13 +1,13 @@
-*usr_toc.txt*	For Vim version 6.0ak.  Last change: 2001 Jun 15
+*usr_toc.txt*	For Vim version 6.0al.  Last change: 2001 Jun 22
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
 			      Table Of Contents			*user-manual*
 
 
-NOTE: The construction of the User Manual has only just started.  Much of it
-is still empty.  Over time bits from the reference manual will be moved to the
-user manual.  Parts from the Vim book and new text will be added.
+NOTE: The construction of the User Manual is not finished yet.  Some of it is
+still empty.  Bits from the reference manual will be moved to the user manual.
+Parts from the Vim book and new text will be added.
 
 ==============================================================================
 Overview ~
@@ -281,22 +281,29 @@ Make Vim work as you like it.
 		|41.9|	Writing a filetype plugin
 		|41.10|	Writing a compiler plugin
 
-|usr_42.txt|  Add new menus (chap 26)
-		add a toolbar item
-		tooltips (chap 26)
-		using :browse and :confirm
+|usr_42.txt|  Add new menus
+		|42.1|	Introduction
+		|42.2|	Menu commands
+		|42.3|	Various
+		|42.4|	Toolbar and popup menus
 
-|usr_43.txt|  Using filetypes
-		|43.1|  Settings for a filetype
+|usr_43.txt|  Automatic settings
+		|43.1|  Plugins for a filetype
 		|43.2|  Adding a filetype
-		|43.3|  Automatic commands
 
-|usr_44.txt|  Your own syntax highlighted (chap 30)
-		changing existing syntax
-		parts of a syntax file
-		items within a line
-		regions
-		synchronizing
+|usr_44.txt|  Your own syntax highlighted
+		|44.1|	Basic syntax commands
+		|44.2|	Keywords
+		|44.3|	Matches
+		|44.4|	Regions
+		|44.5|	Nested items
+		|44.6|	Following groups
+		|44.7|	Other arguments
+		|44.8|	Clusters
+		|44.9|	Including another syntax file
+		|44.10|	Synchronizing
+		|44.11|	Installing a syntax file 
+		|44.12|	Portable syntax file layout
 
 |usr_45.txt|  Select your language
 		(multi-lang features, menutrans, 'encoding', how to enter text

@@ -294,7 +294,7 @@ gui_athena_create_pullright_pixmap()
 	from.size = strlen(from.addr = XtDefaultFont);
 	if (XtConvertAndStore(menuBar, XtRString, &from, XtRFontStruct, &to)
 		== False)
-	    return NULL;
+	    return None;
 	font = *(XFontStruct **)to.addr;
     }
     else
@@ -480,7 +480,8 @@ gui_mch_set_menu_pos(x, y, w, h)
 }
 
 /*
- * Used to calculate the insertion position of a widget with respect to its neighbors.
+ * Used to calculate the insertion position of a widget with respect to its
+ * neighbors.
  *
  * Valid range of return values is: 0 (beginning of children) to
  *                                  numChildren (end of children).
@@ -746,6 +747,26 @@ gui_mch_new_menu_font()
 }
 
 
+    void
+gui_mch_new_tooltip_font()
+{
+    if (toolBar == (Widget)0)
+	return;
+
+    gui_mch_submenu_change(root_menu, FALSE);
+}
+
+
+    void
+gui_mch_new_tooltip_colors()
+{
+    if (toolBar == (Widget)0)
+	return;
+
+    gui_mch_submenu_change(root_menu, TRUE);
+}
+
+
     static void
 gui_mch_submenu_change(menu, colors)
     vimmenu_T	*menu;
@@ -770,10 +791,40 @@ gui_mch_submenu_change(menu, colors)
 		    if (mp->image != (Pixmap)0)
 			XtVaSetValues(mp->id, XtNbitmap, mp->image, NULL);
 		}
+
+# ifdef FEAT_BEVAL
+		/* If we have a tooltip, then we need to change it's font */
+		if (mp->tip != NULL)
+		{
+		    Arg args[2];
+
+		    args[0].name = XtNbackground;
+		    args[0].value = gui.balloonEval_bg_pixel;
+		    args[1].name = XtNforeground;
+		    args[1].value = gui.balloonEval_fg_pixel;
+		    XtSetValues(mp->tip->balloonLabel,
+				&args[0], XtNumber(args));
+		}
+# endif
 #endif
 	    }
 	    else
+	    {
 		gui_athena_menu_font(mp->id);
+
+#ifdef FEAT_BEVAL
+		/* If we have a tooltip, then we need to change it's font */
+		if (mp->tip != NULL)
+		{
+		    Arg args[1];
+
+		    args[0].name = XtNfontSet;
+		    args[0].value = (XtArgVal)gui.balloonEval_fontList;
+		    XtSetValues(mp->tip->balloonLabel,
+				&args[0], XtNumber(args));
+		}
+#endif
+	    }
 	}
 
 	if (mp->children != NULL)
@@ -1454,6 +1505,12 @@ gui_mch_def_colors()
     gui.menu_bg_pixel = gui_mch_get_color((char_u *)gui.menu_bg_color);
     gui.scroll_fg_pixel = gui_mch_get_color((char_u *)gui.scroll_fg_color);
     gui.scroll_bg_pixel = gui_mch_get_color((char_u *)gui.scroll_bg_color);
+#ifdef FEAT_BEVAL
+    gui.balloonEval_fg_pixel = gui_mch_get_color(
+					(char_u *)gui.tooltip_fg_color);
+    gui.balloonEval_bg_pixel = gui_mch_get_color(
+					(char_u *)gui.tooltip_bg_color);
+#endif
 }
 
 

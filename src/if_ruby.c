@@ -32,11 +32,11 @@
  * use dll_* variables.
  */
 #ifdef DYNAMIC_RUBY
-#define rb_cFalseClass                  (*dll_rb_cFalseClass)
-#define rb_cFixnum                      (*dll_rb_cFixnum)
-#define rb_cNilClass                    (*dll_rb_cNilClass)
-#define rb_cSymbol                      (*dll_rb_cSymbol)
-#define rb_cTrueClass                   (*dll_rb_cTrueClass)
+# define rb_cFalseClass		(*dll_rb_cFalseClass)
+# define rb_cFixnum		(*dll_rb_cFixnum)
+# define rb_cNilClass		(*dll_rb_cNilClass)
+# define rb_cSymbol		(*dll_rb_cSymbol)
+# define rb_cTrueClass		(*dll_rb_cTrueClass)
 #endif
 
 #include <ruby.h>
@@ -49,6 +49,7 @@
 #if defined(PROTO) && !defined(FEAT_RUBY)
 /* Define these to be able to generate the function prototypes. */
 # define VALUE int
+# define RUBY_DATA_FUNC int
 #endif
 
 static int ruby_initialized = 0;
@@ -77,47 +78,47 @@ static void ruby_vim_init(void);
 /*
  * Wrapper defines
  */
-#define rb_assoc_new                    dll_rb_assoc_new
-#define rb_cObject                      (*dll_rb_cObject)
-#define rb_check_type                   dll_rb_check_type
-#define rb_class_path                   dll_rb_class_path
-#define rb_data_object_alloc            dll_rb_data_object_alloc
-#define rb_define_class_under           dll_rb_define_class_under
-#define rb_define_const                 dll_rb_define_const
-#define rb_define_global_function       dll_rb_define_global_function
-#define rb_define_method                dll_rb_define_method
-#define rb_define_module                dll_rb_define_module
-#define rb_define_module_function       dll_rb_define_module_function
-#define rb_define_singleton_method      dll_rb_define_singleton_method
-#define rb_define_virtual_variable      dll_rb_define_virtual_variable
-#define rb_defout                       (*dll_rb_defout)
-#define rb_eArgError                    (*dll_rb_eArgError)
-#define rb_eIndexError                  (*dll_rb_eIndexError)
-#define rb_eRuntimeError                (*dll_rb_eRuntimeError)
-#define rb_eStandardError               (*dll_rb_eStandardError)
-#define rb_eval_string_protect          dll_rb_eval_string_protect
-#define rb_global_variable              dll_rb_global_variable
-#define rb_hash_aset                    dll_rb_hash_aset
-#define rb_hash_new                     dll_rb_hash_new
-#define rb_inspect                      dll_rb_inspect
-#define rb_int2inum                     dll_rb_int2inum
-#define rb_lastline_get                 dll_rb_lastline_get
-#define rb_lastline_set                 dll_rb_lastline_set
-#define rb_load_protect                 dll_rb_load_protect
-#define rb_num2long                     dll_rb_num2long
-#define rb_num2ulong                    dll_rb_num2ulong
-#define rb_obj_alloc                    dll_rb_obj_alloc
-#define rb_obj_as_string                dll_rb_obj_as_string
-#define rb_obj_id                       dll_rb_obj_id
-#define rb_raise                        dll_rb_raise
-#define rb_str2cstr                     dll_rb_str2cstr
-#define rb_str_cat                      dll_rb_str_cat
-#define rb_str_concat                   dll_rb_str_concat
-#define rb_str_new                      dll_rb_str_new
-#define rb_str_new2                     dll_rb_str_new2
-#define ruby_errinfo                    (*dll_ruby_errinfo)
-#define ruby_init                       dll_ruby_init
-#define ruby_init_loadpath              dll_ruby_init_loadpath
+#define rb_assoc_new			dll_rb_assoc_new
+#define rb_cObject			(*dll_rb_cObject)
+#define rb_check_type			dll_rb_check_type
+#define rb_class_path			dll_rb_class_path
+#define rb_data_object_alloc		dll_rb_data_object_alloc
+#define rb_define_class_under		dll_rb_define_class_under
+#define rb_define_const			dll_rb_define_const
+#define rb_define_global_function	dll_rb_define_global_function
+#define rb_define_method		dll_rb_define_method
+#define rb_define_module		dll_rb_define_module
+#define rb_define_module_function	dll_rb_define_module_function
+#define rb_define_singleton_method	dll_rb_define_singleton_method
+#define rb_define_virtual_variable	dll_rb_define_virtual_variable
+#define rb_defout			(*dll_rb_defout)
+#define rb_eArgError			(*dll_rb_eArgError)
+#define rb_eIndexError			(*dll_rb_eIndexError)
+#define rb_eRuntimeError		(*dll_rb_eRuntimeError)
+#define rb_eStandardError		(*dll_rb_eStandardError)
+#define rb_eval_string_protect		dll_rb_eval_string_protect
+#define rb_global_variable		dll_rb_global_variable
+#define rb_hash_aset			dll_rb_hash_aset
+#define rb_hash_new			dll_rb_hash_new
+#define rb_inspect			dll_rb_inspect
+#define rb_int2inum			dll_rb_int2inum
+#define rb_lastline_get			dll_rb_lastline_get
+#define rb_lastline_set			dll_rb_lastline_set
+#define rb_load_protect			dll_rb_load_protect
+#define rb_num2long			dll_rb_num2long
+#define rb_num2ulong			dll_rb_num2ulong
+#define rb_obj_alloc			dll_rb_obj_alloc
+#define rb_obj_as_string		dll_rb_obj_as_string
+#define rb_obj_id			dll_rb_obj_id
+#define rb_raise			dll_rb_raise
+#define rb_str2cstr			dll_rb_str2cstr
+#define rb_str_cat			dll_rb_str_cat
+#define rb_str_concat			dll_rb_str_concat
+#define rb_str_new			dll_rb_str_new
+#define rb_str_new2			dll_rb_str_new2
+#define ruby_errinfo			(*dll_ruby_errinfo)
+#define ruby_init			dll_ruby_init
+#define ruby_init_loadpath		dll_ruby_init_loadpath
 
 /*
  * Pointers for dynamic link
@@ -131,7 +132,7 @@ static VALUE *dll_rb_cSymbol;
 static VALUE *dll_rb_cTrueClass;
 static void (*dll_rb_check_type) (VALUE,int);
 static VALUE (*dll_rb_class_path) (VALUE);
-static VALUE (*dll_rb_data_object_alloc) (VALUE,void*,RUBY_DATA_FUNC,RUBY_DATA_FUNC);
+static VALUE (*dll_rb_data_object_alloc) (VALUE, void*, RUBY_DATA_FUNC, RUBY_DATA_FUNC);
 static VALUE (*dll_rb_define_class_under) (VALUE, const char*, VALUE);
 static void (*dll_rb_define_const) (VALUE,const char*,VALUE);
 static void (*dll_rb_define_global_function) (const char*,VALUE(*)(),int);

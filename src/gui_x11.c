@@ -47,12 +47,16 @@
 # define DFLT_MENU_FG_COLOR	"black"
 # define DFLT_SCROLL_BG_COLOR	"gray60"
 # define DFLT_SCROLL_FG_COLOR	"gray77"
+# define DFLT_TOOLTIP_BG_COLOR	"#ffffffff9191"
+# define DFLT_TOOLTIP_FG_COLOR	"black"
 #else
 /* use the default (CDE) colors */
 # define DFLT_MENU_BG_COLOR	""
 # define DFLT_MENU_FG_COLOR	""
 # define DFLT_SCROLL_BG_COLOR	""
 # define DFLT_SCROLL_FG_COLOR	""
+# define DFLT_TOOLTIP_BG_COLOR	"#ffffffff9191"
+# define DFLT_TOOLTIP_FG_COLOR	"black"
 #endif
 
 Widget vimShell = (Widget)0;
@@ -250,6 +254,12 @@ static struct specialkey
 #define XtNscrollForeground	"scrollForeground"
 #define XtCScrollForeground	"ScrollForeground"
 
+/* Resources for setting the foreground and background colors of tooltip */
+#define XtNtooltipBackground	"tooltipBackground"
+#define XtCTooltipBackground	"TooltipBackground"
+#define XtNtooltipForeground	"tooltipForeground"
+#define XtCTooltipForeground	"TooltipForeground"
+
 /*
  * X Resources:
  */
@@ -412,6 +422,24 @@ static XtResource vim_resources[] =
 	XtRString,
 	DFLT_SCROLL_BG_COLOR
     },
+    {
+	XtNtooltipForeground,
+	XtCTooltipForeground,
+	XtRString,
+	sizeof(char *),
+	XtOffsetOf(gui_T, tooltip_fg_color),
+	XtRString,
+	DFLT_TOOLTIP_FG_COLOR
+    },
+    {
+	XtNtooltipBackground,
+	XtCTooltipBackground,
+	XtRString,
+	sizeof(char *),
+	XtOffsetOf(gui_T, tooltip_bg_color),
+	XtRString,
+	DFLT_TOOLTIP_BG_COLOR
+    },
 #ifdef FEAT_XIM
     {
 	"preeditType",
@@ -449,7 +477,7 @@ static XtResource vim_resources[] =
 	sizeof(Pixel),
 	XtOffsetOf(gui_T, balloonEval_fg_pixel),
 	XtRString,
-	"#000000000000"
+	DFLT_TOOLTIP_FG_COLOR
     },
     {
 	XtNballoonEvalBackground,
@@ -458,7 +486,7 @@ static XtResource vim_resources[] =
 	sizeof(Pixel),
 	XtOffsetOf(gui_T, balloonEval_bg_pixel),
 	XtRString,
-	"#ffffffff9191"
+	DFLT_TOOLTIP_BG_COLOR
     },
 #ifdef FEAT_GUI_MOTIF
     {
@@ -473,9 +501,9 @@ static XtResource vim_resources[] =
 #elif defined(FEAT_GUI_ATHENA)
     {
 	XtNballoonEvalFontList,
-	XtCFont,
-	XtRFontStruct,
-	sizeof(XFontStruct *),
+	XtCFontSet,
+	XtRFontSet,
+	sizeof(XFontSet),
 	XtOffsetOf(gui_T, balloonEval_fontList),
 	XtRString,
 	"fixed"
@@ -1471,12 +1499,20 @@ gui_mch_open()
 #endif
 
 #ifdef FEAT_XCMDSRV
-    /*
-     * Cannot handle "widget-less" windows with XtProcessEvent() we'll
-     * have to change the "send" registration to that of the main window
-     * If we have not opened the send stuff yet, remember the window
-     */
-    serverChangeRegisteredWindow(gui.dpy, XtWindow(vimShell));
+    if (serverName == NULL && serverDelayedStartName != NULL)
+    {
+	/* This is a :gui command in a plain vim with no previous server */
+	serverRegisterName(gui.dpy, serverDelayedStartName);
+    }
+    else
+    {
+	/*
+	 * Cannot handle "widget-less" windows with XtProcessEvent() we'll
+	 * have to change the "server" registration to that of the main window
+	 * If we have not registered a name yet, remember the window
+	 */
+	serverChangeRegisteredWindow(gui.dpy, XtWindow(vimShell));
+    }
     XtAddEventHandler(vimShell, PropertyChangeMask, False,
 	              gui_x11_send_event_handler, NULL);
 #endif

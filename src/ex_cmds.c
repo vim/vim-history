@@ -3009,7 +3009,7 @@ ex_append(eap)
 	--lnum;
 
     State = INSERT;		    /* behave like in Insert mode */
-    if (curbuf->b_im_insert == B_IMODE_LMAP)
+    if (curbuf->b_p_iminsert == B_IMODE_LMAP)
 	State |= LANGMAP;
     while (1)
     {
@@ -5485,4 +5485,38 @@ sign_typenr2name(typenr)
     return (char_u *)_("[Deleted]");
 }
 
+#endif
+
+#if defined(FEAT_GUI) || defined(FEAT_XCMDSRV) || defined(PROTO)
+/*
+ * ":drop"
+ */
+    void
+ex_drop(eap)
+    exarg_T	*eap;
+{
+    int		split = FALSE;
+
+    /* Check whether the current buffer is changed. If so, we will need
+     * to split the current window or data could be lost.
+     * We don't need to check if the 'hidden' option is set, as in this
+     * case the buffer won't be lost.
+     */
+    if (!P_HID(curbuf))
+    {
+	++emsg_off;
+	split = check_changed(curbuf, TRUE, FALSE, FALSE, FALSE);
+	--emsg_off;
+    }
+
+    /* Fake a ":snext" or ":next" command. */
+    if (split)
+    {
+	eap->cmdidx = CMD_snext;
+	eap->cmd[0] = 's';
+    }
+    else
+	eap->cmdidx = CMD_next;
+    ex_next(eap);
+}
 #endif

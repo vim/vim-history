@@ -1,4 +1,4 @@
-*usr_40.txt*	For Vim version 6.0ak.  Last change: 2001 Jun 15
+*usr_40.txt*	For Vim version 6.0al.  Last change: 2001 Jun 20
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -257,15 +257,15 @@ The Vim editor enables you to define your own commands.  You execute these
 commands just like any other Command-line mode command.
    To define a command, use the ":command" command, as follows: >
    
-   	:command Delete_first 1delete
+   	:command DeleteFirst 1delete
 
-Now when you execute the command ":Delete_first" Vim excutes ":1delete", which
+Now when you execute the command ":DeleteFirst" Vim excutes ":1delete", which
 deletes the first line.
 
 	Note:
 	User-defined commands must start with a capital letter.  You cannot
-	use ":X", ":Next" and ":Print".  You can use digits, but this is
-	discouraged.
+	use ":X", ":Next" and ":Print".  The underscore cannot be used!  You
+	can use digits, but this is discouraged.
 	
 To list the user-defined commands, execute the following command: >
 
@@ -273,7 +273,7 @@ To list the user-defined commands, execute the following command: >
 
 To remove the definition of a user-defined command, use: >
 
-	:delcommand Delete_one
+	:delcommand DeleteFirst
 
 You can clear all user-defined commands with the following command: >
 
@@ -287,10 +287,11 @@ another.  Command line completion can be used to get the full name.
 NUMBER OF ARGUMENTS
 
 User-defined commands can take a series of arguments.  The number of arguments
-must be specified by the -nargs option.  For instance, the example :Delete_one
-command takes no arguments, so you could have defined it as follows: >
+must be specified by the -nargs option.  For instance, the example
+:DeleteFirst command takes no arguments, so you could have defined it as
+follows: >
 
-	:command Delete_first -nargs=0 1delete
+	:command -nargs=0 DeleteFirst 1delete
 
 However, because zero arguments is the default, you do not need to add
 "-nargs=0".  The other values of -nargs are as follows:

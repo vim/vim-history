@@ -830,9 +830,9 @@ struct file_buffer
 #endif
 
     /* flags for use of ":lmap" and IM control */
-    long	b_im_insert;	/* input mode for insert */
-    long	b_im_search;	/* input mode for search */
-#define B_IMODE_USE_INSERT -1	/*	Use b_im_insert value for search */
+    long	b_p_iminsert;	/* input mode for insert */
+    long	b_p_imsearch;	/* input mode for search */
+#define B_IMODE_USE_INSERT -1	/*	Use b_p_iminsert value for search */
 #define B_IMODE_NONE 0		/*	Input via none */
 #define B_IMODE_LMAP 1		/*	Input via langmap */
 #ifndef USE_IM_CONTROL

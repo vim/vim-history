@@ -217,10 +217,10 @@ getcmdline(firstc, count, indent)
     if (firstc == '/' || firstc == '?' || firstc == '@')
     {
 	/* Use ":lmap" mappings for search pattern and input(). */
-	if (curbuf->b_im_search == B_IMODE_USE_INSERT)
-	    b_im_ptr = &curbuf->b_im_insert;
+	if (curbuf->b_p_imsearch == B_IMODE_USE_INSERT)
+	    b_im_ptr = &curbuf->b_p_iminsert;
 	else
-	    b_im_ptr = &curbuf->b_im_search;
+	    b_im_ptr = &curbuf->b_p_imsearch;
 	if (*b_im_ptr == B_IMODE_LMAP)
 	    State |= LANGMAP;
 #ifdef USE_IM_CONTROL
@@ -806,7 +806,10 @@ getcmdline(firstc, count, indent)
 			*b_im_ptr = B_IMODE_LMAP;
 		    else
 			*b_im_ptr = B_IMODE_NONE;
-		    b_im_search_def = *b_im_ptr;
+		    if (b_im_ptr == &curbuf->b_p_iminsert)
+			set_iminsert_global();
+		    else
+			set_imsearch_global();
 		}
 		goto cmdline_not_changed;
 

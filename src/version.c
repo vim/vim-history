@@ -541,7 +541,7 @@ static char *(features[]) =
 #else
 	"-xim",
 #endif
-#ifdef UNIX
+#if defined(UNIX) || defined(VMS)
 # ifdef FEAT_XCMDSRV
 	"+xcmdsrv",
 # else

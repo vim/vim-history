@@ -514,6 +514,17 @@ VIM_init()
     sv = perl_get_sv(cb, TRUE);
     sv_magic(sv, NULL, 'U', (char *)&cb_funcs, sizeof(cb_funcs));
     SvREADONLY_on(sv);
+
+    /*
+     * Setup the Safe compartment.
+     * It shouldn't be a fatal error if the Safe module is missing.
+     * XXX: Only shares the 'Msg' routine (which has to be called
+     * like 'Msg(...)').
+     */
+    (void)perl_eval_pv( "if ( eval( 'require Safe' ) ) { $VIM::safe = Safe->new(); $VIM::safe->share_from( 'VIM', ['Msg'] ); }", G_DISCARD | G_VOID );
+
+    FREETMPS;
+    LEAVE;
 }
 
 #ifdef DYNAMIC_PERL
@@ -531,6 +542,7 @@ ex_perl(eap)
     char	*script;
     STRLEN	length;
     SV		*sv;
+    SV		*safe;
 
     if (!perl_interp)
     {
@@ -557,7 +569,23 @@ ex_perl(eap)
 	sv = newSVpv(script, 0);
 	vim_free(script);
     }
-    perl_eval_sv(sv, G_DISCARD | G_NOARGS);
+
+    if (sandbox)
+    {
+	if ((safe = perl_get_sv( "VIM::safe", FALSE )) == NULL || !SvTRUE(safe))
+	    EMSG(_("E123: Perl evaluation forbidden in sandbox without the Safe module"));
+	else
+	{
+	    PUSHMARK(SP);
+	    XPUSHs(safe);
+	    XPUSHs(sv);
+	    PUTBACK;
+	    perl_call_method("reval", G_DISCARD);
+	}
+    }
+    else
+	perl_eval_sv(sv, G_DISCARD | G_NOARGS);
+
     SvREFCNT_dec(sv);
 
     err = SvPV(GvSV(PL_errgv), length);

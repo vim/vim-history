@@ -1040,7 +1040,7 @@ static struct vimoption
     {"ignorecase",  "ic",   P_BOOL|P_VI_DEF,
 			    (char_u *)&p_ic, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
-    {"iminsert",    "imi",  P_NUM|P_VIM,
+    {"iminsert",    "imi",  P_NUM|P_VI_DEF,
 			    (char_u *)&p_iminsert, PV_IMI,
 #ifdef B_IMODE_IM
 			    {(char_u *)B_IMODE_IM, (char_u *)0L}
@@ -1048,7 +1048,7 @@ static struct vimoption
 			    {(char_u *)B_IMODE_NONE, (char_u *)0L}
 #endif
 			    },
-    {"imsearch",    "ims",  P_NUM|P_VIM,
+    {"imsearch",    "ims",  P_NUM|P_VI_DEF,
 			    (char_u *)&p_imsearch, PV_IMS,
 #ifdef B_IMODE_IM
 			    {(char_u *)B_IMODE_IM, (char_u *)0L}
@@ -1285,6 +1285,15 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)FALSE, (char_u *)0L}},
+    {"lispwords",   "lw",   P_STRING|P_VI_DEF,
+#ifdef FEAT_LISP
+			    (char_u *)&p_lispwords, PV_NONE,
+			    {(char_u *)LISPWORD_VALUE, (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)"", (char_u *)0L}
+#endif
+			    },
     {"list",	    NULL,   P_BOOL|P_VI_DEF|P_RWIN,
 			    (char_u *)VAR_WIN, PV_LIST,
 			    {(char_u *)FALSE, (char_u *)0L}},
@@ -5833,12 +5842,20 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	}
     }
 
-    else if ((long *)varp == &curbuf->b_im_insert)
+    /* 'shiftwidth' */
+    else if (pp == &curbuf->b_p_sw || pp == &curbuf->b_p_ts)
     {
-	if (curbuf->b_im_insert < 0 || curbuf->b_im_insert > B_IMODE_LAST)
+	if (foldmethodIsIndent(curwin))
+	    foldUpdateAll(curwin);
+    }
+#endif /* FEAT_FOLDING */
+
+    else if (pp == &curbuf->b_p_iminsert)
+    {
+	if (curbuf->b_p_iminsert < 0 || curbuf->b_p_iminsert > B_IMODE_LAST)
 	{
 	    errmsg = e_invarg;
-	    curbuf->b_im_insert = B_IMODE_NONE;
+	    curbuf->b_p_iminsert = B_IMODE_NONE;
 	}
 	showmode();
 #if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
@@ -5846,22 +5863,15 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	status_redraw_curbuf();
 #endif
     }
-    else if ((long *)varp == &curbuf->b_im_search)
+
+    else if (pp == &curbuf->b_p_imsearch)
     {
-	if (curbuf->b_im_search < -1 || curbuf->b_im_search > B_IMODE_LAST)
+	if (curbuf->b_p_imsearch < -1 || curbuf->b_p_imsearch > B_IMODE_LAST)
 	{
 	    errmsg = e_invarg;
-	    curbuf->b_im_search = B_IMODE_NONE;
+	    curbuf->b_p_imsearch = B_IMODE_NONE;
 	}
     }
-
-    /* 'shiftwidth' */
-    else if (pp == &curbuf->b_p_sw)
-    {
-	if (foldmethodIsIndent(curwin))
-	    foldUpdateAll(curwin);
-    }
-#endif
 
 #ifdef FEAT_TITLE
     /* if 'titlelen' has changed, redraw the title */
@@ -6939,8 +6949,8 @@ get_varp(p)
 	case PV_FT:	return (char_u *)&(curbuf->b_p_ft);
 #endif
 	case PV_FO:	return (char_u *)&(curbuf->b_p_fo);
-	case PV_IMI:	return (char_u *)&(curbuf->b_im_insert);
-	case PV_IMS:	return (char_u *)&(curbuf->b_im_search);
+	case PV_IMI:	return (char_u *)&(curbuf->b_p_iminsert);
+	case PV_IMS:	return (char_u *)&(curbuf->b_p_imsearch);
 	case PV_INF:	return (char_u *)&(curbuf->b_p_inf);
 	case PV_ISK:	return (char_u *)&(curbuf->b_p_isk);
 #ifdef FEAT_FIND_ID
@@ -6963,7 +6973,7 @@ get_varp(p)
 	case PV_MPS:	return (char_u *)&(curbuf->b_p_mps);
 	case PV_MA:	return (char_u *)&(curbuf->b_p_ma);
 	case PV_MOD:	return (char_u *)&(curbuf->b_changed);
-	case PV_NF:	return (char_u *)&(curbuf->b_p_nf);
+	case PV_NF>	return$(char_u *)&(curbuf->b_p_nf);
 #ifdef FEAT_OSFILETYPE
 	case PV_OFT:	return (char_u *)&(curbuf->b_p_oft);
 #endif
@@ -6974,7 +6984,7 @@ get_varp(p)
 #ifndef SHORT_FNAME
 	case PV_SN:	return (char_u *)&(curbuf->b_p_sn);
 #endif
-	case PV_STS:	return (char_u *)&(curbuf->b_p_sts);
+	case PV_STS:	return (char_u *)&(curfuf->b_p_sts);
 #ifdef FEAT_SEARCHPATH
 	case PV_SUA:	return (char_u *)&(curbuf->b_p_sua);
 #endif
@@ -7282,8 +7292,8 @@ buf_copy_options(buf, flags)
 #endif
 	    /* This isn't really an option, but copying the langmap and IME
 	     * state from the current buffer is better than resetting it. */
-	    buf->b_im_insert = b_im_insert_def;
-	    buf->b_im_search = b_im_search_def;
+	    buf->b_p_iminsert = p_iminsert;
+	    buf->b_p_imsearch = p_imsearch;
 
 	    /* options that are normally global but also have a local value
 	     * are not copied, start using the global value */
@@ -7333,6 +7343,24 @@ buf_copy_options(buf, flags)
     check_buf_options(buf);	    /* make sure we don't have NULLs */
     if (did_isk)
 	(void)buf_init_chartab(buf, FALSE);
+}
+
+/*
+ * Set the global value for 'iminsert' to the local value.
+ */
+    void
+set_iminsert_global()
+{
+    p_iminsert = curbuf->b_p_iminsert;
+}
+
+/*
+ * Set the global value for 'imsearch' to the local value.
+ */
+    void
+set_imsearch_global()
+{
+    p_imsearch = curbuf->b_p_imsearch;
 }
 
 #if defined(FEAT_CMDL_COMPL) || defined(PROTO)

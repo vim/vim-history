@@ -24,7 +24,9 @@
  * This code requires GTK version 1.1.16 or later.
  */
 
-#include "gui_gtk_f.h"
+#ifdef FEAT_GUI_GTK
+# include "gui_gtk_f.h"
+#endif
 
 #ifdef MIN
 # undef MIN
@@ -99,11 +101,24 @@
 #include "../pixmaps/tb_minwidth.xpm"
 #endif
 
-#include <gdk/gdkkeysyms.h>
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
+#ifdef FEAT_GUI_GTK
+# include <gdk/gdkkeysyms.h>
+# include <gdk/gdk.h>
+# include <gdk/gdkx.h>
 
-#include <gtk/gtk.h>
+# include <gtk/gtk.h>
+#else
+/* define these items to be able to generate prototypes without GTK */
+typedef int GtkWidget;
+# define gpointer int
+# define GdkPixmap int
+# define GdkBitmap int
+# define GtkToolbar int
+# define GtkAdjustment int
+# define gboolean int
+# define GdkEventKey int
+# define CancelData int
+#endif
 
 /*
  * Flags used to distinguish the different contexts in which the

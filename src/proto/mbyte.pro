@@ -69,7 +69,6 @@ int xim_queue_key_press_event __ARGS((GdkEvent *ev));
 void xim_init __ARGS((void));
 int xim_get_status_area_height __ARGS((void));
 int im_get_status __ARGS((void));
-int input_method_active __ARGS((void));
 void convert_setup __ARGS((vimconv_T *vcp, char_u *from, char_u *to));
 int convert_input __ARGS((char_u *ptr, int len, int maxlen));
 char_u *string_convert __ARGS((vimconv_T *vcp, char_u *ptr, int *lenp));

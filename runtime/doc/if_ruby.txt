@@ -1,4 +1,4 @@
-*if_ruby.txt*   For Vim version 6.0ak.  Last change: 2001 May 12
+*if_ruby.txt*   For Vim version 6.0al.  Last change: 2001 Jun 24
 
 
 		  VIM REFERENCE MANUAL    by Shugo Maeda
@@ -66,6 +66,8 @@ Example Vim script: >
 							*:rubyfile* *:rubyf*
 :rubyf[ile] {file}	Execute the Ruby script in {file}.  This is the same as
 			":ruby load 'file'", but allows file name completion.
+
+Executing Ruby commands is not possible in the |sandbox|.
 
 ==============================================================================
 2. The VIM module					*ruby-vim*

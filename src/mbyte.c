@@ -151,43 +151,47 @@ enc_canon_table[] =
     {"iso-8859-14",	ENC_8BIT,		0},
 #define IDX_ISO_15	14
     {"iso-8859-15",	ENC_8BIT,		0},
-#define IDX_UTF8	15
+#define IDX_KOI8_R	15
+    {"koi8-r",		ENC_8BIT,		0},
+#define IDX_KOI8_U	16
+    {"koi8-u",		ENC_8BIT,		0},
+#define IDX_UTF8	17
     {"utf-8",		ENC_UNICODE,		0},
-#define IDX_UCS2	16
+#define IDX_UCS2	18
     {"ucs-2",		ENC_UNICODE + ENC_ENDIAN_B + ENC_2BYTE, 0},
-#define IDX_UCS2LE	17
+#define IDX_UCS2LE	19
     {"ucs-2le",		ENC_UNICODE + ENC_ENDIAN_L + ENC_2BYTE, 0},
-#define IDX_UTF16	18
+#define IDX_UTF16	20
     {"utf-16",		ENC_UNICODE + ENC_ENDIAN_B + ENC_2WORD, 0},
-#define IDX_UTF16LE	19
+#define IDX_UTF16LE	21
     {"utf-16le",	ENC_UNICODE + ENC_ENDIAN_L + ENC_2WORD, 0},
-#define IDX_UCS4	20
+#define IDX_UCS4	22
     {"ucs-4",		ENC_UNICODE + ENC_ENDIAN_B + ENC_4BYTE, 0},
-#define IDX_UCS4LE	21
+#define IDX_UCS4LE	23
     {"ucs-4le",		ENC_UNICODE + ENC_ENDIAN_L + ENC_4BYTE, 0},
-#define IDX_DEBUG	22
+#define IDX_DEBUG	24
     {"debug",		ENC_DBCS,		DBCS_DEBUG},
-#define IDX_CP932	23
+#define IDX_CP932	25
     {"cp932",		ENC_DBCS,		DBCS_JPN},
-#define IDX_CP949	24
+#define IDX_CP949	26
     {"cp949",		ENC_DBCS,		DBCS_KOR},
-#define IDX_CP936	25
+#define IDX_CP936	27
     {"cp936",		ENC_DBCS,		DBCS_CHS},
-#define IDX_CP950	26
+#define IDX_CP950	28
     {"cp950",		ENC_DBCS,		DBCS_CHT},
-#define IDX_EUC_JP	27
+#define IDX_EUC_JP	29
     {"euc-jp",		ENC_DBCS,		DBCS_JPNU},
-#define IDX_SJIS	28
+#define IDX_SJIS	30
     {"sjis",		ENC_DBCS,		DBCS_JPN},
-#define IDX_EUC_KR	29
+#define IDX_EUC_KR	31
     {"euc-kr",		ENC_DBCS,		DBCS_KORU},
-#define IDX_EUC_CN	30
+#define IDX_EUC_CN	32
     {"euc-cn",		ENC_DBCS,		DBCS_CHSU},
-#define IDX_EUC_TW	31
+#define IDX_EUC_TW	33
     {"euc-tw",		ENC_DBCS,		DBCS_CHTU},
-#define IDX_BIG5	32
+#define IDX_BIG5	34
     {"big5",		ENC_DBCS,		DBCS_CHT},
-#define IDX_COUNT	33
+#define IDX_COUNT	35
 };
 
 /*
@@ -1720,23 +1724,33 @@ utf_isupper(a)
 
 /*
  * Version of strnicmp() that handles multi-byte characters.
- * Returns zero if s1 and s2 are equal (ignoring case), one otherwise.
+ * Only needed for Big5 and UTF-8 encoding.  Other DBCS encodings can use
+ * strnicmp(), because there are no ASCII characters in the second byte.
+ * Returns zero if s1 and s2 are equal (ignoring case), the difference between
+ * two characters otherwise.
  */
     int
 mb_strnicmp(s1, s2, n)
     char_u	*s1, *s2;
     int		n;
 {
-    int	i, l;
+    int		i, l;
+    int		cdiff;
 
-    for (i = 0; i < n && s1[i] != NUL; i += l)
+    for (i = 0; i < n; i += l)
     {
 	l = (*mb_ptr2len_check)(s1 + i);
-	if (l == 1)
+	if (l <= 1)
 	{
-	    /* single byte: ignore case. */
-	    if (s1[i] != s2[i] && TO_LOWER(s1[i]) != TO_LOWER(s2[i]))
-		return 1;
+	    /* Single byte: first check normally, then with ignore case. */
+	    if (s1[i] != s2[i])
+	    {
+		cdiff = TO_LOWER(s1[i]) - TO_LOWER(s2[i]);
+		if (cdiff != 0)
+		    return cdiff;
+	    }
+	    else if (s1[i] == NUL)
+		return 0;
 	}
 	else
 	{
@@ -1744,13 +1758,12 @@ mb_strnicmp(s1, s2, n)
 	    if (l > n - i)
 		l = n - i;
 	    if (enc_utf8)
-	    {
-		if (utf_fold(utf_ptr2char(s1 + i))
-					    != utf_fold(utf_ptr2char(s2 + i)))
-		    return 1;
-	    }
-	    else if (STRNCMP(s1 + i, s2 + i, l) != 0)
-		return 1;
+		cdiff = utf_fold(utf_ptr2char(s1 + i))
+					     - utf_fold(utf_ptr2char(s2 + i));
+	    else
+		cdiff =  STRNCMP(s1 + i, s2 + i, l);
+	    if (cdiff != 0)
+		return cdiff;
 	}
     }
     return 0;
@@ -2562,6 +2575,7 @@ iconv_end()
 static int	xim_is_active = FALSE;  /* XIM should be active in the current
 					   mode */
 static int	xim_has_focus = FALSE;	/* XIM is really being used for Vim */
+static int	xim_preediting INIT(= FALSE);	/* XIM in showmode() */
 #ifdef FEAT_GUI_X11
 static XIMStyle	input_style;
 static int	status_area_enabled = TRUE;
@@ -3594,13 +3608,7 @@ xim_get_status_area_height(void)
     int
 im_get_status()
 {
-    return input_method_active();
-}
-
-    int
-input_method_active()
-{
-    return (xim_preediting && xim_has_focus);
+    return xim_preediting;
 }
 
 #endif /* FEAT_XIM */

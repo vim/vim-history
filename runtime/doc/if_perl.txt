@@ -1,4 +1,4 @@
-*if_perl.txt*   For Vim version 6.0ak.  Last change: 2001 Apr 27
+*if_perl.txt*   For Vim version 6.0al.  Last change: 2001 Jun 24
 
 
 		  VIM REFERENCE MANUAL    by Sven Verdoolaege
@@ -85,7 +85,10 @@ Here are some things you can try: >
   :perldo $_ = reverse($_);1
   :perl VIM::Msg("hello")
   :perl $line = $curbuf->Get(42)
-<
+
+Executing Perl commands in the |sandbox| is limited.  ":perldo" will not be
+possible at all.  ":perl" will be evaluated in the Safe environment.
+
 
 							*perl-overview*
 Here is an overview of the functions that are available to Perl: >

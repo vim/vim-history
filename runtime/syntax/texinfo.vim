@@ -2,7 +2,7 @@
 " Language:	Texinfo (macro package for TeX)
 " Maintainer:	Sandor Kopanyi <sandor.kopanyi@mailbox.hu>
 " URL:		<->
-" Last Change:	2001 Apr 30
+" Last Change:	2001 Jun 20
 "
 " the file follows the Texinfo manual structure; this file is based
 " on manual for Texinfo version 4.0, 28 September 1999
@@ -296,8 +296,8 @@ syn region texinfoMltlnAtCmd  matchgroup=texinfoAtCmd start="^@ifnottex"        
 syn region texinfoMltlnAtCmd  matchgroup=texinfoAtCmd start="^@ifset"           end="^@end ifset\s*$"     contains=ALL
 syn region texinfoMltlnAtCmd  matchgroup=texinfoAtCmd start="^@iftex"           end="^@end iftex\s*$"     contains=ALL
 syn region texinfoPrmAtCmd    matchgroup=texinfoAtCmd start="^@set " skip="\\$" end="$" contains=texinfoSpecialChar oneline
-syn region texCommand                                 start="\$\$"              end="\$\$" contained
-syn region texinfoMltlnAtCmd  matchgroup=texinfoAtCmd start="^@tex"             end="^@end tex\s*$"         contains=texCommand
+syn region texinfoTexCmd                              start="\$\$"              end="\$\$" contained
+syn region texinfoMltlnAtCmd  matchgroup=texinfoAtCmd start="^@tex"             end="^@end tex\s*$"       contains=texinfoTexCmd
 syn region texinfoBrcPrmAtCmd matchgroup=texinfoAtCmd start="@value{"           end="}" contains=texinfoSpecialChar,texinfoBrcPrmAtCmd
 
 
@@ -377,7 +377,7 @@ if version >= 508 || !exists("did_texinfo_syn_inits")
   HiLink texinfoIndexPar	Identifier
   HiLink texinfoSIPar		Identifier
   HiLink texinfoDIEPar		Identifier
-  HiLink texCommand		PreProc
+  HiLink texinfoTexCmd		PreProc
 
 
   HiLink texinfoAtCmd		Statement	"@-command

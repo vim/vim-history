@@ -573,12 +573,42 @@ add_menu_path(menu_path, modes, pri_tab,
 	    menu->next = *lower_pri;
 	    *lower_pri = menu;
 
+	    old_modes = 0;
+
 #ifdef FEAT_GUI
 	    menu->iconidx = iconidx;
 	    menu->icon_builtin = icon_builtin;
 	    if (*next_name == NUL && icon != NULL)
 		menu->iconfile = vim_strsave(icon);
+#endif
+	}
+	else
+	{
+	    old_modes = menu->modes;
 
+	    /*
+	     * If this menu option was previously only available in other
+	     * modes, then make sure it's available for this one now
+	     * Also enable a menu when it's created or changed.
+	     */
+#ifdef FEAT_GUI_W32
+	    /* If adding a tearbar (addtearoff == FALSE) don't update modes */
+	    if (addtearoff)
+#endif
+	    {
+		menu->modes |= modes;
+		menu->enabled |= modes;
+	    }
+	}
+
+#ifdef FEAT_GUI
+	/*
+	 * Add the menu item when it's used in one of the modes, but not when
+	 * only a tooltip is defined.
+	 */
+	if ((old_modes & MENU_ALL_MODES) == 0
+		&& (menu->modes & MENU_ALL_MODES) != 0)
+	{
 	    if (gui.in_use)  /* Otherwise it will be added when GUI starts */
 	    {
 		if (*next_name == NUL)
@@ -595,9 +625,8 @@ add_menu_path(menu_path, modes, pri_tab,
 		    gui_mch_add_menu(menu, new_idx);
 		}
 	    }
-#endif
 
-#if defined(FEAT_GUI_W32) & defined(FEAT_TEAROFF)
+# if defined(FEAT_GUI_W32) & defined(FEAT_TEAROFF)
 	    /* When adding a new submenu, may add a tearoff item */
 	    if (	addtearoff
 		    && *next_name
@@ -626,37 +655,19 @@ add_menu_path(menu_path, modes, pri_tab,
 			    ++idx;
 			    ++s;
 			}
-#ifdef FEAT_MBYTE
+#  ifdef FEAT_MBYTE
 			if (has_mbyte)
 			    s += (*mb_ptr2len_check)(s) - 1;
-#endif
+#  endif
 		    }
 		    tearpath[idx] = NUL;
 		    gui_add_tearoff(tearpath, pri_tab, pri_idx);
 		    vim_free(tearpath);
 		}
 	    }
-#endif
-	    old_modes = 0;
+# endif
 	}
-	else
-	{
-	    old_modes = menu->modes;
-
-	    /*
-	     * If this menu option was previously only available in other
-	     * modes, then make sure it's available for this one now
-	     * Also enable a menu when it's created or changed.
-	     */
-#ifdef FEAT_GUI_W32
-	    /* If adding a tearbar (addtearoff == FALSE) don't update modes */
-	    if (addtearoff)
-#endif
-	    {
-		menu->modes |= modes;
-		menu->enabled |= modes;
-	    }
-	}
+#endif /* FEAT_GUI */
 
 	menup = &menu->children;
 	parent = menu;
