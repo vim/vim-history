@@ -2658,6 +2658,34 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     }
 #endif
 
+#ifdef FEAT_NETBEANS_INTG
+    if (usingNetbeans && isNetbeansBuffer(buf))
+    {
+	if (whole)
+	{
+	    if (buf->b_changed)
+	    {
+		netbeans_save_buffer(buf);
+		return retval;
+	    }
+	    else
+	    {
+		errnum = (char_u *)"E656: ";
+		errmsg = (char_u *)_("NetBeans dissallows writes of unmodified buffers");
+		buffer = NULL;
+		goto fail;
+	    }
+	}
+	else
+	{
+	    errnum = (char_u *)"E657: ";
+	    errmsg = (char_u *)_("Partial writes disallowed for NetBeans buffers");
+	    buffer = NULL;
+	    goto fail;
+	}
+    }
+#endif
+
     if (shortmess(SHM_OVER) && !exiting)
 	msg_scroll = FALSE;	    /* overwrite previous file message */
     else
@@ -3900,9 +3928,6 @@ restore_backup:
     {
 	unchanged(buf, TRUE);
 	u_unchanged(buf);
-#ifdef FEAT_NETBEANS_INTG
-	netbeans_saved(buf);
-#endif
     }
 
     /*

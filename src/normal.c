@@ -2473,6 +2473,18 @@ do_mouse(oap, c, dir, count, fixindent)
     in_sep_line = (jump_flags & IN_SEP_LINE);
 #endif
 
+#ifdef FEAT_NETBEANS_INTG
+    if (usingNetbeans && isNetbeansBuffer(curbuf)
+			    && !(jump_flags & (IN_STATUS_LINE | IN_SEP_LINE)))
+    {
+	int key = KEY2TERMCAP1(c);
+
+	if (key == (int)KE_LEFTRELEASE || key == (int)KE_MIDDLERELEASE
+					       || key == (int)KE_RIGHTRELEASE)
+	    netbeans_button_release(which_button);
+    }
+#endif
+
     /* When jumping to another window, clear a pending operator.  That's a bit
      * friendlier than beeping and not jumping to that window. */
     if (curwin != old_curwin && oap != NULL && oap->op_type != OP_NOP)
