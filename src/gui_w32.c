@@ -271,6 +271,23 @@ static void dyn_imm_load(void);
 # define ETO_IGNORELANGUAGE  0x1000
 #endif
 
+/* multi monitor support */
+typedef struct _MONITORINFOstruct
+{
+    DWORD cbSize;
+    RECT rcMonitor;
+    RECT rcWork;
+    DWORD dwFlags;
+} _MONITORINFO;
+
+typedef HANDLE _HMONITOR;
+typedef _HMONITOR (WINAPI *TMonitorFromWindow)(HWND, DWORD);
+typedef BOOL (WINAPI *TGetMonitorInfo)(_HMONITOR, _MONITORINFO *);
+
+static TMonitorFromWindow   pMonitorFromWindow = NULL;
+static TGetMonitorInfo	    pGetMonitorInfo = NULL;
+static HANDLE		    user32_lib = NULL;
+
 /*
  * Return TRUE when running under Windows NT 3.x or Win32s, both of which have
  * less fancy GUI APIs.
@@ -944,6 +961,19 @@ gui_mch_prepare(int *argc, char **argv)
     /* get the OS version info */
     os_version.dwOSVersionInfoSize = sizeof(os_version);
     GetVersionEx(&os_version); /* this call works on Win32s, Win95 and WinNT */
+
+    /* try and load the user32.dll library and get the entry points for
+     * multi-monitor-support. */
+    if ((user32_lib = LoadLibrary("User32.dll")) != NULL)
+    {
+        pMonitorFromWindow = (TMonitorFromWindow)GetProcAddress(user32_lib,
+							 "MonitorFromWindow");
+
+        /* there are ...A and ...W version of GetMonitorInfo - looking at
+         * winuser.h, they have exactly the same declaration. */
+        pGetMonitorInfo = (TGetMonitorInfo)GetProcAddress(user32_lib,
+                                                          "GetMonitorInfoA");
+    }
 }
 
 /*
@@ -1128,6 +1158,34 @@ gui_mch_init(void)
     return OK;
 }
 
+/*
+ * Get the size of the screen, taking position on multiple monitors into
+ * account (if supported).
+ */
+    static void
+get_work_area(RECT *spi_rect)
+{
+    _HMONITOR	    mon;
+    _MONITORINFO    moninfo;
+
+    /* use these functions only if available */
+    if (pMonitorFromWindow != NULL && pGetMonitorInfo != NULL)
+    {
+	/* work out which monitor the window is on, and get *it's* work area */
+	mon = pMonitorFromWindow(s_hwnd, 1 /*MONITOR_DEFAULTTOPRIMARY*/);
+	if (mon != NULL)
+	{
+	    moninfo.cbSize = sizeof(_MONITORINFO);
+	    if (pGetMonitorInfo(mon, &moninfo))
+	    {
+		*spi_rect = moninfo.rcWork;
+		return;
+	    }
+	}
+    }
+    /* this is the old method... */
+    SystemParametersInfo(SPI_GETWORKAREA, 0, spi_rect, 0);
+}
 
 /*
  * Set the size of the window to the given width and height in pixels.
@@ -1143,7 +1201,7 @@ gui_mch_set_shellsize(int width, int height,
 
     /* try to keep window completely on screen */
     /* get size of the screen work area (excludes taskbar, appbars) */
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &workarea_rect, 0);
+    get_work_area(&workarea_rect);
 
     /* get current posision of our window */
     wndpl.length = sizeof(WINDOWPLACEMENT);
@@ -1184,9 +1242,15 @@ gui_mch_set_shellsize(int width, int height,
     if (win_ypos < workarea_rect.top)
 	win_ypos = workarea_rect.top;
 
-    /* set window position */
-    SetWindowPos(s_hwnd, NULL, win_xpos, win_ypos, win_width, win_height,
-		 SWP_NOZORDER | SWP_NOACTIVATE);
+    wndpl.rcNormalPosition.left = win_xpos;
+    wndpl.rcNormalPosition.right = win_xpos + win_width;
+    wndpl.rcNormalPosition.top = win_ypos;
+    wndpl.rcNormalPosition.bottom = win_ypos + win_height;
+
+    /* set window position - we should use SetWindowPlacement rather than
+     * SetWindowPos as the MSDN docs say the coord systems returned by
+     * these two are not compatible. */
+    SetWindowPlacement(s_hwnd, &wndpl);
 
 #ifdef FEAT_MENU
     /* Menu may wrap differently now */
