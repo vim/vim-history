@@ -4142,6 +4142,7 @@ ml_find_line_or_offset(buf, line, offp)
     int		text_end;
     long	offset;
     int		len;
+    int		ffdos = (get_fileformat(buf) == EOL_DOS);
 
     if (buf->b_ml.ml_usedchunks == -1
 	    || buf->b_ml.ml_chunksize == NULL
@@ -4164,13 +4165,14 @@ ml_find_line_or_offset(buf, line, offp)
 	    && ((line
 	     && line >= curline + buf->b_ml.ml_chunksize[curix].mlcs_numlines)
 		|| (offset
-	   && offset >= size + buf->b_ml.ml_chunksize[curix].mlcs_totalsize)))
+	   && offset >= size + buf->b_ml.ml_chunksize[curix].mlcs_totalsize
+		      + ffdos * buf->b_ml.ml_chunksize[curix].mlcs_numlines)))
     {
 	curline += buf->b_ml.ml_chunksize[curix].mlcs_numlines;
 	size += buf->b_ml.ml_chunksize[curix].mlcs_totalsize;
-	curix++;
-	if (offset && get_fileformat(buf) == EOL_DOS)
+	if (offset && ffdos)
 	    size += buf->b_ml.ml_chunksize[curix].mlcs_numlines;
+	curix++;
     }
 
     while ((line && curline < line) || (offset && size < offset))
@@ -4199,20 +4201,21 @@ ml_find_line_or_offset(buf, line, offp)
 	else
 	{
 	    while (offset >= size
-		      + text_end - (int)((dp->db_index[idx]) & DB_INDEX_MASK))
+		       + text_end - (int)((dp->db_index[idx]) & DB_INDEX_MASK)
+								      + ffdos)
 	    {
+		if (ffdos)
+		    size++;
 		if (idx == count - 1)
 		    break;
 		idx++;
-		if (get_fileformat(buf) == EOL_DOS)
-		    size++;
 	    }
 	}
 	len = text_end - ((dp->db_index[idx]) & DB_INDEX_MASK);
 	size += len;
         if (offp != NULL && size >= offset)
 	{
-	    if (size == offset)
+	    if (size + ffdos == offset)
 		*offp = 0;
 	    else if (idx == start_idx)
 		*offp = offset - size + len;
@@ -4224,7 +4227,7 @@ ml_find_line_or_offset(buf, line, offp)
 	curline = buf->b_ml.ml_locked_high + 1;
     }
 
-    if (get_fileformat(buf) == EOL_DOS)
+    if (ffdos)
 	size += line - 1;
     return size;
 }
