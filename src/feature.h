@@ -980,6 +980,11 @@
 # endif
 #endif
 
+#if defined(FEAT_GUI_MSWIN) && defined(FEAT_SMALL)
+# define MSWIN_FIND_REPLACE	/* include code for find/replace dialog */
+# define MSWIN_FR_BUFSIZE 256
+#endif
+
 /*
  * +clientserver	Remote control via the remote_send() function
  *			and the --remote argument

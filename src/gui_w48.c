@@ -44,10 +44,6 @@
 # include "glbl_ime.h"
 #endif
 
-#ifdef FEAT_SMALL
-# define MSWIN_FIND_REPLACE	/* include code for find/replace dialog */
-# define MSWIN_FR_BUFSIZE 256
-#endif
 #ifdef FEAT_MENU
 # define MENUHINTS		/* show menu hints in command line */
 #endif
@@ -141,8 +137,11 @@ static int		s_busy_processing = FALSE;
 static int		destroying = FALSE;	/* call DestroyWindow() ourselves */
 
 #ifdef MSWIN_FIND_REPLACE
-static UINT		s_findrep_msg = 0;
+static UINT		s_findrep_msg = 0;	/* set in gui_w[16/32].c */
 static FINDREPLACE	s_findrep_struct;
+static HWND		s_findrep_hwnd = NULL;
+static int		s_findrep_is_find;	/* TRUE for find dialog, FALSE
+						   for find/replace dialog */
 #endif
 
 static HINSTANCE	s_hinst = NULL;
@@ -267,10 +266,6 @@ static UINT		s_kFlags_pending;
 static UINT		s_wait_timer = 0;   /* Timer for get char from user */
 static int		s_timed_out = FALSE;
 static int		dead_key = 0;	/* 0 - no dead key, 1 - dead key pressed */
-#ifdef MSWIN_FIND_REPLACE
-static HWND		s_findrep_hwnd = NULL;
-static int		s_findrep_is_find;
-#endif
 
 /*
  * For control IME.
@@ -764,137 +759,50 @@ _OnMenu(
 }
 #endif
 
-#if defined(MSWIN_FIND_REPLACE)
-/*
- * Copy the "from" string to the end of cmd[], escaping any '/'.
- */
-    static void
-fr_copy_escape(char *from, char_u *to)
-{
-    char	*s;
-    char_u	*d;
-
-    d = to + STRLEN(to);
-    for (s = from; *s != NUL; ++s)
-    {
-	if (*s == '/')
-	    *d++ = '\\';
-	*d++ = *s;
-    }
-    *d = NUL;
-}
-
-    static void
-fr_setwhat(char_u *cmd)
-{
-    if (s_findrep_struct.Flags & FR_WHOLEWORD)
-	STRCAT(cmd, "\\<");
-    fr_copy_escape(s_findrep_struct.lpstrFindWhat, cmd);
-    if (s_findrep_struct.Flags & FR_WHOLEWORD)
-	STRCAT(cmd, "\\>");
-}
-
-    static void
-fr_setreplcmd(char_u *cmd)
-{
-    STRCAT(cmd, ":%sno/");
-    fr_setwhat(cmd);
-    STRCAT(cmd, "/");
-    fr_copy_escape(s_findrep_struct.lpstrReplaceWith, cmd);
-    if (s_findrep_struct.Flags & FR_REPLACE)
-	STRCAT(cmd, "/gc");
-    else
-	STRCAT(cmd, "/g");
-    if (s_findrep_struct.Flags & FR_MATCHCASE)
-	STRCAT(cmd, "I");
-    else
-	STRCAT(cmd, "i");
-    STRCAT(cmd, "\r");
-}
-
+#ifdef MSWIN_FIND_REPLACE
 /*
  * Handle a Find/Replace window message.
  */
     static void
 _OnFindRepl(void)
 {
-    char_u cmd[MSWIN_FR_BUFSIZE * 2 + 100]; //XXX kludge
+    int	    flags = 0;
+    int	    down;
 
-    /* Add a char before the command if needed */
-    if (State & INSERT)
-	cmd[0] = Ctrl_O;
-    else if ((State & NORMAL) == 0 && State != CONFIRM)
-	cmd[0] = ESC;
-    else
-	cmd[0] = NUL;
-    cmd[1] = NUL;
-
-    if (s_findrep_struct.Flags & FR_DIALOGTERM)
-    {
-	if (State == CONFIRM)
-	    add_to_input_buf("q", 1);
-	return;
-    }
+    /* if (s_findrep_struct.Flags & FR_DIALOGTERM)  nothing to do */
 
     if (s_findrep_struct.Flags & FR_FINDNEXT)
     {
-	if (State == CONFIRM)
-	    STRCAT(cmd, "n");
-	else
-	{
-	    /* Set 'ignorecase' just for this search command. */
-	    if (!(s_findrep_struct.Flags & FR_MATCHCASE) == !p_ic)
-	    {
-		if (p_ic)
-		    STRCAT(cmd, ":set noic\r");
-		else
-		    STRCAT(cmd, ":set ic\r");
-		if (State & INSERT)
-		    STRCAT(cmd, "\017");	/* CTRL-O */
-	    }
-	    if (s_findrep_struct.Flags & FR_DOWN)
-		STRCAT(cmd, "/");
-	    else
-		STRCAT(cmd, "?");
-	    fr_setwhat(cmd);
-	    STRCAT(cmd, "\r");
-	    if (!(s_findrep_struct.Flags & FR_MATCHCASE) == !p_ic)
-	    {
-		if (State & INSERT)
-		    STRCAT(cmd, "\017");	/* CTRL-O */
-		if (p_ic)
-		    STRCAT(cmd, ":set ic\r");
-		else
-		    STRCAT(cmd, ":set noic\r");
-	    }
-	}
-	/*
-	 * Give main window the focus back: this is so
-	 * the cursor isn't hollow.
-	 */
+	flags = FRD_FINDNEXT;
+
+	/* Give main window the focus back: this is so the cursor isn't
+	 * hollow. */
 	(void)SetFocus(s_hwnd);
     }
     else if (s_findrep_struct.Flags & FR_REPLACE)
     {
-	if (State == CONFIRM)
-	    STRCAT(cmd, "y");
-	else
-	    fr_setreplcmd(cmd);
-	/*
-	 * Give main window the focus back: this is to allow
-	 * handling of the confirmation y/n/a/q stuff.
-	 */
+	flags = FRD_REPLACE;
+
+	/* Give main window the focus back: this is so the cursor isn't
+	 * hollow. */
 	(void)SetFocus(s_hwnd);
     }
     else if (s_findrep_struct.Flags & FR_REPLACEALL)
     {
-	if (State == CONFIRM)
-	    STRCAT(cmd, "a");
-	else
-	    fr_setreplcmd(cmd);
+	flags = FRD_REPLACEALL;
     }
-    if (*cmd)
-	add_to_input_buf(cmd, (int)STRLEN(cmd));
+
+    if (flags != 0)
+    {
+	/* Call the generic GUI function to do the actual work. */
+	if (s_findrep_struct.Flags & FR_WHOLEWORD)
+	    flags |= FRD_WHOLE_WORD;
+	if (s_findrep_struct.Flags & FR_MATCHCASE)
+	    flags |= FRD_MATCH_CASE;
+	down = (s_findrep_struct.Flags & FR_DOWN) != 0;
+	gui_do_findrepl(flags, s_findrep_struct.lpstrFindWhat,
+				     s_findrep_struct.lpstrReplaceWith, down);
+    }
 }
 #endif
 
@@ -1533,7 +1441,7 @@ process_message(void)
 
 #ifdef MSWIN_FIND_REPLACE
     /* Don't process messages used by the dialog */
-    if ((s_findrep_hwnd) && (IsDialogMessage(s_findrep_hwnd, &msg)))
+    if (s_findrep_hwnd != NULL && IsDialogMessage(s_findrep_hwnd, &msg))
     {
 	HandleMouseHide(msg.message, msg.lParam);
 	return;
@@ -2038,27 +1946,35 @@ ex_simalt(exarg_T *eap)
 }
 
 /*
- * Create the find & replace dialogs
+ * Create the find & replace dialogs.
  * You can't have both at once: ":find" when replace is showing, destroys
- * the replace dialog first.
+ * the replace dialog first, and the other way around.
  */
 #ifdef MSWIN_FIND_REPLACE
     static void
 initialise_findrep(char_u *initial_string)
 {
+    int		wword = FALSE;
+    int		mcase = !p_ic;
+    char_u	*entry_text;
+
+    /* Get the search string to use. */
+    entry_text = get_find_dialog_text(initial_string, &wword, &mcase);
+
     s_findrep_struct.hwndOwner = s_hwnd;
     s_findrep_struct.Flags = FR_DOWN;
-    if (p_ic)
-	s_findrep_struct.Flags &= ~FR_MATCHCASE;
-    else
+    if (mcase)
 	s_findrep_struct.Flags |= FR_MATCHCASE;
-    if (initial_string != NULL && *initial_string != NUL)
+    if (wword)
+	s_findrep_struct.Flags |= FR_WHOLEWORD;
+    if (entry_text != NULL && *entry_text != NUL)
     {
-	STRNCPY(s_findrep_struct.lpstrFindWhat, initial_string,
+	STRNCPY(s_findrep_struct.lpstrFindWhat, entry_text,
 					       s_findrep_struct.wFindWhatLen);
 	s_findrep_struct.lpstrFindWhat[s_findrep_struct.wFindWhatLen - 1] = NUL;
 	s_findrep_struct.lpstrReplaceWith[0] = NUL;
     }
+    vim_free(entry_text);
 }
 #endif
 
@@ -2068,7 +1984,7 @@ gui_mch_find_dialog(exarg_T *eap)
 #ifdef MSWIN_FIND_REPLACE
     if (s_findrep_msg != 0)
     {
-	if (IsWindow(s_findrep_hwnd) && (s_findrep_is_find == FALSE))
+	if (IsWindow(s_findrep_hwnd) && !s_findrep_is_find)
 	    DestroyWindow(s_findrep_hwnd);
 
 	if (!IsWindow(s_findrep_hwnd))
@@ -2093,7 +2009,7 @@ gui_mch_replace_dialog(exarg_T *eap)
 #ifdef MSWIN_FIND_REPLACE
     if (s_findrep_msg != 0)
     {
-	if (IsWindow(s_findrep_hwnd) && (s_findrep_is_find == TRUE))
+	if (IsWindow(s_findrep_hwnd) && s_findrep_is_find)
 	    DestroyWindow(s_findrep_hwnd);
 
 	if (!IsWindow(s_findrep_hwnd))

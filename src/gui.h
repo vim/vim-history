@@ -482,14 +482,19 @@ typedef enum
     VW_POS_TOP_CENTER
 } gui_win_pos_T;
 
-#if defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_GTK)
+#if defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_GTK) \
+	|| defined(MSWIN_FIND_REPLACE)
 /*
  * Flags used to distinguish the different contexts in which the
  * find/replace callback may be called.
  */
-# define FR_FINDNEXT	1	/* Find next in find dialog */
-# define FR_R_FINDNEXT	2	/* Find next in repl dialog */
-# define FR_REPLACE	3
-# define FR_REPLACEALL	4
-# define FR_UNDO	5
+# define FRD_FINDNEXT	1	/* Find next in find dialog */
+# define FRD_R_FINDNEXT	2	/* Find next in repl dialog */
+# define FRD_REPLACE	3	/* Replace once */
+# define FRD_REPLACEALL	4	/* Replace remaining matches */
+# define FRD_UNDO	5	/* Undo replaced text */
+# define FRD_TYPE_MASK   7	/* Mask for the callback type */
+/* Flags which change the way searching is done. */
+# define FRD_WHOLE_WORD	0x08	/* match whole word only */
+# define FRD_MATCH_CASE	0x10	/* match case */
 #endif

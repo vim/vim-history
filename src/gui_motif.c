@@ -2579,7 +2579,8 @@ gui_motif_menu_fontlist(id)
 typedef struct _SharedFindReplace
 {
     Widget dialog;	/* the main dialog widget */
-    Widget exact;	/* 'Exact match' check button */
+    Widget wword;	/* 'Exact match' check button */
+    Widget mcase;	/* 'match case' check button */
     Widget up;		/* search direction 'Up' radio button */
     Widget down;	/* search direction 'Down' radio button */
     Widget what;	/* 'Find what' entry text widget */
@@ -2648,10 +2649,11 @@ find_replace_callback(w, client_data, call_data)
     long_u	flags = (long_u)client_data;
     char	*find_text, *repl_text;
     Boolean	direction_down = TRUE;
-    Boolean	exact_match = FALSE;
+    Boolean	wword;
+    Boolean	mcase;
     SharedFindReplace *sfr;
 
-    if (flags == FR_UNDO)
+    if (flags == FRD_UNDO)
     {
 	char_u	*save_cpo = p_cpo;
 
@@ -2664,7 +2666,7 @@ find_replace_callback(w, client_data, call_data)
     }
 
     /* Get the search/replace strings from the dialog */
-    if (flags == FR_FINDNEXT)
+    if (flags == FRD_FINDNEXT)
     {
 	repl_text = NULL;
 	sfr = &find_widgets;
@@ -2676,10 +2678,15 @@ find_replace_callback(w, client_data, call_data)
     }
     find_text = XmTextFieldGetString(sfr->what);
     XtVaGetValues(sfr->down, XmNset, &direction_down, NULL);
-    XtVaGetValues(sfr->exact, XmNset, &exact_match, NULL);
+    XtVaGetValues(sfr->wword, XmNset, &wword, NULL);
+    XtVaGetValues(sfr->mcase, XmNset, &mcase, NULL);
+    if (wword)
+	flags |= FRD_WHOLE_WORD;
+    if (mcase)
+	flags |= FRD_MATCH_CASE;
 
     (void)gui_do_findrepl((int)flags, (char_u *)find_text, (char_u *)repl_text,
-						 direction_down, exact_match);
+							      direction_down);
 
     if (find_text != NULL)
 	XtFree(find_text);
@@ -2715,11 +2722,13 @@ find_replace_dialog_create(arg, do_replace)
     Widget		separator;
     Widget		input_form;
     Widget		button_form;
+    Widget		toggle_form;
     Widget		frame;
     XmString		str;
     int			n;
     Arg			args[6];
-    int			exact_word = FALSE;
+    int			wword = FALSE;
+    int			mcase = !p_ic;
     Dimension		width;
     Dimension		widest;
     char_u		*entry_text;
@@ -2727,7 +2736,7 @@ find_replace_dialog_create(arg, do_replace)
     frdp = do_replace ? &repl_widgets : &find_widgets;
 
     /* Get the search string to use. */
-    entry_text = get_find_dialog_text(arg, &exact_word);
+    entry_text = get_find_dialog_text(arg, &wword, &mcase);
 
     /* If the dialog already exists, just raise it. */
     if (frdp->dialog)
@@ -2745,7 +2754,7 @@ find_replace_dialog_create(arg, do_replace)
 	    XmTextFieldSetString(frdp->what, (char *)entry_text);
 	vim_free(entry_text);
 
-	XtVaSetValues(frdp->exact, XmNset, exact_word, NULL);
+	XtVaSetValues(frdp->wword, XmNset, wword, NULL);
 	return;
     }
 
@@ -2788,7 +2797,7 @@ find_replace_dialog_create(arg, do_replace)
 
     XtAddCallback(frdp->find, XmNactivateCallback,
 	    find_replace_callback,
-	    (XtPointer) (do_replace ? FR_R_FINDNEXT : FR_FINDNEXT));
+	    (XtPointer) (do_replace ? FRD_R_FINDNEXT : FRD_FINDNEXT));
 
     if (do_replace)
     {
@@ -2803,7 +2812,7 @@ find_replace_dialog_create(arg, do_replace)
 		NULL);
 	XmStringFree(str);
 	XtAddCallback(frdp->replace, XmNactivateCallback,
-		find_replace_callback, (XtPointer)FR_REPLACE);
+		find_replace_callback, (XtPointer)FRD_REPLACE);
 
 	str = XmStringCreateSimple(_("Replace All"));
 	frdp->all = XtVaCreateManagedWidget("replaceAllButton",
@@ -2816,7 +2825,7 @@ find_replace_dialog_create(arg, do_replace)
 		NULL);
 	XmStringFree(str);
 	XtAddCallback(frdp->all, XmNactivateCallback,
-		find_replace_callback, (XtPointer)FR_REPLACEALL);
+		find_replace_callback, (XtPointer)FRD_REPLACEALL);
 
 	str = XmStringCreateSimple(_("Undo"));
 	frdp->undo = XtVaCreateManagedWidget("undoButton",
@@ -2829,7 +2838,7 @@ find_replace_dialog_create(arg, do_replace)
 		NULL);
 	XmStringFree(str);
 	XtAddCallback(frdp->undo, XmNactivateCallback,
-		find_replace_callback, (XtPointer)FR_UNDO);
+		find_replace_callback, (XtPointer)FRD_UNDO);
     }
 
     str = XmStringCreateSimple(_("Cancel"));
@@ -2901,7 +2910,7 @@ find_replace_dialog_create(arg, do_replace)
 		    NULL);
 
 	    XtAddCallback(frdp->with, XmNactivateCallback,
-		    find_replace_callback, (XtPointer) FR_R_FINDNEXT);
+		    find_replace_callback, (XtPointer) FRD_R_FINDNEXT);
 
 	    str = XmStringCreateSimple(_("Replace with:"));
 	    label_with = XtVaCreateManagedWidget("withLabel",
@@ -2932,7 +2941,7 @@ find_replace_dialog_create(arg, do_replace)
 	     * Make the entry activation do the search.
 	     */
 	    XtAddCallback(frdp->what, XmNactivateCallback,
-		    find_replace_callback, (XtPointer)FR_FINDNEXT);
+		    find_replace_callback, (XtPointer)FRD_FINDNEXT);
 	}
 	XtAddEventHandler(frdp->what, KeyPressMask, False,
 			    (XtEventHandler)find_replace_keypress,
@@ -3005,22 +3014,46 @@ find_replace_dialog_create(arg, do_replace)
 	XtManageChild(frame);
     }
 
-    str = XmStringCreateSimple(_("Match exact word only"));
-    frdp->exact = XtVaCreateManagedWidget("exactToggle",
-	    xmToggleButtonGadgetClass, frdp->dialog,
-	    XmNlabelString, str,
-	    XmNorientation, XmVERTICAL,
-	    XmNentryAlignment, XmALIGNMENT_BEGINNING,
+    toggle_form = XtVaCreateWidget("toggleForm",
+	    xmFormWidgetClass,	frdp->dialog,
 	    XmNleftAttachment, XmATTACH_FORM,
 	    XmNleftOffset, 4,
 	    XmNrightAttachment, XmATTACH_WIDGET,
 	    XmNrightWidget, frame,
 	    XmNrightOffset, 4,
+	    XmNtopAttachment, XmATTACH_WIDGET,
+	    XmNtopWidget, input_form,
+	    XmNtopOffset, 4,
 	    XmNbottomAttachment, XmATTACH_FORM,
 	    XmNbottomOffset, 4,
-	    XmNset, exact_word,
+	    NULL);
+
+    str = XmStringCreateSimple(_("Match whole word only"));
+    frdp->wword = XtVaCreateManagedWidget("wordToggle",
+	    xmToggleButtonGadgetClass, toggle_form,
+	    XmNlabelString, str,
+	    XmNtopAttachment, XmATTACH_FORM,
+	    XmNtopOffset, 4,
+	    XmNleftAttachment, XmATTACH_FORM,
+	    XmNleftOffset, 4,
+	    XmNset, wword,
 	    NULL);
     XmStringFree(str);
+
+    str = XmStringCreateSimple(_("Match case"));
+    frdp->mcase = XtVaCreateManagedWidget("caseToggle",
+	    xmToggleButtonGadgetClass, toggle_form,
+	    XmNlabelString, str,
+	    XmNleftAttachment, XmATTACH_FORM,
+	    XmNleftOffset, 4,
+	    XmNtopAttachment, XmATTACH_WIDGET,
+	    XmNtopWidget, frdp->wword,
+	    XmNtopOffset, 4,
+	    XmNset, mcase,
+	    NULL);
+    XmStringFree(str);
+
+    XtManageChild(toggle_form);
 
     if (entry_text != NULL)
 	XmTextFieldSetString(frdp->what, (char *)entry_text);
