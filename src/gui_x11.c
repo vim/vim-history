@@ -627,6 +627,49 @@ gui_x11_expose_cb(w, dud, event, dum)
     gui_mch_update();
 }
 
+#if (defined(FEAT_NETBEANS_INTG) || defined(FEAT_SUN_WORKSHOP)) \
+	|| defined(PROTO)
+/*
+ *	This function fills in the XRectangle object with the current
+ *	x,y coordinates and height, width so that an XtVaSetValues to
+ *	the same shell of those resources will restore the window to its
+ *	formar position and dimensions.
+ *
+ *	Note: This function may fail, in which case the XRectangle will
+ *	be unchanged.  Be sure to have the XRectangle set with the
+ *	proper values for a failed condition prior to calling this
+ *	function.
+ */
+    static void
+shellRectangle(Widget shell, XRectangle *r)
+{
+    Window		rootw, shellw, child, parentw;
+    int			absx, absy;
+    XWindowAttributes	a;
+    Window		*children;
+    unsigned int	childrenCount;
+
+    shellw = XtWindow(shell);
+    if (shellw == 0)
+	return;
+    for (;;)
+    {
+	XQueryTree(XtDisplay(shell), shellw, &rootw, &parentw,
+						   &children, &childrenCount);
+	XFree(children);
+	if (parentw == rootw)
+	    break;
+	shellw = parentw;
+    }
+    XGetWindowAttributes(XtDisplay(shell), shellw, &a);
+    XTranslateCoordinates(XtDisplay(shell), shellw, a.root, 0, 0,
+							&absx, &absy, &child);
+    r->x = absx;
+    r->y = absy;
+    XtVaGetValues(shell, XmNheight, &r->height, XmNwidth, &r->width, NULL);
+}
+#endif
+
 /* ARGSUSED */
     static void
 gui_x11_resize_window_cb(w, dud, event, dum)

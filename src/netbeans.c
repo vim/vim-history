@@ -2791,47 +2791,4 @@ pos2off(buf_T *buf, pos_T *pos)
 }
 
 
-#if defined(FEAT_GUI_MOTIF) || defined(PROTO)
-/*
- *	This function fills in the XRectangle object with the current
- *	x,y coordinates and height, width so that an XtVaSetValues to
- *	the same shell of those resources will restore the window to its
- *	formar position and dimensions.
- *
- *	Note: This function may fail, in which case the XRectangle will
- *	be unchanged.  Be sure to have the XRectangle set with the
- *	proper values for a failed condition prior to calling this
- *	function.
- */
-    void
-shellRectangle(Widget shell, XRectangle *r)
-{
-	Window		rootw, shellw, child, parentw;
-	int		absx, absy;
-	XWindowAttributes	a;
-	Window		*children;
-	unsigned int	childrenCount;
-
-	shellw = XtWindow(shell);
-	if (shellw == 0)
-		return;
-	for (;;)
-	{
-	    XQueryTree(XtDisplay(shell), shellw, &rootw, &parentw,
-					&children, &childrenCount);
-	    XFree(children);
-	    if (parentw == rootw)
-		break;
-	    shellw = parentw;
-	}
-	XGetWindowAttributes(XtDisplay(shell), shellw, &a);
-	XTranslateCoordinates(XtDisplay(shell), shellw, a.root, 0, 0,
-				&absx, &absy, &child);
-	r->x = absx;
-	r->y = absy;
-	XtVaGetValues(shell, XmNheight, &r->height,
-				XmNwidth, &r->width, NULL);
-}
-#endif
-
 #endif /* defined(FEAT_NETBEANS_INTG) */

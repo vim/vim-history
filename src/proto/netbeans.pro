@@ -14,7 +14,5 @@ void netbeans_saved __ARGS((buf_T *bufp));
 void netbeans_deleted_all_lines __ARGS((buf_T *bufp));
 int netbeans_is_guarded __ARGS((linenr_T top, linenr_T bot));
 void netbeans_draw_multisign_indicator __ARGS((int row));
-void netbeans_draw_multisign_indicator __ARGS((int row));
 void netbeans_gutter_click __ARGS((linenr_T lnum));
-void shellRectangle __ARGS((Widget shell, XRectangle *r));
 /* vim: set ft=c : */
