@@ -2,6 +2,7 @@
 void redraw_later __ARGS((int type));
 void redraw_all_later __ARGS((int type));
 void redraw_curbuf_later __ARGS((int type));
+void redraw_buf_later __ARGS((int type, buf_t *buf));
 void redrawWinline __ARGS((linenr_t lnum, int invalid));
 void update_curbuf __ARGS((int type));
 void update_screen __ARGS((int type));

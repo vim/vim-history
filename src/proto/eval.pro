@@ -2,8 +2,6 @@
 void set_internal_string_var __ARGS((char_u *name, char_u *value));
 int eval_to_bool __ARGS((char_u *arg, int *error, char_u **nextcmd, int skip));
 char_u *eval_to_string __ARGS((char_u *arg, char_u **nextcmd));
-char_u *eval_arg_to_string __ARGS((char_u **arg));
-long eval_arg_to_number __ARGS((char_u **arg, int *error));
 int eval_foldexpr __ARGS((char_u *arg, int *cp));
 void ex_let __ARGS((exarg_t *eap));
 void set_context_for_expression __ARGS((char_u *arg, cmdidx_t cmdidx));

@@ -4,6 +4,8 @@ void syn_stack_free_all __ARGS((buf_t *buf));
 void syn_stack_apply_changes __ARGS((buf_t *buf));
 int syntax_check_changed __ARGS((linenr_t lnum));
 int get_syntax_attr __ARGS((colnr_t col));
+int get_debug_highlight __ARGS((int idx));
+XImage *get_debug_sign __ARGS((int idx));
 void syntax_clear __ARGS((buf_t *buf));
 void ex_syntax __ARGS((exarg_t *eap));
 int syntax_present __ARGS((buf_t *buf));
