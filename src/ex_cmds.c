@@ -831,8 +831,8 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
      * like ":r !cat" hangs.
      * Pass on the SHELL_DOOUT flag when the output is being redirected.
      */
-    if (call_shell(cmd_buf, SHELL_FILTER | SHELL_COOKED |
-					  (do_out ? SHELL_DOOUT : 0)))
+    if (call_shell(cmd_buf, SHELL_FILTER | SHELL_COOKED
+						| (do_out ? SHELL_DOOUT : 0)))
     {
 	must_redraw = CLEAR;
 	wait_return(FALSE);
@@ -844,9 +844,7 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
     if (do_out)
     {
 	if (u_save((linenr_t)(line2), (linenr_t)(line2 + 1)) == FAIL)
-	{
 	    goto error;
-	}
 	redraw_curbuf_later(VALID);
 	if (readfile(otmp, NULL, line2, (linenr_t)0, (linenr_t)MAXLNUM, eap,
 							 READ_FILTER) == FAIL)
@@ -888,7 +886,8 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
 	{
 	    if (do_in)
 	    {
-		sprintf((char *)msg_buf, _("%ld lines filtered"), (long)linecount);
+		sprintf((char *)msg_buf, _("%ld lines filtered"),
+							     (long)linecount);
 		if (msg(msg_buf) && !msg_scroll)
 		{
 		    keep_msg = msg_buf;	    /* display message after redraw */
@@ -1431,7 +1430,17 @@ write_viminfo(file, forceit)
 		{
 		    vim_free(tempname);
 		    if ((tempname = vim_tempname('o')) != NULL)
+		    {
 			fp_out = mch_fopen((char *)tempname, WRITEBIN);
+#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
+			if (symlink_check(tempname))
+			{
+			    EMSG(_("Security error: new viminfo file is a symbolic link"));
+			    fclose(fp_out);
+			    fp_out = NULL;
+			}
+#endif
+		    }
 		}
 #ifdef UNIX
 		/*

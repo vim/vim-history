@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 6.0j.  Last change: 2000 Aug 16
+*tips.txt*      For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -424,7 +424,7 @@ files a bit slower and requires the "gzip" program.
 Where {dirname} is the directory where the help files are.  If you have
 already included autocommands to edit ".gz" files (from
 $VIMRUNTIME/vimrc_example.vim), you should omit the three "autocmd" lines.
-Setting 'cmdheight' to two is to avoid the |hit-return| prompt; it is not
+Setting 'cmdheight' to two is to avoid the |hit-enter| prompt; it is not
 mandatory.  You must also make sure that $VIMRUNTIME is set to where the other
 Vim files are, when they are not in the same location as the compressed "doc"
 directory.  See |$VIMRUNTIME|.

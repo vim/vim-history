@@ -365,6 +365,9 @@ free_buffer(buf)
     var_clear(&buf->b_vars);	    /* free all internal variables */
 #endif
     free_buf_options(buf, TRUE);
+#ifdef FEAT_MBYTE
+    free_string_option(buf->b_start_fcc);
+#endif
     vim_free(buf);
 }
 

@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0j
+MINOR = 0k
 
 # CHECKLIST for creating a new version:
 #
@@ -93,7 +93,7 @@ MINOR = 0j
 # - Check file protections to be "644" for text and "755" for executables.
 # - Check compiling on Amiga, MS-DOS and MS-Windows.
 # - Delete all *~, *.sw?, *.orig, *.rej files
-# - "make unixsrc", "make rt", "make extra", "make lang", "make html"
+# - "make unixsrc", "make unixrt", "make extra", "make lang", "make html"
 #
 # Amiga:
 # - "make amisrc", move the archive to the Amiga and compile the Amiga version
@@ -533,7 +533,6 @@ RT_ALL =	\
 		runtime/macros/hanoi/click.me \
 		runtime/macros/hanoi/hanoi.vim \
 		runtime/macros/hanoi/poster \
-		runtime/macros/html \
 		runtime/macros/justify.vim \
 		runtime/macros/life/click.me \
 		runtime/macros/life/life.vim \
@@ -552,9 +551,8 @@ RT_ALL =	\
 		runtime/macros/urm/urm.vim \
 		runtime/menu.vim \
 		runtime/mswin.vim \
-		runtime/netrw.vim \
-		runtime/netrw.txt \
 		runtime/optwin.vim \
+		runtime/plugin/*.vim \
 		runtime/plugin/README.txt \
 		runtime/scripts.vim \
 		runtime/ftplugin.vim \

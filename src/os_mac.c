@@ -860,6 +860,11 @@ mch_nodetype(name)
 }
 
     void
+mch_init()
+{
+}
+
+    void
 mch_windexit(r)
     int     r;
 {

@@ -1039,21 +1039,26 @@ gui_mch_enable_scrollbar(sb, flag)
 	}
 	else
 	{
-	    switch (sb->type)
+	    if (!gui.which_scrollbars[sb->type])
 	    {
-		case SBAR_LEFT:
-		    XtSetArg(args[n], XmNleftOffset, 0); n++;
-		    break;
+		/* The scrollbars of this type are all disabled, adjust the
+		 * textArea attachment offset. */
+		switch (sb->type)
+		{
+		    case SBAR_LEFT:
+			XtSetArg(args[n], XmNleftOffset, 0); n++;
+			break;
 
-		case SBAR_RIGHT:
-		    XtSetArg(args[n], XmNrightOffset, 0); n++;
-		    break;
+		    case SBAR_RIGHT:
+			XtSetArg(args[n], XmNrightOffset, 0); n++;
+			break;
 
-		case SBAR_BOTTOM:
-		    XtSetArg(args[n], XmNbottomOffset, 0);n++;
-		    break;
+		    case SBAR_BOTTOM:
+			XtSetArg(args[n], XmNbottomOffset, 0);n++;
+			break;
+		}
+		XtSetValues(textArea, args, n);
 	    }
-	    XtSetValues(textArea, args, n);
 	    XtUnmanageChild(sb->id);
 	}
     }
@@ -1763,7 +1768,9 @@ get_pixmap(menuname, sen, insen)
     int		builtin_num;		/* index into builtin table */
     int		num_pixmaps;		/* entries in builtin pixmap table */
     char_u	buf[MAXPATHL];		/* buffer storing expanded pathname */
+#ifdef FEAT_SUN_WORKSHOP
     char_u	locbuf[MAXPATHL];	/* generate locale pathname */
+#endif
     char	**xpm = NULL;		/* xpm array */
     int		i;
 

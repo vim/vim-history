@@ -2624,7 +2624,7 @@ autocommand	autocmd.txt	/*autocommand*
 autocommand-events	autocmd.txt	/*autocommand-events*
 autocommand-pattern	autocmd.txt	/*autocommand-pattern*
 autoload-functions	eval.txt	/*autoload-functions*
-avoid-hit-return	version5.txt	/*avoid-hit-return*
+avoid-hit-enter	version5.txt	/*avoid-hit-enter*
 aw	motion.txt	/*aw*
 a{	motion.txt	/*a{*
 a}	motion.txt	/*a}*
@@ -3261,7 +3261,7 @@ histadd()	eval.txt	/*histadd()*
 histdel()	eval.txt	/*histdel()*
 histget()	eval.txt	/*histget()*
 histnr()	eval.txt	/*histnr()*
-hit-return	message.txt	/*hit-return*
+hit-enter	message.txt	/*hit-enter*
 hitest.vim	syntax.txt	/*hitest.vim*
 hl-Cursor	syntax.txt	/*hl-Cursor*
 hl-CursorIM	syntax.txt	/*hl-CursorIM*
@@ -3302,6 +3302,7 @@ hpterm	term.txt	/*hpterm*
 hpterm-color	syntax.txt	/*hpterm-color*
 html-editing	tips.txt	/*html-editing*
 html.vim	syntax.txt	/*html.vim*
+http	pi_netrw.txt	/*http*
 i	insert.txt	/*i*
 i(	motion.txt	/*i(*
 i)	motion.txt	/*i)*
@@ -3626,7 +3627,17 @@ n	pattern.txt	/*n*
 nasm.vim	syntax.txt	/*nasm.vim*
 navigation	motion.txt	/*navigation*
 ncf.vim	syntax.txt	/*ncf.vim*
+netrw	pi_netrw.txt	/*netrw*
+netrw-activate	pi_netrw.txt	/*netrw-activate*
+netrw-ex	pi_netrw.txt	/*netrw-ex*
+netrw-netrc	pi_netrw.txt	/*netrw-netrc*
+netrw-passwd	pi_netrw.txt	/*netrw-passwd*
+netrw-transparent	pi_netrw.txt	/*netrw-transparent*
+netrw-uidpass	pi_netrw.txt	/*netrw-uidpass*
+netrw-var	pi_netrw.txt	/*netrw-var*
+netrw-xfer	pi_netrw.txt	/*netrw-xfer*
 netterm-mouse	options.txt	/*netterm-mouse*
+network	pi_netrw.txt	/*network*
 new-GTK-GUI	version5.txt	/*new-GTK-GUI*
 new-Select-mode	version5.txt	/*new-Select-mode*
 new-buftype	version6.txt	/*new-buftype*
@@ -3648,6 +3659,7 @@ new-items-6	version6.txt	/*new-items-6*
 new-line-continuation	version5.txt	/*new-line-continuation*
 new-multi-byte	version5.txt	/*new-multi-byte*
 new-multi-lang	version6.txt	/*new-multi-lang*
+new-network-files	version6.txt	/*new-network-files*
 new-operator-mod	version6.txt	/*new-operator-mod*
 new-options-5.2	version5.txt	/*new-options-5.2*
 new-options-5.4	version5.txt	/*new-options-5.4*
@@ -3746,6 +3758,7 @@ perl.vim	syntax.txt	/*perl.vim*
 php.vim	syntax.txt	/*php.vim*
 php3.vim	syntax.txt	/*php3.vim*
 phtml.vim	syntax.txt	/*phtml.vim*
+pi_netrw.txt	pi_netrw.txt	/*pi_netrw.txt*
 plugin-details	filetype.txt	/*plugin-details*
 plugin-special	usr_40.txt	/*plugin-special*
 popup-menu	gui.txt	/*popup-menu*
@@ -3815,6 +3828,7 @@ quotes.txt	quotes.txt	/*quotes.txt*
 quotestar	gui.txt	/*quotestar*
 r	change.txt	/*r*
 raw-terminal-mode	term.txt	/*raw-terminal-mode*
+rcp	pi_netrw.txt	/*rcp*
 read-stdin	version5.txt	/*read-stdin*
 recording	repeat.txt	/*recording*
 recover.txt	recover.txt	/*recover.txt*
@@ -3873,6 +3887,7 @@ s	change.txt	/*s*
 s:var	eval.txt	/*s:var*
 save-file	editing.txt	/*save-file*
 save-settings	options.txt	/*save-settings*
+scp	pi_netrw.txt	/*scp*
 script-local	map.txt	/*script-local*
 script-variable	eval.txt	/*script-variable*
 scriptout-changed	version4.txt	/*scriptout-changed*

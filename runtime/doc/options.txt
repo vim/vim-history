@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0j.  Last change: 2000 Oct 20
+*options.txt*   For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -173,6 +173,8 @@ follow the environment variable name.  That character and what follows is
 appended to the value of the environment variable.  Examples: >
    :set term=$TERM.new
    :set path=/usr/$INCLUDE,$HOME/include,.
+When adding or removing a string from an option with ":set opt-=val" or ":set
+opt+=val" the expansion is done before the adding or removing.
 
 
 Handling of local options			*local-options*
@@ -1148,7 +1150,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			global
 			{not in Vi}
 	Number of screen lines to use for the command-line.  Helps avoiding
-	|hit-return| prompts.
+	|hit-enter| prompts.
 
 						*'columns'* *'co'*
 'columns' 'co'		number	(default 80 or terminal width)
@@ -2420,7 +2422,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	|hl-MoreMsg|	 m  |more-prompt|
 	|hl-ModeMsg|	 M  Mode (e.g., "-- INSERT --")
 	|hl-LineNr|	 n  line number for ":number" and ":#" commands
-	|hl-Question|	 r  |hit-return| prompt and yes/no questions
+	|hl-Question|	 r  |hit-enter| prompt and yes/no questions
 	|hl-StatusLine|	 s  status line of current window |status-line|
 	|hl-StatusLineNC| S  status lines of not-current windows
 	|hl-Title|	 t  Titles for output from ":set all", ":autocmd" etc.
@@ -2670,12 +2672,13 @@ A jump table for the options with a short description can be found at |X_op|.
 				 otherwise: "@,48-57,/,.,-,_,+,,,$,~")
 			global
 			{not in Vi}
-	The characters given by this option are included in file names and
+	The characters specified by this option are included in file names and
 	path names.  Filenames are used for commands like "gf", "[i" and in
 	the tags file.  It is also used for "\f" in a |pattern|.
-	Besides the characters in this option characters that are defined by
-	the C function isalpha() are also always included (this depends on the
-	character set and "locale").
+	Characters that are defined by the C function isalpha() are also
+	always included (this depends on the character set and "locale").
+	Multi-byte characters 256 and above are always included, only the
+	characters up to 255 are specified with this option.
 
 	Note that on systems using a backslash as path separator, Vim tries to
 	do its best to make it work as you would expect.  That is a bit
@@ -2760,6 +2763,11 @@ A jump table for the options with a short description can be found at |X_op|.
 		128 - 159	"~@" - "~_"
 		160 - 254	"| " - "|~"
 		   255		"~?"
+
+	Multi-byte characters 256 and above are always included, only the
+	characters up to 255 are specified with this option.  When a character
+	is printable but it is not available in the current font, a
+	replacement character will be shown.
 
 			*'joinspaces'* *'js'* *'nojoinspaces'* *'nojs'*
 'joinspaces' 'js'	boolean	(default on)
@@ -2947,7 +2955,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			local to buffer
 			{not available when compiled without the |+lispindent|
 			feature}
-	Lisp mode: When a return is typed in insert mode set the indent for
+	Lisp mode: When <Enter> is typed in insert mode set the indent for
 	the next line to Lisp standards (well, sort of).  Also happens with
 	"cc" or "S".  'autoindent' must also be on for this to work.  The 'p'
 	flag in 'cpoptions' changes the method of indenting: Vi compatible or
@@ -3167,7 +3175,7 @@ A jump table for the options with a short description can be found at |X_op|.
 		c	Command-line mode
 		h	all previous modes when editing a help file
 		a	all previous modes
-		r	for |hit-return| and |more-prompt| prompt
+		r	for |hit-enter| and |more-prompt| prompt
 	Normally you would enable the mouse in all four modes with: >
 		:set mouse=a
 <	When the mouse is not enabled, the GUI will still use the mouse for
@@ -3264,7 +3272,7 @@ A jump table for the options with a short description can be found at |X_op|.
 		c	appending to the command-line
 		ci	inserting in the command-line
 		cr	replacing in the command-line
-		m	At the 'Hit Return' or 'More' prompts
+		m	At the 'Hit ENTER' or 'More' prompts
 		e	any mode, pointer below last window
 		s	any mode, pointer on a status line
 		sd	any mode, while dragging a status line
@@ -3300,7 +3308,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Example: >
 		:set mouseshape=s:size,m:no
 <	will make the mouse turn to a sizing arrow over the status lines and
-	indicate no input when the hit-return prompt is displayed (since
+	indicate no input when the hit-enter prompt is displayed (since
 	clicking the mouse has no effect in this state.)
 
 						*'mousetime'* *'mouset'*
@@ -3463,6 +3471,8 @@ A jump table for the options with a short description can be found at |X_op|.
 		:set path=,,
 <	- A directory name may end in a ':' or '/'.
 	- Environment variables are expanded |:set_env|.
+	- When using |netrw.vim| URLs can be used.  For example, adding
+	  "http://www.vim.org" will make ":find index.html" work.
 	- Search upwards and downwards in a directory tree:
 	  1) "*" matches a sequence of characters, e.g., >
 		:set path=/usr/include/*
@@ -3971,7 +3981,7 @@ A jump table for the options with a short description can be found at |X_op|.
 'shortmess' 'shm'	string	(Vim default "filnxtToO", Vi default: "")
 			global
 			{not in Vi}
-	This option helps to avoid all the |hit-return| prompts caused by file
+	This option helps to avoid all the |hit-enter| prompts caused by file
 	messages, for example  with CTRL-G, and to avoid some other messages.
 	It is a list of flags:
 	 flag	meaning when present	~
@@ -4005,7 +4015,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	  I	don't give the intro message when starting Vim |:intro|.
 
 	This gives you the opportunity to avoid that a change between buffers
-	requires you to hit return, but still gives as useful a message as
+	requires you to hit <Enter>, but still gives as useful a message as
 	possible for the space available.  To get the whole message that you
 	would have got with 'shm' empty, use ":file!"
 	Useful values:
@@ -4129,7 +4139,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	'ignorecase' option is on.  Used for the commands "/", "?", "n", "N",
 	":g" and ":s".  Not used for "*", "#", "gd", tag search, etc..  After
 	"*" and "#" you can make 'smartcase' used by doing a "/" command,
-	recalling the search pattern from history and hitting return.
+	recalling the search pattern from history and hitting <Enter>.
 	NOTE: This option is reset when 'compatible' is set.
 
 			     *'smartindent'* *'si'* *'nosmartindent'* *'nosi'*

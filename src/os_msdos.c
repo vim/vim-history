@@ -1648,7 +1648,7 @@ slash_adjust(char_u *p)
 mch_isFullName(char_u *fname)
 {
     /* A name like "d:/foo" and "//server/share" is absolute */
-    return (fname[0] && fname[1] == ':'
+    return (fname[0] != NUL && fname[1] == ':'
 				     && (fname[2] == '/' || fname[2] == '\\'))
 	|| (fname[0] == fname[1] && (fname[0] == '/' || fname[0] == '\\'));
 }
@@ -1741,6 +1741,11 @@ mch_nodetype(char_u *name)
     return NODE_NORMAL;
 }
 
+    void
+mch_init(void)
+{
+}
+
 /*
  * Careful: mch_windexit() may be called before mch_shellinit()!
  */
@@ -1750,6 +1755,11 @@ mch_windexit(int r)
     settmode(TMODE_COOK);
     stoptermcap();
     set_interrupts(FALSE);	    /* restore interrupts */
+#ifdef DJGPP
+    /* Let the system know where our cursor is. */
+    myflush();
+    gotoxy(S_iCurrentColumn + 1, S_iCurrentRow + 1);
+#endif
     /* Somehow outputting CR-NL causes the original colors to be restored */
     out_char('\r');
     out_char('\n');

@@ -2134,24 +2134,31 @@ static int	need_clear_zsubexpr = FALSE;	/* extmatch subexpressions
 						 * still need to be cleared */
 #endif
 
+static int	out_of_stack;	/* TRUE when ran out of stack space */
+
 /*
  * Structure used to save the current input state, when it needs to be
  * restored after trying a match.  Used by reg_save() and reg_restore().
  */
 typedef struct {
-    char_u	*ptr;	/* reginput pointer, used for single-line regexp */
-    colnr_t	col;	/* reginput col, used for multi-line regexp */
-    linenr_t	lnum;	/* reginput lnum, used for multi-line regexp */
+    union
+    {
+	char_u	*ptr;	/* reginput pointer, for single-line regexp */
+	pos_t	pos;	/* reginput pos, for multi-line regexp */
+    } rs_u;
 } regsave_t;
 
 /* struct to save start/end pointer/position in for \(\) */
 typedef struct
 {
-    char_u	*ptr;
-    pos_t	pos;
+    union
+    {
+	char_u	*ptr;
+	pos_t	pos;
+    } se_u;
 } save_se_t;
 
-static long vim_regexec_both __ARGS((char_u *line, colnr_t col));
+static long	vim_regexec_both __ARGS((char_u *line, colnr_t col));
 static long	regtry __ARGS((regprog_t *prog, colnr_t col));
 static void	cleanup_subexpr __ARGS((void));
 #ifdef FEAT_SYN_HL
@@ -2299,20 +2306,21 @@ vim_regexec_both(line, col)
     char_u	*s;
     long	retval = 0L;
 
-#if 0 /* this doesn't work, because when running out of stack space signals
-	 won't be catched... */
-#ifdef UNIX
+    reg_tofree = NULL;
+#ifdef HAVE_SETJMP_H
     /*
      * Matching with a regexp may cause a very deep recursive call of
      * regmatch().  Vim will crash when running out of stack space.  Catch
      * this here if the system supports it.
      */
-    if (mch_setjmp() == FAIL)
+    mch_startjmp();
+    if (SETJMP(lc_jump_env) != 0)
     {
+	mch_didjmp();
 	EMSG(_("Crash intercepted; regexp too complex?"));
+	retval = 0L;
 	goto theend;
     }
-#endif
 #endif
 
     if (REG_MULTI)
@@ -2369,7 +2377,7 @@ vim_regexec_both(line, col)
 
     regline = line;
     reglnum = 0;
-    reg_tofree = NULL;
+    out_of_stack = FALSE;
 
     /* Simplest case: Anchored match need be tried only once. */
     if (prog->reganch)
@@ -2385,7 +2393,7 @@ vim_regexec_both(line, col)
     else
     {
 	/* Messy cases:  unanchored match. */
-	for (;;)
+	while (!got_int && !out_of_stack)
 	{
 	    if (prog->regstart != NUL)
 	    {
@@ -2420,14 +2428,14 @@ vim_regexec_both(line, col)
 	}
     }
 
-    /* Didn't find a match. */
-    vim_free(reg_tofree);
+    if (out_of_stack)
+	EMSG(_("pattern caused out-of-stack error"));
 
 theend:
-#if 0
-#ifdef UNIX
+    /* Didn't find a match. */
+    vim_free(reg_tofree);
+#ifdef HAVE_SETJMP_H
     mch_endjmp();
-#endif
 #endif
     return retval;
 }
@@ -2578,6 +2586,14 @@ advance_reginput()
 #endif
 
 /*
+ * The arguments from BRACE_LIMITS are stored here.  They are actually local
+ * to regmatch(), but they are here to reduce the amount of stack space used
+ * (it can be called recursively many times).
+ */
+static long	bl_minval;
+static long	bl_maxval;
+
+/*
  * regmatch - main matching routine
  *
  * Conceptually the strategy is simple: Check to see whether the current
@@ -2593,16 +2609,22 @@ advance_reginput()
  * undefined state!
  */
     static int
-regmatch(prog)
-    char_u	*prog;
-{
+regmatch(scan)
     char_u	*scan;		/* Current node. */
+{
     char_u	*next;		/* Next node. */
-    long	minval = -1;	/* init for GCC */
-    long	maxval = -1;	/* init for GCC */
-    static int	break_count = 0;
     int		op;
-    int		testval = FALSE;
+    static int	break_count = 0;
+
+#ifdef HAVE_GETRLIMIT
+    /* Check if we are running out of stack space.  Could be caused by
+     * recursively calling ourselves. */
+    if (out_of_stack || mch_stackcheck((char *)&op) == FAIL)
+    {
+	out_of_stack = TRUE;
+	return FALSE;
+    }
+#endif
 
     /* Some patterns my cause a long time to match, even though they are not
      * illegal.  E.g., "\([a-z]\+\)\+Q".  Allow breaking them with CTRL-C.
@@ -2610,7 +2632,6 @@ regmatch(prog)
     if ((++break_count & 0xfff) == 0)
 	ui_breakcheck();
 
-    scan = prog;
 #ifdef DEBUG
     if (scan != NULL && regnarrate)
     {
@@ -2895,9 +2916,6 @@ regmatch(prog)
 	    break;
 
 	  case ANYOF:
-	    testval = TRUE;
-	    /*FALLTHROUGH*/
-
 	  case ANYBUT:
 	    if (*reginput == NUL)
 		return FALSE;
@@ -2905,13 +2923,14 @@ regmatch(prog)
 	    if (cc_dbcs && mb_ptr2len_check(reginput) > 1)
 	    {
 		if ((cstrchr(OPERAND(scan), *reginput << 8 | reginput[1])
-							  == NULL) == testval)
+						    == NULL) == (op == ANYOF))
 		    return FALSE;
 		reginput++;
 	    }
 	    else
 #endif
-		if ((cstrchr(OPERAND(scan), *reginput) == NULL) == testval)
+		if ((cstrchr(OPERAND(scan), *reginput)
+						    == NULL) == (op == ANYOF))
 		    return FALSE;
 	    reginput++;
 	    break;
@@ -3207,14 +3226,15 @@ regmatch(prog)
 		}
 	    }
 	    break;
+
 	  case BRACE_LIMITS:
 	    {
 		int	no;
 
 		if (OP(next) == BRACE_SIMPLE)
 		{
-		    minval = OPERAND_MIN(scan);
-		    maxval = OPERAND_MAX(scan);
+		    bl_minval = OPERAND_MIN(scan);
+		    bl_maxval = OPERAND_MAX(scan);
 		}
 		else if (OP(next) >= BRACE_COMPLEX
 			&& OP(next) < BRACE_COMPLEX + 10)
@@ -3231,6 +3251,7 @@ regmatch(prog)
 		}
 	    }
 	    break;
+
 	  case BRACE_COMPLEX + 0:
 	  case BRACE_COMPLEX + 1:
 	  case BRACE_COMPLEX + 2:
@@ -3298,6 +3319,8 @@ regmatch(prog)
 		int		nextch_ic;
 		long		count;
 		regsave_t	save;
+		long		minval;
+		long		maxval;
 
 		/*
 		 * Lookahead to avoid useless match attempts when we know
@@ -3325,6 +3348,11 @@ regmatch(prog)
 		{
 		    minval = (op == STAR) ? 0 : 1;
 		    maxval = MAX_LIMIT;
+		}
+		else
+		{
+		    minval = bl_minval;
+		    maxval = bl_maxval;
 		}
 
 		/*
@@ -3462,23 +3490,24 @@ regmatch(prog)
 			 */
 			if (REG_MULTI)
 			{
-			    if (save_start.col == 0)
+			    if (save_start.rs_u.pos.col == 0)
 			    {
-				if (save_start.lnum < save_before.lnum
-					|| myreg_getline(--save_start.lnum)
-								      == NULL)
+				if (save_start.rs_u.pos.lnum
+						< save_before.rs_u.pos.lnum
+					|| myreg_getline(
+					    --save_start.rs_u.pos.lnum) == NULL)
 				    break;
 				reg_restore(&save_start);
-				save_start.col = STRLEN(regline);
+				save_start.rs_u.pos.col = STRLEN(regline);
 			    }
 			    else
-				--save_start.col;
+				--save_start.rs_u.pos.col;
 			}
 			else
 			{
-			    if (save_start.ptr == regline)
+			    if (save_start.rs_u.ptr == regline)
 				break;
-			    --save_start.ptr;
+			    --save_start.rs_u.ptr;
 			}
 		    }
 		    /* NOBEHIND succeeds when no match was found */
@@ -3499,19 +3528,17 @@ regmatch(prog)
 
 	  case END:
 	    return TRUE;	/* Success! */
-	    /* break; Not Reached */
+
 	  default:
 	    EMSG(_(e_re_corr));
 #ifdef DEBUG
 	    printf("Illegal op code %d\n", op);
 #endif
 	    return FALSE;
-	    /* break; Not Reached */
 	  }
 	}
 
 	scan = next;
-	testval = FALSE;
     }
 
     /*
@@ -3948,11 +3975,11 @@ reg_save(save)
 {
     if (REG_MULTI)
     {
-	save->col = reginput - regline;
-	save->lnum = reglnum;
+	save->rs_u.pos.col = reginput - regline;
+	save->rs_u.pos.lnum = reglnum;
     }
     else
-	save->ptr = reginput;
+	save->rs_u.ptr = reginput;
 }
 
 /*
@@ -3964,12 +3991,12 @@ reg_restore(save)
 {
     if (REG_MULTI)
     {
-	reglnum = save->lnum;
+	reglnum = save->rs_u.pos.lnum;
 	regline = myreg_getline(reglnum);
-	reginput = regline + save->col;
+	reginput = regline + save->rs_u.pos.col;
     }
     else
-	reginput = save->ptr;
+	reginput = save->rs_u.ptr;
 }
 
 /*
@@ -3980,8 +4007,9 @@ reg_save_equal(save)
     regsave_t	*save;
 {
     if (REG_MULTI)
-	return reglnum == save->lnum && reginput == regline + save->col;
-    return reginput == save->ptr;
+	return reglnum == save->rs_u.pos.lnum
+				  && reginput == regline + save->rs_u.pos.col;
+    return reginput == save->rs_u.ptr;
 }
 
 /*
@@ -3998,13 +4026,13 @@ save_se(savep, posp, pp)
 {
     if (REG_MULTI)
     {
-	savep->pos = *posp;
+	savep->se_u.pos = *posp;
 	posp->lnum = reglnum;
 	posp->col = reginput - regline;
     }
     else
     {
-	savep->ptr = *pp;
+	savep->se_u.ptr = *pp;
 	*pp = reginput;
     }
 }
@@ -4019,9 +4047,9 @@ restore_se(savep, posp, pp)
     char_u	**pp;
 {
     if (REG_MULTI)
-	*posp = savep->pos;
+	*posp = savep->se_u.pos;
     else
-	*pp = savep->ptr;
+	*pp = savep->se_u.ptr;
 }
 
 #ifdef DEBUG

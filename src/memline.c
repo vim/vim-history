@@ -253,7 +253,7 @@ ml_open()
 /*
  * Open the memfile.  No swap file is created yet.
  */
-    mfp = mf_open(NULL, TRUE);
+    mfp = mf_open(NULL, 0);
     if (mfp == NULL)
 	goto error;
 
@@ -798,7 +798,7 @@ ml_recover()
  * open the memfile from the old swap file
  */
     p = vim_strsave(fname);		/* save fname for the message */
-    mfp = mf_open(fname, FALSE);	/* consumes fname! */
+    mfp = mf_open(fname, O_RDONLY);	/* consumes fname! */
     if (mfp == NULL || mfp->mf_fd < 0)
     {
 	if (p != NULL)
@@ -3338,16 +3338,10 @@ findswapname(buf, dirp, old_fname)
     if (!(buf->b_p_sn || buf->b_shortname) && buf->b_fname
 					     && mch_getperm(buf->b_fname) < 0)
     {
-# if defined(HAVE_LSTAT) && ((defined(S_IFMT) && defined(S_IFLNK)) || defined(S_ISLNK))
+# if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
 	struct stat st;
 
-	if (mch_lstat((char *)buf->b_fname, &st) == -1 ||
-#  if defined(S_IFMT) && defined(S_IFLNK)
-		(st.st_mode & S_IFMT) != S_IFLNK
-#  else
-		!S_ISLNK(st.st_mode)
-#  endif
-						    )
+	if (mch_lstat((char *)buf->b_fname, &st) == -1 || ISSYMLINK(st.st_mode))
 # endif
 	    dummyfd = mch_fopen((char *)buf->b_fname, "w");
     }

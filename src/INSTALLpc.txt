@@ -15,6 +15,7 @@ Contents:
 4. Windows 3.1
 5. Using Mingw
 6. Cross compiling for Win32 from a Linux machine
+7. Building with Python support
 
 
 1. MS-DOS
@@ -256,3 +257,30 @@ your Linux (or other unix) box.  To do this, you need to follow a few steps:
 	4) make -f Make_ming.mak gvim.exe
 
 Now you have created the Windows binary from your Linux box!  Have fun...
+
+7. Building with Python support
+=================================================
+
+(written by Ron Aaron: <ron@mossbayeng.com>)
+
+This has been tested with the mingw32 compiler, and the ActiveState
+ActivePython:
+    http://www.ActiveState.com/Products/ActivePython/
+
+After installing the ActivePython, you will have to create a 'mingw32' 
+'libpython20.a' to link with:
+   cd $PYTHON/libs
+   pexports python20.dll > python20.def
+   dlltool -d python20.def -l libpython20.a
+
+Once that is done, edit the 'Make_ming.mak' so the PYTHON variable points to
+the root of the Python installation (C:\Python20, for example).  If you are
+cross-compiling on Linux with the mingw32 setup, you need to also convert all
+the 'Include' files to *unix* line-endings.  This bash command will do it
+easily:
+   for fil in *.h ; do vim -e -c 'set ff=unix|w|q' $fil
+
+Now just do:
+   make -f Make_ming.mak gvim.exe
+
+and you will end up with a Python-enabled, Win32 version.  Enjoy!

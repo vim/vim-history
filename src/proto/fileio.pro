@@ -27,3 +27,4 @@ char_u *set_context_in_autocmd __ARGS((char_u *arg, int doautocmd));
 char_u *get_event_name __ARGS((int idx));
 int match_file_pat __ARGS((char_u *pattern, char_u *fname, char_u *sfname, char_u *tail, int allow_dirs));
 char_u *file_pat_to_reg_pat __ARGS((char_u *pat, char_u *pat_end, char *allow_dirs, int no_bslash));
+int symlink_check __ARGS((char_u *fname));

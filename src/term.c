@@ -1426,6 +1426,30 @@ parse_builtin_tcap(term)
 	}
     }
 }
+#if defined(HAVE_TGETENT) || defined(FEAT_TERMRESPONSE)
+static void set_color_count __ARGS((int nr));
+
+/*
+ * Set number of colors.
+ * Store it as a number in t_colors.
+ * Store it as a string in T_CCO (using nr_colors[]).
+ */
+    static void
+set_color_count(nr)
+    int		nr;
+{
+    static char	nr_colors[20];		/* string for number of colors */
+
+    t_colors = nr;
+    if (t_colors > 1)
+    {
+	sprintf(nr_colors, "%d", t_colors);
+	T_CCO = (char_u *)nr_colors;
+    }
+    else
+	T_CCO = empty_option;
+}
+#endif
 
 #ifdef HAVE_TGETENT
 static char	    *(key_names[]) =
@@ -1439,6 +1463,9 @@ static char	    *(key_names[]) =
     "k7", "k8", "k9", "k;", "F1", "F2",
     "%1", "&8", "kb", "kI", "kD", "kh",
     "@7", "kP", "kN", "K1", "K3", "K4", "K5",
+#ifdef FEAT_TERMRESPONSE
+    "Co",
+#endif
     NULL
 };
 #endif
@@ -1458,7 +1485,6 @@ set_termname(term)
     int		builtin_first = p_tbi;
     int		try;
     int		termcap_cleared = FALSE;
-    static char	nr_colors[15];	    /* string for number of colors */
 #endif
     int		width = 0, height = 0;
     char_u	*error_msg = NULL;
@@ -1576,15 +1602,9 @@ set_termname(term)
 		    width = tgetnum("co");
 
 		/*
-		 * Get number of colors.  If non-zero, store as string in
-		 * nr_colors[].
+		 * Get number of colors.
 		 */
-		t_colors = tgetnum("Co");
-		if (t_colors > 0)
-		{
-		    sprintf(nr_colors, "%d", t_colors);
-		    T_CCO = (char_u *)nr_colors;
-		}
+		set_color_count(tgetnum("Co"));
 
 # ifndef hpux
 		BC = (char *)TGETSTR("bc", &tp);
@@ -2563,7 +2583,7 @@ term_color(s, n)
     /* Special handling of 16 colors, because termcap can't handle it */
     /* Also accept "\e[3%dm" for TERMINFO, it is sometimes used */
     /* Also accept CSI instead of <Esc>[ */
-    if (n > 7 && t_colors == 16
+    if (n > 7 && t_colors >= 16
 	      && ((s[0] == ESC && s[1] == '[') || (s[0] == CSI && (i = 1) == 1))
 	      && s[i] != NUL
 	      && (STRCMP(s + i + 1, "%p1%dm") == 0
@@ -2704,15 +2724,15 @@ ttest(pairs)
 
 	/* if 'Sb' and 'AB' are not defined, reset "Co" */
 	if (*T_CSB == NUL && *T_CAB == NUL)
-	{
 	    T_CCO = empty_option;
-	    t_colors = 0;
-	}
 
 	/* Set 'weirdinvert' according to value of 't_xs' */
 	p_wiv = (*T_XS != NUL);
     }
     need_gather = TRUE;
+
+    /* Set t_colors to the value of t_Co. */
+    t_colors = atoi((char *)T_CCO);
 }
 
 #if defined(FEAT_GUI) || defined(PROTO)
@@ -4625,10 +4645,6 @@ gather_termleader()
 	}
 
     need_gather = FALSE;
-
-    /* Set t_colors to the value of t_Co. */
-    if (T_CCO != NULL)
-	t_colors = atoi((char *)T_CCO);
 }
 
 /*
@@ -4833,13 +4849,21 @@ got_code_from_term(code, len)
 	for (i = 3; isxdigit(code[i]) && isxdigit(code[i + 1]); i += 2)
 	    buf[j++] = (hex2nr(code[i]) << 4) + hex2nr(code[i + 1]);
 	buf[j] = NUL;
+	if (key_names[xt_index_in][0] == 'C'
+					  && key_names[xt_index_in][1] == 'o')
+	{
+	    /* Color count is not a key code. */
+	    set_color_count(atoi((char *)buf));
+	}
+	else
+	{
+	    /* First delete any existing entry with the same code. */
+	    i = find_term_bykeys(buf);
+	    if (i >= 0)
+		del_termcode_idx(i);
 
-	/* First delete any existing entry with the same code. */
-	i = find_term_bykeys(buf);
-	if (i >= 0)
-	    del_termcode_idx(i);
-
-	add_termcode((char_u *)key_names[xt_index_in], buf, FALSE);
+	    add_termcode((char_u *)key_names[xt_index_in], buf, FALSE);
+	}
     }
 
     ++xt_index_in;

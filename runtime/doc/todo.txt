@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0j.  Last change: 2000 Oct 22
+*todo.txt*      For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,14 +29,18 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-A regexp can run forever and crash when out of stack space.  Using
-mch_setjmp()/mch_endjmp() doesn't work, because signals can't be catched when
-out of stack space.
+":help stl" still opens help.txt first.  Can this be avoided?
 
-Combination of Visual selection, ":" command and scrolling causes the display
-to be updated wrong. (Nam)
+":r `" says "1 returned".  Should say "cannot open file `".
+vim 6.0: can't open file /tmp/asdf". (Akkerman)
 
-DJGPP: "vim main.c" doesn't show right syntax highlighting.  CTRL-L fixes it.
+For 'backupcopy': add possibility to switch to "copy" when file name matches
+"\<tmp\>" or "/crontab/".
+
+Dos 16 bit: "make text" doesn't work: stack overflow.
+
+doing c%() with $ in 'cpo' doesn't display the ) because of a showmatch.
+(Sievert)
 
 
 Main items for 6.0:
@@ -381,6 +385,9 @@ J. User Friendlier
 9   Add buffer-local menu.  Should offer a choice between removing the menu or
     disabling it.  Be careful that tear-offs don't disappear (keep one empty
     item?).
+8   Add ":highlight default ...": Only set if not present yet.  For use in all
+    syntax files, so that user can specify highlighting before loading syntax
+    file.
 9   Make Windows install program better:
     Add an icon on the Desktop, if the user wants this.
     Add Vim to the Start/Programs menu if the user wants this.
@@ -474,7 +481,7 @@ Various recent:
 -   multi-line regexp:
     Make test for multi-line regexp and ":s".
     Check use of multi-line regexp in syntax highlighting.
--   When starting GUI with invalid DISPLAY, the hit-return prompt is always in
+-   When starting GUI with invalid DISPLAY, the hit-enter prompt is always in
     line 2, while the "cannot open display" is somewhere else.
 -   Win32 GUI bug: When inserting a /* or removing it (changing the
     highlighting) a line of the screen is deleted.
@@ -500,7 +507,7 @@ Various recent:
     ":silent s//" still writes a message.
     How to use ":silent" for a search command?  ":silent /pat" uses ":/pat".
 	:silent exe "normal /path\<CR>"
-    Run the external command silently, don't give the hit-return prompt.
+    Run the external command silently, don't give the hit-enter prompt.
     Remove how it's done for Risc OS with ":!~cmd", see do_shell().
     Don't redraw the screen, make a note in the docs that CTRL-L should be
     used if the command has any output.
@@ -516,7 +523,7 @@ Various recent:
     -> ":silent unmap" shouldn't complain about a non-existing mapping.
     Still do the messages for ":redir"?
     -> ":silent redir": Remember the last message, print it if waiting for a
-       key (otherwise the hit-return prompt could be missed).
+       key (otherwise the hit-enter prompt could be missed).
     -> ":silent ptag": don't complain when tag doesn't exist.  Use in example
        for ":ptag" CursorHold autocommand.
     Ideas in ~/vim/patches/wall.noredir.tgz (Stephen P. Wall).
@@ -553,16 +560,8 @@ Considered for release 6.0:
 -   When $CFLAGS is set, don't change it in configure. (Griffis)
     Give a warning that CFLAGS from the environment is being used.
 8   Use configure to set absolute paths in tools scripts when installing.
-9   Add "mswin" feature, for Win16 and Win32.  Include gui_w16.c? (Negri)
 8   Windows (and others): When using the scrollbar to scroll, don't move the
     cursor position.  When moving the cursor scroll to the cursor position.
-8   Add ~/vim/macros/matchit.vim to the distribution?
-9   Using "filetype" and "syntax" as autocommand group name is confusing,
-    because they are also used as event names.  Change to "filetypegroup" and
-    "syntaxgroup" in Vim 6.0.
-8   Add ":highlight default ...": Only set if not present yet.  For use in all
-    syntax files, so that user can specify highlighting before loading syntax
-    file.
 8   Add commands for argument list manipulation:
 	:add <file>	    add file to arglist
 	:remove [file]	    remove file from arglist (default: current)
@@ -572,35 +571,14 @@ Considered for release 6.0:
     in the system (and 'directory' is ~/tmp). (Soulier)
     Create the swap file as soon as its name is chosen, when mf_fname is set.
     Delete it before changing mf_fname/mf_ffname.
-7   Further support for editing files in projects (see ":idselect").
-    Create project-level settings.
-    More general: Be able to do settings/mappings in a specific "symbol
-    space", so that they can be undone all at once.  Also to be used when
-    'filetype' is set.
-    Different sources for options, autocommands, mappings, menus, etc:
-    1. Vim defaults (set at compile time)
-    2. System defaults (set by sysadm) in $VIMRUNTIME/local
-    3. Project defaults
-    4. Personal defaults from $HOME
-    Where they apply:
-    a. globally, all buffers and windows
-    b. all buffers of a filetype
-    c. specific buffer
-    d. all windows of a viewtype
-    e. specific window
-    Should be able to do "save stuff for filetype" and "save stuff for
-    viewtype".
-    Make Win32 version also read system-wide vimrc file.  "$VIM/vimrc"?
-    General: add "project" level of initializations.  Allow user to switch
-    between different projects (undoing inits from the old project).
-8   Add option to disable the dialog for the ATTENTION prompt.  In general:
-    Better control for protecting the user for editing a file twice, file
+7   Make it possible to set global options only local to a buffer or window.
+    For example 'hidden'.
+8   Add better control for protecting the user for editing a file twice, file
     changed outside of Vim, file protection changed outside of Vim, etc.
-8   Win32 GUI: Implement flag to avoid "hit any key to continue" in DOS
+8   Win32 GUI: Make ":silent !ls" work, avoid "hit any key to continue" in DOS
     console used to execute external commands.  Pass a flag to vimrun.exe.
-8   Make ":normal" command accept <Key> notation, like ":map".
+8   Add command like ":normal" that accepts <Key> notation like ":map".
 8   Make clipboard work for Dos32 version. (Negri)
-8   Remove runtime/macros/html.
 8   Adjust colortest.vim: Include colors on normal background (Szalai).
     Reduce the size by using a while loop.
 8   Add the possibility for a maintainer of a binary version to include his
@@ -613,18 +591,13 @@ Considered for release 6.0:
     and get the same files and windows as when exiting.
 7   Add ModeMsgVisual, ModeMsgInsert, etc. so that each mode message can be
     highlighted differently.
-8   Add docs on how to edit a remote file through ftp or http (with a script).
-    Mention *Cmd autocommand events and $VIMRUNTIME/netrw.vim.
-8   Define auto-indenting with syntax items?
-    Also: define auto-indenting with fold regions?  indent = foldlevel *
-    shiftwidth.
 -   For files found with 'include': handle "*" in included name, for Java.
     (Jason)
 -   Include patch to multibyte.txt from patch
     ~/ftp/vim/unreleased/patches/vim-5.6-dalecki-4.gz .  It has already
     changed quite a bit, merge changes.
 
-- Include patches from 5.x after ~/vim/patches/vim-5.7x-*.tar.gz
+- Include patches from 5.x after ~/vim/patches/vim-5.7y-*.tar.gz
 
 ---------------------- bugs ---------------------------
 
@@ -742,7 +715,7 @@ Win32 GUI known bugs:
     - Selecting text while editing a command-line has an implied copy to the
       clipboard.  Remove this, and add a command character to copy/cut/delete
       the selected text (used in the popup menu).
-    - When selecting at the more-prompt or hit-return-prompt right mouse
+    - When selecting at the more-prompt or hit-enter-prompt right mouse
       button doesn't give popup menu.  Also has an implied copy to the
       clipboard.  Use the popup menu "Copy" entry for that.
 9   When there are more than 32767 lines, the scrollbar has a roundoff error.
@@ -762,7 +735,7 @@ Win32 GUI known bugs:
     Same option as for multi-byte (patch from Nam)?
     Add another option to add one to the character width?  Lucida Console
     italic is wider than the normal font ("d" overlaps with next char).
-7   At the hit-return prompt scrolling now no longer works.  Need to use the
+7   At the hit-enter prompt scrolling now no longer works.  Need to use the
     keyboard to get around this.  Pretend <CR> was hit when the users tries to
     scroll?
 7   'mousefocus' is disabled until the next mouse click, when trying to exit
@@ -1060,7 +1033,7 @@ VMS:
 8   [<C-I> doesn't work when '*' is in 'iskeyword'.  find_pattern_in_path()
     must escape special characters in the pattern.
 8   In Visual block mode, "A" appends to lines that don't extend into the
-    block, but padding is wrong (always two spaces).
+    block, but padding is wrong (always two spaces).  Fix the padding.
 8   Vim can overwrite a read-only file with ":w!".  ":w" can't overwrite an
     existing file, "w!" can, but perhaps not a read-only file?  Then use
     ":w!!" for that.
@@ -1679,7 +1652,7 @@ Messages:
     screen when reading commands from stdin. (Kendall)
     --> Make a difference between informative messages, prompts, etc. and
 	error messages, printing text, etc.
-8   Window should be redrawn when resizing at the hit-return prompt.
+8   Window should be redrawn when resizing at the hit-enter prompt.
     Also at the ":tselect" prompt.  Find a generic solution for redrawing when
     a prompt is present (with a callback function?).
 
@@ -2849,7 +2822,7 @@ Various improvements:
 7   Have a look at viH (Hellenic or Greek version of Vim).  But a solution
     outside of Vim might be satisfactory (Haritsis).
 3   Make "2d%" work like "d%d%" instead of "d2%"?
-8   Make "more" prompt accept command characters, like "hit-return" prompt?
+8   Make "more" prompt accept command characters, like "hit-enter" prompt?
     Or extend it with more commands, like "less": 'b' for back, 'j' for one
     line down, etc.
 8   For the "--more--" prompt, support the 'b'ack command for more commands.

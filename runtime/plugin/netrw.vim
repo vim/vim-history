@@ -1,24 +1,31 @@
 " netrw.vim: Handles the reading and writing of file(s) across a network
 "
 "  Author:  Charles E. Campbell, Jr. PhD   <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-"  Date:    August 23, 2000
-"  Version: 2.01
+"           scp  support by raf            <raf@comdyn.com.au>
+"           http support by Bram Moolenaar <bram@moolenaar.net>
+"  Date:    October 26, 2000
+"  Version: 2.05
+"
 
-" Readinb:
+" Reading:
 " :Nr machine:file                  uses rcp
 " :Nr "machine file"                uses ftp with <.netrc>
 " :Nr "machine id password file"    uses ftp
-" :Nr "rcp://machine/file"          uses rcp
 " :Nr "ftp://machine/file"          uses ftp  (autodetects <.netrc>)
+" :Nr "http://[user@]machine/file"  uses http (wget)
+" :Nr "rcp://machine/file"          uses rcp
+" :Nr "scp://[user@]machine/file"   uses scp
 
-" Writinb:
+" Writing:
 " :Nw machine:file                  uses rcp
 " :Nw "machine file"                uses ftp with <.netrc>
 " :Nw "machine id password file"    uses ftp
-" :Nw "rcp://machine/file"          uses rcp
 " :Nw "ftp://machine/file"          uses ftp  (autodetects <.netrc>)
+" :Nw "rcp://machine/file"          uses rcp
+" :Nw "scp://[user@]machine/file"   uses scp
+" http: not supported!
 
-" User And Password Changinb:
+" User And Password Changing:
 "  Attempts to use ftp will prompt you for a user-id and a password.
 "  These will be saved in b:netrw_uid and b:netrw_passwd
 "  Subsequent uses of ftp will re-use those.  If you need to use
@@ -35,24 +42,30 @@
 "  (James1:22 RSV)
 " =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+" Exit quickly when already loaded or when 'compatible' is set.
+if exists("loaded_netrw") || &cp
+  finish
+endif
+let loaded_netrw = 1
+
 " Vimrc Support:
-" Auto-detection for ftp://* and rcp://*
+" Auto-detection for ftp://*, rcp://*, scp://*, and http://*
 " Should make file transfers across networks transparent.  Currently I haven't
 " supported appends.  Hey, gotta leave something for <netrw.vim> version 3!
 if version >= 600
   augroup Network
     au!
-    au BufReadCmd	ftp://*,rcp://* exe "Nr 0r " . expand("<afile>") | exe "set ft=" . expand("<afile>:e")
-    au FileReadCmd	ftp://*,rcp://* exe "Nr "    . expand("<afile>") | exe "set ft=" . expand("<afile>:e")
-    au BufWriteCmd	ftp://*,rcp://* exe "Nw "    . expand("<afile>")
+    au BufReadCmd	ftp://*,rcp://*,scp://*,http://* exe "Nr 0r " . expand("<afile>") | exe "doau BufReadPost " . expand("<afile>")
+    au FileReadCmd	ftp://*,rcp://*,scp://*,http://* exe "Nr "    . expand("<afile>") | exe "doau BufReadPost " . expand("<afile>")
+    au BufWriteCmd	ftp://*,rcp://*,scp://* exe "Nw "    . expand("<afile>")
   augroup END
 endif
 
 " ------------------------------------------------------------------------
 
 " Commands: :Nr and :Nw
-:com! -nargs=* Nr call NetRead(<f-args>)
-:com! -range=% -nargs=* Nw <line1>,<line2>call NetWrite(<f-args>)
+:com -nargs=* Nr call NetRead(<f-args>)
+:com -range=% -nargs=* Nw <line1>,<line2>call NetWrite(<f-args>)
 
 " ------------------------------------------------------------------------
 
@@ -124,8 +137,7 @@ function! NetRead(...)
   if     b:netrw_method  == 1	" read with rcp
 "   echo "DBG: read via rcp (method #1)"
    exe "!rcp " . b:netrw_machine . ":" . b:netrw_fname . " " . tmpfile
-   exe readcmd . tmpfile
-   let result   = delete(tmpfile)
+   let result = NetGetFile(readcmd, tmpfile)
    let b:netrw_lastfile = choice
 
   elseif b:netrw_method  == 2		" read with ftp + <.netrc>
@@ -133,8 +145,7 @@ function! NetRead(...)
 "   echo "DBG: this line gets wiped out"
    exe "norm mzoascii\<cr>get ".b:netrw_fname." ".tmpfile."\<esc>"
    exe "'z+1,.!ftp -i " . b:netrw_machine
-   exe readcmd . " " . tmpfile
-   let result           = delete(tmpfile)
+   let result = NetGetFile(readcmd, tmpfile)
    let b:netrw_lastfile = choice
 
   elseif b:netrw_method == 3		" read with ftp + machine, id, passwd, and fname
@@ -142,7 +153,7 @@ function! NetRead(...)
 "   echo "DBG: this line gets wiped out"
    exe "norm mzouser ".b:netrw_uid." ".b:netrw_passwd."\<cr>ascii\<cr>get ".b:netrw_fname." ".tmpfile."\<esc>"
 
-   if &term == "win32"
+   if has("win32")
     exe "norm o\<esc>my"
     exe "'z+1,'y-1!ftp -i -n " . b:netrw_machine
 	" the ftp on Win95 puts four lines of trash at the end
@@ -157,10 +168,21 @@ function! NetRead(...)
     exe "'z+1,.!ftp -i " . b:netrw_machine
    endif
    norm 'z
-   exe readcmd." ".tmpfile
-   let result = delete(tmpfile)
+   let result = NetGetFile(readcmd, tmpfile)
 
    " save choice/id/password for future use
+   let b:netrw_lastfile = choice
+
+  elseif     b:netrw_method  == 4	" read with scp
+"   echo "DBG: read via scp (method #4)"
+   exe "!scp " . b:netrw_machine . ":" . b:netrw_fname . " " . tmpfile
+   let result = NetGetFile(readcmd, tmpfile)
+   let b:netrw_lastfile = choice
+
+  elseif     b:netrw_method  == 5	" read with http (wget)
+"   echo "DBG: read via http (method #5)"
+   exe "!wget http://" . b:netrw_machine . "/" . b:netrw_fname . " -O " . tmpfile
+   let result = NetGetFile(readcmd, tmpfile)
    let b:netrw_lastfile = choice
 
   else " Complain
@@ -176,6 +198,22 @@ function! NetRead(...)
 " echo "DBG: return NetRead }"
 endfunction
 " end of NetRead
+
+" Function to read file "fname" with command "readcmd".
+" Takes care of deleting the last line when the buffer was emtpy.
+" Deletes the file "fname".
+func NetGetFile(readcmd, fname)
+  let dodel = 0
+  if line("$") == 1 && getline(1) == ""
+    let dodel = 1
+  endif
+  exe a:readcmd . " " . a:fname
+  if a:readcmd[0] == '0' && dodel && getline("$") == ""
+    $d
+    1
+  endif
+  return delete(a:fname)
+endfun
 
 " ------------------------------------------------------------------------
 
@@ -249,7 +287,7 @@ function! NetWrite(...) range
    let b:netrw_lastfile = choice
 
   elseif b:netrw_method == 3	" write with ftp + machine, id, passwd, and fname
-   if &term == "win32"
+   if has("win32")
     exe "norm mzouser ".b:netrw_uid." ".b:netrw_passwd."\<cr>ascii\<cr>put ".tmpfile." ".b:netrw_fname."\<esc>"
     exe "'z+1,.!ftp -i -n " . b:netrw_machine
 	norm u
@@ -265,6 +303,10 @@ function! NetWrite(...) range
    " save choice/id/password for future use
    let b:netrw_lastfile = choice
    let b:netrw_uid     = b:netrw_uid
+
+  elseif     b:netrw_method == 4	" write with scp
+   exe "!scp " . tmpfile . " " . b:netrw_machine . ":" . b:netrw_fname
+   let b:netrw_lastfile = choice
 
   else " Complain
    echo "***warning*** unable to comply with your request<" . choice . ">"
@@ -287,6 +329,8 @@ endfunction
 "  method == 1: rcp
 "            2: ftp + <.netrc>
 "            3: ftp + machine, id, password, and [path]filename
+"            4: scp
+"            5: http (wget)
 fu! NetMethod(choice)  " globals: method machine id passwd fname
 " echo "DBG: NetMethod1(a:choice<".a:choice.">) {"
 
@@ -299,13 +343,17 @@ fu! NetMethod(choice)  " globals: method machine id passwd fname
  " mipf  : a:machine a:id password filename  Use ftp
  " mf    : a:machine filename                Use ftp + <.netrc> or b:netrw_uid b:netrw_passwd
  " ftpurm: ftp://host/filename               Use ftp + <.netrc> or b:netrw_uid b:netrw_passwd
- " rcpurm: rpc://host/filename               Use rpc
- " rpchf : host:filename                     Use rpc
+ " rcpurm: rcp://host/filename               Use rcp
+ " rcphf : host:filename                     Use rcp
+ " scpurm: scp://[user@]host/filename        Use scp
+ " httpurm: http://[user@]host/filename      Use wget
  let mipf   = '\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)'
  let mf     = '\(\S\+\)\s\+\(\S\+\)'
  let ftpurm = 'ftp://\([^/]\{-}\)/\(.*\)$'
  let rcpurm = 'rcp://\([^/]\{-}\)/\(.*\)$'
- let rpchf  = '\(\I\i*\):\(\S\+\)'
+ let rcphf  = '\(\I\i*\):\(\S\+\)'
+ let scpurm = 'scp://\([^/]\{-}\)/\(.*\)$'
+ let httpurm= 'http://\([^/]\{-}\)/\(.*\)$'
 
  " Determine Method
  " rcp://hostname/...path-to-file
@@ -314,6 +362,20 @@ fu! NetMethod(choice)  " globals: method machine id passwd fname
   let b:netrw_method = 1
   let b:netrw_machine= substitute(a:choice,rcpurm,'\1',"")
   let b:netrw_fname  = substitute(a:choice,rcpurm,'\2',"")
+
+ " scp://user@hostname/...path-to-file
+ elseif match(a:choice,scpurm) == 0
+"  echo "DBG: NetMethod: scp://..."
+  let b:netrw_method = 4
+  let b:netrw_machine= substitute(a:choice,scpurm,'\1',"")
+  let b:netrw_fname  = substitute(a:choice,scpurm,'\2',"")
+
+ " http://hostname/...path-to-file
+ elseif match(a:choice,httpurm) == 0
+"  echo "DBG: NetMethod: http://..."
+  let b:netrw_method = 5
+  let b:netrw_machine= substitute(a:choice,httpurm,'\1',"")
+  let b:netrw_fname  = substitute(a:choice,httpurm,'\2',"")
 
  " ftp://hostname/...path-to-file
  elseif match(a:choice,ftpurm) == 0
@@ -342,7 +404,7 @@ fu! NetMethod(choice)  " globals: method machine id passwd fname
   let b:netrw_method = 1
   let b:netrw_machine= substitute(a:choice,rpchf,'\1',"")
   let b:netrw_fname  = substitute(a:choice,rpchf,'\2',"")
-  if &term == "win32"
+  if has("win32")
    " don't let PCs try <.netrc>
    let b:netrw_method = 3
   endif

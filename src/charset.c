@@ -71,33 +71,34 @@ buf_init_chartab(buf, global)
 #else
 	while (c <= '~')
 #endif
-	    chartab[c++] = 1 + CHAR_IP;
+	    chartab[c++] = 1 + CT_PRINT_CHAR;
 #ifdef FEAT_FKMAP
 	if (p_altkeymap)
 	{
 	    while (c < YE)
-		chartab[c++] = 1 + CHAR_IP;
+		chartab[c++] = 1 + CT_PRINT_CHAR;
 	}
 #endif
 	while (c < 256)
 	{
 #ifdef FEAT_MBYTE
 	    /* UTF-8: can't tell width from first byte unless it's ASCII */
-	    if (cc_utf8 && c >= 0x80)
-		chartab[c++] = CHAR_IP;
+	    if (cc_utf8 && c >= 0xa0)
+		chartab[c++] = CT_PRINT_CHAR + 1;
 	    /* double-byte chars are either unprintable or double-width */
 	    else if (cc_dbcs && MB_BYTE2LEN(c) == 2)
-		chartab[c++] = CHAR_IP + 2;
+		chartab[c++] = 2;
 	    else
 #endif
+		/* the rest is unprintable by default */
 		chartab[c++] = 2;
 	}
 
 #ifdef FEAT_MBYTE
 	/* Assume that every multi-byte char is a filename character. */
 	for (c = 1; c < 256; ++c)
-	    if (MB_BYTE2LEN(c) > 1)
-		chartab[c] |= CHAR_IF;
+	    if ((cc_dbcs && MB_BYTE2LEN(c) > 1) || (cc_utf8 && c >= 0xa0))
+		chartab[c] |= CT_FNAME_CHAR;
 #endif
     }
 
@@ -191,48 +192,40 @@ buf_init_chartab(buf, global)
 		    if (i == 0)			/* (re)set ID flag */
 		    {
 			if (tilde)
-			    chartab[c] &= ~CHAR_ID;
+			    chartab[c] &= ~CT_ID_CHAR;
 			else
-			    chartab[c] |= CHAR_ID;
+			    chartab[c] |= CT_ID_CHAR;
 		    }
-		    else if (i == 1)		/* set printable to 1 or 2 */
+		    else if (i == 1)		/* (re)set printable */
 		    {
-			if ((c < ' '
+			if (c < ' '
 #ifndef EBCDIC
-				    || c > '~'
+				|| c > '~'
 #endif
 #ifdef FEAT_FKMAP
-				    || (p_altkeymap
-					&& (F_isalpha(c) || F_isdigit(c)))
+				|| (p_altkeymap
+				    && (F_isalpha(c) || F_isdigit(c)))
 #endif
 			    )
-#ifdef FEAT_MBYTE
-				/* for UTF-8 keep size for c >= 0x80, for DBCS
-				 * keep size when it's a multi-byte */
-				&& (!has_mbyte
-				    || (cc_utf8 && c < 0x80)
-				    || (cc_dbcs && MB_BYTE2LEN(c) != 2))
-#endif
-			   )
 			{
 			    if (tilde)
 			    {
-				chartab[c] = (chartab[c] & ~CHAR_MASK) + 2;
-				chartab[c] &= ~CHAR_IP;
+				chartab[c] = (chartab[c] & ~CT_CELL_MASK) + 2;
+				chartab[c] &= ~CT_PRINT_CHAR;
 			    }
 			    else
 			    {
-				chartab[c] = (chartab[c] & ~CHAR_MASK) + 1;
-				chartab[c] |= CHAR_IP;
+				chartab[c] = (chartab[c] & ~CT_CELL_MASK) + 1;
+				chartab[c] |= CT_PRINT_CHAR;
 			    }
 			}
 		    }
 		    else if (i == 2)		/* (re)set fname flag */
 		    {
 			if (tilde)
-			    chartab[c] &= ~CHAR_IF;
+			    chartab[c] &= ~CT_FNAME_CHAR;
 			else
-			    chartab[c] |= CHAR_IF;
+			    chartab[c] |= CT_FNAME_CHAR;
 		    }
 		    else /* i == 3 */		/* (re)set keyword flag */
 			buf->b_chartab[c] = !tilde;
@@ -354,7 +347,7 @@ transchar(c)
 #ifdef FEAT_FKMAP
 			|| F_ischar(c)
 #endif
-		)) || (c < 256 && (chartab[c] & CHAR_IP)))
+		)) || (c < 256 && (chartab[c] & CT_PRINT_CHAR)))
     {
 	/* printable character */
 	buf[i] = c;
@@ -453,13 +446,18 @@ transchar_hex(buf, c)
  * Caller must make sure 0 <= b <= 255.
  * For multi-byte mode "b" must be the first byte of a character.
  * A TAB is counted as two cells: "^I".
- * For UTF-8 mode this will return 0 for bytes >= 0x80.
+ * For UTF-8 mode this will return 0 for bytes >= 0x80, because the number of
+ * cells depends on further bytes.
  */
     int
 byte2cells(b)
     int		b;
 {
-    return (chartab[b] & CHAR_MASK);
+#ifdef FEAT_MBYTE
+    if (cc_utf8 && b >= 0x80)
+	return 0;
+#endif
+    return (chartab[b] & CT_CELL_MASK);
 }
 
 /*
@@ -474,14 +472,17 @@ char2cells(c)
     if (IS_SPECIAL(c))
 	return char2cells(K_SECOND(c)) + 2;
 #ifdef FEAT_MBYTE
-    /* DBCS: double-byte means double-width */
-    if (cc_dbcs && c >= 0x100)
-	return 2;
-    /* UTF-8: up to 0x80 need to check the value, below that like ASCII */
-    if (cc_utf8 && c >= 0x80)
-	return utf_char2cells(c);
+    if (c >= 0x80)
+    {
+	/* UTF-8: above 0x80 need to check the value */
+	if (cc_utf8)
+	    return utf_char2cells(c);
+	/* DBCS: double-byte means double-width */
+	if (cc_dbcs && c >= 0x100)
+	    return 2;
+    }
 #endif
-    return (chartab[c & 0xff] & CHAR_MASK);
+    return (chartab[c & 0xff] & CT_CELL_MASK);
 }
 
 /*
@@ -493,15 +494,12 @@ ptr2cells(p)
     char_u	*p;
 {
 #ifdef FEAT_MBYTE
-    int		n;
-
-    n = (chartab[*p] & CHAR_MASK);
-    if (n == 0)	    /* must be utf-8 */
-	n = mb_ptr2cells(p);
-    return n;
-#else
-    return (chartab[*p] & CHAR_MASK);
+    /* For UTF-8 we need to look at more bytes if the first byte is >= 0x80. */
+    if (cc_utf8 && *p >= 0x80)
+	return mb_ptr2cells(p);
+    /* For DBCS we can tell the cell count from the first byte. */
 #endif
+    return (chartab[*p] & CT_CELL_MASK);
 }
 
 /*
@@ -611,7 +609,7 @@ win_linetabsize(wp, s)
 vim_isIDc(c)
     int c;
 {
-    return (c > 0 && c < 0x100 && (chartab[c] & CHAR_ID));
+    return (c > 0 && c < 0x100 && (chartab[c] & CT_ID_CHAR));
 }
 
 /*
@@ -637,22 +635,24 @@ vim_iswordc_buf(c, buf)
 
 /*
  * return TRUE if 'c' is a valid file-name character
+ * Assume characters above 0x100 are valid (multi-byte).
  */
     int
 vim_isfilec(c)
     int	c;
 {
-    return (c > 0 && c < 0x100 && (chartab[c] & CHAR_IF));
+    return (c >= 0x100 || (c > 0 && (chartab[c] & CT_FNAME_CHAR)));
 }
 
 /*
  * return TRUE if 'c' is a printable character
+ * Assume characters above 0x100 are printable (multi-byte).
  */
     int
 vim_isprintc(c)
     int c;
 {
-    return (c > 0 && c < 0x100 && (chartab[c] & CHAR_IP));
+    return (c >= 0x100 || (c > 0 && (chartab[c] & CT_PRINT_CHAR)));
 }
 
 /*
@@ -665,7 +665,7 @@ vim_isprintc(c)
 safe_vim_isprintc(c)
     int c;
 {
-    return (chartab[c] & CHAR_IP);
+    return (chartab[c] & CT_PRINT_CHAR);
 }
 
 /*
@@ -880,26 +880,31 @@ getvcol(wp, pos, start, cursor, end)
 		incr = ts - (vcol % ts);
 	    else
 	    {
-		incr = CHARSIZE(c);
 #ifdef FEAT_MBYTE
-		if (has_mbyte
-#ifdef FEAT_VERTSPLIT
-			&& wp->w_width != 0
-#endif
-			)
+		if (has_mbyte)
 		{
-		    int	i = mb_ptr2cells(ptr);
+		    /* For utf-8, if the byte is >= 0x80, need to look at
+		     * further bytes to find the cell width. */
+		    if (cc_utf8 && c >= 0x80)
+			incr = mb_ptr2cells(ptr);
+		    else
+			incr = CHARSIZE(c);
 
-		    if (incr == 0)	/* UTF-8 */
-			incr = i;
 		    /* If a double-cell char doesn't fit at the end of a line
 		     * it wraps to the next line, it's like this char is three
 		     * cells wide. */
-		    if (i == 2 && wp->w_p_wrap && (int)(vcol % W_WIDTH(wp))
+		    if (incr == 2
+			    && wp->w_p_wrap
+#ifdef FEAT_VERTSPLIT
+			    && wp->w_width != 0
+#endif
+			    && (int)(vcol % W_WIDTH(wp))
 						      == (int)W_WIDTH(wp) - 1)
 			++incr;
 		}
+		else
 #endif
+		    incr = CHARSIZE(c);
 	    }
 
 	    if (ptr >= posptr)	/* character at pos->col */

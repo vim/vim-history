@@ -804,6 +804,11 @@ mch_nodetype(name)
     return NODE_NORMAL;
 }
 
+    void
+mch_init()
+{
+}
+
 /*
  * Careful: mch_windexit() may be called before mch_shellinit()!
  */

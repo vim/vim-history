@@ -1364,6 +1364,21 @@ mch_shellinit()
 }
 
 /*
+ * Init the tables for toupper() and tolower().
+ */
+    void
+mch_init(void)
+{
+    int		i;
+
+    /* Init the tables for toupper() and tolower() */
+    for (i = 0; i < 256; ++i)
+	toupper_tab[i] = tolower_tab[i] = i;
+    CharUpperBuff(toupper_tab, 256);
+    CharLowerBuff(tolower_tab, 256);
+}
+
+/*
  * GUI version of mch_windexit().
  * Shut down and exit with status `r'
  * Careful: mch_windexit() may be called before mch_shellinit()!
@@ -1941,21 +1956,6 @@ mch_check_win(
 	return OK;
     return FAIL;
 #endif
-}
-
-/*
- * Init the tables for toupper() and tolower().
- */
-    void
-win32_init(void)
-{
-    int		i;
-
-    /* Init the tables for toupper() and tolower() */
-    for (i = 0; i < 256; ++i)
-	toupper_tab[i] = tolower_tab[i] = i;
-    CharUpperBuff(toupper_tab, 256);
-    CharLowerBuff(tolower_tab, 256);
 }
 
 /*

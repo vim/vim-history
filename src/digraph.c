@@ -2188,12 +2188,13 @@ printdigraph(dp)
     digr_t	*dp;
 {
     char_u	buf[30];
+    char_u	*p;
 
 #ifdef FEAT_MBYTE
     int		list_width;
 
     if (has_mbyte)
-	list_width = 12;
+	list_width = 13;
     else
 	list_width = 11;
 # define LIST_WIDTH list_width
@@ -2209,21 +2210,24 @@ printdigraph(dp)
 	    while (msg_col % LIST_WIDTH != 0)
 		msg_putchar(' ');
 
-	buf[0] = dp->char1;
-	buf[1] = dp->char2;
-	buf[2] = ' ';
+	p = buf;
+	*p++ = dp->char1;
+	*p++ = dp->char2;
+	*p++ = ' ';
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
-	    buf[mb_char2bytes(dp->result, buf + 3) + 3] = NUL;
+	{
+	    /* add a space to draw a composing char on */
+	    if (cc_utf8 && utf_iscomposing(dp->result))
+		*p++ = ' ';
+	    p += mb_char2bytes(dp->result, p);
+	}
 	else
 #endif
-	{
-	    buf[3] = dp->result;
-	    buf[4] = NUL;
-	}
+	    *p++ = dp->result;
 	if (char2cells(dp->result) == 1)
-	    STRCAT(buf, " ");
-	sprintf((char *)buf + STRLEN(buf), " %3d", dp->result);
+	    *p++ = ' ';
+	sprintf((char *)p, " %3d", dp->result);
 	msg_outtrans(buf);
     }
 }

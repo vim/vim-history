@@ -670,11 +670,18 @@ typedef unsigned short u8char_t;
 
 /*
  * Flags for chartab[].
+ * The "_CHAR" ones are for a character (possibly multi-byte).  They don't
+ * work for the first byte of a multi-byte.
+ * To get the nr of cells use CT_CELL_MASK:
+ * - For non-multi-byte index with the character.
+ * - For DBCS index with the first byte.
+ * - For UTF-8 index with the character (byte up to 0x80 is the same, byte of
+ *   0x80 and above depends on further bytes).
  */
-#define CHAR_MASK	0x03	/* low two bits for size */
-#define CHAR_IP		0x04	/* third bit set for printable chars */
-#define CHAR_ID		0x08	/* fourth bit set for ID chars */
-#define CHAR_IF		0x10	/* fifth bit set for file name chars */
+#define CT_CELL_MASK	0x03	/* low two bits for display cells (1 or 2) */
+#define CT_PRINT_CHAR	0x04	/* flag: set for printable chars */
+#define CT_ID_CHAR	0x08	/* flag: set for ID chars */
+#define CT_FNAME_CHAR	0x10	/* flag: set for file name chars */
 
 /*
  * Values for do_tag().
@@ -1305,6 +1312,16 @@ typedef struct VimClipboard
  */
 # define MB_BYTE2LEN(b)	mb_bytelen_tab[b]
 # define MB_BYTE2LEN_CHECK(b)	(((b) < 0 || (b) > 255) ? 1 : mb_bytelen_tab[b])
+#endif
+
+/* ISSYMLINK(mode) tests if a file is a symbolic link. */
+#if (defined(S_IFMT) && defined(S_IFLNK)) || defined(S_ISLNK)
+# define HAVE_ISSYMLINK
+# if defined(S_IFMT) && defined(S_IFLNK)
+#  define ISSYMLINK(mode) (((mode) & S_IFMT) == S_IFLNK)
+# else
+#  define ISSYMLINK(mode) S_ISLNK(mode)
+# endif
 #endif
 
 #endif /* VIM__H */

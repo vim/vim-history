@@ -15,7 +15,6 @@ diffwin.vim	show the differences of two windows
 hdiffwin.vim	like diffwin but uses horizontally split windows
 dvorak		for when you use a Dvorak keyboard
 explorer.vim	file browser
-html		macros for editing HTML files
 justify.vim	user function for justifying text
 shellmenu.vim	menus for editing shell scripts in the GUI version
 swapmous.vim	swap left and right mouse buttons

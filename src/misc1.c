@@ -6320,6 +6320,16 @@ get_cmd_output(cmd, flags)
 	EMSG2(_(e_notopen), tempname);
 	goto done;
     }
+
+#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
+    if (symlink_check(tempname))
+    {
+	EMSG(_("Security error: shell command output is a symbolic link"));
+	fclose(fd);
+	goto done;
+    }
+#endif
+
     fseek(fd, 0L, SEEK_END);
     len = ftell(fd);		    /* get size of temp file */
     fseek(fd, 0L, SEEK_SET);

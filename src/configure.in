@@ -1464,8 +1464,9 @@ main()
 
 dnl Check for functions in one big call, to reduce the size of configure
 AC_CHECK_FUNCS(bcmp fchdir fchown fseeko fsync ftello getcwd getpwnam getpwuid \
-	getrlimit gettimeofday getwd lstat memcmp memset nanosleep opendir \
-	putenv qsort select setenv setpgid setsid sigset sigsetjmp \
+	getrlimit gettimeofday getwd lstat memcmp memset mkstemp \
+	nanosleep opendir putenv qsort select setenv setpgid setsid \
+	sigaltstack sigstack sigset sigsetjmp sigaction sigvec \
 	strcasecmp strerror strftime stricmp strncasecmp strnicmp \
 	strpbrk strtol tgetent usleep utime utimes)
 

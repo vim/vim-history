@@ -62,6 +62,7 @@ struct Completion
     char_u		*str;	  /* matched text */
     char_u		*fname;	  /* file containing the match */
     int			original; /* ORIGINAL_TEXT, CONT_S_IPOS or FREE_FNAME */
+    int			number;	  /* sequence number */
 };
 
 /* the original text when the expansion begun */
@@ -78,6 +79,7 @@ static struct Completion    *first_match = NULL;
 static struct Completion    *curr_match = NULL;
 static struct Completion    *shown_match = NULL;
 static int		    started_completion = FALSE;
+static int		    completion_matches = 0;
 static char_u		    *complete_pat = NULL;
 static int		    complete_direction = FORWARD;
 static int		    shown_direction = FORWARD;
@@ -1794,8 +1796,12 @@ ins_compl_add(str, len, fname, dir, reuse)
     match = (struct Completion *)alloc((unsigned)sizeof(struct Completion));
     if (match == NULL)
 	return RET_ERROR;
+    match->number = -1;
     if (reuse & ORIGINAL_TEXT)
+    {
+	match->number = 0;
 	match->str = original_text;
+    }
     else if ((match->str = vim_strnsave(str, len)) == NULL)
     {
 	vim_free(match);
@@ -2021,6 +2027,8 @@ ins_compl_clear()
 {
     continue_status = 0;
     started_completion = FALSE;
+    completion_matches = 0;
+    msg_clr_cmdline();		/* necessary for "noshowmode" */
     complete_pat = NULL;
     save_sm = -1;
 }
@@ -2233,6 +2241,8 @@ ins_compl_prep(c)
 	    complete_pat = NULL;
 	    ins_compl_free();
 	    started_completion = FALSE;
+	    completion_matches = 0;
+	    msg_clr_cmdline();		/* necessary for "noshowmode" */
 	    ctrl_x_mode = 0;
 	    p_sm = save_sm;
 	    if (edit_submode != NULL)
@@ -2375,8 +2385,11 @@ ins_compl_get_exp(ini, dir)
 		    dict_f = DICT_EXACT;
 		}
 		sprintf((char *)IObuff, _("Scanning: %s"),
-			ins_buf->b_sfname == NULL ? buf_spname(ins_buf)
-						  : (char *)ins_buf->b_sfname);
+			ins_buf->b_fname == NULL
+			    ? buf_spname(ins_buf)
+			    : ins_buf->b_sfname == NULL
+				? (char *)ins_buf->b_fname
+				: (char *)ins_buf->b_sfname);
 		msg_trunc_attr(IObuff, TRUE, hl_attr(HLF_R));
 	    }
 	    else if (*e_cpt == NUL)
@@ -2612,8 +2625,9 @@ ins_compl_get_exp(ini, dir)
 			    continue;
 		    }
 		}
-		if (ins_compl_add_infercase(ptr, len, ins_buf == curbuf ?
-			NULL : ins_buf->b_sfname, dir, reuse) != FAIL)
+		if (ins_compl_add_infercase(ptr, len,
+			    ins_buf == curbuf ?  NULL : ins_buf->b_sfname,
+							  dir, reuse) != FAIL)
 		{
 		    found_new_match = OK;
 		    break;
@@ -3057,7 +3071,14 @@ ins_complete(c)
 
     shown_match = curr_match;
     shown_direction = complete_direction;
+
+    /*
+     * Find next match.
+     */
     temp = ins_compl_next(TRUE);
+
+    if (temp > 1)	/* all matches have been found */
+	completion_matches = temp;
     curr_match = shown_match;
     complete_direction = shown_direction;
     completion_interrupted = FALSE;
@@ -3110,29 +3131,71 @@ ins_complete(c)
 	    edit_submode_extra = (char_u *)_("The only match");
 	    edit_submode_highl = HLF_COUNT;
 	}
-    }
-
-    if (temp > 1)
-    {
-	if (ctrl_x_mode == 0 || ctrl_x_mode == CTRL_X_WHOLE_LINE)
-	    ptr = (char_u *)_("All %d matches have now been found");
-	else if (ctrl_x_mode == CTRL_X_FILES)
-	    ptr = (char_u *)_("There are %d matching file names");
-	else if (ctrl_x_mode == CTRL_X_TAGS)
-	    ptr = (char_u *)_("There are %d matching tags");
 	else
-	    ptr = (char_u *)_("There are %d matches");
-	sprintf((char *)IObuff, (char *)ptr, temp);
-	if (dollar_vcol)
-	    curs_columns(FALSE);
-	msg_attr(IObuff, hl_attr(HLF_R));
-	if (!char_avail())
 	{
-	    setcursor();
-	    out_flush();
-	    ui_delay(1500L, FALSE);
+	    /* Update completion sequence number when needed. */
+	    if (curr_match->number == -1)
+	    {
+		int		    number = 0;
+		struct Completion   *match;
+
+		if (complete_direction == FORWARD)
+		{
+		    /* search backwards for the first valid (!= -1) number.
+		     * This should normally succeed already at the first loop
+		     * cycle, so it's fast! */
+		    for (match = curr_match->prev; match != NULL
+				 && match != first_match; match = match->prev)
+			if (match->number != -1)
+			{
+			    number = match->number;
+			    break;
+			}
+		    if (match != NULL)
+			/* go up and assign all numbers which are not assigned
+			 * yet */
+			for (match = match->next; match
+				  && match->number == -1; match = match->next)
+			    match->number = ++number;
+		}
+		else /* BACKWARD */
+		{
+		    /* search forwards (upwards) for the first valid (!= -1)
+		     * number.  This should normally succeed already at the
+		     * first loop cycle, so it's fast! */
+		    for (match = curr_match->next; match != NULL
+				 && match != first_match; match = match->next)
+			if (match->number != -1)
+			{
+			    number = match->number;
+			    break;
+			}
+		    if (match != NULL)
+			/* go down and assign all numbers which are not
+			 * assigned yet */
+			for (match = match->prev; match
+				  && match->number == -1; match = match->prev)
+			    match->number = ++number;
+		}
+	    }
+
+	    /* The match should always have a sequnce number now, this is just
+	     * a safety check. */
+	    if (curr_match->number != -1)
+	    {
+		if (completion_matches > 0)
+		    sprintf((char *)IObuff, _("match %d of %d"),
+				      curr_match->number, completion_matches);
+		else
+		    sprintf((char *)IObuff, _("match %d"), curr_match->number);
+		edit_submode_extra = IObuff;
+		edit_submode_highl = HLF_R;
+		if (dollar_vcol)
+		    curs_columns(FALSE);
+	    }
 	}
     }
+
     showmode();
     if (edit_submode_extra != NULL)
     {
@@ -3140,13 +3203,20 @@ ins_complete(c)
 	    msg_attr(edit_submode_extra,
 		    edit_submode_highl < HLF_COUNT
 		    ? hl_attr(edit_submode_highl) : 0);
+	edit_submode_extra = NULL;
+#if 0
 	if (!char_avail())
 	{
 	    setcursor();
 	    out_flush();
 	    ui_delay(1500L, FALSE);
 	}
-	edit_submode_extra = NULL;
+#else
+    }
+    else
+    {
+	msg_clr_cmdline();	/* necessary for "noshowmode" */
+#endif
     }
 
     return TRUE;

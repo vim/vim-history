@@ -512,6 +512,21 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     }
 #endif /* FEAT_AUTOCMD */
 
+#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
+    /* Security check: When filtering, we don't want to read through a
+     * symlink.  This could be a symlink attack to try to replace the filtered
+     * text with something else.
+     */
+    if (filtering && symlink_check(fname))
+    {
+	--no_wait_return;
+	msg_scroll = msg_save;
+	close(fd);
+	EMSG2(_("Security error: filter output is a symbolic link: %s"), fname);
+	return FAIL;
+    }
+#endif
+
 #ifdef FEAT_MBYTE
     /*
      * Decide which 'charcode' to use.
@@ -570,6 +585,15 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 		if (errmsg == NULL && (fd = mch_open((char *)tmpname,
 						  O_RDONLY | O_EXTRA, 0)) < 0)
 		    errmsg = (char_u *)_("can't read output of 'charconvert'");
+
+#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
+		/* Security check: When filtering, we don't want to read
+		 * through a symlink.  This could be a symlink attack to try
+		 * to replace the filtered text with something else.
+		 */
+		if (errmsg == NULL && symlink_check(tmpname))
+		    errmsg = (char_u *)_("Security error: 'charconvert' output is a symbolic link");
+#endif
 	    }
 	    if (errmsg != NULL)
 	    {
@@ -1746,7 +1770,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	     * - we can't set the owner/group of the new file
 	     */
 	    if (st_old.st_nlink > 1
-		    || lstat((char *)fname, &st) < 0
+		    || mch_lstat((char *)fname, &st) < 0
 		    || st.st_dev != st_old.st_dev
 		    || st.st_ino != st_old.st_ino)
 		backup_copy = TRUE;
@@ -1926,8 +1950,10 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		{
 		    /* remove old backup, if present */
 		    mch_remove(backup);
-		    bfd = mch_open((char *)backup, O_WRONLY|O_CREAT|O_EXTRA,
-									0666);
+		    /* Open with O_EXCL to avoid the file being created while
+		     * we were sleeping (symlink hacker attack?) */
+		    bfd = mch_open((char *)backup,
+				       O_WRONLY|O_CREAT|O_EXTRA|O_EXCL, 0666);
 		    if (bfd < 0)
 		    {
 			vim_free(backup);
@@ -2289,6 +2315,18 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	if (buf->b_ffname != NULL)
 	    (void)mch_copy_file_attribute(buf->b_ffname, wfname);
 	/* Should copy ressource fork */
+    }
+#endif
+
+#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
+    /* Security check: When filtering, we don't want to write through a
+     * symlink.  This could be a symlink attack to try to replace the filtered
+     * text with something else.
+     */
+    if (filtering && symlink_check(wfname))
+    {
+	EMSG2(_("Security error: filter input is a symbolic link: %s"), wfname);
+	goto fail;
     }
 #endif
 
@@ -3043,8 +3081,8 @@ get_fio_flags(ptr)
 #endif
 
 /*
- * shorten_fname: Try to find a shortname by comparing the fullname with the
- * current directory.
+ * Try to find a shortname by comparing the fullname with the current
+ * directory.
  * Returns NULL if not shorter name possible, pointer into "full_path"
  * otherwise.
  */
@@ -3101,7 +3139,8 @@ shorten_fname(full_path, dir_name)
  * edited, both for file name and swap file name.  Try to shorten the file
  * names a bit, if safe to do so.
  * When "force" is FALSE: Only try to shorten absolute file names.
- * For buffers that have buftype "nofile" or "scratch": never change the file name.
+ * For buffers that have buftype "nofile" or "scratch": never change the file
+ * name.
  */
     void
 shorten_fnames(force)
@@ -3791,8 +3830,21 @@ vim_tempname(extra_char)
 	    STRCAT(itmp, TEMPNAME);
 	    if ((p = vim_strchr(itmp, '?')) != NULL)
 		*p = extra_char;
+#ifdef HAVE_MKSTEMP
+	    {
+		int fd;
+
+		/* We cheat: create the tempfile and then delete it. */
+		fd = mkstemp((char *)itmp);
+		if (fd == -1)
+		    continue;
+		close(fd);
+		mch_remove(itmp);
+	    }
+#else
 	    if (mktemp((char *)itmp) == NULL)
 		continue;
+#endif
 	    return vim_strsave(itmp);
 	}
     }
@@ -5771,3 +5823,17 @@ file_pat_to_reg_pat(pat, pat_end, allow_dirs, no_bslash)
     }
     return reg_pat;
 }
+
+#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
+/*
+ * Return TRUE if file "name" is in fact a symbolic link.
+ */
+    int
+symlink_check(fname)
+    char_u	*fname;
+{
+    struct stat sb;
+
+    return (mch_lstat((char *)fname, &sb) == 0 && ISSYMLINK(sb.st_mode));
+}
+#endif

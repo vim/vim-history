@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 6.0j.  Last change: 2000 Aug 07
+*tagsearch.txt* For Vim version 6.0k.  Last change: 2000 Oct 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -452,9 +452,10 @@ a tag for each "#defined" macro, typedefs, enums, etc.
 Some programs that generate tags files:
 ctags			As found on most Unix systems.  Only supports C.  Only
 			does the basic work.
-exuberant ctags		Included with the Vim distribution.  This a very good
-			one.  It works for C, C++, Java, Fortran and Eiffel.
-			It can generate tags for many items.
+exuberant ctags		This a very good one.  It works for C, C++, Java,
+			Fortran, Eiffel and others.  It can generate tags for
+			many items.  See http://ctags.sourceforge.net.  The
+			executable is included with the Vim executable.
 etags			Connected to Emacs.  Supports many languages.
 JTags			For Java, in Java.  It can be found at
 			http://www.fleiner.com/jtags/.

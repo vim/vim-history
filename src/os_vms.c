@@ -1282,6 +1282,11 @@ mch_nodetype(name)
 }
 
     void
+mch_init(void)
+{
+}
+
+    void
 mch_windexit(int r)
 {
     exiting = TRUE;

@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0j.  Last change: 2000 Oct 20
+*starting.txt*  For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -455,7 +455,7 @@ stdin.  A typical example: >
 A problem is that stdin for the program run by xargs is not setup properly,
 which causes problems for Vim.  That is because Vim expects commands to come
 from stdin.  The symptoms are that typed characters are echoed and don't take
-effect until <Return> is hit.
+effect until <Enter> is hit.
 
 This is really a problem in xargs.  To work around it, you can use this small
 program: >
@@ -521,11 +521,12 @@ accordingly.  Vim proceeds in this order:
 	initializations until 4. are skipped.  Only the "-u" option is
 	interpreted.
      							*system-vimrc*
-     a. For Unix, OS/2, VMS, Macintosh, RISC-OS and Amiga the system vimrc
-	file is read for initializations.  The path of this file is shown with
-	the ":version" command.  Note that this file is ALWAYS read in
-	'compatible' mode, since the automatic resetting of 'compatible' is
-	only done later.  Add a ":set nocp" command if you like.
+     a. For Unix, MS-DOS, MS-Windows, OS/2, VMS, Macintosh, RISC-OS and Amiga
+	the system vimrc file is read for initializations.  The path of this
+	file is shown with the ":version" command.  Mostly it's "$VIM/vimrc".
+	Note that this file is ALWAYS read in 'compatible' mode, since the
+	automatic resetting of 'compatible' is only done later.  Add a ":set
+	nocp" command if you like.
 
 			  *VIMINIT* *.vimrc* *_vimrc* *EXINIT* *.exrc* *_exrc*
      b. Four places are searched for initializations.  The first that exists
@@ -576,6 +577,7 @@ accordingly.  Vim proceeds in this order:
 	- The "-u NONE" command line argument is used |-u|.
 	- When Vim was started with the |-u| argument to specify a vimrc
 	  script to use.
+	- When Vim was compiled without the |+eval| feature.
 	Note that using "-c set noloadplugins" doesn't work, because the
 	commands from the command line are executed after loading the plugins
 	(so that they are active when loading the first file).

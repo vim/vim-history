@@ -551,10 +551,10 @@ struct file_buffer
     int		b_flags;	/* various BF_ flags */
 
     /*
-     * b_ffname has the full path of the file.
-     * b_sfname is the name as the user typed it.
+     * b_ffname has the full path of the file (NULL for no name).
+     * b_sfname is the name as the user typed it (or NULL).
      * b_fname is the same as b_sfname, unless ":cd" has been done,
-     *		then it is the same as b_ffname.
+     *		then it is the same as b_ffname (NULL for no name).
      */
     char_u	*b_ffname;	/* full path file name */
     char_u	*b_sfname;	/* short file name */
@@ -793,7 +793,7 @@ struct file_buffer
 #ifdef FEAT_TCL
     void	*tcl_ref;
 #endif
-  
+
 #ifdef FEAT_RUBY
     void	*ruby_ref;
 #endif

@@ -1,4 +1,4 @@
-*usr_06.txt*	For Vim version 6.0j.  Last change: 2000 Oct 22
+*usr_06.txt*	For Vim version 6.0k.  Last change: 2000 Oct 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -83,7 +83,8 @@ switches on three very clever mechanisms:
 Vim's functionality can be extended by adding plugins.  They usually add a
 nice feature for a limited audience (if it was for everybody it would have
 been included in Vim itself).  A plugin is nothing more than a Vim script file
-that is loaded automatically.
+that is loaded automatically. {not available when Vim was compiled without the
+|+eval| feature}
 
 There are two types of plugins:
 

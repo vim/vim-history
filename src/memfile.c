@@ -114,23 +114,23 @@ static void mf_do_open __ARGS((memfile_t *, char_u *, int));
  *  fname:	name of file to use (NULL means no file at all)
  *		Note: fname must have been allocated, it is not copied!
  *			If opening the file fails, fname is freed.
- *  trunc_file:	    if TRUE: file should be truncated when opening
+ *  flags:	flags for open() call
  *
  *  If fname != NULL and file cannot be opened, fail.
  *
  * return value: identifier for this memory block file.
  */
     memfile_t *
-mf_open(fname, trunc_file)
-    char_u  *fname;
-    int	    trunc_file;
+mf_open(fname, flags)
+    char_u	*fname;
+    int		flags;
 {
-    memfile_t	    *mfp;
-    int		    i;
-    off_t	    size;
+    memfile_t		*mfp;
+    int			i;
+    off_t		size;
 #if defined(STATFS) && defined(UNIX) && !defined(__QNX__)
 # define USE_FSTATFS
-    struct STATFS   stf;
+    struct STATFS	stf;
 #endif
 
     if ((mfp = (memfile_t *)alloc((unsigned)sizeof(memfile_t))) == NULL)
@@ -144,7 +144,7 @@ mf_open(fname, trunc_file)
     }
     else
     {
-	mf_do_open(mfp, fname, trunc_file);	/* try to open the file */
+	mf_do_open(mfp, fname, flags);	/* try to open the file */
 
 	/* if the file cannot be opened, return here */
 	if (mfp->mf_fd < 0)
@@ -181,7 +181,7 @@ mf_open(fname, trunc_file)
 	mfp->mf_page_size = stf.F_BSIZE;
 #endif
 
-    if (mfp->mf_fd < 0 || trunc_file
+    if (mfp->mf_fd < 0 || (flags & (O_TRUNC|O_EXCL))
 		      || (size = lseek(mfp->mf_fd, (off_t)0L, SEEK_END)) <= 0)
 	mfp->mf_blocknr_max = 0;	/* no file or empty file */
     else
@@ -210,7 +210,7 @@ mf_open_file(mfp, fname)
     memfile_t	*mfp;
     char_u	*fname;
 {
-    mf_do_open(mfp, fname, TRUE);		/* try to open the file */
+    mf_do_open(mfp, fname, O_RDWR|O_CREAT|O_EXCL); /* try to open the file */
 
     if (mfp->mf_fd < 0)
 	return FAIL;
@@ -1192,12 +1192,13 @@ mf_need_trans(mfp)
  * error occurs).
  */
     static void
-mf_do_open(mfp, fname, trunc_file)
+mf_do_open(mfp, fname, flags)
     memfile_t	*mfp;
     char_u	*fname;
-    int		trunc_file;
+    int		flags;		/* flags for open() */
 {
     mfp->mf_fname = fname;
+
     /*
      * Get the full path name before the open, because this is
      * not possible after the open on the Amiga.
@@ -1221,7 +1222,7 @@ mf_do_open(mfp, fname, trunc_file)
 #else
 	    (char *)mfp->mf_fname,
 #endif
-	    (trunc_file ? (O_CREAT | O_RDWR | O_TRUNC) : (O_RDONLY)) | O_EXTRA
+	    flags | O_EXTRA
 #if defined(UNIX) || defined(RISCOS)		 /* open in rw------- mode */
 		    , (mode_t)0600
 #endif

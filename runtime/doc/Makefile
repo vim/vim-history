@@ -58,6 +58,7 @@ DOCS = \
 	os_vms.txt \
 	os_win32.txt \
 	pattern.txt \
+	pi_netrw.txt \
 	quickfix.txt \
 	quickref.txt \
 	quotes.txt \
@@ -142,6 +143,7 @@ HTMLS = \
 	os_vms.html \
 	os_win32.html \
 	pattern.html \
+	pi_netrw.html \
 	quickfix.html \
 	quickref.html \
 	quotes.html \

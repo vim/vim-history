@@ -159,7 +159,10 @@ typedef struct GuiScrollbar
 
     /* Values measured in characters: */
     int		top;		/* Top of scroll bar (chars from row 0) */
-    int		height;		/* Height of scroll bar (num rows) */
+    int		height;		/* Current height of scroll bar in rows */
+#ifdef FEAT_VERTSPLIT
+    int		width;		/* Current width of scroll bar in cols */
+#endif
     int		status_height;	/* Height of status line */
 #ifdef FEAT_GUI_X11
     Widget	id;		/* Id of real scroll bar */

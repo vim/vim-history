@@ -1,9 +1,10 @@
 /* os_win16.c */
 void mch_setmouse __ARGS((int on));
 void mch_shellinit __ARGS((void));
+void mch_init __ARGS((void));
 void mch_windexit __ARGS((int r));
 int mch_check_win __ARGS((int argc, char **argv));
-void win32_init __ARGS((void));
+void mch_init __ARGS((void));
 int mch_input_isatty __ARGS((void));
 void mch_settitle __ARGS((char_u *title, char_u *icon));
 void mch_restore_title __ARGS((int which));

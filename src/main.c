@@ -288,10 +288,10 @@ main
     int		    input_isatty;	    /* is active input a terminal? */
     oparg_t	    oa;			    /* operator arguments */
 
-#ifdef RISCOS
-    /* Turn off all the horrible filename munging in UnixLib. */
-    __uname_control = __UNAME_NO_PROCESS;
-#endif
+    /*
+     * Do any system-specific initialisations.
+     */
+    mch_init();
 
 #ifdef FEAT_TCL
     Tcl_FindExecutable(argv[0]);
@@ -305,21 +305,17 @@ main
     _wildcard(&argc, &argv);
 #endif
 
-#ifdef MSWIN
-    win32_init();		/* init toupper() and tolower() tables */
-#endif
-
 #ifdef FEAT_MBYTE
     (void)mb_init();	/* init mb_bytelen_tab[] to ones */
 #endif
-
-    /* Init the table of Normal mode commands. */
-    init_normal_cmds();
 
 #ifdef FEAT_GUI_MAC
     /* Macinthosh needs this before any memory is allocated. */
     gui_prepare(&argc, argv);	/* Prepare for possibly starting GUI sometime */
 #endif
+
+    /* Init the table of Normal mode commands. */
+    init_normal_cmds();
 
 #if defined(HAVE_DATE_TIME) && defined(VMS) && defined(VAXC)
     make_version();
@@ -1161,11 +1157,14 @@ main
 	    need_wait_return = TRUE;
 	secure = 0;
 
+#ifdef FEAT_EVAL
 	/*
 	 * Read all the plugin files.
+	 * Only when compiled with +eval, since most plugins need it.
 	 */
 	if (p_lpl)
 	    cmd_runtime((char_u *)"plugin/*.vim", TRUE);
+#endif
     }
 
     /*

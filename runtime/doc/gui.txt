@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0j.  Last change: 2000 Oct 21
+*gui.txt*       For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -50,9 +50,9 @@ When the GUI starts up initializations are carried out, in this order:
 - If the "-U {gvimrc}" command-line option has been used when starting Vim,
   the {gvimrc} file will be read for initializations.  The following
   initializations are skipped.
-- For Unix, if the system gvimrc exists, it is sourced.  The name of this file
-  is normally "$VIM/gvimrc".  You can check this with ":version".  Also see
-  |$VIM|.
+- For Unix and MS-Windows, if the system gvimrc exists, it is sourced.  The
+  name of this file is normally "$VIM/gvimrc".  You can check this with
+  ":version".  Also see |$VIM|.
 - The following are tried, and only the first one that exists is used:
   - If the GVIMINIT environment variable exists and is not empty, it is
     executed as an Ex command.
@@ -202,7 +202,7 @@ shift key, it will scroll a page at a time.
 The mouse only works if the appropriate flag in the 'mouse' option is set.
 When the GUI is switched on, and 'mouse' wasn't set yet, the 'mouse' option is
 automatically set to "a", enabling it for all modes except for the
-|hit-return| prompt.  If you don't want this, a good place to change the
+|hit-enter| prompt.  If you don't want this, a good place to change the
 'mouse' option is the "gvimrc" file.
 
 Other options that are relevant:
@@ -289,7 +289,7 @@ See |gui-selections| on how the selection is used.
 
 A different kind of selection is used when:
 - in Command-line mode
-- at the |hit-return| prompt
+- at the |hit-enter| prompt
 - whenever the current mode is not in the 'mouse' option
 - when hodling the CTRL and SHIFT keys in the GUI
 Since Vim continues like the selection isn't there, and there is no mode
@@ -418,7 +418,7 @@ system.  To do this, put these commands in your .vimrc file: >
 	:set wcm=<C-Z>
 	:map <F4> :emenu <C-Z>
 Pressing <F4> will start the menu.  You can now use the cursor keys to select
-a menu entry.  Hit <Return> to execute it.  Hit <Esc> if you want to cancel.
+a menu entry.  Hit <Enter> to execute it.  Hit <Esc> if you want to cancel.
 This does require the |+menu| feature enabled at compile time.
 
 							*tear-off-menus*

@@ -281,6 +281,11 @@ mch_shellinit()
 #endif
 }
 
+    void
+mch_init(void)
+{
+}
+
 /*
  * GUI version of mch_windexit().
  * Shut down and exit with status `r'
@@ -317,7 +322,7 @@ mch_check_win(
  * Init the tables for toupper() and tolower().
  */
     void
-win32_init(void)
+mch_init(void)
 {
     int		i;
 

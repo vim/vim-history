@@ -946,7 +946,6 @@ do_one_cmd(cmdlinep, sourcing,
     void		*cookie;		/* argument for getline() */
 {
     char_u		*p;
-    int			i;
     linenr_t		lnum;
     long		n;
     char_u		*errormsg = NULL;	/* error message */
@@ -1253,6 +1252,7 @@ do_one_cmd(cmdlinep, sourcing,
 	char_u		*pos;
 	char_u		*ptr;
 	int		len;
+	int		i;
 
 	program = (ea.cmdidx == CMD_grep) ? p_gp : p_mp;
 	p = skipwhite(p);
@@ -3752,7 +3752,7 @@ get_mef_name()
 	if (mch_getperm(name) < 0
 #ifdef HAVE_LSTAT
 		    /* Don't accept a symbolic link, its a security risk. */
-		    && lstat((char *)name, &sb) < 0
+		    && mch_lstat((char *)name, &sb) < 0
 #endif
 		)
 	    break;

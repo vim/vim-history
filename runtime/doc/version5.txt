@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 6.0j.  Last change: 2000 Aug 16
+*version5.txt*  For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -88,7 +88,7 @@ Viminfo improved			|improved-viminfo|
 Various new commands			|new-commands-5.4|
 Various new options			|new-options-5.4|
 Vim scripts				|new-script-5.4|
-Avoid hit-return prompt			|avoid-hit-return|
+Avoid hit-enter prompt			|avoid-hit-enter|
 Improved quickfix			|improved-quickfix|
 Regular expressions			|regexp-changes-5.4|
 Changed					|changed-5.4|
@@ -1155,7 +1155,7 @@ When doing ":buf N", going to a buffer that was edited with ":view", the
 readonly flag was reset.  Now make a difference between ":e file" and ":buf
 file": Only set/reset 'ro' for the first one.
 
-Avoid |hit-return| prompt when not able to write viminfo on exit.
+Avoid |hit-enter| prompt when not able to write viminfo on exit.
 
 When giving error messages in the terminal where the GUI was started, GUI
 escape codes would be written to the terminal.  In an xterm this could be seen
@@ -1342,7 +1342,7 @@ that the "0" was still there. (Acevedo)
 
 "/<Tab>" landed on the wrong character when 'incsearch' is set.
 
-Asking a yes/no question could cause a |hit-return| prompt.
+Asking a yes/no question could cause a |hit-enter| prompt.
 
 When the file consists of one long line (>4100 characters), making changes
 caused various errors and a crash.
@@ -1434,7 +1434,7 @@ Changed "XawChain*" to "XtChain*", should work for more systems.
 
 Included quite a few fixes for rightleft mode (Lottem).
 
-Didn't ask to |hit-return| when GUI is started and error messages are printed.
+Didn't ask to |hit-enter| when GUI is started and error messages are printed.
 
 When trying to edit a file in a non-existent directory, ended up with editing
 "No file".
@@ -1444,7 +1444,7 @@ When trying to edit a file in a non-existent directory, ended up with editing
 When 'hlsearch' set, only the current window was updated for a new search
 pattern.
 
-Sometimes error messages on startup didn't cause a |hit-return| prompt,
+Sometimes error messages on startup didn't cause a |hit-enter| prompt,
 because of autocommands containing an empty line.
 
 Was possible to select part of the window in the border, below the command
@@ -2680,7 +2680,7 @@ The FileChangedShell autocommand didn't set <afile> to the name of the changed
 file.
 
 When doing ":e file", causing the attention message, there sometimes was no
-hit-return prompt.  Caused by empty line or "endif" at end of sourced file.
+hit-enter prompt.  Caused by empty line or "endif" at end of sourced file.
 
 A large number of patches for the VMS version. (Hunsaker)
 
@@ -3474,16 +3474,16 @@ influence the outcome.  This makes it faster and avoids error messages. (Webb)
 Also optimized the skipping of expressions inside an "if 0".
 
 
-Avoid hit-return prompt					*avoid-hit-return*
+Avoid hit-enter prompt					*avoid-hit-enter*
 -----------------------
 
 Added 'T' flag to 'shortmess': Truncate all messages that would cause the
-hit-return prompt (unless that would happen anyway).
+hit-enter prompt (unless that would happen anyway).
 The 'O' flag in 'shortmess' now also applies to quickfix messages, e.g., from
 the ":cn" command.
 
 The default for 'shortmess' is now "filnxtToO", to make most messages fit on
-the command line, and not cause the hit-return prompt.
+the command line, and not cause the hit-enter prompt.
 
 Previous messages can be viewed with the new |:messages| command.
 
@@ -3548,7 +3548,7 @@ Changed							*changed-5.4*
 
 Unix: Use $TMPDIR for temporary files, if it is set and exists.
 
-Removed "Empty buffer" message.  It isn't useful and can cause a hit-return
+Removed "Empty buffer" message.  It isn't useful and can cause a hit-enter
 prompt. (Negri)
 
 "ex -" now reads commands from stdin and works in silent mode.  This is to be
@@ -4647,7 +4647,7 @@ modelines were inspected.  It was wrong when executing a function.
 
 The file name and line number for an error message wasn't displayed when it
 was the same as for the last error, even when this was long ago.  Now reset
-the name/lnum after a hit-return prompt.
+the name/lnum after a hit-enter prompt.
 
 In a session file, a "%" in a file name caused trouble, because fprintf() was
 used to write it to the file.
@@ -4714,7 +4714,7 @@ When editing file 97 of 13, ":Next" didn't work.  Now it goes to the last
 file in the argument list.
 
 Insert mode completion (for dictionaries or included files) could not be
-interrupted by typing an <Esc>.  Could get hit-return prompt after line
+interrupted by typing an <Esc>.  Could get hit-enter prompt after line
 completion, or whenever the informative message would get too long.
 
 When using the ":edit" command to re-edit the same file, an autocommand to
@@ -4838,7 +4838,7 @@ as Vim scripts.  Renamed them to *.vim.
 they have been removed]
 
 Patch 5.4m.1
-Problem:    When editing a file with a long name, would get the hit-return
+Problem:    When editing a file with a long name, would get the hit-enter
 	    prompt, even though all settings are such that the name should be
 	    truncated to avoid that.  filemess() was printing the file name
 	    without truncating it.
@@ -4899,7 +4899,7 @@ Problem:    With the ":s" command:
 	       which causes a crash in the Win32 GUI.
 	    3. When using ":s" in a ":g" command, the cursor was not put on
 	       the first non-white in the line.
-	    4. There was a hit-return prompt when confirming the substitution
+	    4. There was a hit-enter prompt when confirming the substitution
 	       and the replacement was a bit longer.
 Solution:   1. Only disable/enable the mouse when asking for confirmation.
 	    2. Always put the cursor on the first character, it is going to be
@@ -5069,10 +5069,10 @@ Solution:   Give an error message for a negative line number.
 Files:	    src/ex_docmd.c
 
 Patch 5.4n.10
-Problem:    Win32 GUI: At the hit-return prompt, it was possible to scroll the
+Problem:    Win32 GUI: At the hit-enter prompt, it was possible to scroll the
 	    text.  This erased the prompt and made Vim look like it is in
 	    Normal mode, while it is actually still waiting for a <CR>.
-Solution:   Disallow scrolling at the hit-return prompt for systems that use
+Solution:   Disallow scrolling at the hit-enter prompt for systems that use
 	    on the fly scrolling.
 Files:	    src/message.c
 
@@ -5528,9 +5528,9 @@ Files:	    src/os_unix.c, src/ui.c
 
 Patch 5.4.31
 Problem:    GUI: When 'mousefocus' is set, moving the mouse over where a
-	    window boundary was, causes a hit-return prompt to be finished.
+	    window boundary was, causes a hit-enter prompt to be finished.
 	    (Jeff Walker)
-Solution:   Don't use 'mousefocus' at the hit-return prompt.  Also ignore it
+Solution:   Don't use 'mousefocus' at the hit-enter prompt.  Also ignore it
 	    for the more prompt and a few other situations.  When an operator
 	    is pending, abort it first.
 Files:	    src/gui.c
@@ -6198,7 +6198,7 @@ Files:	    src/undo.c
 
 Patch 5.5.038
 Problem:    When typing a long ":" command, so that the screen scrolls up,
-	    causes the hit-return prompt, even though the user just typed
+	    causes the hit-enter prompt, even though the user just typed
 	    return to execute the command.
 Solution:   Reset need_wait_return if (part of) the command was typed in
 	    getcmdline().
@@ -6325,7 +6325,7 @@ Solution:   Don't call u_clearline() in op_delete() when changing only one
 Files:	    src/ops.c
 
 Patch 5.5.058
-Problem:    Using a long search pattern and then "n" causes the hit-return
+Problem:    Using a long search pattern and then "n" causes the hit-enter
 	    prompt.  (Krishna)
 Solution:   Truncate the echoed pattern, like other messages.  Moved code for
 	    truncating from msg_attr() to msg_strtrunc().
@@ -6506,7 +6506,7 @@ Solution:   Give that error message.
 Files:	    src/ex_docmd.c
 
 Patch 5.6a.012 (depends on 5.6a.008)
-Problem:    Some Syntax menu entries caused a hit-return prompt.
+Problem:    Some Syntax menu entries caused a hit-enter prompt.
 Solution:   Call a function to make the command shorter.  Also rename a few
 	    functions to avoid name clashes.
 Files:	    runtime/menu.vim

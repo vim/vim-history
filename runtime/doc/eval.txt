@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0j.  Last change: 2000 Oct 19
+*eval.txt*      For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1512,7 +1512,7 @@ mode()		Return a string that indicates the current mode:
 			i	Insert
 			R	Replace
 			c	Command-line
-			r	Hit-return prompt
+			r	Hit-enter prompt
 		This is useful in the 'statusline' option.  In most other
 		places it always returns "c".
 
@@ -1768,7 +1768,14 @@ tempname()
 		is different for at least 26 consecutive calls.  Example: >
 			:let tmpfile = tempname()
 			:exe "redir > " . tmpfile
-<
+<		Warning: If the temporary file is in a directory writable for
+		everyone, like /tmp, a hacker may try to create the file, or a
+		symbolic link with the same name, which is a security risk.
+		When you are editing sensitive information or when working as
+		root, make sure your temporary files are in a directory only
+		writable by yourself by setting the environment variable
+		$TMPDIR.
+
 							*tolower()*
 tolower({expr})
 		The result is a copy of the String given, with all lower case
