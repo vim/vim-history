@@ -492,7 +492,10 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	isdir_f = (mch_isdir(fname));
 	perm = mch_getperm(fname);  /* check if the file exists */
 	if (isdir_f)
+	{
 	    filemess(curbuf, sfname, (char_u *)_("is a directory"), 0);
+	    curbuf->b_p_ro = TRUE;	/* must use "w!" now */
+	}
 	else
 #endif
 	    if (newfile)
@@ -528,8 +531,11 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 		    return OK;	    /* a new file is not an error */
 		}
 		else
+		{
 		    filemess(curbuf, sfname,
-					  (char_u *)_("[Permission Denied]"), 0);
+				       (char_u *)_("[Permission Denied]"), 0);
+		    curbuf->b_p_ro = TRUE;	/* must use "w!" now */
+		}
 	    }
 
 	return FAIL;
@@ -624,6 +630,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 		EMSG(_("E200: *ReadPre autocommands made the file unreadable"));
 	    else
 		EMSG(_("E201: *ReadPre autocommands must not change current buffer"));
+	    curbuf->b_p_ro = TRUE;	/* must use "w!" now */
 	    return FAIL;
 	}
     }
@@ -1717,7 +1724,10 @@ failed:
 	if (got_int)
 	{
 	    if (!(flags & READ_DUMMY))
+	    {
 		filemess(curbuf, sfname, (char_u *)_(e_interr), 0);
+		curbuf->b_p_ro = TRUE;	/* must use "w!" now */
+	    }
 	    msg_scroll = msg_save;
 #ifdef FEAT_VIMINFO
 	    check_marks_read();
