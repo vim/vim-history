@@ -1224,21 +1224,17 @@ save_typebuf()
 }
 
 /*
- * open new script file for ":so!" command
- * return OK on success, FAIL on error
+ * Open a new script file for the ":source!" command.
  */
-    int
-openscript(name)
-    char_u *name;
+    void
+openscript(name, directly)
+    char_u	*name;
+    int		directly;	/* when TRUE execute directly */
 {
-    int		oldcurscript;
-    oparg_T	oa;
-    int		save_State;
-
     if (curscript + 1 == NSCRIPT)
     {
 	EMSG(_(e_nesting));
-	return FAIL;
+	return;
     }
 
     if (scriptin[curscript] != NULL)	/* already reading script */
@@ -1250,32 +1246,49 @@ openscript(name)
 	EMSG2(_(e_notopen), name);
 	if (curscript)
 	    --curscript;
-	return FAIL;
+	return;
     }
     if (save_typebuf() == FAIL)
-	return FAIL;
+	return;
 
     /*
-     * With command ":g/pat/so! file" we have to execute the
-     * commands from the file now.
+     * Execute the commands from the file right now when using ":source!"
+     * after ":global" or ":argdo" or in a loop.  Also when another command
+     * follows.  This means the display won't be updated.  Don't do this
+     * always, "make test" would fail.
      */
-    if (global_busy)
+    if (directly)
     {
-	clear_oparg(&oa);
-	save_State = State;
+	oparg_T	oa;
+	int	oldcurscript;
+	int	save_State = State;
+	int	save_restart_edit = restart_edit;
+	int	save_insertmode = p_im;
+	int	save_finish_op = finish_op;
+	int	save_msg_scroll = msg_scroll;
+
 	State = NORMAL;
+	msg_scroll = FALSE;	/* no msg scrolling in Normal mode */
+	restart_edit = 0;	/* don't go to Insert mode */
+	p_im = FALSE;		/* don't use 'insertmode' */
+	clear_oparg(&oa);
+	finish_op = FALSE;
+
 	oldcurscript = curscript;
 	do
 	{
-	    check_cursor();	/* put cursor on an existing line */
-	    normal_cmd(&oa, FALSE);
-	    vpeekc();		/* check for end of file */
+	    update_topline_cursor();	/* update cursor position and topline */
+	    normal_cmd(&oa, FALSE);	/* execute one command */
+	    vpeekc();			/* check for end of file */
 	}
 	while (scriptin[oldcurscript] != NULL);
-	State = save_State;
-    }
 
-    return OK;
+	State = save_State;
+	msg_scroll = save_msg_scroll;
+	restart_edit = save_restart_edit;
+	p_im = save_insertmode;
+	finish_op = save_finish_op;
+    }
 }
 
 /*

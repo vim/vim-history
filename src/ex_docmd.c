@@ -276,7 +276,6 @@ static char_u	*uc_fun_cmd __ARGS((void));
 #endif
 #ifdef FEAT_EX_EXTRA
 static void	ex_normal __ARGS((exarg_T *eap));
-static void	update_topline_cursor __ARGS((void));
 static void	ex_startinsert __ARGS((exarg_T *eap));
 #else
 # define ex_normal		ex_ni
@@ -6777,6 +6776,19 @@ ex_mark(eap)
     }
 }
 
+/*
+ * Update w_topline, w_leftcol and the cursor position.
+ */
+    void
+update_topline_cursor()
+{
+    check_cursor();		/* put cursor on valid line */
+    update_topline();
+    if (!curwin->w_p_wrap)
+	validate_cursor();
+    update_curswant();
+}
+
 #ifdef FEAT_EX_EXTRA
 /*
  * ":normal[!] {commands}": Execute normal mode commands.
@@ -6937,19 +6949,6 @@ ex_normal(eap)
 #ifdef FEAT_MBYTE
     vim_free(arg);
 #endif
-}
-
-/*
- * Update w_topline, w_leftcol and the cursor position.
- */
-    static void
-update_topline_cursor()
-{
-    check_cursor();		/* put cursor on valid line */
-    update_topline();
-    if (!curwin->w_p_wrap)
-	validate_cursor();
-    update_curswant();
 }
 
 /*
