@@ -1340,7 +1340,7 @@ enter_buffer(buf)
 
     /* If autocommands did not change the cursor position, restore cursor lnum
      * and possibly cursor col. */
-    if (curwin->w_cursor.lnum == 1 && curwin->w_cursor.col == 0)
+    if (curwin->w_cursor.lnum == 1 && inindent(0))
 	buflist_getfpos();
 
     check_arg_idx(curwin);		/* check for valid arg_idx */
