@@ -2552,7 +2552,7 @@ fail:		     /* free the allocated lines */
 				/* Part of a tab selected -- but don't
 				 * double-count it. */
 				bd.startspaces = (ce - cs + 1)
-				    - oap->start.coladd;
+							  - oap->start.coladd;
 				startcol++;
 			    }
 			}
@@ -2959,10 +2959,10 @@ do_put(regname, dir, count, flags)
     {
 	if (gchar_cursor() == TAB)
 	{
-	    if (dir == FORWARD || curwin->w_cursor.coladd)
+	    if (dir == FORWARD || curwin->w_cursor.coladd > 0)
 		coladvance_force(getviscol());
 	}
-	else if (curwin->w_cursor.coladd)
+	else if (curwin->w_cursor.coladd > 0 || gchar_cursor() == NUL)
 	{
 	    if (dir == FORWARD)
 		coladvance_force(getviscol() + 1);
@@ -3012,7 +3012,7 @@ do_put(regname, dir, count, flags)
 
 #ifdef FEAT_VIRTUALEDIT
 	col += curwin->w_cursor.coladd;
-	if (ve_flags == VE_ALL && curwin->w_cursor.coladd)
+	if (ve_flags == VE_ALL && curwin->w_cursor.coladd > 0)
 	{
 	    if (dir == FORWARD && c == NUL)
 		++col;

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Good old CFG files
 " Maintainer:	Igor N. Prischepoff (igor@tyumbit.ru, pri_igor@mail.ru)
-" Last change:	2001 May 10
+" Last change:	2001 Sep 02
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -23,8 +23,8 @@ syn match   CfgParams    ".*="me=e-1 contains=CfgComment
 syn match   CfgValues    "=.*"hs=s+1 contains=CfgDirectory,UncPath,CfgComment,CfgString,CfgOnOff
 
 " Sections
-syn match CfgSection        "\[.*\]"
-syn match CfgSection        "{.*}"
+syn match CfgSection	    "\[.*\]"
+syn match CfgSection	    "{.*}"
 
 " String
 syn match  CfgString	"\".*\"" contained
@@ -40,10 +40,10 @@ syn match  CfgComment	"\/\/.*"
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_cfg_syn_inits")
     if version < 508
-        let did_cfg_syn_inits = 1
-        command -nargs=+ HiLink hi link <args>
+	let did_cfg_syn_inits = 1
+	command -nargs=+ HiLink hi link <args>
     else
-        command -nargs=+ HiLink hi def link <args>
+	command -nargs=+ HiLink hi def link <args>
     endif
     HiLink CfgOnOff     Label
     HiLink CfgComment	Comment

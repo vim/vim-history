@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	bc - An arbitrary precision calculator language
 " Maintainer:	Vladimir Scholtz <vlado@gjh.sk>
-" Last change:	2001 May 09
+" Last change:	2001 Sep 02
 " Available on:	www.gjh.sk/~vlado/bc.vim
 
 " For version 5.x: Clear all syntax items
@@ -34,7 +34,7 @@ syn match bcIdentifier		"[a-z_][a-z0-9_]*"
  syn match bcString		"\"[^"]*\""
 
 " Number
-syn match bcNumber             "[0-9]\+"
+syn match bcNumber		"[0-9]\+"
 
 " Comment
 syn match bcComment		"\#.*"
@@ -42,10 +42,10 @@ syn region bcComment		start="/\*" end="\*/"
 
 " Parent ()
 syn cluster bcAll contains=bcList,bcIdentifier,bcNumber,bcKeyword,bcType,bcConstant,bcString,bcParentError
-syn region bcList             matchgroup=Delimiter start="(" skip="|.\{-}|" matchgroup=Delimiter end=")" contains=@bcAll
-syn region bcList             matchgroup=Delimiter start="\[" skip="|.\{-}|" matchgroup=Delimiter end="\]" contains=@bcAll
-syn match bcParenError                  "]"
-syn match bcParenError                  ")"
+syn region bcList		matchgroup=Delimiter start="(" skip="|.\{-}|" matchgroup=Delimiter end=")" contains=@bcAll
+syn region bcList		matchgroup=Delimiter start="\[" skip="|.\{-}|" matchgroup=Delimiter end="\]" contains=@bcAll
+syn match bcParenError			"]"
+syn match bcParenError			")"
 
 
 

@@ -47,10 +47,10 @@ syn match   draculaStatement   "power-node"
 syn match   draculaStatement   "ground-node"
 syn match   draculaStatement   "subckt-name"
 
-syn match   draculaType        "\*description"
-syn match   draculaType        "\*input-layer"
-syn match   draculaType        "\*operation"
-syn match   draculaType        "\*end"
+syn match   draculaType		"\*description"
+syn match   draculaType		"\*input-layer"
+syn match   draculaType		"\*operation"
+syn match   draculaType		"\*end"
 
 syn match   draculaComment ";.*"
 

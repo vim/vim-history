@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Dylan Library Interface Files
 " Authors:	Justus Pendleton <justus@acm.org>
-"               Brent Fulgham <bfulgham@debian.org>
+"		Brent Fulgham <bfulgham@debian.org>
 " Last Change:	Fri Sep 29 13:50:20 PDT 2000
 "
 

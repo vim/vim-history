@@ -5795,7 +5795,11 @@ nv_replace(cap)
 	 * autoindent.	The insert command depends on being on the last
 	 * character of a line or not.
 	 */
+#ifdef FEAT_MBYTE
+	(void)del_chars(cap->count1, FALSE);	/* delete the characters */
+#else
 	(void)del_bytes(cap->count1, FALSE);	/* delete the characters */
+#endif
 	stuffcharReadbuff('\r');
 	stuffcharReadbuff(ESC);
 	/*
@@ -6806,7 +6810,9 @@ nv_g_cmd(cap)
      */
     case '*':
     case '#':
-    case POUND:		/* pound sign */
+#if POUND != '#'
+    case POUND:		/* pound sign (sometimes equal to '#') */
+#endif
     case Ctrl_RSB:		/* :tag or :tselect for current identifier */
     case ']':			/* :tselect for current identifier */
 	nv_ident(cap);

@@ -2,7 +2,7 @@
 " This is a GENERATED FILE. Please always refer to source file at the URI below.
 " Language: Gtk+ theme files `gtkrc'
 " Maintainer: David Ne\v{c}as (Yeti), <yeti@physics.muni.cz>
-" Last Change: 2001-07-10
+" Last Change: 2001 Sep 02
 " URI: http://physics.muni.cz/~yeti/download/gtkrc.vim
 
 
@@ -79,44 +79,44 @@ if version >= 508 || !exists("did_gtkrc_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink gtkrcComment        Comment
-  HiLink gtkrcFixme          Todo
+  HiLink gtkrcComment	     Comment
+  HiLink gtkrcFixme	     Todo
 
-  HiLink gtkrcInclude        Preproc
+  HiLink gtkrcInclude	     Preproc
 
-  HiLink gtkrcACString       gtkrcString
-  HiLink gtkrcBString        gtkrcString
-  HiLink gtkrcString         String
-  HiLink gtkrcNumber         Number
+  HiLink gtkrcACString	     gtkrcString
+  HiLink gtkrcBString	     gtkrcString
+  HiLink gtkrcString	     String
+  HiLink gtkrcNumber	     Number
   HiLink gtkrcStateName      gtkrcConstant
   HiLink gtkrcPriorityName   gtkrcConstant
-  HiLink gtkrcConstant       Constant
+  HiLink gtkrcConstant	     Constant
 
   HiLink gtkrcPathSpecial    gtkrcSpecial
   HiLink gtkrcWPathSpecial   gtkrcSpecial
-  HiLink gtkrcRGBColor       gtkrcSpecial
-  HiLink gtkrcKeyMod         gtkrcSpecial
-  HiLink gtkrcSpecial        Special
+  HiLink gtkrcRGBColor	     gtkrcSpecial
+  HiLink gtkrcKeyMod	     gtkrcSpecial
+  HiLink gtkrcSpecial	     Special
 
-  HiLink gtkrcTop            gtkrcKeyword
-  HiLink gtkrcPathSet        gtkrcKeyword
+  HiLink gtkrcTop	     gtkrcKeyword
+  HiLink gtkrcPathSet	     gtkrcKeyword
   HiLink gtkrcStyleKeyword   gtkrcKeyword
-  HiLink gtkrcFunction       gtkrcKeyword
-  HiLink gtkrcBind           gtkrcKeyword
-  HiLink gtkrcKeyword        Keyword
+  HiLink gtkrcFunction	     gtkrcKeyword
+  HiLink gtkrcBind	     gtkrcKeyword
+  HiLink gtkrcKeyword	     Keyword
 
   HiLink gtkrcClassNameGnome gtkrcGtkClass
   HiLink gtkrcClassName      gtkrcGtkClass
   HiLink gtkrcFunctionName   gtkrcGtkClass
-  HiLink gtkrcGtkClass       Type
+  HiLink gtkrcGtkClass	     Type
 
-  HiLink gtkrcImage          gtkrcOtherword
+  HiLink gtkrcImage	     gtkrcOtherword
   HiLink gtkrcOtherword      Function
 
   HiLink gtkrcParenError     gtkrcError
   HiLink gtkrcBraceError     gtkrcError
   HiLink gtkrcBracketError   gtkrcError
-  HiLink gtkrcError          Error
+  HiLink gtkrcError	     Error
 
   delcommand HiLink
 endif

@@ -1267,11 +1267,15 @@ win_update(wp)
 	 * Watch out for scrolling that made entries in w_lines[] invalid.
 	 * E.g., CTRL-U makes the first half of w_lines[] invalid and sets
 	 * top_end; need to redraw from top_end to the "to" line.
+	 * A middle mouse click with a Visual selection may change the text
+	 * above the Visual area and reset wl_valid, do count these for
+	 * mid_end (in srow).
 	 */
 	if (mid_start > 0)
 	{
 	    lnum = wp->w_topline;
 	    idx = 0;
+	    srow = 0;
 	    if (scrolled_down)
 		mid_start = top_end;
 	    else
@@ -1280,6 +1284,8 @@ win_update(wp)
 	    {
 		if (wp->w_lines[idx].wl_valid)
 		    mid_start += wp->w_lines[idx].wl_size;
+		else if (!scrolled_down)
+		    srow += wp->w_lines[idx].wl_size;
 		++idx;
 # ifdef FEAT_FOLDING
 		if (idx < wp->w_lines_valid && wp->w_lines[idx].wl_valid)
@@ -1288,7 +1294,7 @@ win_update(wp)
 # endif
 		    ++lnum;
 	    }
-	    srow = mid_start;
+	    srow += mid_start;
 	    mid_end = wp->w_height;
 	    for ( ; idx < wp->w_lines_valid; ++idx)		/* find end */
 	    {
@@ -2338,6 +2344,7 @@ win_line(wp, lnum, startrow, endrow)
 #ifdef FEAT_SYN_HL
     int		syntax_attr = 0;	/* attributes desired by syntax */
     int		has_syntax = FALSE;	/* this buffer has syntax highl. */
+    int		save_did_emsg;
 #endif
     int		extra_check;		/* has syntax or linebreak */
 #ifdef FEAT_MBYTE
@@ -2415,9 +2422,19 @@ win_line(wp, lnum, startrow, endrow)
 #ifdef FEAT_SYN_HL
     if (syntax_present(wp->w_buffer))
     {
+	/* Prepare for syntax highlighting in this line.  When there is an
+	 * error, stop syntax highlighting. */
+	save_did_emsg = did_emsg;
+	did_emsg = FALSE;
 	syntax_start(wp, lnum);
-	has_syntax = TRUE;
-	extra_check = TRUE;
+	if (did_emsg)
+	    syntax_clear(wp->w_buffer);
+	else
+	{
+	    did_emsg = save_did_emsg;
+	    has_syntax = TRUE;
+	    extra_check = TRUE;
+	}
     }
 #endif
 
@@ -3259,8 +3276,18 @@ win_line(wp, lnum, startrow, endrow)
 #ifdef FEAT_SYN_HL
 		if (has_syntax)
 		{
+		    /* Get the syntax attribute for the character.  If there
+		     * is an error, disable syntax highlighting. */
+		    save_did_emsg = did_emsg;
+		    did_emsg = FALSE;
+
 		    v = (long)(ptr - line);
 		    syntax_attr = get_syntax_attr((colnr_T)v - 1);
+
+		    if (did_emsg)
+			syntax_clear(wp->w_buffer);
+		    else
+			did_emsg = save_did_emsg;
 
 		    /* Need to get the line again, a multi-line regexp may
 		     * have made it invalid. */

@@ -36,8 +36,8 @@ if version >= 508 || !exists("did_blank_syntax_inits")
   endif
 
   HiLink blankInstruction      Statement
-  HiLink blankNumber           Number
-  HiLink blankString           String
+  HiLink blankNumber	       Number
+  HiLink blankString	       String
 
   delcommand HiLink
 endif

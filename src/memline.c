@@ -3355,6 +3355,7 @@ findswapname(buf, dirp, old_fname)
 
 #if !defined(SHORT_FNAME) \
 		     && ((!defined(UNIX) && !defined(OS2)) || defined(ARCHIE))
+# define CREATE_DUMMY_FILE
     FILE	*dummyfd = NULL;
 
 /*
@@ -3580,7 +3581,7 @@ findswapname(buf, dirp, old_fname)
 		    buf->b_shortname = TRUE;
 		    vim_free(fname);
 		    fname = makeswapname(buf, dir_name);
-		    continue;	    /* try again with '.' replaced by '_' */
+		    continue;	    /* try again with '.' replaced with '_' */
 		}
 	    }
 #endif
@@ -3636,6 +3637,29 @@ findswapname(buf, dirp, old_fname)
 			&& vim_strchr(p_shm, SHM_ATTENTION) == NULL)
 		{
 		    struct stat st;
+#ifdef CREATE_DUMMY_FILE
+		    int		did_use_dummy = FALSE;
+
+		    /* Avoid getting a warning for the file being created
+		     * outside of Vim, it was created at the start of this
+		     * function.  Delete the file now, because Vim might exit
+		     * here if the window is closed. */
+		    if (dummyfd != NULL)
+		    {
+			fclose(dummyfd);
+			dummyfd = NULL;
+			mch_remove(buf->b_fname);
+			did_use_dummy = TRUE;
+		    }
+#endif
+#ifdef FEAT_GUI
+		    /* If we are supposed to start the GUI but it wasn't
+		     * completely started yet, start it now.  This makes the
+		     * messages displayed in the Vim window when loading a
+		     * session from the .gvimrc file. */
+		    if (gui.starting && !gui.in_use)
+			gui_start();
+#endif
 
 #if (defined(UNIX) || defined(__EMX__) || defined(VMS)) && (defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG))
 		    process_still_running = FALSE;
@@ -3732,6 +3756,12 @@ findswapname(buf, dirp, old_fname)
 			MSG_PUTS("\n");
 			need_wait_return = TRUE; /* call wait_return later */
 		    }
+
+#ifdef CREATE_DUMMY_FILE
+		    /* Going to try another name, need the dummy file again. */
+		    if (did_use_dummy)
+			dummyfd = mch_fopen((char *)buf->b_fname, "w");
+#endif
 		}
 	    }
 	}
@@ -3758,8 +3788,7 @@ findswapname(buf, dirp, old_fname)
     }
 
     vim_free(dir_name);
-#if !defined(SHORT_FNAME) \
-		     && ((!defined(UNIX) && !defined(OS2)) || defined(ARCHIE))
+#ifdef CREATE_DUMMY_FILE
     if (dummyfd != NULL)	/* file has been created temporarily */
     {
 	fclose(dummyfd);

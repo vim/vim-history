@@ -6,7 +6,6 @@ void gui_x11_set_back_color __ARGS((void));
 XmFontList gui_motif_create_fontlist __ARGS((XFontStruct *font));
 XmFontList gui_motif_fontset2fontlist __ARGS((XFontSet *fontset));
 void gui_mch_enable_menu __ARGS((int flag));
-void gui_mch_set_menu_pos __ARGS((int x, int y, int w, int h));
 void gui_motif_set_mnemonics __ARGS((int enable));
 void gui_mch_add_menu __ARGS((vimmenu_T *menu, int idx));
 void gui_mch_toggle_tearoffs __ARGS((int enable));

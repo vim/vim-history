@@ -3461,7 +3461,7 @@ ex_autocmd(eap)
     else if (eap->cmdidx == CMD_autocmd)
 	do_autocmd(eap->arg, eap->forceit);
     else
-	do_augroup(eap->arg);
+	do_augroup(eap->arg, eap->forceit);
 }
 
 /*
@@ -8772,12 +8772,14 @@ ex_match(eap)
     {
 	vim_free(curwin->w_match.regprog);
 	curwin->w_match.regprog = NULL;
+	redraw_later(NOT_VALID);	/* always need a redraw */
     }
 
-    if (ends_excmd(*eap->arg)
-	    || (STRNICMP(eap->arg, "none", 4) == 0
+    if (ends_excmd(*eap->arg))
+	end = eap->arg;
+    else if ((STRNICMP(eap->arg, "none", 4) == 0
 		&& (vim_iswhite(eap->arg[4]) || ends_excmd(eap->arg[4]))))
-	eap->nextcmd = find_nextcmd(eap->arg);
+	end = eap->arg + 4;
     else
     {
 	p = skiptowhite(eap->arg);
@@ -8808,11 +8810,9 @@ ex_match(eap)
 		EMSG2(_(e_invarg2), p);
 		return;
 	    }
-	    else
-		redraw_later(NOT_VALID);
 	}
-	eap->nextcmd = find_nextcmd(end);
     }
+    eap->nextcmd = find_nextcmd(end);
 }
 #endif
 

@@ -1414,6 +1414,7 @@ cmdline_changed:
 	    validate_cursor();
 
 	    update_screen(NOT_VALID);
+	    msg_starthere();
 	    redrawcmdline();
 	    did_incsearch = TRUE;
 	}

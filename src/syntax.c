@@ -5742,7 +5742,7 @@ syn_get_id(lnum, col, trans)
      * line of the same buffer, need to restart parsing. */
     if (curwin->w_buffer != syn_buf
 	    || lnum != current_lnum
-	    || col <= (long)current_col)
+	    || col < (long)current_col)
 	syntax_start(curwin, lnum);
 
     (void)get_syntax_attr((colnr_T)col);

@@ -1,4 +1,4 @@
-*pi_netrw.txt*   For Vim version 6.0at.  Last change: 2001 Jul 28
+*pi_netrw.txt*   For Vim version 6.0au.  Last change: 2001 Sep 02
 
 
 		  VIM REFERENCE MANUAL    by Charles E. Campbell, Jr.
@@ -10,37 +10,63 @@ Network-Oriented File Transfers with Vim		*netrw* *network*
 2. Activation						|netrw-activate|
 3. Ex Commands						|netrw-ex|
 4. Variables						|netrw-var|
+5. User Options						|netrw-options|
 
-The functionality mentioned here is a |standard-plugin|.
-This plugin is only available if 'compatible' is not set.
-You can avoid loading this plugin by setting the "loaded_netrw" variable: >
+The functionality mentioned here is done via using |standard-plugin|
+techniques.  This plugin is only available if 'compatible' is not set and you
+can avoid loading this plugin by setting the "loaded_netrw" variable: >
 	:let loaded_netrw = 1
 
 {Vi does not have any of this}
 
+
 ==============================================================================
 1. Network-Oriented File Transfer			*netrw-xfer*
 
-Network-oriented file transfer under Vim is implemented by a VimL-based
-script (<netrw.vim>).  It currently supports both reading and writing
-across networks using rcp, scp, ftp, or ftp+<.netrc> as appropriate.
-http is supported read-only.
+Network-oriented file transfer under Vim is implemented by a VimL-based script
+(<netrw.vim>) using plugin techniques.  It currently supports both reading
+and writing across networks using rcp, scp, ftp, or ftp+<.netrc> as
+appropriate.  http is currently supported read-only.
 
-    Reading				Writing			Uses ~
-    --------------------------	---------------------------	----------
-    * rcp://machine/path	* rcp://machine/path		rcp
-    :Nread rcp://machine/path	:Nwrite rcp://machine/path		rcp
+For rcp, scp, and http, one can use network-oriented file transfer
+transparently:
+>
+	vim rcp://machine/path
+	vim scp://machine/path
+<
+If your ftp supports <.netrc>, then it too can be just as transparently used
+if the needed triad of machine name, user id, and password are present in that
+file.  Your ftp must be able to use the <.netrc> file on its own, however.
+>
+	vim ftp://machine/path
+<
+However, ftp will often need to query the user for the userid and
+password.  The latter will be done "silently"; ie asterisks will show up
+instead of the actually-typed-in password.  Netrw will retain the userid and
+password for subsequent read/writes from the most recent transfer so
+subsequent transfers (read/write) to or from that machine will take place
+without additional prompting.
 
-    * scp://machine/path	* scp://machine/path		scp
-    :Nread scp://machine/path	:Nwrite scp://machine/path		scp
+      Reading			   Writing			  Uses~
+      ------------------------	   ---------------------------	  ----------
+>
+    * rcp://machine/path	 * rcp://machine/path		  rcp
+<     :Nread rcp://machine/path	   :Nwrite rcp://machine/path	  rcp
+>
+    * scp://machine/path	 * scp://machine/path		  scp
+<     :Nread scp://machine/path	   :Nwrite scp://machine/path	  scp
 
-    * ftp://machine/path	* ftp://machine/path		ftp
-    :Nread ftp://machine/path	:Nwrite ftp://machine/path		ftp+(**)
-    :Nread machine path		:Nwrite machine path		ftp+.netrc
-    :Nread machine uid pass path	:Nwrite machine uid pass path	ftp
+>
+    * ftp://machine/path	 * ftp://machine/path		  ftp
+<     :Nread ftp://machine/path	   :Nwrite ftp://machine/path	  ftp+(**)
+      :Nread machine path	   :Nwrite machine path		  ftp+.netrc
+      :Nread machine uid pass path :Nwrite machine uid pass path  ftp
 
-    * http://machine/path					wget
-    :Nread http://machine/path					wget
+      (for ftp, "machine" may be machine#port if a different port is needed
+      than the standard ftp port)
+>
+    * http://machine/path					  wget
+<     :Nread http://machine/path				  wget
 
 	(*) transparent file transfer: i.e. vim rcp://machine/path
 					    :r	ftp://machine/path
@@ -50,16 +76,16 @@ http is supported read-only.
 	     work with your ftp client.  Otherwise the script will
 	     prompt for user-id and pasword.
 
-Both the :Nread and the :Nwrite command can accept multiple filenames: >
+Both the :Nread and the :Nwrite ex-commands can accept multiple filenames: >
 
 	:Nread rcp://machine/path1 rcp://machine/path2
-
+>
 
 NETRC							*netrw-netrc*
 
-The ftp transfers can make use of the optional <.netrc> file.  The typical
-syntax for lines in a <.netrc> file is given as shown below. >
-
+The typical syntax for lines in a <.netrc> file is given as shown below.
+Unix ftp's usually support <.netrc>; Windows ftp's usually don't.
+>
 	machine {full machine name} login {user-id} password "{password}"
 	default			    login {user-id} password "{password}"
 
@@ -76,23 +102,18 @@ password.
 
 PASSWORD						*netrw-passwd*
 
-The script attempts to get passwords for ftp invisibly.  If the user has
-explicitly specified both foreground and background colors for Normal
-highlighting (see following example) >
-
-  hi Normal      term=NONE cterm=NONE gui=NONE  start=<Esc>[m<Esc>[1;32;m
-  \		 stop=t_me   guifg=green      guibg=navyblue  ctermfg=2
-
-then the script can use those colors to keep the password request
-"invisible".  See |netrw-uidpass| for how to change the password after
-one has set it.
+The script attempts to get passwords for ftp invisibly using |inputsecret()|,
+a built-in Vim function.  See |netrw-uidpass| for how to change the password
+after one has set it.
 
 
 ==============================================================================
 2. Activation						*netrw-activate*
 
 Network-oriented file transfers are available by default whenever
-|'nocompatible'| mode is enabled.
+|'nocompatible'| mode is enabled.  The <netrw.vim> file resides in your
+system's vim-plugin directory and is sourced automatically whenever you bring
+up vim.
 
 
 TRANSPARENT FILE TRANSFER				*netrw-transparent*
@@ -112,32 +133,35 @@ made.  Thus one may use files across networks as if they were local. >
 The usual read/write commands are supported.  There are also a couple of
 additional commands available.
 
-:[range]Nw			Write the specified lines to the current
+:[range]Nw
+				Write the specified lines to the current
 				file as specified in b:netrw_lastfile.
 
 :[range]Nw {netfile} [{netfile}]...
 				Write the specified lines to the {netfile}.
 
-:Nread				Read the specified lines into the current
+:Nread
+				Read the specified lines into the current
 				buffer from the file specified in
 				b:netrw_lastfile.
 
-:Nread {netfile} {netfile}...	Read the {netfile} after the current line.
+:Nread {netfile} {netfile}...
+				Read the {netfile} after the current line.
 
-							*netrw-uidpass*
-:call NetUserPass()		If b:netrw_uid and b:netrw_passwd don't exist,
+									*netrw-uidpass*
+:call NetUserPass()
+				If b:netrw_uid and b:netrw_passwd don't exist,
 				this function query the user for them.
 
-:call NetUserPass("userid")	This call will set the b:netrw_uid and, if
-				the password doesn't exist, will query the
-				user for it.
+:call NetUserPass("userid")
+				This call will set the b:netrw_uid and, if
+				the password doesn't exist, will query the user for it.
 
 :call NetUserPass("userid","passwd")
-				This call will set both the b:netrw_uid and
-				b:netrw_passwd.  The user-id and password
-				are used by ftp transfers.  One may
-				effectively remove the user-id and password
-				by using "" strings.
+				This call will set both the b:netrw_uid and b:netrw_passwd.
+				The user-id and password are used by ftp transfers.  One may
+				effectively remove the user-id and password by using ""
+				strings.
 
 
 ==============================================================================
@@ -145,16 +169,67 @@ additional commands available.
 
 The script <netrw.vim> uses several variables:
 
-	netrw_uid			Holds current user-id for ftp.
+	netrw_uid		Holds current user-id for ftp.
 	netrw_passwd		Holds current password for ftp.
 	b:netrw_lastfile	Holds latest method/machine/path.
+	b:netrw_line		Holds current line number     (during NetWrite)
+	b:netrw_column		Holds current cursor position (during NetWrite)
+	netrw_ftp		Optional -- see |netrw-options|
 
 The script will also make use of the following variables internally,
 albeit temporarily.
 
-	s:netrw_method		Index indicating rcp/ftp+.netrc/ftp
-	s:netrw_machine		Holds machine name parsed from input
-	s:netrw_fname       Holds filename being accessed
+	g:netrw_method		Index indicating rcp/ftp+.netrc/ftp
+	g:netrw_machine		Holds machine name parsed from input
+	g:netrw_fname       	Holds filename being accessed
+
+
+==============================================================================
+5. User Options						*netrw-options*
+
+    Option	    Type	Setting		Meaning ~
+    ---------	    --------	--------------	--------------------------- >
+
+    netrw_ftp	    variable	=doesn't exist	userid set by "user userid"
+				=0		userid set by "user userid"
+				=1		userid set by "userid"
+
+    NetReadFixup    function	=doesn't exist	no change
+				=exists		Allows user to have ftp-read
+						files automatically
+						transformed however they wish
+<
+
+These options both help with certain ftp's that give trouble otherwise.  In
+order to best understand how to use these options if ftp is giving you
+troubles, a bit of discussion follows on how netrw does ftp reads.
+
+Netrw typically builds up four lines of the following form:
+>
+    mark-z
+    open machine port
+    user userid
+    password
+    get filename tempfile
+<
+It then passes the four lines through a filter: 'z+1,.!ftp -i [-n] where -i
+tells ftp not to be interactive and the option -n means don't use netrc (if
+<.netrc> exists it will be used to avoid having to query the user for userid
+and password).  The transferred file is put into a temporary file.  The
+temporary file is then read into the main editing session window that
+requested it and the temporary file deleted.
+
+If your ftp doesn't accept the "user" command and immediately just demands a
+userid, then put "let netrw_ftp=1" in your <.vimrc>.
+
+If your ftp for whatever reason generates unwanted lines (such as AUTH
+messages) you may write a NetReadFixup(tmpfile) function:
+>
+    function! NetReadFixup(tmpfile) endfunction
+>
+This function will be called if it exists and thus allows you to customize
+your reading process.
+
 
 ==============================================================================
  vim:tw=78:

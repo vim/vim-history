@@ -510,7 +510,24 @@ display_errors()
 
 
 /*
- * Does `s' contain a wildcard?
+ * Return TRUE if "p" contain a wildcard that can be expanded by
+ * dos_expandpath().
+ */
+    int
+mch_has_exp_wildcard(char_u *p)
+{
+    for ( ; *p; ++p)
+    {
+	if (vim_strchr((char_u *)"?*[", *p) != NULL
+		|| (*p == '~' && p[1] != NUL))
+	    return TRUE;
+    }
+    return FALSE;
+}
+
+/*
+ * Return TRUE if "p" contain a wildcard or a "~1" kind of thing (could be a
+ * shortened file name).
  */
     int
 mch_has_wildcard(char_u *p)
@@ -1126,25 +1143,33 @@ mch_print_cleanup(void)
 to_device_units(int idx, int dpi, int physsize, int offset, int def_number)
 {
     int		ret;
-    int		c;
+    int		u;
     int		nr;
 
-    if (printer_opts[idx].present)
+    u = prt_get_unit(idx);
+    if (u == PRT_UNIT_NONE)
     {
-	c = TO_LOWER(printer_opts[idx].string[0]);
-	nr = printer_opts[idx].number;
-    }
-    else
-    {
-	c = 'p';
+	u = PRT_UNIT_PERC;
 	nr = def_number;
     }
-    if (c == 'i')
-	ret = (nr * dpi);
-    else if (c == 'm')
-	ret = (nr * 10 * dpi) / 254;
     else
-	ret = (physsize * nr) / 100;
+	nr = printer_opts[idx].number;
+
+    switch (u)
+    {
+	case PRT_UNIT_PERC:
+	    ret = (physsize * nr) / 100;
+	    break;
+	case PRT_UNIT_INCH:
+	    ret = (nr * dpi);
+	    break;
+	case PRT_UNIT_MM:
+	    ret = (nr * 10 * dpi) / 254;
+	    break;
+	case PRT_UNIT_POINT:
+	    ret = (nr * 10 * dpi) / 720;
+	    break;
+    }
 
     if (ret < offset)
 	return 0;
@@ -1249,8 +1274,8 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 
 #ifdef WIN3264
     DEVMODE		*mem;
-    DEVNAMES		*devname;
 #endif
+    DEVNAMES		*devname;
     int			i;
 
     bUserAbort = &(psettings->user_abort);
@@ -1327,19 +1352,19 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
      * passed back correctly. It must be retrieved from the
      * hDevMode struct.
      */
+#ifdef WIN3264
     mem = (DEVMODE *)GlobalLock(prt_dlg.hDevMode);
     if (mem != NULL)
     {
-#ifdef WIN3264
 	if (mem->dmCopies != 1)
 	    stored_nCopies = mem->dmCopies;
-#endif
 	if ((mem->dmFields & DM_DUPLEX) && (mem->dmDuplex & ~DMDUP_SIMPLEX))
 	    psettings->duplex = TRUE;
 	if ((mem->dmFields & DM_COLOR) && (mem->dmColor & DMCOLOR_COLOR))
 	    psettings->has_color = TRUE;
     }
     GlobalUnlock(prt_dlg.hDevMode);
+#endif
 
     devname = (DEVNAMES *)GlobalLock(prt_dlg.hDevNames);
     if (devname != 0)
@@ -1544,7 +1569,7 @@ mch_print_set_bg(unsigned long bgcol)
      * With a white background we can draw characters transparent, which is
      * good for italic characters that overlap to the next char cell.
      */
-    if (bgcol == 0xffffff)
+    if (bgcol == 0xffffffUL)
 	SetBkMode(prt_dlg.hDC, TRANSPARENT);
     else
 	SetBkMode(prt_dlg.hDC, OPAQUE);
@@ -1648,9 +1673,8 @@ shortcut_error:
  */
 HWND message_window = 0;	    /* window that's handling messsages */
 
-/* We also use a broadcast message to locate servers
- */
-static unsigned int vim_broadcast = 0;
+#define VIM_CLASSNAME      "VIM_MESSAGES"
+#define VIM_CLASSNAME_LEN  (sizeof(VIM_CLASSNAME) - 1)
 
 /* Communication is via WM_COPYDATA messages. The message type is send in
  * the dwData parameter. Types are defined here. */
@@ -1658,9 +1682,6 @@ static unsigned int vim_broadcast = 0;
 #define COPYDATA_REPLY	1
 #define COPYDATA_EXPR	10
 #define COPYDATA_RESULT	11
-#define COPYDATA_GETHWND 20
-#define COPYDATA_LIST	30
-#define BROADCAST_WAKEUP 40
 
 /* This is a structure containing a server HWND and its name. */
 struct server_id
@@ -1697,35 +1718,7 @@ static int save_reply(HWND server, char_u *reply, int expr);
     static LRESULT CALLBACK
 Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    if (msg == vim_broadcast)
-    {
-	/* wParam is the sender's HWND,
-	 * lParam is the notification type to return.
-	 * This is simply passed back in the WM_COPYDATA reply.
-	 */
-	HWND requester = (HWND)wParam;
-	DWORD type = (DWORD)lParam;
-	COPYDATASTRUCT reply;
-
-	/* If the type is BROADCAST_WAKEUP, we don't need to reply - it's just
-	 * a notification */
-	if (type == BROADCAST_WAKEUP)
-	    return 1;
-
-	/* Don't respond if we don't have a name to reply with */
-	if (serverName == NULL)
-	    return 0;
-
-	reply.dwData = type;
-	reply.cbData = STRLEN(serverName) + 1;
-	reply.lpData = serverName;
-	SendMessage(requester, WM_COPYDATA, (WPARAM)message_window,
-							    (LPARAM)(&reply));
-
-	/* Don't bother if the sender ignores us */
-	return 1;
-    }
-    else if (msg == WM_COPYDATA)
+    if (msg == WM_COPYDATA)
     {
 	/* This is a message from another Vim. The dwData member of the
 	 * COPYDATASTRUCT determines the type of message:
@@ -1741,24 +1734,12 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	 *   COPYDATA_RESULT:
 	 *	A reply. We are a client, and a server has sent this message
 	 *	in response to a COPYDATA_EXPR.
-	 *   COPYDATA_GETHWND:
-	 *	A response to a VimBroadcast message.  The broadcast requested
-	 *	a HWND for a server name.  The window user data contains a
-	 *	pointer to a struct server_id with the requested name in it.
-	 *	The window procedure should fill in the HWND.
-	 *   COPYDATA_LIST:
-	 *	A response to a VimBroadcast message.  The broadcast requested
-	 *	a list of server names.  The window user data contains a
-	 *	pointer to a growarray. Each server name is added to the
-	 *	growarray, separated by newlines.
 	 */
-	COPYDATASTRUCT *data = (COPYDATASTRUCT*)lParam;
-	HWND sender = (HWND)wParam;
-	COPYDATASTRUCT reply;
-	char_u *res;
-	char_u winstr[30];
-	garray_T *ga;
-	struct server_id *id;
+	COPYDATASTRUCT	*data = (COPYDATASTRUCT*)lParam;
+	HWND		sender = (HWND)wParam;
+	COPYDATASTRUCT	reply;
+	char_u		*res;
+	char_u		winstr[30];
 
 	switch (data->dwData)
 	{
@@ -1803,42 +1784,23 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 #ifdef FEAT_AUTOCMD
 		if (data->dwData == COPYDATA_REPLY)
 		{
-		    sprintf((char *)winstr, "0x%x", sender);
+		    sprintf((char *)winstr, "0x%x", (unsigned)sender);
 		    apply_autocmds(EVENT_REMOTEREPLY, winstr, data->lpData,
 								TRUE, curbuf);
 		}
 #endif
 	    }
 	    return 1;
-
-	case COPYDATA_GETHWND:
-	    id = (struct server_id *)GetWindowLong(message_window,
-								GWL_USERDATA);
-	    if (STRICMP(id->name, data->lpData) == 0)
-		id->hwnd = sender;
-	    return 1;
-
-	case COPYDATA_LIST:
-	    ga = (garray_T *)GetWindowLong(message_window, GWL_USERDATA);
-	    ga_concat(ga, data->lpData);
-	    ga_concat(ga, "\n");
-	    return 1;
 	}
 
 	return 0;
     }
-    else if (msg == WM_DESTROY)
-    {
-	/* We're dying - wake up any clients waiting for us */
-	SendMessage(HWND_BROADCAST, vim_broadcast, 0, BROADCAST_WAKEUP);
-	return 0;
-    }
-    else
-	return DefWindowProc(hwnd, msg, wParam, lParam);
+
+    return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
 /*
- * Initialise the message handling process. This involves creating a window
+ * Initialise the message handling process.  This involves creating a window
  * to handle messages - the window will not be visible.
  */
     void
@@ -1849,9 +1811,6 @@ serverInitMessaging(void)
 
     /* Clean up on exit */
     atexit(CleanUpMessaging);
-
-    /* Register a broadcast message */
-    vim_broadcast = RegisterWindowMessage("VimBroadcast");
 
     /* Register a window class - we only really care
      * about the window procedure
@@ -1866,16 +1825,73 @@ serverInitMessaging(void)
     wndclass.hCursor = NULL;
     wndclass.hbrBackground = NULL;
     wndclass.lpszMenuName = NULL;
-    wndclass.lpszClassName = "VIM_MESSAGES";
+    wndclass.lpszClassName = VIM_CLASSNAME;
     RegisterClass(&wndclass);
 
-    /* Create the message window. It will be hidden,
-     * so the details don't matter. */
-    message_window = CreateWindow("VIM_MESSAGES", "Vim Message Window",
+    /* Create the message window. It will be hidden, so the details don't
+     * matter. */
+    message_window = CreateWindow(VIM_CLASSNAME, "",
 			 WS_OVERLAPPEDWINDOW,
 			 CW_USEDEFAULT, CW_USEDEFAULT,
 			 100, 100, NULL, NULL,
 			 s_hinst, NULL);
+}
+
+/*
+ * Get the title of the window "hwnd", which is the Vim server name, in
+ * "name[namelen]" and return the length.
+ * Returns zero if window "hwnd" is not a Vim server.
+ */
+    static int
+getVimServerName(HWND hwnd, char *name, int namelen)
+{
+    int		len;
+    char	buffer[VIM_CLASSNAME_LEN + 1];
+
+    /* Ignore windows which aren't Vim message windows */
+    len = GetClassName(hwnd, buffer, sizeof(buffer));
+    if (len != VIM_CLASSNAME_LEN || STRCMP(buffer, VIM_CLASSNAME) != 0)
+	return 0;
+
+    /* Get the title of the window */
+    return GetWindowText(hwnd, name, namelen);
+}
+
+    static BOOL CALLBACK
+enumWindowsGetServer(HWND hwnd, LPARAM lparam)
+{
+    struct	server_id *id = (struct server_id *)lparam;
+    char	server[25];
+
+    /* Get the title of the window */
+    if (getVimServerName(hwnd, server, sizeof(server)) == 0)
+	return TRUE;
+
+    /* If this is the server we're looking for, return its HWND */
+    if (STRCMP(server, id->name) == 0)
+    {
+	id->hwnd = hwnd;
+	return FALSE;
+    }
+
+    /* Otherwise, keep looking */
+    return TRUE;
+}
+
+    static BOOL CALLBACK
+enumWindowsGetNames(HWND hwnd, LPARAM lparam)
+{
+    garray_T	*ga = (garray_T *)lparam;
+    char	server[25];
+
+    /* Get the title of the window */
+    if (getVimServerName(hwnd, server, sizeof(server)) == 0)
+	return TRUE;
+
+    /* Add the name to the list */
+    ga_concat(ga, server);
+    ga_concat(ga, "\n");
+    return TRUE;
 }
 
     static HWND
@@ -1886,10 +1902,7 @@ findServer(char_u *name)
     id.name = name;
     id.hwnd = 0;
 
-    SetWindowLong(message_window, GWL_USERDATA, (unsigned long)&id);
-    SendMessage(HWND_BROADCAST, vim_broadcast, (WPARAM)message_window,
-							    COPYDATA_GETHWND);
-    SetWindowLong(message_window, GWL_USERDATA, 0);
+    EnumWindows(enumWindowsGetServer, (LPARAM)(&id));
 
     return id.hwnd;
 }
@@ -1910,6 +1923,10 @@ serverSetName(char_u *name)
 
     for (;;)
     {
+	/* This is inefficient - we're doing an EnumWindows loop for each
+	 * possible name. It would be better to grab all names in one go,
+	 * and scan the list each time...
+	 */
 	hwnd = findServer(ok_name);
 	if (hwnd == 0)
 	    break;
@@ -1925,8 +1942,17 @@ serverSetName(char_u *name)
 	vim_free(ok_name);
     else
     {
+	/* Remember the name */
 	serverName = ok_name;
+#ifdef FEAT_TITLE
+	need_maketitle = TRUE;	/* update Vim window title later */
+#endif
+
+	/* Update the message window title */
+	SetWindowText(message_window, ok_name);
+
 #ifdef FEAT_EVAL
+	/* Set the servername variable */
 	set_vim_var_string(VV_SEND_SERVER, serverName, -1);
 #endif
     }
@@ -1939,23 +1965,19 @@ serverGetVimNames(void)
 
     ga_init2(&ga, 1, 100);
 
-    /* Get all the server names */
-    SetWindowLong(message_window, GWL_USERDATA, (unsigned long)&ga);
-    SendMessage(HWND_BROADCAST, vim_broadcast, (WPARAM)message_window,
-							       COPYDATA_LIST);
-    SetWindowLong(message_window, GWL_USERDATA, 0);
+    EnumWindows(enumWindowsGetNames, (LPARAM)(&ga));
 
     return ga.ga_data;
 }
 
     int
 serverSendReply(name, reply)
-    char_u	 *name;			/* Where to send. */
-    char_u	 *reply;		/* What to send. */
+    char_u	*name;		/* Where to send. */
+    char_u	*reply;		/* What to send. */
 {
-    HWND target;
+    HWND	target;
     COPYDATASTRUCT data;
-    int n = 0;
+    int		n = 0;
 
     /* The "name" argument is a magic cookie obtained from expand("<client>").
      * It should be of the form 0xXXXXX - i.e. a C hex literal, which is the
@@ -2060,13 +2082,19 @@ save_reply(HWND server, char_u *reply, int expr)
     return OK;
 }
 
+/*
+ * Get a reply from server "server".
+ * When "expr" is TRUE, get the result of an expression, otherwise a
+ * server2client() message.
+ * If "remove" is TRUE, consume the message, the caller must free it then.
+ * if "wait" is TRUE block until a message arrives (or the server exits).
+ */
     char_u *
 serverGetReply(HWND server, int expr, int remove, int wait)
 {
     int		i;
     char_u	*reply;
     reply_T	*rep;
-    MSG		msg;
 
     /* When waiting, loop until the message waiting for is received. */
     for (;;)
@@ -2080,25 +2108,20 @@ serverGetReply(HWND server, int expr, int remove, int wait)
 	    rep = REPLY_ITEM(i);
 	    if (rep->server == server && rep->expr_result == expr)
 	    {
-		size_t bytes;
-
-		/* If we aren't going to remove the reply from the list,
-		 * just return the value we've found
-		 */
-		if (!remove)
-		    return rep->reply;
-
 		/* Save the values we've found for later */
 		reply = rep->reply;
 
-		/* Move the rest of the list down to fill the gap */
-		bytes = (REPLY_COUNT - i - 1) * sizeof(reply_T);
-		mch_memmove(rep, rep + 1, bytes);
-		--REPLY_COUNT;
-		++REPLY_ROOM;
+		if (remove)
+		{
+		    /* Move the rest of the list down to fill the gap */
+		    mch_memmove(rep, rep + 1,
+				     (REPLY_COUNT - i - 1) * sizeof(reply_T));
+		    --REPLY_COUNT;
+		    ++REPLY_ROOM;
+		}
 
 		/* Return the reply to the caller, who takes on responsibility
-		 * for freeing it. */
+		 * for freeing it if "remove" is TRUE. */
 		return reply;
 	    }
 	}
@@ -2114,30 +2137,24 @@ serverGetReply(HWND server, int expr, int remove, int wait)
 	/* Loop until we receive a reply */
 	while (reply_received == 0)
 	{
-	    /* Wait for a SendMessage() call to us.  This could be the reply we
-	     * are waiting for.  */
-	    MsgWaitForMultipleObjects(0, NULL, TRUE, INFINITE, QS_SENDMESSAGE);
+	    /* Wait for a SendMessage() call to us.  This could be the reply
+	     * we are waiting for.  Use a timeout of a second, to catch the
+	     * situation that the server died unexpectedly. */
+	    MsgWaitForMultipleObjects(0, NULL, TRUE, 1000, QS_ALLINPUT);
 
 	    /* If the server has died, give up */
 	    if (!IsWindow(server))
 		return NULL;
 
-	    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-	    {
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	    }
+	    serverProcessPendingMessages();
 	}
     }
 
     return NULL;
 }
 
-#if !defined(FEAT_GUI) || defined(PROTO)
 /*
- * Process any messages in the Windows message queue. This is only required
- * for the console version, as the GUI version has a message loop anyway.
- * Return TRUE if something was put in the input buffer.
+ * Process any messages in the Windows message queue.
  */
     void
 serverProcessPendingMessages(void)
@@ -2150,7 +2167,6 @@ serverProcessPendingMessages(void)
 	DispatchMessage(&msg);
     }
 }
-#endif
 
 #endif /* FEAT_CLIENTSERVER */
 

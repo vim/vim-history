@@ -16,6 +16,7 @@ void mch_set_shellsize __ARGS((void));
 void mch_new_shellsize __ARGS((void));
 void mch_suspend __ARGS((void));
 void display_errors __ARGS((void));
+int mch_has_exp_wildcard __ARGS((char_u *p));
 int mch_has_wildcard __ARGS((char_u *p));
 int mch_chdir __ARGS((char *path));
 int can_end_termcap_mode __ARGS((int give_msg));

@@ -13,7 +13,7 @@ A. Supported compiler and environement
  1. CodeWarrior (pre-MacOS X)
  2. MPW (pre-MacOS X)
  3. Project Builder (MacOS X)
- 4. Unix Compiler (MacOS X) 
+ 4. Unix Compiler (MacOS X)
 
 B. Supported user interface
 
@@ -29,7 +29,7 @@ C. Supported "OS" style
  1. MacOS                    [Compile as B.1]
  2. MacOS X                  [Compile as B.2]
  3. BSD Unix                 [Compile as B.2, B.3 and B.4]
- 
+
 -----------------------------------------------------------
 
 Special Consideration
@@ -61,7 +61,7 @@ C.3: The BSD Unix version
 -----------------------------------------------------------
 
 A.1: Compiling with CodeWarior
- 
+
  1. Expand the resource file:
    - ../src/os_mac.rsr.hqx (to produce ../src/gui_mac.rsrc)
 
@@ -69,7 +69,7 @@ A.1: Compiling with CodeWarior
    - ../src/os_mac.sit.hqx (to produce ../src/vim.mcp)
 
  3. Open vim.mcp with CodeWarior
- 
+
    This is a CodeWarior 9 project file. When using a newer version,
    you need to convert the file. you may also need to change some
    access path.
@@ -80,8 +80,8 @@ A.1: Compiling with CodeWarior
  4. Select the target PPC, 68k FAT (with/without debugger)
 
  5. Compile
- 
- 
+
+
 A.2: Compiling with MPW.
 
  0. You will need a recent version of the MPW and the Universal Interfaces.
@@ -100,7 +100,7 @@ A.2: Compiling with MPW.
     folder and load the CreateVimMake script. Change to the Worksheet
     window. Type "os_mac.build" and hit Enter (not Return). A dialog box
     will appear. Select the target you want. (Vim-68k, Vim-ppc, Vim-carbon)
-    
+
  4. Select "Build" from the menu (or type command-B). Type the program name
     into the dialog box.
 
@@ -121,7 +121,7 @@ A.3: Compiling with Project Builder.
      -DMACOS_X_UNIX
        if you want to use shell commands (using os_unix.c)
        NOTE: some functionality may be missing
-  
+
  4. Hammer the build button in ;)
 
 
@@ -150,8 +150,8 @@ Compilation instructions:
    extra/vim-X.X-extra.tar.gz
 
    where X.X is the version number.
-   
-   NOTE: the language support is not yet supported 
+
+   NOTE: the language support is not yet supported
 
 2. Expand the archives.
 

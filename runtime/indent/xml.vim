@@ -1,11 +1,11 @@
 " Language:	xml
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 " URL:		http://www.zellner.org/vim/indent/xml.vim
-" Last Change:	Sat, 28 Apr 2001 14:16:23 +0200
+" Last Change:	Mon, 27 Aug 2001 23:39:17 +0200
 " Notes:	1) does not indent pure non-xml code (e.g. embedded scripts)
 "		2) will be confused by unbalanced tags in comments
 "		or CDATA sections.
-" TODO:		implement pre-like tags, see xml_indent_open / xml_indent_close
+" TODO: 	implement pre-like tags, see xml_indent_open / xml_indent_close
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -14,7 +14,7 @@ endif
 let b:did_indent = 1
 
 " [-- local settings (must come before aborting the script) --]
-setlocal indentexpr=XmlIndentGet(v:lnum)
+setlocal indentexpr=XmlIndentGet(v:lnum,1)
 setlocal indentkeys=o,O,*<Return>,<>>,<<>,/,<bs>,{,}
 
 if !exists('b:xml_indent_open')
@@ -39,7 +39,7 @@ endfun
 
 " [-- check if it's xml --]
 fun! <SID>XmlIndentSynCheck(lnum)
-    if '' != &syntax &&
+    if '' != &syntax
 	let syn1 = synIDattr(synID(a:lnum, 1, 1), 'name')
 	let syn2 = synIDattr(synID(a:lnum, strlen(getline(a:lnum)) - 1, 1), 'name')
 	if '' != syn1 && syn1 !~ 'xml' && '' != syn2 && syn2 !~ 'xml'
@@ -63,7 +63,7 @@ fun! <SID>XmlIndentSum(lnum, style, add)
     endif
 endfun
 
-fun! XmlIndentGet(lnum)
+fun! XmlIndentGet(lnum, use_syntax_check)
     " Find a non-empty line above the current line.
     let lnum = prevnonblank(a:lnum - 1)
 
@@ -72,8 +72,10 @@ fun! XmlIndentGet(lnum)
 	return 0
     endif
 
-    if 0 == <SID>XmlIndentSynCheck(lnum) || 0 == <SID>XmlIndentSynCheck(a:lnum)
-	return indent(a:lnum)
+    if a:use_syntax_check
+	if 0 == <SID>XmlIndentSynCheck(lnum) || 0 == <SID>XmlIndentSynCheck(a:lnum)
+	    return indent(a:lnum)
+	endif
     endif
 
     let ind = <SID>XmlIndentSum(lnum, -1, indent(lnum))

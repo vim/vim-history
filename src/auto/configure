@@ -56,7 +56,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --enable-gtk-check      If auto-select GUI, check for GTK [default=yes]"
 ac_help="$ac_help
-  --enable-gnome-check    If GTK GUI, check for GNOME [default=yes]"
+  --enable-gnome-check    If GTK GUI, check for GNOME [default=no]"
 ac_help="$ac_help
   --enable-motif-check    If auto-select GUI, check for Motif [default=yes]"
 ac_help="$ac_help
@@ -3279,7 +3279,7 @@ if test "${enable_gnome_check+set}" = set; then
   enableval="$enable_gnome_check"
   :
 else
-  enable_gnome_check="yes"
+  enable_gnome_check="no"
 fi
 
   echo "$ac_t""$enable_gnome_check" 1>&6;

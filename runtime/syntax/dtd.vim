@@ -50,7 +50,7 @@ endif
 
 " if this is a html like comment hightlight also
 " the opening <! and the closing > as Comment.
-syn region dtdComment           start=+<![ \t]*--+ end=+-->+ contains=dtdTodo
+syn region dtdComment		start=+<![ \t]*--+ end=+-->+ contains=dtdTodo
 
 
 " proper DTD comment
@@ -98,7 +98,7 @@ if !exists("dtd_no_param_entities")
 endif
 
 " &entities; compare with xml
-syn match   dtdEntity                 "&[^; \t]*;" contains=dtdEntityPunct
+syn match   dtdEntity		      "&[^; \t]*;" contains=dtdEntityPunct
 syn match   dtdEntityPunct  contained "[&.;]"
 
 " Strings are between quotes

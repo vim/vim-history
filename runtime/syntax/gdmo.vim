@@ -3,7 +3,7 @@
 "		(ISO-10165-4; Guidelines for the Definition of Managed Object)
 " Maintainer:	Gyuman Kim <violino@dooly.modacom.co.kr>
 " URL:		http://dooly.modacom.co.kr/gdmo.vim
-" Last change:	2001 May 4
+" Last change:	2001 Sep 02
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -50,11 +50,11 @@ syn match   gdmoExtension     "ONLY-IF-NO-CONTAINED-OBJECTS"
 
 
 " Strings and constants
-syn match   gdmoSpecial           contained "\\\d\d\d\|\\."
-syn region  gdmoString            start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=gdmoSpecial
-syn match   gdmoCharacter         "'[^\\]'"
+syn match   gdmoSpecial		contained "\\\d\d\d\|\\."
+syn region  gdmoString		start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=gdmoSpecial
+syn match   gdmoCharacter	  "'[^\\]'"
 syn match   gdmoSpecialCharacter  "'\\.'"
-syn match   gdmoNumber            "0[xX][0-9a-fA-F]\+\>"
+syn match   gdmoNumber		  "0[xX][0-9a-fA-F]\+\>"
 syn match   gdmoLineComment       "--.*"
 syn match   gdmoLineComment       "--.*--"
 
@@ -74,19 +74,19 @@ if version >= 508 || !exists("did_gdmo_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink gdmoCategory         Structure
+  HiLink gdmoCategory	      Structure
   HiLink gdmoRelationship     Macro
   HiLink gdmoDefinition       Statement
-  HiLink gdmoReference        Type
-  HiLink gdmoExtension        Operator
-  HiLink gdmoBraces           Function
-  HiLink gdmoSpecial          Special
-  HiLink gdmoString           String
-  HiLink gdmoCharacter        Character
+  HiLink gdmoReference	      Type
+  HiLink gdmoExtension	      Operator
+  HiLink gdmoBraces	      Function
+  HiLink gdmoSpecial	      Special
+  HiLink gdmoString	      String
+  HiLink gdmoCharacter	      Character
   HiLink gdmoSpecialCharacter gdmoSpecial
-  HiLink gdmoComment          Comment
+  HiLink gdmoComment	      Comment
   HiLink gdmoLineComment      gdmoComment
-  HiLink gdmoType             Type
+  HiLink gdmoType	      Type
 
   delcommand HiLink
 endif

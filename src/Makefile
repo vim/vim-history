@@ -296,7 +296,7 @@ CClink = $(CC)
 # The automatic check will use another one that can be found
 # Gnome is disabled by default, it may cause trouble.
 #CONF_OPT_GUI = --disable-gtk-check
-CONF_OPT_GUI = --disable-gnome-check
+#CONF_OPT_GUI = --enable-gnome-check
 #CONF_OPT_GUI = --disable-motif-check
 #CONF_OPT_GUI = --disable-athena-check
 
@@ -771,7 +771,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60at
+VIMRTDIR = /vim60au
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -2179,7 +2179,7 @@ objects/eval.o: eval.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
  ex_cmds.h proto.h globals.h farsi.h version.h
 objects/ex_cmds.o: ex_cmds.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h option.h ex_cmds.h proto.h globals.h farsi.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h
 objects/ex_cmds2.o: ex_cmds2.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h
@@ -2203,7 +2203,7 @@ objects/if_cscope.o: if_cscope.c vim.h auto/config.h feature.h os_unix.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h if_cscope.h
 objects/if_xcmdsrv.o: if_xcmdsrv.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h option.h ex_cmds.h proto.h globals.h farsi.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h
 objects/main.o: main.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
  ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h option.h \
  ex_cmds.h proto.h globals.h farsi.h farsi.c

@@ -212,7 +212,11 @@ static char *(features[]) =
 	"+fork()",
 #endif
 #ifdef FEAT_GETTEXT
+# ifdef DYNAMIC_GETTEXT
+	"+gettext/dyn",
+# else
 	"+gettext",
+# endif
 #else
 	"-gettext",
 #endif
@@ -221,7 +225,7 @@ static char *(features[]) =
 #else
 	"-hangul_input",
 #endif
-#if defined(HAVE_ICONV_H) && defined(USE_ICONV)
+#if (defined(HAVE_ICONV_H) && defined(USE_ICONV)) || defined(DYNAMIC_ICONV)
 # ifdef DYNAMIC_ICONV
 	"+iconv/dyn",
 # else
@@ -335,7 +339,11 @@ static char *(features[]) =
 # endif
 #endif
 #ifdef FEAT_MBYTE_IME
+# ifdef DYNAMIC_IME
+	"+multi_byte_ime/dyn",
+# else
 	"+multi_byte_ime",
+# endif
 #else
 # ifdef FEAT_MBYTE
 	"+multi_byte",

@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0at.  Last change: 2001 Aug 27
+*various.txt*   For Vim version 6.0au.  Last change: 2001 Aug 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -182,6 +182,13 @@ g8			Print the hex values of the bytes used in the
 			On Unix the command normally runs in a non-interactive
 			shell.  If you want an interactive shell to be used
 			(to use aliases) set 'shellcmdflag' to "-ic".
+			Vim redraws the screen after the command is finished,
+			because it may have printed any text.  This requires a
+			hit-enter prompt, so that you can read any messages.
+			To avoid this use: >
+				:silent !{cmd}
+<			The screen is not redrawn then, thus you have to use
+			CTRL-L if the command did display something.
 			Also see |shell-window|.
 
 							*:!!*
@@ -640,7 +647,9 @@ There are currently a number of limitations with PostScript printing:
   it should be available on all PostScript printers) but the font size is
   used.
 
-- 'printoptions' - The duplex setting is ignored.
+- 'printoptions' - The duplex setting is used when generating PostScript
+  output, but it is up to the printer to take notice of the setting.  If the
+  printer does not support duplex printing then it will be silently ignored.
 
 - EBCDIC - There is no explicit support for PostScript generation on EBCDIC
   platforms.  If you keep to characters that translate to printable 7-bit

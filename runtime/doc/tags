@@ -1079,6 +1079,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 -l	starting.txt	/*-l*
 -m	starting.txt	/*-m*
 -menufont	gui_x11.txt	/*-menufont*
+-menufontset	gui_x11.txt	/*-menufontset*
 -menuheight	gui_x11.txt	/*-menuheight*
 -mf	gui_x11.txt	/*-mf*
 -mh	gui_x11.txt	/*-mh*
@@ -1518,6 +1519,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :au	autocmd.txt	/*:au*
 :aug	autocmd.txt	/*:aug*
 :augroup	autocmd.txt	/*:augroup*
+:augroup-delete	autocmd.txt	/*:augroup-delete*
 :aun	gui.txt	/*:aun*
 :aunmenu	gui.txt	/*:aunmenu*
 :autocmd	autocmd.txt	/*:autocmd*
@@ -2151,6 +2153,12 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :si	gui_w32.txt	/*:si*
 :sig	sign.txt	/*:sig*
 :sign	sign.txt	/*:sign*
+:sign-define	sign.txt	/*:sign-define*
+:sign-jump	sign.txt	/*:sign-jump*
+:sign-list	sign.txt	/*:sign-list*
+:sign-place	sign.txt	/*:sign-place*
+:sign-undefine	sign.txt	/*:sign-undefine*
+:sign-unplace	sign.txt	/*:sign-unplace*
 :sil	various.txt	/*:sil*
 :silent	various.txt	/*:silent*
 :simalt	gui_w32.txt	/*:simalt*
@@ -3005,6 +3013,7 @@ E363	pattern.txt	/*E363*
 E364	eval.txt	/*E364*
 E365	options.txt	/*E365*
 E366	options.txt	/*E366*
+E367	autocmd.txt	/*E367*
 E368	eval.txt	/*E368*
 E37	message.txt	/*E37*
 E371	various.txt	/*E371*
@@ -4745,6 +4754,7 @@ netrw	pi_netrw.txt	/*netrw*
 netrw-activate	pi_netrw.txt	/*netrw-activate*
 netrw-ex	pi_netrw.txt	/*netrw-ex*
 netrw-netrc	pi_netrw.txt	/*netrw-netrc*
+netrw-options	pi_netrw.txt	/*netrw-options*
 netrw-passwd	pi_netrw.txt	/*netrw-passwd*
 netrw-transparent	pi_netrw.txt	/*netrw-transparent*
 netrw-uidpass	pi_netrw.txt	/*netrw-uidpass*

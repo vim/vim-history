@@ -1,6 +1,6 @@
 " Menu Translations:	Czech
 " Translated By:	Jiøí Pavlovskı <pavlovsk@ff.cuni.cz>
-" Last Change:		2001 Jul 28
+" Last Change:		2001 Sep 02
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -14,19 +14,19 @@ scriptencoding iso-8859-2
 menutrans &Help &Nápovìda
 menutrans &Overview<Tab><F1>	&Pøehled<Tab><F1>
 menutrans &How-to\ links	&Tipy
-menutrans &GUI        &Grafické\ rozhraní
+menutrans &GUI 			&Grafické\ rozhraní
 menutrans &Credits		Po&dìkování
 menutrans Co&pying		&Licenèní\ politika
-menutrans &Find\.\.\.	&Najít\.\.\.
+menutrans &Find\.\.\.		&Najít\.\.\.
 menutrans &Version		&Verze
-menutrans &About		  &O\ aplikaci
+menutrans &About		&O\ aplikaci
 
 " File menu
 menutrans &File				&Soubor
 menutrans &Open\.\.\.<Tab>:e		&Otevøít\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp	Otevøít\ v\ no&vém\ oknì\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		&Novı<Tab>:enew
-menutrans &Close<Tab>:q			&Zavøít<Tab>:q
+menutrans &Close<Tab>:close		&Zavøít<Tab>:close
 menutrans &Save<Tab>:w			&Ulo¾it<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:w	Ulo¾it &jako\.\.\.<Tab>:w
 menutrans &Print			&Tisk

@@ -1,6 +1,6 @@
 " Menu Translations:	Nederlands
 " Maintainer:		Bram Moolenaar
-" Last Change:	2001 Jul 28
+" Last Change:	2001 Aug 31
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -26,7 +26,7 @@ menutrans &File				&Bestand
 menutrans &Open\.\.\.<Tab>:e		&Openen\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp	In\ nieuw\ &Venster\ openen\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		&Nieuw<Tab>:enew
-menutrans &Close<Tab>:q			&Sluiten<Tab>:q
+menutrans &Close<Tab>:close		&Sluiten<Tab>:close
 menutrans &Save<Tab>:w			&Bewaren<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	Bewaren\ als\.\.\.<Tab>:sav
 menutrans Split\ &Diff\ with\.\.\.	Toon\ diff\ met\.\.\.

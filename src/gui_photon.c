@@ -13,16 +13,22 @@
 
 #include "vim.h"
 
+#ifdef FEAT_TOOLBAR
+# include <photon/PxImage.h>
+#endif
+
 #if !defined(__QNX__)
 /* Used when generating prototypes. */
-#define PgColor_t	int
-#define PhEvent_t	int
-#define PhPoint_t	int
-#define PtWidget_t	int
-#define Pg_BLACK	0
-#define PtCallbackF_t	int
-#define PtCallbackInfo_t int
-#define PhTile_t	int
+# define PgColor_t	int
+# define PhEvent_t	int
+# define PhPoint_t	int
+# define PtWidget_t	int
+# define Pg_BLACK	0
+# define PtCallbackF_t	int
+# define PtCallbackInfo_t int
+# define PhTile_t	int
+# define PtWidget_t	int
+# define PhImage_t	int
 #endif
 
 #define ARRAY_LENGTH(a) (sizeof(a) / sizeof(a[0]))
@@ -188,8 +194,8 @@ static PtCallbackF_t gui_ph_handle_timer_timeout;
 static PtCallbackF_t gui_ph_handle_window_cb;
 
 static PtCallbackF_t gui_ph_handle_scrollbar;
-static PtCallbackF_t gui_ph_handle_keyboard;	/* keyboard input */
-static PtCallbackF_t gui_ph_handle_mouse;	/* mouse buttons and movement */
+static PtCallbackF_t gui_ph_handle_keyboard;
+static PtCallbackF_t gui_ph_handle_mouse;
 static PtCallbackF_t gui_ph_handle_pulldown_menu;
 static PtCallbackF_t gui_ph_handle_menu;
 static PtCallbackF_t gui_ph_handle_focus;	/* focus change of text area */
@@ -202,6 +208,13 @@ static PtCallbackF_t gui_ph_handle_menu_unrealized;
 #ifdef USE_PANEL_GROUP
 static void gui_ph_get_panelgroup_margins( short*, short*, short*, short* );
 #endif
+
+#ifdef FEAT_TOOLBAR
+static PhImage_t *gui_ph_toolbar_find_icon( vimmenu_T *menu );
+#endif
+
+static void gui_ph_draw_start( void );
+static void gui_ph_draw_end( void );
 
 /* Set the text for the balloon */
 static PtWidget_t * gui_ph_show_tooltip( PtWidget_t *window,
@@ -242,7 +255,9 @@ static PtWidget_t * gui_ph_show_tooltip( PtWidget_t *window,
     return( PtInflateBalloon(
 	    window,
 	    widget,
-	    Pt_BALLOON_BOTTOM,
+	    /* Don't put the balloon at the bottom,
+	     * it gets drawn over by gfx done in the PtRaw */
+	    Pt_BALLOON_TOP,
 	    tooltip,
 	    font,
 	    fill_color,
@@ -270,19 +285,8 @@ gui_ph_handle_menu_resize(
     PtWidget_t		*container;
     PhPoint_t		below_menu;
     int_u		height;
-    static short_u	is_first_time = TRUE;
 
     height = sizes->new_dim.h;
-
-    /*
-     * FIXME: Before the main window is realised, and after calling
-     * PtExtentWidget, the height is 4 pixels smaller than it should be
-     */
-    if( is_first_time == TRUE )
-    {
-	is_first_time = FALSE;
-	height += 4;
-    }
 
     /* Because vim treats the toolbar and menubar separatly,
      * and here they're lumped together into a PtToolbarGroup,
@@ -357,7 +361,7 @@ gui_ph_handle_timer_timeout(PtWidget_t *widget, void *data, PtCallbackInfo_t *in
 gui_ph_handle_window_cb( PtWidget_t *widget, void *data, PtCallbackInfo_t *info )
 {
     PhWindowEvent_t *we = info->cbdata;
-    int width, height;
+    ushort_t *width, *height;
 
     switch( we->event_f ) {
 	case Ph_WM_CLOSE:
@@ -381,14 +385,14 @@ gui_ph_handle_window_cb( PtWidget_t *widget, void *data, PtCallbackInfo_t *info 
 	    break;
 
 	case Ph_WM_RESIZE:
-	    /* FIXME: the +1 is for a bug in photon */
-	    width  = we->size.w + 1;
-	    height = we->size.h + 1;
+	    PtGetResource( gui.vimWindow, Pt_ARG_WIDTH, &width, 0 );
+	    PtGetResource( gui.vimWindow, Pt_ARG_HEIGHT, &height, 0 );
 #ifdef USE_PANEL_GROUP
 	    width  -= (pg_margin_left + pg_margin_right);
 	    height -= (pg_margin_top + pg_margin_bottom);
 #endif
-	    gui_resize_shell( width, height );
+	    gui_resize_shell( *width, *height );
+	    gui_set_shellsize( FALSE, FALSE );
 	    is_ignore_draw = FALSE;
 	    PtEndFlux( gui.vimContainer );
 	    PtContainerRelease( gui.vimContainer );
@@ -420,14 +424,15 @@ gui_ph_handle_scrollbar( PtWidget_t *widget, void *data, PtCallbackInfo_t *info 
 		dragging = TRUE;
 		break;
 
-	    case Pt_SCROLL_RELEASED:
+	    case Pt_SCROLL_SET:
 		/* FIXME: return straight away here? */
+		return( Pt_CONTINUE );
 		break;
 	}
 
 	gui_drag_scrollbar(sb, value, dragging);
     }
-    return Pt_CONTINUE;
+    return( Pt_CONTINUE );
 }
 
     static int
@@ -442,7 +447,8 @@ gui_ph_handle_keyboard( PtWidget_t *widget, void *data, PtCallbackInfo_t *info )
 
     ch = modifiers = len = 0;
 
-    gui_mch_mousehide( MOUSE_HIDE );
+    if( p_mh )
+	gui_mch_mousehide( MOUSE_HIDE );
 
     /* We're a good lil photon program, aren't we? yes we are, yeess wee arrr */
     if( key->key_flags & Pk_KF_Compose )
@@ -574,6 +580,8 @@ gui_ph_handle_keyboard( PtWidget_t *widget, void *data, PtCallbackInfo_t *info )
 		    return( Pt_CONTINUE );
 		}
 	    }
+	    else
+		modifiers &= ~MOD_MASK_SHIFT;
 	}
 
 	ch = simplify_key( ch, &modifiers );
@@ -798,6 +806,7 @@ gui_ph_handle_menu( PtWidget_t *widget, void *data, PtCallbackInfo_t *info )
     return( Pt_CONTINUE );
 }
 
+/* Stop focus from disappearing into the menubar... */
     static int
 gui_ph_handle_menu_unrealized(
 	PtWidget_t *widget,
@@ -805,6 +814,16 @@ gui_ph_handle_menu_unrealized(
 	PtCallbackInfo_t *info )
 {
     PtGiveFocus( gui.vimTextArea, NULL );
+    return( Pt_CONTINUE );
+}
+
+    static int
+gui_ph_handle_window_open(
+	PtWidget_t *widget,
+	void *data,
+	PtCallbackInfo_t *info )
+{
+    gui_set_shellsize( FALSE, TRUE );
     return( Pt_CONTINUE );
 }
 
@@ -841,7 +860,7 @@ gui_ph_find_buffer_item( char_u *name )
     vimmenu_T *items = NULL;
 
     while( top_level != NULL &&
-	    ( strcmp( top_level->dname, "Buffers" ) != 0 ) )
+	    ( STRCMP( top_level->dname, "Buffers" ) != 0 ) )
 	top_level = top_level->next;
 
     if( top_level != NULL )
@@ -849,7 +868,7 @@ gui_ph_find_buffer_item( char_u *name )
 	items = top_level->children;
 
 	while( items != NULL &&
-		( strcmp( items->dname, name ) != 0 ) )
+		( STRCMP( items->dname, name ) != 0 ) )
 	    items = items->next;
     }
     return( items );
@@ -867,14 +886,14 @@ gui_ph_pg_set_buffer_num( int_u buf_num )
 
     search[0] = '(';
     ultoa( buf_num, &search[1], 10 );
-    strcat( search, ")" );
+    STRCAT( search, ")" );
 
     for( i = 0; i < num_panels; i++ )
     {
 	/* find the last "(" in the panel title and see if the buffer
 	 * number in the title matches the one we're looking for */
-	mark = strrchr( panel_titles[ i ], '(' );
-	if( mark != NULL && strcmp( mark, search ) == 0 )
+	mark = STRRCHR( panel_titles[ i ], '(' );
+	if( mark != NULL && STRCMP( mark, search ) == 0 )
 	{
 	    PtSetResource( gui.vimPanelGroup, Pt_ARG_PG_CURRENT_INDEX,
 		    i, 0 );
@@ -932,7 +951,7 @@ gui_ph_is_buffer_item( vimmenu_T *menu, vimmenu_T *parent )
 {
     char *mark;
 
-    if( strcmp( parent->dname, "Buffers" ) == 0 )
+    if( STRCMP( parent->dname, "Buffers" ) == 0 )
     {
 	/* Look for '(' digits ')' */
 	mark = vim_strchr( menu->dname, '(' );
@@ -986,7 +1005,7 @@ gui_ph_pg_remove_buffer( char *name )
 	    /* Copy all the titles except the one we're removing */
 	    for( i = 0; i < num_panels; i++ )
 	    {
-		if( strcmp( panel_titles[ i ], name ) != 0 )
+		if( STRCMP( panel_titles[ i ], name ) != 0 )
 		{
 		    *s++ = panel_titles[ i ];
 		}
@@ -1075,14 +1094,12 @@ gui_ph_encoding_changed( int new_encoding )
 
 /****************************************************************************/
 /****************************************************************************/
-/* all gui_mch_* functions below */
 
     void
 gui_mch_prepare(argc, argv)
     int	    *argc;
     char    **argv;
 {
-    /* FIXME: Make sure we can run vim on a different node */
     PtInit( NULL );
 }
 
@@ -1090,7 +1107,7 @@ gui_mch_prepare(argc, argv)
 gui_mch_init(void)
 {
     PtArg_t args[10];
-    int	    n = 0;
+    int	    flags = 0, n = 0;
 
     PhDim_t	window_size = {100, 100}; /* Abitrary values */
     PhPoint_t	pos = {0, 0};
@@ -1115,12 +1132,11 @@ gui_mch_init(void)
 	return( FAIL );
 
     PtAddCallback( gui.vimWindow, Pt_CB_WINDOW, gui_ph_handle_window_cb, NULL );
+    PtAddCallback( gui.vimWindow, Pt_CB_WINDOW_OPENING,
+	    gui_ph_handle_window_open, NULL );
 
     n = 0;
-    PtSetArg( &args[ n++ ], Pt_ARG_ANCHOR_FLAGS,
-	    Pt_LEFT_ANCHORED_LEFT | Pt_RIGHT_ANCHORED_RIGHT |
-	    Pt_BOTTOM_ANCHORED_BOTTOM | Pt_TOP_ANCHORED_TOP,
-	    Pt_IS_ANCHORED );
+    PtSetArg( &args[ n++ ], Pt_ARG_ANCHOR_FLAGS, Pt_ANCHOR_ALL, Pt_IS_ANCHORED );
     PtSetArg( &args[ n++ ], Pt_ARG_DIM, &window_size, 0 );
     PtSetArg( &args[ n++ ], Pt_ARG_POS, &pos, 0 );
 
@@ -1160,8 +1176,10 @@ gui_mch_init(void)
      */
     PtSetArg( &args[ n++ ], Pt_ARG_FLAGS, Pt_TRUE,
 	    Pt_GETS_FOCUS | Pt_HIGHLIGHTED );
+#ifndef FEAT_MOUSESHAPE
     PtSetArg( &args[ n++ ], Pt_ARG_CURSOR_TYPE, GUI_PH_MOUSE_TYPE, 0 );
     PtSetArg( &args[ n++ ], Pt_ARG_CURSOR_COLOR, gui_ph_mouse_color, 0 );
+#endif
 
     gui.vimTextArea = PtCreateWidget( PtRaw, Pt_DFLT_PARENT, n, args );
     if( gui.vimTextArea == NULL)
@@ -1204,8 +1222,7 @@ gui_mch_init(void)
 #ifdef FEAT_MENU
     n = 0;
     PtSetArg( &args[ n++ ], Pt_ARG_WIDTH, window_size.w, 0 );
-    PtSetArg( &args[ n++ ], Pt_ARG_ANCHOR_FLAGS,
-	    Pt_LEFT_ANCHORED_LEFT | Pt_RIGHT_ANCHORED_RIGHT,
+    PtSetArg( &args[ n++ ], Pt_ARG_ANCHOR_FLAGS, Pt_ANCHOR_LEFT_RIGHT,
 	    Pt_IS_ANCHORED );
     gui.vimToolBarGroup = PtCreateWidget( PtToolbarGroup, gui.vimWindow,
 	    n, args );
@@ -1216,8 +1233,13 @@ gui_mch_init(void)
 	    gui_ph_handle_menu_resize, NULL );
 
     n = 0;
+    flags = 0;
     PtSetArg( &args[ n++ ], Pt_ARG_WIDTH, window_size.w, 0 );
-
+    if( ! vim_strchr( p_go, GO_MENUS ) )
+    {
+	flags |= Pt_DELAY_REALIZE;
+	PtSetArg( &args[ n++ ], Pt_ARG_FLAGS, Pt_TRUE, flags );
+    }
     gui.vimMenuBar = PtCreateWidget( PtMenuBar, gui.vimToolBarGroup, n, args );
     if( gui.vimMenuBar == NULL )
 	return( FAIL );
@@ -1226,16 +1248,16 @@ gui_mch_init(void)
     n = 0;
 
     PtSetArg( &args[ n++ ], Pt_ARG_ANCHOR_FLAGS,
-	    Pt_LEFT_ANCHORED_LEFT | Pt_RIGHT_ANCHORED_RIGHT |
-	    Pt_TOP_ANCHORED_TOP,
-	    Pt_IS_ANCHORED );
+	    Pt_ANCHOR_LEFT_RIGHT |Pt_TOP_ANCHORED_TOP, Pt_IS_ANCHORED );
     PtSetArg( &args[ n++ ], Pt_ARG_RESIZE_FLAGS, Pt_TRUE,
 	    Pt_RESIZE_Y_AS_REQUIRED );
     PtSetArg( &args[ n++ ], Pt_ARG_WIDTH, window_size.w, 0 );
-    PtSetArg( &args[ n++ ], Pt_ARG_TOOLBAR_FLAGS,
-	    Pt_TRUE, Pt_TOOLBAR_ITEM_SEPARATORS );
-    PtSetArg( &args[ n++ ], Pt_ARG_FLAGS, Pt_DELAY_REALIZE,
-	    Pt_DELAY_REALIZE | Pt_GETS_FOCUS );
+
+    flags = Pt_GETS_FOCUS;
+    if( ! vim_strchr( p_go, GO_TOOLBAR ) )
+	flags |= Pt_DELAY_REALIZE;
+
+    PtSetArg( &args[ n++ ], Pt_ARG_FLAGS, Pt_DELAY_REALIZE, flags );
 
     gui.vimToolBar = PtCreateWidget( PtToolbar, gui.vimToolBarGroup, n, args );
     if( gui.vimToolBar == NULL )
@@ -1394,7 +1416,8 @@ gui_mch_browse(
     {
 	if( saving == TRUE )
 	{
-	    flags |= Pt_FSR_CONFIRM_EXISTING | Pt_FSR_NO_FCHECK;
+	    /* Don't need Pt_FSR_CONFIRM_EXISTING, vim will ask anyway */
+	    flags |= Pt_FSR_NO_FCHECK;
 	    open_text = "&Save";
 	}
 
@@ -1438,10 +1461,51 @@ gui_mch_browse(
     }
     return( NULL );
 }
-
 #endif
 
 #if defined( FEAT_GUI_DIALOG ) || defined( PROTO )
+static PtWidget_t *gui_ph_dialog_text = NULL;
+
+    static int
+gui_ph_dialog_close( int button, void *data )
+{
+    PtModalCtrl_t *modal_ctrl = data;
+    char_u *dialog_text, *vim_text;
+
+    if( gui_ph_dialog_text != NULL )
+    {
+	PtGetResource( gui_ph_dialog_text, Pt_ARG_TEXT_STRING, &dialog_text, 0 );
+	PtGetResource( gui_ph_dialog_text, Pt_ARG_POINTER, &vim_text, 0 );
+	STRNCPY( vim_text, dialog_text, IOSIZE - 1 );
+    }
+
+    PtModalUnblock( modal_ctrl, (void *) button );
+
+    return( Pt_TRUE );
+}
+
+    static int
+gui_ph_dialog_text_enter( PtWidget_t *widget, void *data, PtCallbackInfo_t *info )
+{
+    if( info->reason_subtype == Pt_EDIT_ACTIVATE )
+	gui_ph_dialog_close( 1, data );
+    return( Pt_CONTINUE );
+}
+
+    static int
+gui_ph_dialog_esc( PtWidget_t *widget, void *data, PtCallbackInfo_t *info )
+{
+    PhKeyEvent_t *key;
+
+    key = PhGetData( info->event );
+    if( ( key->key_flags & Pk_KF_Cap_Valid ) && ( key->key_cap == Pk_Escape ) )
+    {
+	gui_ph_dialog_close( 0, data );
+	return( Pt_CONSUME );
+    }
+    return( Pt_PROCESS );
+}
+
     int
 gui_mch_dialog(
 	int	type,
@@ -1478,6 +1542,9 @@ gui_mch_dialog(
 	    button_count++;
     }
 
+    if ( title == NULL )
+	title = "Vim";
+
     buttons_copy = alloc( len + 1 );
     button_array = (char_u **) alloc( button_count * sizeof( char_u * ) );
     if( buttons_copy != NULL && button_array != NULL )
@@ -1501,7 +1568,7 @@ gui_mch_dialog(
 		}
 	    }
 	}
-
+#ifndef FEAT_GUI_TEXTDIALOG
 	dialog_result = PtAlert(
 		gui.vimWindow, NULL,
 		title,
@@ -1509,6 +1576,73 @@ gui_mch_dialog(
 		message, NULL,
 		button_count, (const char **) button_array, NULL,
 		default_button, 0, Pt_MODAL );
+#else
+	/* PtPrompt doesn't work if you're not using PtMainLoop(), so create the dialog directly.
+	 * It does give us the option ofadding extra features, like trapping the escape key and
+	 * returning 0 to vim */
+	{
+	    int n;
+	    PtArg_t args[5];
+	    PtWidget_t *dialog, *pane;
+	    PtModalCtrl_t modal_ctrl;
+	    PtDialogInfo_t di;
+
+	    memset( &di, 0, sizeof( di ) );
+	    memset( &modal_ctrl, 0, sizeof( modal_ctrl ) );
+
+	    n = 0;
+	    PtSetArg( &args[n++], Pt_ARG_GROUP_ROWS_COLS, 0, 0 );
+	    PtSetArg( &args[n++], Pt_ARG_WIDTH, 350, 0 );
+	    PtSetArg( &args[n++], Pt_ARG_GROUP_ORIENTATION,
+		    Pt_GROUP_VERTICAL, 0 );
+	    PtSetArg( &args[n++], Pt_ARG_GROUP_FLAGS,
+		    Pt_TRUE, Pt_GROUP_NO_KEYS | Pt_GROUP_STRETCH_HORIZONTAL );
+	    PtSetArg( &args[n++], Pt_ARG_CONTAINER_FLAGS, Pt_FALSE, Pt_TRUE );
+	    pane = PtCreateWidget( PtGroup, NULL, n, args );
+
+	    n = 0;
+	    PtSetArg( &args[n++], Pt_ARG_TEXT_STRING, message, 0 );
+	    PtCreateWidget( PtLabel, pane, n, args );
+
+	    if( textfield != NULL )
+	    {
+		n = 0;
+		PtSetArg( &args[n++], Pt_ARG_MAX_LENGTH, IOSIZE - 1, 0 );
+		PtSetArg( &args[n++], Pt_ARG_TEXT_STRING, textfield, 0 );
+		PtSetArg( &args[n++], Pt_ARG_POINTER, textfield, 0 );
+		gui_ph_dialog_text = PtCreateWidget( PtText, pane, n, args );
+		PtAddCallback( gui_ph_dialog_text, Pt_CB_ACTIVATE,
+			gui_ph_dialog_text_enter, &modal_ctrl );
+	    }
+
+	    di.parent = gui.vimWindow;
+	    di.pane = pane;
+	    di.title = title;
+	    di.buttons = (const char **) button_array;
+	    di.nbtns = button_count;
+	    di.def_btn = default_button;
+	    /* This is just to give the dialog the close button.
+	     * We check for the Escape key ourselves and return 0 */
+	    di.esc_btn = button_count;
+	    di.callback = gui_ph_dialog_close;
+	    di.data = &modal_ctrl;
+
+	    dialog = PtCreateDialog( &di );
+	    PtAddFilterCallback( dialog, Ph_EV_KEY,
+		    gui_ph_dialog_esc, &modal_ctrl );
+
+	    if( gui_ph_dialog_text != NULL )
+		PtGiveFocus( gui_ph_dialog_text, NULL );
+
+	    /* Open dialog, block the vim window and wait for the dialog to close */
+	    PtRealizeWidget( dialog );
+	    PtMakeModal( dialog, Ph_CURSOR_NOINPUT, Ph_CURSOR_DEFAULT_COLOR );
+	    dialog_result = (int) PtModalBlock( &modal_ctrl, 0 );
+
+	    PtDestroyWidget( dialog );
+	    gui_ph_dialog_text = NULL;
+	}
+#endif
     }
 
     vim_free( button_array );
@@ -1560,12 +1694,20 @@ gui_mch_set_shellsize(int width, int height,
 	gui_ph_resize_container();
 }
 
+/*
+ * Return the amount of screen space that hasn't been allocated (such as
+ * by the shelf).
+ */
     void
 gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
 {
-    /* FIXME */
-    *screen_w = 640;
-    *screen_h = 480;
+    PhRect_t console;
+
+    PhWindowQueryVisible( Ph_QUERY_WORKSPACE, 0,
+	    PhInputGroup( NULL ), &console );
+
+    *screen_w = console.lr.x - console.ul.x + 1;
+    *screen_h = console.lr.y - console.ul.y + 1;
 }
 
     void
@@ -1587,7 +1729,13 @@ gui_mch_iconify(void)
     void
 gui_mch_set_foreground()
 {
-    /* TODO */
+    PhWindowEvent_t event;
+
+    memset( &event, 0, sizeof (event) );
+    event.event_f = Ph_WM_TOFRONT;
+    event.event_state = Ph_WM_EVSTATE_FFRONT;
+    event.rid = PtWidgetRid( gui.vimWindow );
+    PtForwardWindowEvent( &event );
 }
 #endif
 
@@ -1628,7 +1776,7 @@ gui_mch_set_scrollbar_pos(scrollbar_T *sb, int x, int y, int w, int h)
 gui_mch_create_scrollbar(scrollbar_T *sb, int orient)
 {
     int	    n = 0;
-    int	    anchor_flags = 0;
+/*    int	    anchor_flags = 0;*/
     PtArg_t args[4];
 
     /*
@@ -1640,7 +1788,8 @@ gui_mch_create_scrollbar(scrollbar_T *sb, int orient)
     PtSetArg( &args[ n++ ], Pt_ARG_FLAGS, Pt_DELAY_REALIZE,
 	    Pt_DELAY_REALIZE | Pt_GETS_FOCUS );
     PtSetArg( &args[ n++ ], Pt_ARG_SCROLLBAR_FLAGS, Pt_SCROLLBAR_SHOW_ARROWS, 0);
-
+#if 0
+    /* Don't need this anchoring for the scrollbars */
     if( orient == SBAR_HORIZ )
     {
 	anchor_flags = Pt_BOTTOM_ANCHORED_BOTTOM |
@@ -1657,7 +1806,8 @@ gui_mch_create_scrollbar(scrollbar_T *sb, int orient)
 		anchor_flags |= Pt_RIGHT_ANCHORED_RIGHT;
 	}
     }
-    PtSetArg( &args[ n++ ], Pt_ARG_ANCHOR_FLAGS, Pt_FALSE, Pt_TRUE );
+    PtSetArg( &args[ n++ ], Pt_ARG_ANCHOR_FLAGS, anchor_flags, Pt_IS_ANCHORED );
+#endif
     PtSetArg( &args[ n++ ], Pt_ARG_ORIENTATION,
 	    (orient == SBAR_HORIZ) ? Pt_HORIZONTAL : Pt_VERTICAL, 0 );
 #ifdef USE_PANEL_GROUP
@@ -1682,20 +1832,83 @@ gui_mch_enable_scrollbar(scrollbar_T *sb, int flag)
 gui_mch_destroy_scrollbar(scrollbar_T *sb)
 {
     PtDestroyWidget( sb->id );
+    sb->id = NULL;
 }
 
 /****************************************************************************/
 /* Mouse functions */
 
+#if defined(FEAT_MOUSESHAPE) || defined(PROTO)
+/* The last set mouse pointer shape is remembered, to be used when it goes
+ * from hidden to not hidden. */
+static int last_shape = 0;
+
+/* Table for shape IDs.  Keep in sync with the mshape_names[] table in
+ * misc2.c! */
+static int mshape_ids[] =
+{
+    Ph_CURSOR_POINTER,		/* arrow */
+    Ph_CURSOR_NONE,		/* blank */
+    Ph_CURSOR_INSERT,		/* beam */
+    Ph_CURSOR_DRAG_VERTICAL,	/* updown */
+    Ph_CURSOR_DRAG_VERTICAL,	/* udsizing */
+    Ph_CURSOR_DRAG_HORIZONTAL,	/* leftright */
+    Ph_CURSOR_DRAG_HORIZONTAL,	/* lrsizing */
+    Ph_CURSOR_WAIT,		/* busy */
+    Ph_CURSOR_DONT,		/* no */
+    Ph_CURSOR_CROSSHAIR,	/* crosshair */
+    Ph_CURSOR_FINGER,		/* hand1 */
+    Ph_CURSOR_FINGER,		/* hand2 */
+    Ph_CURSOR_FINGER,		/* pencil */
+    Ph_CURSOR_QUESTION_POINT,	/* question */
+    Ph_CURSOR_POINTER,		/* right-arrow */
+    Ph_CURSOR_POINTER,		/* up-arrow */
+    Ph_CURSOR_POINTER		/* last one */
+};
+
+    void
+mch_set_mouse_shape(shape)
+    int	shape;
+{
+    int	    id;
+
+    if (!gui.in_use)
+	return;
+
+    if (shape == MSHAPE_HIDE || gui.pointer_hidden)
+	PtSetResource( gui.vimTextArea, Pt_ARG_CURSOR_TYPE, Ph_CURSOR_NONE,
+		0 );
+    else
+    {
+	if (shape >= MSHAPE_NUMBERED)
+	    id = Ph_CURSOR_POINTER;
+	else
+	    id = mshape_ids[shape];
+
+	PtSetResource( gui.vimTextArea, Pt_ARG_CURSOR_TYPE, id,	0 );
+    }
+    if (shape != MSHAPE_HIDE)
+	last_shape = shape;
+}
+#endif
+
     void
 gui_mch_mousehide(int hide)
 {
-    if( p_mh && gui.pointer_hidden != hide )
+    if( gui.pointer_hidden != hide )
     {
-	PtSetResource( gui.vimTextArea, Pt_ARG_CURSOR_TYPE,
-		( hide == MOUSE_SHOW ) ? Ph_CURSOR_INSERT : Ph_CURSOR_NONE,
-		0 );
 	gui.pointer_hidden = hide;
+#ifdef FEAT_MOUSESHAPE
+	if( hide )
+	    PtSetResource( gui.vimTextArea, Pt_ARG_CURSOR_TYPE,
+		    Ph_CURSOR_NONE, 0 );
+	else
+	    mch_set_mouse_shape( last_shape );
+#else
+	PtSetResource( gui.vimTextArea, Pt_ARG_CURSOR_TYPE,
+		( hide == MOUSE_SHOW ) ? GUI_PH_MOUSE_TYPE : Ph_CURSOR_NONE,
+		0 );
+#endif
     }
 }
 
@@ -1750,6 +1963,7 @@ gui_mch_get_rgb(guicolor_T pixel)
     void
 gui_mch_new_colors(void)
 {
+#if 0 /* Don't bother changing the cursor colour */
     short color_diff;
 
     /*
@@ -1767,10 +1981,13 @@ gui_mch_new_colors(void)
 	g = PgGreenValue( gui_ph_mouse_color ) ^ 255;
 	b = PgBlueValue( gui_ph_mouse_color ) ^ 255;
 
+#ifndef FEAT_MOUSESHAPE
 	gui_ph_mouse_color = PgRGB( r, g, b );
 	PtSetResource( gui.vimTextArea, Pt_ARG_CURSOR_COLOR,
 		gui_ph_mouse_color, 0 );
+#endif
     }
+#endif
 
     PtSetResource( gui.vimTextArea, Pt_ARG_FILL_COLOR, gui.back_pixel, 0 );
 }
@@ -1855,8 +2072,8 @@ gui_mch_get_color(char_u *name)
 
     for( i = 0; i < ARRAY_LENGTH( table ); i++ )
     {
-	if(STRICMP(name, table[i].name) == 0)
-	    return (table[i].colour);
+	if( STRICMP( name, table[i].name ) == 0 )
+	    return( table[i].colour );
     }
 
     /*
@@ -1884,7 +2101,7 @@ gui_mch_get_color(char_u *name)
 	    char    *color;
 
 	    fgets(line, LINE_LEN, fd);
-	    len = strlen(line);
+	    len = STRLEN(line);
 
 	    if (len <= 1 || line[len-1] != '\n')
 		continue;
@@ -2105,6 +2322,7 @@ gui_mch_draw_string(int row, int col, char_u *s, int len, int flags)
 	PgSetUserClip( NULL );
 #else
 	rect.lr.y -= ( p_linespace + 1 ) / 2;
+	/* XXX: DrawTextArea doesn't work with phditto */
 	PgDrawTextArea( s, len, &rect, Pg_TEXT_BOTTOM );
 #endif
     }
@@ -2236,15 +2454,107 @@ gui_mch_haskey(char_u *name)
 /****************************************************************************/
 /* Menu */
 
+#ifdef FEAT_TOOLBAR
+#include "toolbar.phi"
+
+static PhImage_t *gui_ph_toolbar_images[] = {
+    &tb_new_phi,
+    &tb_open_phi,
+    &tb_save_phi,
+    &tb_undo_phi,
+    &tb_redo_phi,
+    &tb_cut_phi,
+    &tb_copy_phi,
+    &tb_paste_phi,
+    &tb_print_phi,
+    &tb_help_phi,
+    &tb_find_phi,
+    &tb_save_all_phi,
+    &tb_save_session_phi,
+    &tb_new_session_phi,
+    &tb_load_session_phi,
+    &tb_macro_phi,
+    &tb_replace_phi,
+    &tb_close_phi,
+    &tb_maximize_phi,
+    &tb_minimize_phi,
+    &tb_split_phi,
+    &tb_shell_phi,
+    &tb_find_prev_phi,
+    &tb_find_next_phi,
+    &tb_find_help_phi,
+    &tb_make_phi,
+    &tb_jump_phi,
+    &tb_ctags_phi,
+    &tb_vsplit_phi,
+    &tb_maxwidth_phi,
+    &tb_minwidth_phi
+};
+
+static PhImage_t *
+gui_ph_toolbar_load_icon( char_u *iconfile )
+{
+    static PhImage_t external_icon;
+    PhImage_t *temp_phi = NULL;
+
+    temp_phi = PxLoadImage( iconfile, NULL );
+    if( temp_phi != NULL )
+    {
+	/* The label widget will free the image/palette/etc. for us when
+	 * it's destroyed */
+	temp_phi->flags |= Ph_RELEASE_IMAGE_ALL;
+	memcpy( &external_icon, temp_phi, sizeof( external_icon ) );
+	free( temp_phi );
+
+	temp_phi = &external_icon;
+    }
+    return( temp_phi );
+}
+
+/*
+ * This returns either a builtin icon image, an external image or NULL
+ * if it can't find either.  The caller can't and doesn't need to try and
+ * free() the returned image, and it can't store the image pointer.
+ * (When setting the Pt_ARG_LABEL_IMAGE resource, the contents of the
+ * PhImage_t are copied, and the original PhImage_t aren't needed anymore).
+ */
+static PhImage_t *
+gui_ph_toolbar_find_icon( vimmenu_T *menu )
+{
+    char_u full_pathname[ MAXPATHL + 1 ];
+    PhImage_t *icon = NULL;
+
+    if( menu->icon_builtin == FALSE )
+    {
+	if( menu->iconfile != NULL )
+	    icon = gui_ph_toolbar_load_icon( menu->iconfile );
+
+	/* TODO: Restrict loading to just .png? Search for any format? */
+	if( ( icon == NULL ) &&
+	    ( ( gui_find_bitmap( menu->name, full_pathname, "gif" ) == OK ) ||
+	      ( gui_find_bitmap( menu->name, full_pathname, "png" ) == OK ) ) )
+	    icon = gui_ph_toolbar_load_icon( full_pathname );
+
+	if( icon != NULL )
+	    return( icon );
+    }
+
+    if( menu->iconidx >= 0 &&
+	    ( menu->iconidx < ARRAY_LENGTH( gui_ph_toolbar_images ) ) )
+    {
+	return( gui_ph_toolbar_images[ menu->iconidx ] );
+    }
+
+    return( NULL );
+}
+#endif
+
 #if defined( FEAT_MENU ) || defined( PROTO )
     void
 gui_mch_enable_menu(int flag)
 {
     if( flag != 0 )
-    {
 	PtRealizeWidget( gui.vimMenuBar );
-	PtExtentWidgetFamily( gui.vimToolBarGroup );
-    }
     else
 	PtUnrealizeWidget( gui.vimMenuBar );
 }
@@ -2271,9 +2581,9 @@ gui_ph_position_menu( PtWidget_t *widget, int priority )
     {
 	PtGetResource( traverse, Pt_ARG_POINTER, &menu, 0 );
 
-	if( widget != traverse &&
-		menu != NULL &&
-		priority < menu->priority )
+	if( menu != NULL &&
+		priority < menu->priority &&
+		widget != traverse )
 	{
 	    /* Insert the widget before the current traverse widget */
 	    PtWidgetInsert( widget, traverse, 1 );
@@ -2289,6 +2599,8 @@ gui_ph_position_menu( PtWidget_t *widget, int priority )
 gui_mch_add_menu(vimmenu_T *menu, int index)
 {
     vimmenu_T	*parent = menu->parent;
+    char_u	*accel_key;
+    char_u	mnemonic_str[MB_LEN_MAX];
     int	    n;
     PtArg_t args[5];
 
@@ -2296,26 +2608,24 @@ gui_mch_add_menu(vimmenu_T *menu, int index)
 
     if( menu_is_menubar( menu->name ) )
     {
-	char_u	*accel_key;
 
-	/* FIXME: This hack doesn't seem to work if the menu has
-	 * the Accelerator Key text */
 	accel_key = vim_strchr( menu->name, '&' );
 	if( accel_key != NULL )
-	    accel_key++;
+	{
+	    mnemonic_str[0] = accel_key[1];
+	    mnemonic_str[1] = NUL;
+	}
 
 	/* Create the menu button */
 	n = 0;
 	PtSetArg( &args[ n++ ], Pt_ARG_TEXT_STRING, menu->dname, 0 );
 	PtSetArg( &args[ n++ ], Pt_ARG_ACCEL_TEXT, menu->actext, 0 );
-	PtSetArg( &args[ n++ ], Pt_ARG_ACCEL_KEY, accel_key, 0 );
+	if( accel_key != NULL )
+	    PtSetArg( &args[ n++ ], Pt_ARG_ACCEL_KEY, mnemonic_str, 0 );
 	PtSetArg( &args[ n++ ], Pt_ARG_POINTER, menu, 0 );
 
 	if( parent != NULL )
-	{
-	    PtSetArg( &args[ n++ ], Pt_ARG_BUTTON_TYPE,
-		    Pt_MENU_RIGHT, 0 );
-	}
+	    PtSetArg( &args[ n++ ], Pt_ARG_BUTTON_TYPE, Pt_MENU_RIGHT, 0 );
 
 	menu->id = PtCreateWidget( PtMenuButton,
 		(parent == NULL) ? gui.vimMenuBar : parent->submenu_id,
@@ -2326,22 +2636,20 @@ gui_mch_add_menu(vimmenu_T *menu, int index)
 	/* Create the actual menu */
 	n = 0;
 	if( parent != NULL )
-	{
 	    PtSetArg( &args[ n++ ], Pt_ARG_MENU_FLAGS, Pt_TRUE, Pt_MENU_CHILD );
-	}
+
 	menu->submenu_id = PtCreateWidget( PtMenu, menu->id, n, args );
 
 	if( parent == NULL )
 	{
 	    PtAddCallback( menu->submenu_id, Pt_CB_UNREALIZED,
 		    gui_ph_handle_menu_unrealized, menu );
-	}
 
-	if( menu->mnemonic != 0 )
-	{
-	    PtAddHotkeyHandler( gui.vimWindow, tolower( menu->mnemonic ), Pk_KM_Alt,
-		    0 ,
-		    menu, gui_ph_handle_pulldown_menu );
+	    if( menu->mnemonic != 0 )
+	    {
+		PtAddHotkeyHandler( gui.vimWindow, tolower( menu->mnemonic ),
+			Pk_KM_Alt, 0, menu, gui_ph_handle_pulldown_menu );
+	    }
 	}
 
 	gui_ph_position_menu( menu->id, menu->priority );
@@ -2349,7 +2657,6 @@ gui_mch_add_menu(vimmenu_T *menu, int index)
 	/* Redraw menubar here instead of gui_mch_draw_menubar */
 	if( gui.menu_is_active )
 	    PtRealizeWidget( menu->id );
-
     }
     else if( menu_is_popup( menu->name ) )
     {
@@ -2363,8 +2670,10 @@ gui_mch_add_menu(vimmenu_T *menu, int index)
 gui_mch_add_menu_item(vimmenu_T *menu, int index)
 {
     vimmenu_T	*parent = menu->parent;
+    char_u	*accel_key;
+    char_u	mnemonic_str[MB_LEN_MAX];
     int	    n;
-    PtArg_t args[5];
+    PtArg_t args[13];
 
     n = 0;
     PtSetArg( &args[ n++ ], Pt_ARG_POINTER, menu, 0 );
@@ -2375,24 +2684,50 @@ gui_mch_add_menu_item(vimmenu_T *menu, int index)
 	if( menu_is_separator( menu->name ) )
 	{
 	    PtSetArg( &args[ n++ ], Pt_ARG_SEP_FLAGS,
-		    Pt_SEP_ORIENTATION, Pt_SEP_VERTICAL );
+		    Pt_SEP_VERTICAL, Pt_SEP_ORIENTATION );
 	    PtSetArg( &args[ n++ ], Pt_ARG_SEP_TYPE, Pt_ETCHED_IN, 0 );
+	    PtSetArg( &args[ n++ ], Pt_ARG_ANCHOR_FLAGS,
+		    Pt_TRUE, Pt_ANCHOR_TOP_BOTTOM );
+	    PtSetArg( &args[ n++ ], Pt_ARG_WIDTH, 2, 0 );
 	    menu->id = PtCreateWidget( PtSeparator, gui.vimToolBar, n, args );
 	}
 	else
 	{
-	    PtSetArg( &args[ n++ ], Pt_ARG_TEXT_STRING, menu->dname, 0 );
-	    PtSetArg( &args[ n++ ], Pt_ARG_FLAGS, Pt_FALSE, Pt_HIGHLIGHTED );
-	    PtSetArg( &args[ n++ ], Pt_ARG_LABEL_BALLOON,
-		    gui_ph_show_tooltip, 0 );
-	    PtSetArg( &args[ n++ ], Pt_ARG_LABEL_FLAGS,
-		    Pt_TRUE, Pt_SHOW_BALLOON );
+	    if( strstr( (const char *) p_toolbar, "text" ) != NULL )
+	    {
+		PtSetArg( &args[ n++ ], Pt_ARG_BALLOON_POSITION,
+			Pt_BALLOON_BOTTOM, 0 );
+		PtSetArg( &args[ n++ ], Pt_ARG_TEXT_STRING, menu->dname, 0 );
+		PtSetArg( &args[ n++ ], Pt_ARG_TEXT_FONT, "TextFont08", 0 );
+	    }
+	    if( ( strstr( (const char *) p_toolbar, "icons" ) != NULL ) &&
+		    ( gui_ph_toolbar_images != NULL ) )
+	    {
+		PtSetArg( &args[ n++ ], Pt_ARG_LABEL_IMAGE,
+			gui_ph_toolbar_find_icon( menu ), 0 );
+		PtSetArg( &args[ n++ ], Pt_ARG_LABEL_TYPE, Pt_TEXT_IMAGE, 0 );
+		PtSetArg( &args[ n++ ], Pt_ARG_TEXT_IMAGE_SPACING, 0, 0 );
+	    }
+	    if( strstr( (const char *) p_toolbar, "tooltips" ) != NULL )
+	    {
+		PtSetArg( &args[ n++ ], Pt_ARG_LABEL_BALLOON,
+			gui_ph_show_tooltip, 0 );
+		PtSetArg( &args[ n++ ], Pt_ARG_LABEL_FLAGS,
+			Pt_TRUE, Pt_SHOW_BALLOON );
+	    }
+	    PtSetArg( &args[ n++ ], Pt_ARG_MARGIN_HEIGHT, 1, 0 );
+	    PtSetArg( &args[ n++ ], Pt_ARG_MARGIN_WIDTH, 1, 0 );
+	    PtSetArg( &args[ n++ ], Pt_ARG_FLAGS, Pt_FALSE,
+		    Pt_HIGHLIGHTED | Pt_GETS_FOCUS );
+	    PtSetArg( &args[ n++ ], Pt_ARG_FILL_COLOR, Pg_TRANSPARENT, 0 );
 	    menu->id = PtCreateWidget( PtButton, gui.vimToolBar, n, args );
 
 	    PtAddCallback( menu->id, Pt_CB_ACTIVATE, gui_ph_handle_menu, menu );
 	}
+	/* Update toolbar if it's open */
+	if( PtWidgetIsRealized( gui.vimToolBar ) )
+	    PtRealizeWidget( menu->id );
     }
-
     else
 #endif
 	if( menu_is_separator( menu->name ) )
@@ -2401,14 +2736,18 @@ gui_mch_add_menu_item(vimmenu_T *menu, int index)
     }
     else
     {
-	char_u *accel_key;
-
 	accel_key = vim_strchr( menu->name, '&' );
 	if( accel_key != NULL )
-	    accel_key++;
+	{
+	    mnemonic_str[0] = accel_key[1];
+	    mnemonic_str[1] = NUL;
+	}
 
 	PtSetArg( &args[ n++ ], Pt_ARG_TEXT_STRING, menu->dname, 0 );
-	PtSetArg( &args[ n++ ], Pt_ARG_ACCEL_KEY, accel_key, 0 );
+	if( accel_key != NULL )
+	    PtSetArg( &args[ n++ ], Pt_ARG_ACCEL_KEY, mnemonic_str,
+		    0 );
+
 	PtSetArg( &args[ n++ ], Pt_ARG_ACCEL_TEXT, menu->actext, 0 );
 
 	menu->id = PtCreateWidget( PtMenuButton, parent->submenu_id, n, args );
@@ -2449,7 +2788,8 @@ gui_mch_menu_grey(vimmenu_T *menu, int grey)
 	return;
 
     flags = PtWidgetFlags( menu->id );
-    if( PtWidgetIsClass( menu->id, PtMenuButton ) )
+    if( PtWidgetIsClass( menu->id, PtMenuButton ) &&
+	    PtWidgetIsClass( PtWidgetParent( menu->id ), PtMenu ) )
     {
 	fields = Pt_FALSE;
 	mask = Pt_SELECTABLE;
@@ -2695,7 +3035,6 @@ gui_mch_adjust_charsize(void)
 
     return( OK );
 }
-
 
     GuiFont
 gui_mch_get_font(char_u *vim_font_name, int report_error)

@@ -263,8 +263,6 @@ static struct cmdline_option
     {"-borderwidth",	TRUE},
     {"-sw",		TRUE},
     {"-scrollbarwidth", TRUE},
-    {"-mh",		TRUE},
-    {"-menuheight",	TRUE},
     {"-xrm",		TRUE},
 #endif
 };
@@ -1649,6 +1647,7 @@ mainwin_realize(GtkWidget *widget)
     if (serverName == NULL && serverDelayedStartName != NULL)
     {
 	/* This is a :gui command in a plain vim with no previous server */
+	commWindow = GDK_WINDOW_XWINDOW(gui.mainwin->window);
 	(void)serverRegisterName(gui.dpy, serverDelayedStartName);
     }
     else
@@ -1750,11 +1749,6 @@ gui_mch_init()
     /* Initialise atoms */
     compound_text_atom = gdk_atom_intern("COMPOUND_TEXT", FALSE);
     text_atom = gdk_atom_intern("TEXT", FALSE);
-
-#ifdef FEAT_MENU
-    /* Don't change the menu height values used in gui.c at runtime */
-    gui.menu_height_fixed = TRUE;
-#endif
 
     /* Set default foreground and background colors. */
     gui.norm_pixel = gui.def_norm_pixel;

@@ -1,6 +1,6 @@
 " Script to define the syntax menu in menu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Aug 01
+" Last Change:	2001 Aug 31
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/menu.vim
@@ -65,7 +65,7 @@ SynMenu AB.ASP\ with\ Perl:aspperl
 SynMenu AB.Assembly.680x0:asm68k
 SynMenu AB.Assembly.GNU:asm
 SynMenu AB.Assembly.H8300:asmh8300
-SynMenu AB.Assembly.Intel\ Itanum:ia64
+SynMenu AB.Assembly.Intel\ Itanium:ia64
 SynMenu AB.Assembly.Microsoft:masm
 SynMenu AB.Assembly.Netwide:nasm
 SynMenu AB.Assembly.PIC:pic
@@ -182,6 +182,7 @@ SynMenu L-Ma.Lace:lace
 SynMenu L-Ma.Lamda\ Prolog:lprolog
 SynMenu L-Ma.Latte:latte
 SynMenu L-Ma.Lex:lex
+SynMenu L-Ma.LFTP:lftp
 SynMenu L-Ma.Lilo:lilo
 SynMenu L-Ma.Lisp:lisp
 SynMenu L-Ma.Lite:lite
@@ -213,6 +214,7 @@ SynMenu Me-NO.MS-DOS.MS-DOS\ \.bat\ file:dosbatch
 SynMenu Me-NO.MS-DOS.4DOS\ \.bat\ file:btm
 SynMenu Me-NO.MS-DOS.MS-DOS\ \.ini\ file:dosini
 SynMenu Me-NO.MS\ Resource\ file:rc
+SynMenu Me-NO.Mush:mush
 SynMenu Me-NO.Muttrc:muttrc
 SynMenu Me-NO.Nastran\ input/DMAP:nastran
 SynMenu Me-NO.Natural:natural
@@ -255,6 +257,7 @@ SynMenu PQ.Python:python
 
 SynMenu R-Sg.R:r
 SynMenu R-Sg.Radiance:radiance
+SynMenu R-Sg.Readline\ config:readline
 SynMenu R-Sg.RCS\ log\ output:rcslog
 SynMenu R-Sg.Rebol:rebol
 SynMenu R-Sg.Registry\ of\ MS-Windows:registry
@@ -303,6 +306,7 @@ SynMenu Sh-S.Spice:spice
 SynMenu Sh-S.Speedup:spup
 SynMenu Sh-S.Squid:squid
 SynMenu Sh-S.SQL:sql
+SynMenu Sh-S.SQL\ Forms:sqlforms
 SynMenu Sh-S.SQR:sqr
 SynMenu Sh-S.Standard\ ML:sml
 SynMenu Sh-S.Stored\ Procedures:stp
@@ -344,6 +348,7 @@ SynMenu WXYZ.WEB:web
 SynMenu WXYZ.Webmacro:webmacro
 SynMenu WXYZ.Website\ MetaLanguage:wml
 SynMenu WXYZ.Wdiff:wdiff
+SynMenu WXYZ.Wget\ config:wget
 SynMenu WXYZ.Whitespace\ (add):whitespace
 SynMenu WXYZ.WinBatch/Webbatch:winbatch
 SynMenu WXYZ.Windows\ Scripting\ Host:wsh

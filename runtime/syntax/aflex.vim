@@ -5,7 +5,7 @@
 " LastChange:	02 May 2001
 " Original:	Lex, maintained by Dr. Charles E. Campbell, Jr.
 "				<Charles.Campbell@gsfc.nasa.gov>
-" Comment:          Replaced sourcing c.vim file by ada.vim and rename lex*
+" Comment:	Replaced sourcing c.vim file by ada.vim and rename lex*
 "		in aflex*
 
 " For version 5.x: Clear all syntax items

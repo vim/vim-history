@@ -73,7 +73,7 @@ static Window	LookupName __ARGS((Display *dpy, char *name,
 static int	SendInit __ARGS((Display *dpy));
 static char	*SendEventProc __ARGS((Display *dpy, XEvent *eventPtr,
 				      int expect));
-static int      IsSerialName __ARGS((char *name));
+static int	IsSerialName __ARGS((char *name));
 
 /* Private variables */
 static Atom	registryProperty = None;
@@ -95,7 +95,7 @@ sendToVim(dpy, name, cmd, asKeys)
     Display	*dpy;			/* Where to send. */
     char	*name;			/* Where to send. */
     char	*cmd;			/* What to send. */
-    int		asKeys;                 /* Interpret as keystrokes or expr ? */
+    int		asKeys;			/* Interpret as keystrokes or expr ? */
 {
     Window	    w;
     Atom	    *plist;
@@ -108,8 +108,8 @@ sendToVim(dpy, name, cmd, asKeys)
 				 * Used to give each command a
 				 * different serial number. */
     XEvent	    event;
-    XPropertyEvent *e = (XPropertyEvent *)&event;
-    time_t          start;
+    XPropertyEvent  *e = (XPropertyEvent *)&event;
+    time_t	    start;
     char	    *result;
     char	    *loosename = NULL;
 
@@ -170,7 +170,7 @@ sendToVim(dpy, name, cmd, asKeys)
 
     serial++;
     sprintf(property, "%c%c%c-n %s%c-s %s",
-	              0, asKeys ? 'k' : 'c', 0, name, 0, cmd);
+		      0, asKeys ? 'k' : 'c', 0, name, 0, cmd);
     if (name == loosename)
 	free(loosename);
     if (!asKeys)
@@ -261,7 +261,7 @@ SendInit(dpy)
     {
 	commWindow =
 	    XCreateSimpleWindow(dpy, XDefaultRootWindow(dpy),
-		                getpid(), 0, 10, 10, 0,
+				getpid(), 0, 10, 10, 0,
 				WhitePixel(dpy, DefaultScreen(dpy)),
 				WhitePixel(dpy, DefaultScreen(dpy)));
 	XSelectInput(dpy, commWindow, PropertyChangeMask);
@@ -305,7 +305,7 @@ LookupName(dpy, name, delete, loose)
 
     regProp = NULL;
     result = XGetWindowProperty(dpy, RootWindow(dpy, 0), registryProperty, 0,
-	                        MAX_PROP_WORDS, False, XA_STRING, &actualType,
+				MAX_PROP_WORDS, False, XA_STRING, &actualType,
 				&actualFormat, &numItems, &bytesAfter,
 				&regProp);
 
@@ -382,8 +382,8 @@ LookupName(dpy, name, delete, loose)
 	if (count > 0)
 	    memcpy(entry, p, count);
 	XChangeProperty(dpy, RootWindow(dpy, 0), registryProperty, XA_STRING,
-		        8, PropModeReplace, regProp,
-		        (int) (numItems - (p-entry)));
+			8, PropModeReplace, regProp,
+			(int) (numItems - (p-entry)));
 	XSync(dpy, False);
     }
 
@@ -528,14 +528,14 @@ AppendPropCarefully(dpy, window, property, value, length)
 				 * be modified. */
     Atom property;		/* Name of property. */
     char *value;		/* Characters  to append to property. */
-    int  length;                /* How much to append */
+    int  length;		/* How much to append */
 {
     XErrorHandler old_handler;
 
     old_handler = XSetErrorHandler(x_error_check);
     got_x_error = FALSE;
     XChangeProperty(dpy, window, property, XA_STRING, 8,
-	            PropModeAppend, value, length);
+		    PropModeAppend, value, length);
     XSync(dpy, False);
     (void) XSetErrorHandler(old_handler);
     return got_x_error ? -1 : 0;

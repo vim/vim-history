@@ -1,4 +1,4 @@
-*if_ruby.txt*   For Vim version 6.0at.  Last change: 2001 Jun 24
+*if_ruby.txt*   For Vim version 6.0au.  Last change: 2001 Aug 29
 
 
 		  VIM REFERENCE MANUAL    by Shugo Maeda
@@ -31,7 +31,7 @@ For MS-Windows you might find a Ruby library here:
 {script}
 {endpattern}
 			Execute Ruby script {script}.
-			{endpattern} must NOT be preceeded by any white space.
+			{endpattern} must NOT be preceded by any white space.
 			If {endpattern} is omitted, it defaults to a dot '.'
 			like for the |:append| and |:insert| commands. This
 			form of the |:ruby| command is mainly useful for

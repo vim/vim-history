@@ -38,7 +38,6 @@ static wininfo_T *find_wininfo __ARGS((buf_T *buf));
 #ifdef UNIX
 static buf_T	*buflist_findname_stat __ARGS((char_u *ffname, struct stat *st));
 static int	otherfile_buf __ARGS((buf_T *buf, char_u *ffname, struct stat *stp));
-static void	buf_setino __ARGS((buf_T *buf));
 static int	buf_same_ino __ARGS((buf_T *buf, struct stat *stp));
 #else
 static int	otherfile_buf __ARGS((buf_T *buf, char_u *ffname));
@@ -172,12 +171,13 @@ open_buffer(read_stdin, eap)
      * So the modelines have priority over auto commands.
      */
     /* When reading stdin, the buffer contents always needs writing, so set
-     * the changed flag.  Unless in readonly mode: "ls | gview -". */
+     * the changed flag.  Unless in readonly mode: "ls | gview -".
+     * When interrupted and 'cpoptions' contains 'i' set changed flag. */
     if ((read_stdin && !readonlymode && !bufempty())
 #ifdef FEAT_AUTOCMD
 		|| modified_was_set	/* ":set modified" used in autocmd */
 #endif
-		)
+		|| (got_int && vim_strchr(p_cpo, CPO_INTMOD) != NULL))
 	changed();
     else if (retval != FAIL)
 	unchanged(curbuf, FALSE);
@@ -2395,12 +2395,12 @@ otherfile_buf(buf, ffname
     return TRUE;
 }
 
-#ifdef UNIX
+#if defined(UNIX) || defined(PROTO)
 /*
  * Set inode and device number for a buffer.
  * Must always be called when b_fname is changed!.
  */
-    static void
+    void
 buf_setino(buf)
     buf_T	*buf;
 {

@@ -1,6 +1,6 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.it>
-" Last Change:	2001 Jul 31
+" Last Change:	2001 Sep 02
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -27,7 +27,7 @@ menut &About		&Intro
 menut &Open\.\.\.<Tab>:e		&Apri\.\.\.<Tab>:e
 menut Sp&lit-Open\.\.\.<Tab>:sp	A&pri\ nuova\ Finestra\.\.\.<Tab>:sp
 menut &New<Tab>:enew		&Nuovo<Tab>:enew
-menut &Close<Tab>:q			&Chiudi<Tab>:q
+menut &Close<Tab>:close		&Chiudi<Tab>:close
 menut &Save<Tab>:w			&Salva<Tab>:w
 menut Save\ &As\.\.\.<Tab>:sav	Salva\ &con\ nome\.\.\.<Tab>:sav
 menut &Print			S&tampa
@@ -78,7 +78,7 @@ menut default		per\ difetto
 menut evening		notturno
 menut morning		diurno
 menut shine		brillante
-menut peachpuff         alla\ pesca
+menut peachpuff		alla\ pesca
 menut &Keymap				&Mappa\ tastiera
 
 " Edit/File Settings
@@ -198,7 +198,7 @@ menut Rotate\ &Down<Tab>^Wr		Ruota\ verso\ il\ &basso<Tab>^Wr
 menut Select\ Fo&nt\.\.\.		Scegli\ &Font\.\.\.
 
 " The popup menu
-menut &Undo		        &Disfa
+menut &Undo			&Disfa
 menut Cu&t			&Taglia
 menut &Copy			C&opia
 menut &Paste		I&ncolla

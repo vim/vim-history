@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.0at.  Last change: 2001 Aug 27
+*message.txt*   For Vim version 6.0au.  Last change: 2001 Aug 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -177,10 +177,12 @@ to display in the window.
 When using the ":make" or ":grep" commands: The file used to save the error
 messages or grep output cannot be opened.  This can have several causes:
 - 'shellredir' has a wrong value.
-- The shell used changes directory, causing the error file to be written in
-  another directory.  This could be fixed by changing 'makeef', but then the
-  make command is still executed in the wrong directory.
+- The shell changes directory, causing the error file to be written in another
+  directory.  This could be fixed by changing 'makeef', but then the make
+  command is still executed in the wrong directory.
 - 'makeef' has a wrong value.
+- The 'grepprg' or 'makeprg' could not be executed.  This cannot always be
+  detected (especially on MS-Windows).  Check your $PATH.
 
 							*E12*  >
   Command not allowed from exrc/vimrc in current dir or tag search

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	awk, nawk, gawk, mawk
 " Maintainer:	Antonio Colombo <antonio.colombo@jrc.it>
-" Last Change:	2001 Jul 16
+" Last Change:	2001 Sep 02
 
 " AWK  ref.  is: Alfred V. Aho, Brian W. Kernighan, Peter J. Weinberger
 " The AWK Programming Language, Addison-Wesley, 1988
@@ -143,7 +143,7 @@ syn match  awkLineSkip	"\\$"
 " Highlight array element's (recursive arrays allowed).
 " Keeps nested array names' separate from normal array elements.
 " Keeps numbers separate from normal array elements (variables).
-syn match  awkArrayArray        contained "[^][, \t]\+\["me=e-1
+syn match  awkArrayArray	contained "[^][, \t]\+\["me=e-1
 syn match  awkArrayElement      contained "[^][, \t]\+"
 syn region awkArray		transparent start="\[" end="\]" contains=awkArray,awkArrayElement,awkArrayArray,awkNumber,awkFloat
 

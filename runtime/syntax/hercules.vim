@@ -16,28 +16,28 @@ endif
 syn case ignore
 
 " Hercules runset sections
-syn match   herculesType        "^\s*\t*header"
-syn match   herculesType        "^\s*\t*options"
-syn match   herculesType        "^\s*\t*alias"
-syn match   herculesType        "^\s*\t*assign"
-syn match   herculesType        "^\s*\t*assign_property"
-syn match   herculesType        "^\s*\t*waiver"
-syn match   herculesType        "^\s*\t*.*_options"
-syn match   herculesType        "^\s*\t*check_point"
-syn match   herculesType        "^\s*\t*compare_group"
-syn match   herculesType        "^\s*\t*environment"
-syn match   herculesType        "^\s*\t*grid_check"
-syn match   herculesType        "^\s*\t*include"
-syn match   herculesType        "^\s*\t*layer_stats"
-syn match   herculesType        "^\s*\t*load_group"
-syn match   herculesType        "^\s*\t*.*run_only"
-syn match   herculesType        "^\s*\t*restart"
-syn match   herculesType        "^\s*\t*self_intersect"
-syn match   herculesType        "^\s*\t*set "
-syn match   herculesType        "^\s*\t*set\t"
-syn match   herculesType        "^\s*\t*snap"
-syn match   herculesType        "^\s*\t*system"
-syn match   herculesType        "^\s*\t*variable"
+syn match   herculesType	"^\s*\t*header"
+syn match   herculesType	"^\s*\t*options"
+syn match   herculesType	"^\s*\t*alias"
+syn match   herculesType	"^\s*\t*assign"
+syn match   herculesType	"^\s*\t*assign_property"
+syn match   herculesType	"^\s*\t*waiver"
+syn match   herculesType	"^\s*\t*.*_options"
+syn match   herculesType	"^\s*\t*check_point"
+syn match   herculesType	"^\s*\t*compare_group"
+syn match   herculesType	"^\s*\t*environment"
+syn match   herculesType	"^\s*\t*grid_check"
+syn match   herculesType	"^\s*\t*include"
+syn match   herculesType	"^\s*\t*layer_stats"
+syn match   herculesType	"^\s*\t*load_group"
+syn match   herculesType	"^\s*\t*.*run_only"
+syn match   herculesType	"^\s*\t*restart"
+syn match   herculesType	"^\s*\t*self_intersect"
+syn match   herculesType	"^\s*\t*set "
+syn match   herculesType	"^\s*\t*set\t"
+syn match   herculesType	"^\s*\t*snap"
+syn match   herculesType	"^\s*\t*system"
+syn match   herculesType	"^\s*\t*variable"
 
 " Hercules commands and keywords
 syn match   herculesstatement   "^ *\(attach_property\|boolean\|cell_extent\)"
@@ -78,8 +78,8 @@ syn keyword herculesstatement   by_property cutting edge_touch enclosing inside
 syn keyword herculesstatement   equations inside_hole interact touching vertex
 
 " Hercules comments
-syn region herculesComment           start="/\*" end="\*/" contains=herculesTodo
-syn match herculesComment            "//.*" contains=herculesTodo
+syn region herculesComment	     start="/\*" end="\*/" contains=herculesTodo
+syn match herculesComment	     "//.*" contains=herculesTodo
 
 " Preprocessor directives
 syn match   herculesPreProc "^#.*"

@@ -1,6 +1,6 @@
 " Menu Translations:	Slovak
 " Translated By:	Martin Lacko <lacko@host.sk>
-" Last Change:		2001 Aug 27
+" Last Change:		2001 Sep 02
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -14,7 +14,7 @@ scriptencoding iso-8859-2
 menutrans &Help &Pomocník
 menutrans &Overview<Tab><F1>	&Prehµad<Tab><F1>
 menutrans &How-to\ links	&Tipy
-menutrans &GUI        &Grafické\ rozhranie
+menutrans &GUI			&Grafické\ rozhranie
 menutrans &Credits		Poï&akovanie
 menutrans Co&pying		&Licencia
 menutrans &Find\.\.\.	&Hµada»\.\.\.
@@ -26,7 +26,7 @@ menutrans &File				&Súbor
 menutrans &Open\.\.\.<Tab>:e		&Otv&oi»\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp	Ot&voi»\ v\ no&vom\ okne\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		&Nový<Tab>:enew
-menutrans &Close<Tab>:q			&Zav&ori»<Tab>:q
+menutrans &Close<Tab>:close		&Zav&ori»<Tab>:close
 menutrans &Save<Tab>:w			&Ulo¾i»<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:w	Ul¾i» &ako\.\.\.<Tab>:w
 menutrans &Print			&Tlaè

@@ -3415,9 +3415,12 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 
 #ifdef UNIX
     /* When creating a new file, set its owner/group to that of the original
-     * file. */
+     * file.  Get the new device and inode number. */
     if (backup != NULL && !backup_copy)
+    {
 	chown((char *)wfname, st_old.st_uid, st_old.st_gid);
+	buf_setino(buf);
+    }
 #endif
 
 
@@ -5081,6 +5084,7 @@ buf_check_timestamp(buf, focus)
     {
 	linenr_T	old_line_count = buf->b_ml.ml_line_count;
 	exarg_T		ea;
+	pos_T		old_cursor;
 #ifdef FEAT_AUTOCMD
 	aco_save_T	aco;
 
@@ -5098,6 +5102,7 @@ buf_check_timestamp(buf, focus)
 	 * and encoding to be the same. */
 	if (prep_exarg(&ea, buf) == OK)
 	{
+	    old_cursor = curwin->w_cursor;
 	    if (bufempty())
 		old_line_count = 0;
 	    curbuf->b_flags |= BF_CHECK_RO;	/* check for RO again */
@@ -5114,6 +5119,10 @@ buf_check_timestamp(buf, focus)
 		    ml_delete(buf->b_ml.ml_line_count, FALSE);
 	    }
 	    vim_free(ea.cmd);
+
+	    /* Restore the cursor position and check it (lines may have been
+	     * removed). */
+	    curwin->w_cursor = old_cursor;
 	    check_cursor();
 #ifdef FEAT_AUTOCMD
 	    keep_filetype = FALSE;
@@ -5547,6 +5556,7 @@ static void au_remove_pat __ARGS((AutoPat *ap));
 static void au_remove_cmds __ARGS((AutoPat *ap));
 static void au_cleanup __ARGS((void));
 static int au_new_group __ARGS((char_u *name));
+static void au_del_group __ARGS((char_u *name));
 static int au_find_group __ARGS((char_u *name));
 static EVENT_T event_name2nr __ARGS((char_u *start, char_u **end));
 static char_u *event_nr2name __ARGS((EVENT_T event));
@@ -5585,7 +5595,10 @@ show_autocmd(ap, event)
     {
 	if (ap->group != AUGROUP_DEFAULT)
 	{
-	    msg_puts_attr(AUGROUP_NAME(ap->group), hl_attr(HLF_T));
+	    if (AUGROUP_NAME(ap->group) == NULL)
+		msg_puts_attr((char_u *)_("--Deleted--"), hl_attr(HLF_E));
+	    else
+		msg_puts_attr(AUGROUP_NAME(ap->group), hl_attr(HLF_T));
 	    msg_puts((char_u *)"  ");
 	}
 	msg_puts_attr(event_nr2name(event), hl_attr(HLF_T));
@@ -5710,22 +5723,45 @@ au_cleanup()
 au_new_group(name)
     char_u	*name;
 {
-    int	    i;
+    int		i;
 
     i = au_find_group(name);
     if (i == AUGROUP_ERROR)	/* the group doesn't exist yet, add it */
     {
-	if (ga_grow(&augroups, 1) == FAIL)
+	/* First try using a free entry. */
+	for (i = 0; i < augroups.ga_len; ++i)
+	    if (AUGROUP_NAME(i) == NULL)
+		break;
+	if (i == augroups.ga_len && ga_grow(&augroups, 1) == FAIL)
 	    return AUGROUP_ERROR;
-	i = augroups.ga_len;
+
 	AUGROUP_NAME(i) = vim_strsave(name);
 	if (AUGROUP_NAME(i) == NULL)
 	    return AUGROUP_ERROR;
-	++augroups.ga_len;
-	--augroups.ga_room;
+	if (i == augroups.ga_len)
+	{
+	    ++augroups.ga_len;
+	    --augroups.ga_room;
+	}
     }
 
     return i;
+}
+
+    static void
+au_del_group(name)
+    char_u	*name;
+{
+    int	    i;
+
+    i = au_find_group(name);
+    if (i == AUGROUP_ERROR)	/* the group doesn't exist */
+	EMSG2(_("E367: No such group: \"%s\""), name);
+    else
+    {
+	vim_free(AUGROUP_NAME(i));
+	AUGROUP_NAME(i) = NULL;
+    }
 }
 
 /*
@@ -5739,10 +5775,8 @@ au_find_group(name)
     int	    i;
 
     for (i = 0; i < augroups.ga_len; ++i)
-    {
 	if (AUGROUP_NAME(i) != NULL && STRCMP(AUGROUP_NAME(i), name) == 0)
 	    return i;
-    }
     return AUGROUP_ERROR;
 }
 
@@ -5750,12 +5784,20 @@ au_find_group(name)
  * ":augroup {name}".
  */
     void
-do_augroup(arg)
+do_augroup(arg, del_group)
     char_u	*arg;
+    int		del_group;
 {
     int	    i;
 
-    if (STRICMP(arg, "end") == 0)   /* ":aug end": back to group 0 */
+    if (del_group)
+    {
+	if (*arg == NUL)
+	    EMSG(_(e_argreq));
+	else
+	    au_del_group(arg);
+    }
+    else if (STRICMP(arg, "end") == 0)   /* ":aug end": back to group 0 */
 	current_augroup = AUGROUP_DEFAULT;
     else if (*arg)		    /* ":aug xxx": switch to group xxx */
     {

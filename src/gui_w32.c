@@ -2634,7 +2634,7 @@ gui_mch_dialog(
 #endif
 	{
 	    *p++ = DLG_FONT_POINT_SIZE;		// point size
-	    nchar = nCopyAnsiToWideChar (p, TEXT(DLG_FONT_NAME));
+	    nchar = nCopyAnsiToWideChar(p, TEXT(DLG_FONT_NAME));
 	}
 	p += nchar;
     }
@@ -2854,7 +2854,7 @@ nCopyAnsiToWideChar(
     int i;
 
     nChar = MultiByteToWideChar(
-	    CP_OEMCP,
+	    CP_ACP,
 	    MB_PRECOMPOSED,
 	    lpAnsiIn, len,
 	    lpWCStr, len);

@@ -1,4 +1,4 @@
-*usr_90.txt*	For Vim version 6.0at.  Last change: 2001 Aug 07
+*usr_90.txt*	For Vim version 6.0au.  Last change: 2001 Aug 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -297,7 +297,7 @@ UNIX
 When you type "make install" the runtime files will be copied to a directory
 which is specific for this version.  Thus they will not overwrite a previous
 version.  This makes it possible to use two or more versions next to
-eachother.
+each other.
    The executable "vim" will overwrite an older version.  If you don't care
 about keeping the old version, running "make install" will work fine.  You can
 delete the old runtime files manually.  Just delete the directory with the

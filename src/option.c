@@ -2496,13 +2496,13 @@ set_init_1()
 
 #ifdef FEAT_POSTSCRIPT
     /* 'printexpr' must be allocated to be able to evaluate it. */
-#ifndef MSWIN
+# ifndef MSWIN
     set_string_default("pexpr",
-	    (char_u *)"system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice) . ' ' . v:fname_in) . delete(v:fname_in)");
-#else
+	    (char_u *)"system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice) . ' ' . v:fname_in) . delete(v:fname_in) + v:shell_error");
+# else
     set_string_default("pexpr",
 	    (char_u *)"system('copy' . ' ' . v:fname_in . ' ' . &printdevice) . delete(v:fname_in)");
-#endif
+# endif
 #endif
 
     /*
@@ -2589,9 +2589,11 @@ set_init_1()
 							     (LPTSTR)buf, 20);
 	if (n >= 2 && STRNICMP(buf, "en", 2) != 0)
 	{
-	    /* TODO: is this right? */
-	    if (STRNICMP(buf, "zht", 3) == 0)
+	    /* There are a few exceptions (probably more) */
+	    if (STRNICMP(buf, "cht", 3) == 0 || STRNICMP(buf, "zht", 3) == 0)
 		STRCPY(buf, "zh_TW");
+	    else if (STRNICMP(buf, "jp", 2) == 0)
+		STRCPY(buf, "ja");
 	    else
 		buf[2] = NUL;		/* truncate to two-letter code */
 	    vim_setenv("LANG", buf);
@@ -6053,12 +6055,23 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
      * If the screen (shell) height has been changed, assume it is the
      * physical screenheight.
      */
-    if ((old_Rows != Rows || old_Columns != Columns) && full_screen
+    if (old_Rows != Rows || old_Columns != Columns)
+    {
+	if (full_screen
 #ifdef FEAT_GUI
-	    && !gui.starting
+		&& !gui.starting
 #endif
 	    )
-	set_shellsize((int)Columns, (int)Rows, TRUE);
+	    set_shellsize((int)Columns, (int)Rows, TRUE);
+	else
+	{
+	    /* Postpone the resizing; check the size and cmdline position for
+	     * messages. */
+	    check_shellsize();
+	    if (cmdline_row > Rows - p_ch)
+		cmdline_row = Rows - p_ch;
+	}
+    }
 
     if (curbuf->b_p_sts < 0)
     {

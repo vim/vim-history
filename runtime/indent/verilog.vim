@@ -2,11 +2,11 @@
 " Language:	Verilog HDL
 " Maintainer:	Chih-Tsun Huang <cthuang@larc.ee.nthu.edu.tw>
 " Last Change:	Wed Aug  1 21:08:17 CST 2001
-" URL:          http://larc.ee.nthu.edu.tw/~cthuang/vim/indent/verilog.vim
+" URL:		http://larc.ee.nthu.edu.tw/~cthuang/vim/indent/verilog.vim
 "
 " Buffer Variables:
 "     b:verilog_indent_modules : indenting after the declaration
-"                                of module blocks
+"				 of module blocks
 "     b:verilog_indent_width   : indenting width
 "
 

@@ -118,6 +118,7 @@
 #define CPO_EMPTYREGION	'E'	/* operating on empty region is an error */
 #define CPO_FNAMER	'f'	/* set file name for ":r file" */
 #define CPO_FNAMEW	'F'	/* set file name for ":w file" */
+#define CPO_INTMOD	'i'	/* interrupt a read makes buffer modified */
 #define CPO_JOINSP	'j'	/* only use two spaces for join after '.' */
 #define CPO_ENDOFSENT	'J'	/* need two spaces to detect end of sentence */
 #define CPO_KEYCODE	'k'	/* don't recognize raw key code in mappings */
@@ -144,7 +145,7 @@
 #define CPO_STAR	'*'	/* ":*" means ":@" */
 #define CPO_SPECI	'<'	/* don't recognize <> in mappings */
 #define CPO_DEFAULT	"aABceFs"
-#define CPO_ALL		"aAbBcCdDeEfFjJkKlLmnoOprsStuwWxy$!%*<"
+#define CPO_ALL		"aAbBcCdDeEfFijJkKlLmnoOprsStuwWxy$!%*<"
 
 /* characters for p_ww option: */
 #define WW_ALL		"bshl<>[],~"

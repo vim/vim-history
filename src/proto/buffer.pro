@@ -32,6 +32,7 @@ int buflist_add __ARGS((char_u *fname, int flags));
 void buflist_slash_adjust __ARGS((void));
 void buflist_altfpos __ARGS((void));
 int otherfile __ARGS((char_u *ffname));
+void buf_setino __ARGS((buf_T *buf));
 void fileinfo __ARGS((int fullname, int shorthelp, int dont_truncate));
 void col_print __ARGS((char_u *buf, int col, int vcol));
 void maketitle __ARGS((void));

@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0at
+MINOR = 0au
 
 # CHECKLIST for creating a new version:
 #
@@ -560,6 +560,7 @@ SRC_EXTRA =	\
 		src/proto/os_beos.pro \
 		src/proto/os_riscos.pro \
 		src/os_vms_fix.com \
+		src/toolbar.phi \
 
 # runtime files for all distributions
 RT_ALL =	\

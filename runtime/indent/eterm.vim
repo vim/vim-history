@@ -38,7 +38,7 @@ function GetEtermIndent()
 
     " Check for closing brace on current line
     if line =~ '^\s*end\>'
-        let ind	= ind - &sw
+	let ind	= ind - &sw
     endif
 
     return ind

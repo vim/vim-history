@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0at.  Last change: 2001 Aug 27
+*eval.txt*      For Vim version 6.0au.  Last change: 2001 Aug 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2842,6 +2842,12 @@ This would call the function "my_func_whizz(parameter)"
 			Cannot be followed by a comment.
 			Example: >
 		:echo "the value of 'shell' is" &shell
+<			A later redraw may make the message disappear again.
+			To avoid that a command from before the ":echo" causes
+			a redraw afterwards (redraws are often postponed until
+			you type something), force a redraw with the |:redraw|
+			command.  Example: >
+		:new | redraw | echo "there is a new window"
 <
 							*:echon*
 :echon {expr1} ..	Echoes each {expr1}, without anything added.  Also see

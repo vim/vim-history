@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0at.  Last change: 2001 Aug 27
+*options.txt*   For Vim version 6.0au.  Last change: 2001 Sep 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1444,6 +1444,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 			argument will set the file name for the current
 			buffer, if the current buffer doesn't have a file name
 			yet.
+		i	When included, interrupting the reading of a file will
+			leave it modified.
 		j	When joining lines, only add two spaces after a '.',
 			not after '!' or '?'.  Also see 'joinspaces'.
 		J	A |sentence| has to be followed by two spaces after
@@ -2395,7 +2397,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	'errorformat' option: see |errorformat|.
 
 						*'grepprg'* *'gp'*
-'grepprg' 'gp'		string	(default "grep -n ", Win32: "findstr /n",
+'grepprg' 'gp'		string	(default "grep -n ",
+					Unix: "grep -n $* /dev/null",
+					Win32: "findstr /n" or "grep -n",
 						      VMS: "SEEARCH/NUMBERS ")
 			global or local to buffer |global-local|
 			{not in Vi}
@@ -2409,6 +2413,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 		:set grepprg=grep\ -nH
 <	See also the section |:make_makeprg|, since most of the comments there
 	apply equally to 'grepprg'.
+	For Win32, the default is "findstr /n" if "findstr.exe" can be found,
+	otherwise it's "grep -n".
 	This option cannot be set from a |modeline|, for security reasons.
 
 						*'guicursor'* *'gcr'*
@@ -3387,7 +3393,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not in Vi}
 			{only in the GUI}
 	Number of pixel lines inserted between characters.  Useful if the font
-	uses the full character cell height, making lines touch eachother.
+	uses the full character cell height, making lines touch each other.
 	When non-zero there is room for underlining.
 
 						*'lisp'* *'nolisp'*
@@ -4036,11 +4042,13 @@ A jump table for the options with a short description can be found at |Q_op|.
 	The file name to be printed is in |v:fname_in|.
 	The arguments to the ":hardcopy" command are in |v:cmdarg|.
 	The expression must take care of deleting the file after printing it.
+	When there is an error, the expression must return a non-zero number.
+	If there is no error, return zero or an empty string.
 	The default for non MS-Windows machines is to simply use "lpr" to
 	print the file: >
 
 	    system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice)
-			. ' ' . v:fname_in) . delete(v:fname_in)
+		. ' ' . v:fname_in) . delete(v:fname_in) + v:shell_error
 <
 	On MS-Windows machines the default is to copy the file to the
 	currently specified printdevice: >
@@ -4055,10 +4063,14 @@ A jump table for the options with a short description can be found at |Q_op|.
 		:function PrintFile(fname)
 		:  system("ghostview " . a:fname)
 		:  delete(a:fname)
+		:  return v:shell_error
 		:endfunc
-<
-	If evaluating the expression fails, you get an error message. *E365*
-	In that case Vim will delete the file.
+<								*E365*
+	If evaluating the expression fails or it results in a non-zero number,
+	you get an error message.  In that case Vim will delete the
+	file.  In the default value for non-MS-Windows a trick is used: Adding
+	"v:shell_error" will result in a non-zero number when the system()
+	call fails.
 	This option cannot be set from a |modeline|, for security reasons.
 
 						*'printfont'* *'pfn'*
@@ -4101,8 +4113,13 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  top:{spec}		top margin (default: 5pc)
 	  bottom:{spec}		bottom margin (default: 5pc)
 				{spec} is a number followed by "in" for
-				inches, "mm" for millimetres or "pc" for a
+				inches, "pt" for points (1 point is 1/72 of an
+				inch), "mm" for millimetres or "pc" for a
 				percentage of the media size.
+				Weird example:
+				    left:2in,top:30pt,right:16mm,bottom:3pc
+				If the unit is not recognized there is no
+				error and the default value is used.
 
 	  header:{nr}		Number of lines to reserve for the header.
 				Only the first line is actually filled, thus
@@ -4141,8 +4158,24 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  portrait:y (default)	Orientation is portrait.
 	  portrait:n		Orientation is landscape.
 
+
 	  paper:A4   (default)	Paper size: A4
-	  paper:letter		Paper size: Letter
+	  paper:{name}		Paper size from this table:
+					{name}		 size in inch ~
+					10x14		10    x 14
+					A3		11.69 x 16.54
+					A4		 8.27 x 11.69
+					A5		 5.83 x	8.27
+					B4		10.12 x 14.33
+					B5		 7.17 x 10.12
+					executive	 7.25 x 10.5
+					folio		 8.27 x 13
+					ledger		17    x 11
+					legal		 8.5  x 14
+					letter		 8.5  x 11
+					quarto		 8.5  x 10.83
+					statement	 5.5  x	8.5
+					tabloid		11    x 17
 
 	The item indicated with (default) is used when the item is not
 	present.  The values are not always used, especially when using a
@@ -5550,7 +5583,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 				*'toolbar'* *'tb'*
 'toolbar' 'tb'		string	(default "icons,tooltips")
 			global
-			{only for |+GUI_GTK|, |+GUI_Athena| and |+GUI_Motif|}
+			{only for |+GUI_GTK|, |+GUI_Athena|, |+GUI_Motif| and
+			|+GUI_Photon|}
 	The contents of this option controls various toolbar settings.  The
 	possible values are:
 		icons		Toolbar buttons are shown with icons.

@@ -1,6 +1,6 @@
 " Menu Translations:	Korean
 " Maintainer:		Nam SungHyun <namsh@kldp.org>
-" Last Change:		2001 Jul 28
+" Last Change:		2001 Sep 02
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -26,7 +26,7 @@ menutrans &File				파일(&F)
 menutrans &Open\.\.\.<Tab>:e		열기(&O)\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp	분할해서\ 열기(&l)\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		새로운(&N)<Tab>:enew
-menutrans &Close<Tab>:q			닫기(&C)<Tab>:q
+menutrans &Close<Tab>:close		닫기(&C)<Tab>:close
 menutrans &Save<Tab>:w			저장(&S)<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	다른\ 이름으로\ 저장(&A)\.\.\.<Tab>:sav
 "menutrans Split\ &Diff\ with\.\.\.	Split\ &Diff\ with\.\.\.
@@ -166,7 +166,7 @@ menutrans Close\ &Other(s)<Tab>^Wo	다른\ 창\ 닫기(&O)<Tab>^Wo
 menutrans Move\ &To			이동(&T)
 menutrans &Top<Tab>^WK			꼭대기(&T)<Tab>^WK
 menutrans &Bottom<Tab>^WJ		바닥(&B)<Tab>^WJ
-menutrans &Left\ side<Tab>^WH	        왼쪽(&L)<Tab>^WH
+menutrans &Left\ side<Tab>^WH		왼쪽(&L)<Tab>^WH
 menutrans &Right\ side<Tab>^WL		오른쪽(&R)<Tab>^WL
 menutrans Rotate\ &Up<Tab>^WR		위로\ 회전(&U)<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		아래로\ 회전(&D)<Tab>^Wr

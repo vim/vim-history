@@ -2296,8 +2296,10 @@ usage()
     main_msg(_("-italicfont <font>\tUse <font> for italic text"));
     main_msg(_("-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"));
     main_msg(_("-borderwidth <width>\tUse a border width of <width> (also: -bw)"));
-    main_msg(_("-scrollbarwidth <width>\tUse a scrollbar width of <width> (also: -sw)"));
+    main_msg(_("-scrollbarwidth <width>  Use a scrollbar width of <width> (also: -sw)"));
+# ifdef FEAT_GUI_ATHENA
     main_msg(_("-menuheight <height>\tUse a menu bar height of <height> (also: -mh)"));
+# endif
     main_msg(_("-reverse\t\tUse reverse video (also: -rv)"));
     main_msg(_("+reverse\t\tDon't use reverse video (also: +rv)"));
     main_msg(_("-xrm <resource>\tSet the specified resource"));
@@ -2427,6 +2429,21 @@ time_msg(msg, tv_start)
 	fprintf(time_fd, ": %s\n", msg);
     }
 }
+
+# ifdef WIN3264
+/*
+ * Windows doesn't have gettimeofday(), although it does have struct timeval.
+ */
+    int
+gettimeofday(struct timeval *tv, char *dummy)
+{
+    long t = clock();
+    tv->tv_sec = t / CLOCKS_PER_SEC;
+    tv->tv_usec = (t - tv->tv_sec * CLOCKS_PER_SEC) * 1000000 / CLOCKS_PER_SEC;
+    return 0;
+}
+# endif
+
 #endif
 
 #if defined(FEAT_CLIENTSERVER) || defined(PROTO)

@@ -1,7 +1,7 @@
 " DTML syntax file
-" Language:	        Zope's Dynamic Template Markup Language
+" Language:			Zope's Dynamic Template Markup Language
 " Maintainer:	    Jean Jordaan <jean@upfrontsystems.co.za> (njj)
-" Last change:	    2001 Aug 12
+" Last change:	    2001 Sep 02
 
 " These are used with Claudio Fleiner's html.vim in the standard distribution.
 "
@@ -175,7 +175,7 @@ syn keyword dtmlTagName var if elif else unless in with let call raise try excep
 syn keyword dtmlEndTagName if unless in with let raise try tree sendmail transparent contained
 
 " Own additions
-syn keyword dtmlTODO    TODO FIXME          contained
+syn keyword dtmlTODO    TODO FIXME		contained
 
 syn region dtmlComment start=+<dtml-comment>+ end=+</dtml-comment>+ contains=dtmlTODO
 

@@ -502,9 +502,7 @@ gui_mch_set_menu_pos(x, y, w, h)
     int		height;
 
     XtUnmanageChild(menuBar);
-    XtVaGetValues(menuBar,
-		XtNborderWidth, &border,
-		NULL);
+    XtVaGetValues(menuBar, XtNborderWidth, &border, NULL);
     /* avoid trouble when there are no menu items, and h is 1 */
     height = h - 2 * border;
     if (height < 0)

@@ -27,7 +27,7 @@ menutrans &File				ファイル(&F)
 menutrans &Open\.\.\.<Tab>:e		開く(&O)\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp	分割して開く(&L)\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		新規作成(&N)<Tab>:enew
-menutrans &Close<Tab>:q			閉じる(&C)<Tab>:q
+menutrans &Close<Tab>:close		閉じる(&C)<Tab>:close
 menutrans &Save<Tab>:w			保存(&S)<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	名前を付けて保存(&A)\.\.\.<Tab>:sav
 menutrans Split\ &Diff\ with\.\.\.	差分表示(&D)\.\.\.

@@ -1,15 +1,15 @@
 " Vim syntax file
 " Language:	Haskell
 " Maintainer:	John Williams <jrw@pobox.com>
-" Last Change:	2001 May 10
+" Last Change:	2001 Sep 02
 " Thanks to Ryan Crumley for suggestions and John Meacham for
 " pointing out bugs.
 "
 " Options-assign a value to these variables to turn the option on:
 "
 " hs_highlight_delimiters - Highlight delimiter characters--users
-"                           with a light-colored background will
-"                           probably want to turn this on.
+"			    with a light-colored background will
+"			    probably want to turn this on.
 " hs_highlight_boolean - Treat True and False as keywords.
 " hs_highlight_types - Treat names of primitive types as keywords.
 " hs_highlight_more_types - Treat names of other common types as keywords.
@@ -38,26 +38,26 @@ syn match hsConSym "`\(\<[A-Z][a-zA-Z0-9_']*\.\)\=[A-Z][a-zA-Z0-9_']*`"
 syn match hsDelimiter  "(\|)\|\[\|\]\|,\|;\|_\|{\|}"
 
 " Strings and constants
-syn match   hsSpecialChar      contained "\\\([0-9]\+\|o[0-7]\+\|x[0-9a-fA-F]\+\|[\"\\'&\\abfnrtv]\|^[A-Z^_\[\\\]]\)"
-syn match   hsSpecialChar      contained "\\\(NUL\|SOH\|STX\|ETX\|EOT\|ENQ\|ACK\|BEL\|BS\|HT\|LF\|VT\|FF\|CR\|SO\|SI\|DLE\|DC1\|DC2\|DC3\|DC4\|NAK\|SYN\|ETB\|CAN\|EM\|SUB\|ESC\|FS\|GS\|RS\|US\|SP\|DEL\)"
-syn match   hsSpecialCharError contained "\\&\|'''\+"
-syn region  hsString           start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=hsSpecialChar
-syn match   hsCharacter        "[^a-zA-Z0-9_']'\([^\\]\|\\[^']\+\|\\'\)'"lc=1 contains=hsSpecialChar,hsSpecialCharError
-syn match   hsCharacter        "^'\([^\\]\|\\[^']\+\|\\'\)'" contains=hsSpecialChar,hsSpecialCharError
-syn match   hsNumber           "\<[0-9]\+\>\|\<0[xX][0-9a-fA-F]\+\>\|\<0[oO][0-7]\+\>"
-syn match   hsFloat            "\<[0-9]\+\.[0-9]\+\([eE][-+]\=[0-9]\+\)\=\>"
+syn match   hsSpecialChar	contained "\\\([0-9]\+\|o[0-7]\+\|x[0-9a-fA-F]\+\|[\"\\'&\\abfnrtv]\|^[A-Z^_\[\\\]]\)"
+syn match   hsSpecialChar	contained "\\\(NUL\|SOH\|STX\|ETX\|EOT\|ENQ\|ACK\|BEL\|BS\|HT\|LF\|VT\|FF\|CR\|SO\|SI\|DLE\|DC1\|DC2\|DC3\|DC4\|NAK\|SYN\|ETB\|CAN\|EM\|SUB\|ESC\|FS\|GS\|RS\|US\|SP\|DEL\)"
+syn match   hsSpecialCharError	contained "\\&\|'''\+"
+syn region  hsString		start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=hsSpecialChar
+syn match   hsCharacter		"[^a-zA-Z0-9_']'\([^\\]\|\\[^']\+\|\\'\)'"lc=1 contains=hsSpecialChar,hsSpecialCharError
+syn match   hsCharacter		"^'\([^\\]\|\\[^']\+\|\\'\)'" contains=hsSpecialChar,hsSpecialCharError
+syn match   hsNumber		"\<[0-9]\+\>\|\<0[xX][0-9a-fA-F]\+\>\|\<0[oO][0-7]\+\>"
+syn match   hsFloat		"\<[0-9]\+\.[0-9]\+\([eE][-+]\=[0-9]\+\)\=\>"
 
 " Keyword definitions. These must be patters instead of keywords
 " because otherwise they would match as keywords at the start of a
 " "literate" comment (see lhs.vim).
-syn match hsModule          "\<module\>"
-syn match hsImport          "\<import\>.*"he=s+6 contains=hsImportMod
-syn match hsImportMod       contained "\<\(as\|qualified\|hiding\)\>"
-syn match hsInfix           "\<\(infix\|infixl\|infixr\)\>"
-syn match hsStructure       "\<\(class\|data\|deriving\|instance\|default\|where\)\>"
-syn match hsTypedef         "\<\(type\|newtype\)\>"
-syn match hsStatement       "\<\(do\|case\|of\|let\|in\)\>"
-syn match hsConditional     "\<\(if\|then\|else\)\>"
+syn match hsModule		"\<module\>"
+syn match hsImport		"\<import\>.*"he=s+6 contains=hsImportMod
+syn match hsImportMod		contained "\<\(as\|qualified\|hiding\)\>"
+syn match hsInfix		"\<\(infix\|infixl\|infixr\)\>"
+syn match hsStructure		"\<\(class\|data\|deriving\|instance\|default\|where\)\>"
+syn match hsTypedef		"\<\(type\|newtype\)\>"
+syn match hsStatement		"\<\(do\|case\|of\|let\|in\)\>"
+syn match hsConditional		"\<\(if\|then\|else\)\>"
 
 " Not real keywords, but close.
 if exists("hs_highlight_boolean")
@@ -104,39 +104,39 @@ if version >= 508 || !exists("did_hs_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  hi link hsModule                        hsStructure
-  hi link hsImport                        Include
-  hi link hsImportMod                     hsImport
-  hi link hsInfix                         PreProc
-  hi link hsStructure                     Structure
-  hi link hsStatement                     Statement
-  hi link hsConditional                   Conditional
-  hi link hsSpecialChar                   SpecialChar
-  hi link hsTypedef                       Typedef
-  hi link hsVarSym                        hsOperator
-  hi link hsConSym                        hsOperator
-  hi link hsOperator                      Operator
+  hi link hsModule			  hsStructure
+  hi link hsImport			  Include
+  hi link hsImportMod			  hsImport
+  hi link hsInfix			  PreProc
+  hi link hsStructure			  Structure
+  hi link hsStatement			  Statement
+  hi link hsConditional			  Conditional
+  hi link hsSpecialChar			  SpecialChar
+  hi link hsTypedef			  Typedef
+  hi link hsVarSym			  hsOperator
+  hi link hsConSym			  hsOperator
+  hi link hsOperator			  Operator
   if exists("hs_highlight_delimiters")
     " Some people find this highlighting distracting.
-    hi link hsDelimiter                   Delimiter
+    hi link hsDelimiter			  Delimiter
   endif
-  hi link hsSpecialCharError              Error
-  hi link hsString                        String
-  hi link hsCharacter                     Character
-  hi link hsNumber                        Number
-  hi link hsFloat                         Float
-  hi link hsConditional                   Conditional
-  hi link hsLiterateComment               hsComment
-  hi link hsBlockComment                  hsComment
-  hi link hsLineComment                   hsComment
-  hi link hsComment                       Comment
-  hi link hsPragma                        SpecialComment
-  hi link hsBoolean                       Boolean
-  hi link hsType                          Type
-  hi link hsMaybe                         hsEnumConst
-  hi link hsOrdering                      hsEnumConst
-  hi link hsEnumConst                     Constant
-  hi link hsDebug                         Debug
+  hi link hsSpecialCharError		  Error
+  hi link hsString			  String
+  hi link hsCharacter			  Character
+  hi link hsNumber			  Number
+  hi link hsFloat			  Float
+  hi link hsConditional			  Conditional
+  hi link hsLiterateComment		  hsComment
+  hi link hsBlockComment		  hsComment
+  hi link hsLineComment			  hsComment
+  hi link hsComment			  Comment
+  hi link hsPragma			  SpecialComment
+  hi link hsBoolean			  Boolean
+  hi link hsType			  Type
+  hi link hsMaybe			  hsEnumConst
+  hi link hsOrdering			  hsEnumConst
+  hi link hsEnumConst			  Constant
+  hi link hsDebug			  Debug
 
   delcommand HiLink
 endif

@@ -46,7 +46,7 @@ function GetMatlabIndent(lnum)
     " See if the user has already dedented
     elseif indent(v:lnum) > curind - &sw
       " If not, recommend one dedent
-        let curind = curind - &sw
+	let curind = curind - &sw
     else
       " Otherwise, trust the user
       return -1

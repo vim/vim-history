@@ -45,6 +45,7 @@ void ex_checktime __ARGS((exarg_T *eap));
 int get_printer_page_num __ARGS((void));
 int prt_header_height __ARGS((void));
 int prt_use_number __ARGS((void));
+int prt_get_unit __ARGS((int idx));
 void ex_hardcopy __ARGS((exarg_T *eap));
 void mch_print_cleanup __ARGS((void));
 int mch_print_init __ARGS((prt_settings_T *psettings, char_u *jobname, int forceit));

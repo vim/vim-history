@@ -2120,6 +2120,26 @@ mch_breakcheck(void)
     }
 }
 
+/*
+ * Return TRUE if "p" contain a wildcard that can be expanded by
+ * dos_expandpath().
+ */
+    int
+mch_has_exp_wildcard(char_u *p)
+{
+    for ( ; *p; ++p)
+    {
+	if (vim_strchr((char_u *)"?*[", *p) != NULL
+		|| (*p == '~' && p[1] != NUL))
+	    return TRUE;
+    }
+    return FALSE;
+}
+
+/*
+ * Return TRUE if "p" contain a wildcard or a "~1" kind of thing (could be a
+ * shortened file name).
+ */
     int
 mch_has_wildcard(char_u *p)
 {

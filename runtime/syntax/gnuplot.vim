@@ -103,7 +103,7 @@ syn keyword gnuplotType		trange urange vrange sample[s] size
 syn keyword gnuplotType		bezier boxerrorbars boxes bargraph bar[s]
 syn keyword gnuplotType		boxxyerrorbars csplines dots fsteps histeps impulses
 syn keyword gnuplotType		lines linesp[oints] points poiinttype sbezier splines steps
-" w lt lw ls          = optional
+" w lt lw ls	      = optional
 syn keyword gnuplotType		vectors xerr[orbars] xyerr[orbars] yerr[orbars] financebars candlesticks vector
 syn keyword gnuplotType		errorbars surface
 syn keyword gnuplotType		tics ticslevel ticscale time timefmt view
@@ -121,7 +121,7 @@ syn keyword gnuplotType		nox2zeroaxis y2zeroaxis noy2zeroaxis angles
 " comments + strings
 syn region gnuplotComment	start="#" end="$"
 syn region gnuplotComment	start=+"+ skip=+\\"+ end=+"+
-syn region gnuplotComment	start=+'+            end=+'+
+syn region gnuplotComment	start=+'+	     end=+'+
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already

@@ -1,19 +1,19 @@
 " Vim syntax file
 " Language:     Cyn++
 " Maintainer:   Phil Derrick <phild@forteds.com>
-" Last change:  2001 May 10
+" Last change:  2001 Sep 02
 "
 " Language Information
 "
-"               Cynpp (Cyn++) is a macro language to ease coding in Cynlib.
-"               Cynlib is a library of C++ classes to allow hardware
-"               modelling in C++. Combined with a simulation kernel,
-"               the compiled and linked executable forms a hardware
-"               simulation of the described design.
+"		Cynpp (Cyn++) is a macro language to ease coding in Cynlib.
+"		Cynlib is a library of C++ classes to allow hardware
+"		modelling in C++. Combined with a simulation kernel,
+"		the compiled and linked executable forms a hardware
+"		simulation of the described design.
 "
-"               Cyn++ is designed to be HDL-like.
+"		Cyn++ is designed to be HDL-like.
 "
-"               Further information can be found from www.forteds.com
+"		Further information can be found from www.forteds.com
 
 
 

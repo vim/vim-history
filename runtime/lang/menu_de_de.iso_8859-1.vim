@@ -27,7 +27,7 @@ menutrans &File				&Datei
 menutrans &Open\.\.\.<Tab>:e		&Öffnen\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp	In\ geteiltem\ &Fenster\ Öffnen\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		&Neue\ Datei<Tab>:enew
-menutrans &Close<Tab>:q			Sch&liessen<Tab>:q
+menutrans &Close<Tab>:close		Sch&liessen<Tab>:close
 menutrans &Save<Tab>:w			&Speichern<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:w	Speichern\ &Als\.\.\.<Tab>:w
 menutrans &Print			&Drucken

@@ -25,6 +25,7 @@ BEGIN   {
 	skip_word["put"]="yes";
 	skip_word["reference"]="yes";
 	skip_word["section"]="yes";
+	skip_word["space"]="yes";
 	skip_word["starting"]="yes";
 	skip_word["toggle"]="yes";
 	skip_word["various"]="yes";
@@ -34,16 +35,17 @@ BEGIN   {
 #
 # protect special chars
 #
-/[><&]/ {gsub(/&/,"\\&amp;");gsub(/>/,"\\&gt;");gsub(/</,"\\&lt;")}
+/[><&á]/ {gsub(/&/,"\\&amp;");gsub(/>/,"\\&gt;");gsub(/</,"\\&lt;");gsub("á","\\&aacute;");}
 #
 # end of sample lines by non-blank in first column
 #
 sample == "yes" && substr($0,1,4) == "&lt;" { sample = "no"; gsub(/^&lt;/, " "); }
 sample == "yes" && substr($0,1,1) != " " && substr($0,1,1) != "	" && length($0) > 0 { sample = "no" }
 #
-# sample lines printed bold
+# sample lines printed bold unless empty...
 #
-sample == "yes" { print "<B>" $0 "</B>"; next; }
+sample == "yes" && $0 =="" { print ""; next; }
+sample == "yes" && $0 !="" { print "<B>" $0 "</B>"; next; }
 #
 # start of sample lines in next line
 #
@@ -66,9 +68,9 @@ substr($0,length($0),1) == "~" { print "<B><FONT COLOR=\"PURPLE\">" substr($0,1,
 # isolated "*"
 #
 /[ 	]\*[ 	]/ {gsub(/ \* /," \\&#42; ");
-                    gsub(/ \*	/," \\&#42;	");
-                    gsub(/	\* /,"	\\&#42; ");
-                    gsub(/	\*	/,"	\\&#42;	"); }
+		    gsub(/ \*	/," \\&#42;	");
+		    gsub(/	\* /,"	\\&#42; ");
+		    gsub(/	\*	/,"	\\&#42;	"); }
 #
 # tag start
 #
@@ -83,9 +85,9 @@ substr($0,length($0),1) == "~" { print "<B><FONT COLOR=\"PURPLE\">" substr($0,1,
 # isolated "|"
 #
 /[ 	]\|[ 	]/ {gsub(/ \| /," \\&#124; ");
-                    gsub(/ \|	/," \\&#124;	");
-                    gsub(/	\| /,"	\\&#124; ");
-                    gsub(/	\|	/,"	\\&#124;	"); }
+		    gsub(/ \|	/," \\&#124;	");
+		    gsub(/	\| /,"	\\&#124; ");
+		    gsub(/	\|	/,"	\\&#124;	"); }
 /'\|'/ { gsub(/'\|'/,"'\\&#124;'"); }
 /\^V\|/ {gsub(/\^V\|/,"^V\\&#124;");}
 / \\\|	/ {gsub(/\|/,"\\&#124;");}
@@ -160,7 +162,7 @@ substr($0,1,3) == "---" && substr($0,75,1) != "-" { next; }
 
 
 FILENAME == "gui.txt" && asciiart == "no"  \
-          && $0 ~ /\+----/ && $0 ~ /----\+/ {
+	  && $0 ~ /\+----/ && $0 ~ /----\+/ {
 	asciiart= "yes";
 	asciicnt=0;
 	}
@@ -203,9 +205,9 @@ nstar > 2 && npipe < 3 {
 			}
 		}
 	}
-        printf("\n");
+	printf("\n");
 	next;
-        }
+	}
 #
 # line contains "|"
 #
@@ -266,7 +268,7 @@ npipe > 2 && nstar > 2 {
 			}
 		}
 	}
-        printf("\n");
+	printf("\n");
 	next;
 	}
 #
@@ -352,7 +354,7 @@ nstar == 2  {
 
 
 asciiart == "yes"  && $0 ~ /\+-\+--/  \
-        && $0 ~ "scrollbar" { asciiart = "no"; }
+	&& $0 ~ "scrollbar" { asciiart = "no"; }
 
 END {
 	topback();

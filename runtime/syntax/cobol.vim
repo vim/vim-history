@@ -2,8 +2,8 @@
 " Language: COBOL
 " Maintainers:  Davyd Ondrejko <vondraco@columbus.rr.com>
 "     (formerly Sitaram Chamarty <sitaram@diac.com> and
-"               James Mitchell <james_mitchell@acm.org>)
-" Last change:  2001 May 09
+"		    James Mitchell <james_mitchell@acm.org>)
+" Last change:  2001 Sep 02
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -72,13 +72,13 @@ syn match   cobolBadLine      "^.\{6\}[^ D\-*$/].*"hs=s+6
 syn match   cobolBadLine      "^.\{6\}\s\+\*.*"
 
 syn match   cobolNumber       "\<-\=\d*\.\=\d\+\>" contains=cobolMarker,cobolComment
-syn match   cobolPic          "\<S*9\+\>" contains=cobolMarker,cobolComment
-syn match   cobolPic          "\<$*\.\=9\+\>" contains=cobolMarker,cobolComment
-syn match   cobolPic          "\<Z*\.\=9\+\>" contains=cobolMarker,cobolComment
-syn match   cobolPic          "\<V9\+\>" contains=cobolMarker,cobolComment
-syn match   cobolPic          "\<9\+V\>" contains=cobolMarker,cobolComment
-syn match   cobolPic          "\<-\+[Z9]\+\>" contains=cobolMarker,cobolComment
-syn match   cobolTodo         "todo" contained
+syn match   cobolPic		"\<S*9\+\>" contains=cobolMarker,cobolComment
+syn match   cobolPic		"\<$*\.\=9\+\>" contains=cobolMarker,cobolComment
+syn match   cobolPic		"\<Z*\.\=9\+\>" contains=cobolMarker,cobolComment
+syn match   cobolPic		"\<V9\+\>" contains=cobolMarker,cobolComment
+syn match   cobolPic		"\<9\+V\>" contains=cobolMarker,cobolComment
+syn match   cobolPic		"\<-\+[Z9]\+\>" contains=cobolMarker,cobolComment
+syn match   cobolTodo		"todo" contained
 syn match   cobolComment      "^.\{6\}\*.*"hs=s+6 contains=cobolTodo,cobolMarker
 syn match   cobolComment      "^.\{6\}/.*"hs=s+6 contains=cobolTodo,cobolMarker
 syn match   cobolComment      "^.\{6\}C.*"hs=s+6 contains=cobolTodo,cobolMarker
@@ -87,31 +87,31 @@ syn match   cobolCompiler     "^.\{6\}$.*"hs=s+6
 " For MicroFocus or other inline comments, include this line.
 " syn region  cobolComment      start="*>" end="$" contains=cobolTodo,cobolMarker
 
-syn keyword cobolGoTo         GO GOTO
-syn keyword cobolCopy         COPY
+syn keyword cobolGoTo		GO GOTO
+syn keyword cobolCopy		COPY
 
 " cobolBAD: things that are BAD NEWS!
-syn keyword cobolBAD          ALTER ENTER RENAMES
+syn keyword cobolBAD		ALTER ENTER RENAMES
 
 " cobolWatch: things that are important when trying to understand a program
-syn keyword cobolWatch        OCCURS DEPENDING VARYING BINARY COMP REDEFINES
-syn keyword cobolWatch        REPLACING RUN
-syn match   cobolWatch        "COMP-[123456XN]"
+syn keyword cobolWatch		OCCURS DEPENDING VARYING BINARY COMP REDEFINES
+syn keyword cobolWatch		REPLACING RUN
+syn match   cobolWatch		"COMP-[123456XN]"
 
-syn keyword cobolEXECs        EXEC END-EXEC
+syn keyword cobolEXECs		EXEC END-EXEC
 
 
-syn match   cobolDecl         "^.\{6} \{1,4}\(0\=1\|77\|78\) "hs=s+7,he=e-1 contains=cobolMarker
-syn match   cobolDecl         "^.\{6} \+[1-4]\d "hs=s+7,he=e-1 contains=cobolMarker
-syn match   cobolDecl         "^.\{6} \+0\=[2-9] "hs=s+7,he=e-1 contains=cobolMarker
-syn match   cobolDecl         "^.\{6} \+66 "hs=s+7,he=e-1 contains=cobolMarker
+syn match   cobolDecl		"^.\{6} \{1,4}\(0\=1\|77\|78\) "hs=s+7,he=e-1 contains=cobolMarker
+syn match   cobolDecl		"^.\{6} \+[1-4]\d "hs=s+7,he=e-1 contains=cobolMarker
+syn match   cobolDecl		"^.\{6} \+0\=[2-9] "hs=s+7,he=e-1 contains=cobolMarker
+syn match   cobolDecl		"^.\{6} \+66 "hs=s+7,he=e-1 contains=cobolMarker
 
-syn match   cobolWatch        "^.\{6} \+88 "hs=s+7,he=e-1 contains=cobolMarker
+syn match   cobolWatch		"^.\{6} \+88 "hs=s+7,he=e-1 contains=cobolMarker
 
-syn match   cobolBadID        "\k\+-\($\|[^-A-Z0-9]\)"
+syn match   cobolBadID		"\k\+-\($\|[^-A-Z0-9]\)"
 
-syn keyword cobolCALLs        CALL CANCEL GOBACK PERFORM INVOKE
-syn match   cobolCALLs        "EXIT \+PROGRAM"
+syn keyword cobolCALLs		CALL CANCEL GOBACK PERFORM INVOKE
+syn match   cobolCALLs		"EXIT \+PROGRAM"
 syn match   cobolExtras       /\<VALUE \+\d\+\./hs=s+6,he=e-1
 
 syn match   cobolString       /"[^"]*\("\|$\)/

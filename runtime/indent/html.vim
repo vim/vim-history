@@ -2,7 +2,7 @@
 " Author:	Johannes Zellner <johannes@zellner.org>
 " URL:		http://www.zellner.org/vim/indent/html.vim
 " Last Change:	Mon, 09 Apr 2001 14:31:56 +0200
-" Globals:	g:html_indent_tags         -- indenting tags
+" Globals:	g:html_indent_tags	   -- indenting tags
 "		g:html_indent_strict       -- inhibit 'O O' elements
 "		g:html_indent_strict_table -- inhibit 'O -' elements
 
