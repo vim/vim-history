@@ -1829,7 +1829,7 @@ AC_CHECK_HEADERS(stdarg.h stdlib.h string.h sys/select.h sys/utsname.h \
 	sys/stream.h sys/ptem.h termios.h libc.h sys/statfs.h \
 	poll.h sys/poll.h pwd.h utime.h sys/param.h libintl.h \
 	libgen.h util/debug.h util/msg18n.h frame.h \
-	sys/acl.h sys/access.h sys/sysctl.h sys/sysinfo.h)
+	sys/acl.h sys/access.h sys/sysctl.h sys/sysinfo.h wchar.h)
 
 dnl On Mac OS X strings.h exists but produces a warning message :-(
 if test "x$MACOSX" != "xyes"; then
