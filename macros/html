@@ -70,7 +70,7 @@ the following
 10	ispell spell check the current document (needs ispell)
 11	header information at begining of file
 12	level change.
--- 
+--
 INTERNET:  ray@Celestial.COM   Ray A. Jones; Celestial Systems, Inc.
 URL: http://www.celestial.com  2835 82nd Ave. SE, Suite S-100
                                Mercer Island, WA 98040; (206) 236-1676
@@ -87,7 +87,7 @@ unity.  If this bothers you, run it through your spell checker!
 # Contents:  .exrc .level1 .level2 .level3 .level4 .level5
 # Wrapped by ray@camco1 on Mon Feb 12 14:04:21 1996
 PATH=/bin:/usr/bin:/usr/ucb ; export PATH
-if test -f '.exrc' -a "${1}" != "-c" ; then 
+if test -f '.exrc' -a "${1}" != "-c" ; then
   echo shar: Will not clobber existing file \"'.exrc'\"
 else
 echo shar: Extracting \"'.exrc'\" \(361 characters\)
@@ -111,7 +111,7 @@ if test 361 -ne `wc -c <'.exrc'`; then
 fi
 # end of '.exrc'
 fi
-if test -f '.level1' -a "${1}" != "-c" ; then 
+if test -f '.level1' -a "${1}" != "-c" ; then
   echo shar: Will not clobber existing file \"'.level1'\"
 else
 echo shar: Extracting \"'.level1'\" \(361 characters\)
@@ -135,7 +135,7 @@ if test 361 -ne `wc -c <'.level1'`; then
 fi
 # end of '.level1'
 fi
-if test -f '.level2' -a "${1}" != "-c" ; then 
+if test -f '.level2' -a "${1}" != "-c" ; then
   echo shar: Will not clobber existing file \"'.level2'\"
 else
 echo shar: Extracting \"'.level2'\" \(530 characters\)
@@ -157,7 +157,7 @@ if test 530 -ne `wc -c <'.level2'`; then
 fi
 # end of '.level2'
 fi
-if test -f '.level3' -a "${1}" != "-c" ; then 
+if test -f '.level3' -a "${1}" != "-c" ; then
   shar: Will not clobber existing file \"'.level3'\"
 else
 echo shar: Extracting \"'.level3'\" \(373 characters\)
@@ -180,7 +180,7 @@ if test 373 -ne `wc -c <'.level3'`; then
 fi
 # end of '.level3'
 fi
-if test -f '.level4' -a "${1}" != "-c" ; then 
+if test -f '.level4' -a "${1}" != "-c" ; then
   echo shar: Will not clobber existing file \"'.level4'\"
 else
 echo shar: Extracting \"'.level4'\" \(530 characters\)
@@ -202,7 +202,7 @@ if test 530 -ne `wc -c <'.level4'`; then
 fi
 # end of '.level4'
 fi
-if test -f '.level5' -a "${1}" != "-c" ; then 
+if test -f '.level5' -a "${1}" != "-c" ; then
   echo shar: Will not clobber existing file \"'.level5'\"
 else
 echo shar: Extracting \"'.level5'\" \(288 characters\)

@@ -1,5 +1,5 @@
 " These macros 'solve' any maze produced by the a-maze-ing maze.c program.
-" 
+"
 " First, a bit of maze theory.
 " If you were put into a maze, a guaranteed method of finding your way
 " out of the maze is to put your left hand onto a wall and just keep walking,
@@ -7,11 +7,11 @@
 " work if the maze does not have any 'islands', or if the 'exit' is on the
 " same island as your starting point. These conditions hold for the mazes
 " under consideration.
-" 
+"
 " Assuming that the maze is made up of horizontal and vertical walls spaced
 " one step apart and that you can move either north, south, east or west,
 " then you can automate this procedure by carrying out the following steps.
-" 
+"
 " 1. Put yourself somewhere in the maze near a wall.
 " 2. Check if you have a wall on your left. If so, go to step 4.
 " 3. There is no wall on your left, so turn on the spot to your left and step
@@ -20,11 +20,11 @@
 "    spot to your right by 90 degrees and repeat step 4.
 " 5. There is no wall in front of you, so step forward one step and
 "    go to step 2.
-" 
+"
 " In this way you will cover all the corridors of the maze (until you get back
 " to where you started from, if you do not stop).
-" 
-" By examining a maze produced by the maze.c program you will see that 
+"
+" By examining a maze produced by the maze.c program you will see that
 " each square of the maze is one character high and two characters wide.
 " To go north or south, you move by a one character step, but to move east or
 " west you move by a two character step. Also note that in any position
@@ -38,27 +38,27 @@
 " is a | (otherwise it is a .).
 " A wall exists to the south of you if the character where you are
 " is a _ (otherwise it is a space).
-" 
+"
 " Note the difference for direction south, where we must examine the character
 " where the cursor is rather than an adjacent cell.
-" 
+"
 " If you were implementing the above procedure is a normal computer language
-" you could use a loop with if statements and continue statements, 
+" you could use a loop with if statements and continue statements,
 " However, these constructs are not available in vi macros so I have used
 " a state machine with 8 states. Each state signifies the direction you
 " are going in and whether or not you have checked if there is a wall on
 " your left.
-" 
+"
 " The transition from state to state and the actions taken on each transition
 " are given in the state table below.
 " The names of the states are N1, N2, S1, S2, E1, E2, W1, W2, where each letter
 " stands for a direction of the compass, the number 1 indicates that the we
 " have not yet checked to see if there is a wall on our left and the number 2
 " indicates that we have checked and there is a wall on our left.
-" 
+"
 " For each state we must consider the existence or not of a wall in a
 " particular direction. This direction is given in the following table.
-" 
+"
 " NextChar table:
 " state        direction       vi commands
 "  N1              W               hF
@@ -69,10 +69,10 @@
 "  E2              E               lF
 "  W1              S               F
 "  W2              W               hF
-" 
+"
 " where F is a macro which yanks the character under the cursor into
 " the NextChar register (n).
-" 
+"
 " State table:
 " In the 'vi commands' column is given the actions to carry out when in
 " this state and the NextChar is as given. The commands k, j, ll, hh move
@@ -80,7 +80,7 @@
 " command mm is used as a no-op command.
 " In the 'next state' column is given the new state of the machine after
 " the action is carried out.
-" 
+"
 " current state        NextChar    vi commands  next state
 "      N1                 .            hh          W1
 "      N1                 |            mm          N2
@@ -99,7 +99,7 @@
 "      W2                 |            mm          N1
 "      W2                 .            hh          W1
 "
-" 
+"
 " Complaint about vi macros:
 " It seems that you cannot have more than one 'undo-able' vi command
 " in the one macro, so you have to make lots of little macros and

@@ -1,19 +1,19 @@
-dnl autoconf script for Vim on Unix
-dnl
-dnl Process this file with autoconf 2.4 to produce a configure script.
-dnl Gnu m4 1.3 or later is also required
-dnl
+dnl configure.in: autoconf script for Vim
+
+dnl Process this file with autoconf 2.12 to produce "configure".
 
 AC_INIT(vim.h)
 AC_CONFIG_HEADER(config.h)
-AC_DEFINE(UNIX)	dnl or do you think configure may run on a non-unix system?
+
+dnl Being able to run configure means the system is Unix (compatible).
+AC_DEFINE(UNIX)
 AC_PROG_MAKE_SET
 
 dnl Checks for programs.
 AC_PROG_CC	dnl required by almost everything
 AC_PROG_CPP	dnl required by header file checks
 AC_ISC_POSIX	dnl required by AC_C_CROSS
-AC_C_CROSS	dnl required by AC_TRY_RUN
+AC_PROG_AWK	dnl required for "make html" in ../doc
 
 dnl Set default value for CFLAGS if none is defined or it's empty
 if test -z "$CFLAGS"; then
@@ -21,7 +21,7 @@ if test -z "$CFLAGS"; then
   test "$GCC" = yes && CFLAGS="-O2 -fno-strength-reduce"
 fi
 
-dnl you might want to remove this, if it causes too much trouble. I like it:
+dnl You might want to remove this, if it causes too much trouble.
 dnl -Wmissing-prototypes removed, old versions of GCC don't have it
 test "$GCC" = yes && CFLAGS="$CFLAGS -Wall -Wshadow"
 
@@ -31,7 +31,7 @@ if test "$cross_compiling" = yes; then
   AC_MSG_ERROR([cannot compile a simple program, check CC and CFLAGS])
 fi
 
-dnl see if the compiler accepts "-Olimit 2000", needed for some systems
+dnl See if the compiler accepts "-Olimit 2000", needed for some systems
 dnl because Vim uses very big case statements.
 if test "$GCC" != yes; then
   AC_MSG_CHECKING(if compiler accepts -Olimit)
@@ -39,40 +39,204 @@ if test "$GCC" != yes; then
   CFLAGS="$CFLAGS -Olimit 2000"
   AC_TRY_LINK(, ,
 	AC_MSG_RESULT(yes),
-	AC_MSG_RESULT(no); CFLAGS=$save_cflags)
+	AC_MSG_RESULT(no); CFLAGS="$save_cflags")
 fi
 
 dnl gcc-cpp has the wonderful -MM option to produce nicer dependencies
 test "$GCC" = yes && CPP_MM=M; AC_SUBST(CPP_MM)
 
 if test -f ./toolcheck; then
-AC_CHECKING(for buggy tools)
-sh ./toolcheck 1>&AC_FD_MSG
+  AC_CHECKING(for buggy tools)
+  sh ./toolcheck 1>&AC_FD_MSG
 fi
 
 
-dnl Check user requested features
+dnl Check user requested features.
+
+dnl If the user wants a Perl interpreter in vim, try using it.
+AC_MSG_CHECKING(if perlinterp option enabled)
+AC_ARG_ENABLE(perlinterp,
+	[  --enable-perlinterp     Include a Perl interpreter in vi.], ,
+	[enable_perlinterp="yes"])
+AC_MSG_RESULT($enable_perlinterp)
+if test "$enable_perlinterp" = "yes"; then
+  AC_SUBST(vi_cv_path_perl)
+  AC_PATH_PROG(vi_cv_path_perl, perl)
+  if test "X$vi_cv_path_perl" != "X"; then
+    AC_MSG_CHECKING(Perl version)
+    if $vi_cv_path_perl -e 'require 5.003_01' >/dev/null 2>/dev/null; then
+      AC_MSG_RESULT(OK)
+      eval `$vi_cv_path_perl -V:shrpenv`
+      if test "X$shrpenv" = "XUNKNOWN"; then # pre 5.003_04
+	shrpenv=""
+      fi
+      vi_cv_perllib=`$vi_cv_path_perl -MConfig -e 'print $Config{privlibexp}'`
+      AC_SUBST(vi_cv_perllib)
+      perlcppflags=`$vi_cv_path_perl -Mlib=$srcdir -MExtUtils::Embed \
+	      -e 'ccflags;perl_inc'`
+      if test "X$perlcppflags" != "X"; then
+	PERL_CFLAGS="$perlcppflags"
+      fi
+      perllibs=`cd $srcdir;$vi_cv_path_perl -MExtUtils::Embed \
+	      -e 'ldopts' | sed '/Warning/d' | sed '/Note (probably harmless)/d'`
+      if test "X$perllibs" != "X"; then
+	LIBS="$perllibs $LIBS"
+      fi
+      perlldflags=`cd $srcdir;$vi_cv_path_perl -MExtUtils::Embed \
+	      -e 'ccdlflags'`
+      if test "X$perlldflags" != "X"; then
+	LDFLAGS="$perlldflags $LDFLAGS"
+      fi
+      PERL_SRC="if_perl.c if_perlsfio.c"
+      PERL_OBJ="if_perl.o if_perlsfio.o"
+      PERL_PRO="if_perl.pro if_perlsfio.pro"
+      AC_DEFINE(HAVE_PERL_INTERP)
+    else
+      AC_MSG_RESULT(too old; need Perl version 5.003_01 or later)
+    fi
+  fi
+fi
+AC_SUBST(shrpenv)
+AC_SUBST(PERL_SRC)
+AC_SUBST(PERL_OBJ)
+AC_SUBST(PERL_PRO)
+AC_SUBST(PERL_CFLAGS)
+
+dnl If the user wants a Python interpreter in vim, try it.
+AC_MSG_CHECKING(if pythoninterp option enabled)
+AC_ARG_ENABLE(pythoninterp,
+        [  --enable-pythoninterp   Include a Python interpreter in vi.], ,
+	[enable_pythoninterp="yes"])
+AC_MSG_RESULT($enable_pythoninterp)
+
+if test "$enable_pythoninterp" = "yes"; then
+
+  dnl -- find the python executable
+  AC_PATH_PROG(vi_cv_path_python, python)
+  if test "X$vi_cv_path_python" != "X"; then
+
+    dnl -- get its version number
+    AC_CACHE_CHECK(Python version,vi_cv_var_python_version, 
+    [[vi_cv_var_python_version=`
+	    ${vi_cv_path_python} -c 'import sys; print sys.version[:3]'` 
+    ]])
+
+    dnl -- it must be at least version 1.4
+    AC_MSG_CHECKING(Python is 1.4 or better)
+    if ${vi_cv_path_python} -c \
+	"import sys; sys.exit(${vi_cv_var_python_version} < 1.4)"
+    then
+      AC_MSG_RESULT(yep)
+
+      dnl -- find where python thinks it was installed
+      AC_CACHE_CHECK(Python's install prefix,vi_cv_path_python_pfx,
+      [ vi_cv_path_python_pfx=`
+	    ${vi_cv_path_python} -c \
+		"import sys; print sys.prefix"` ])
+
+      dnl -- and where it thinks it runs
+      AC_CACHE_CHECK(Python's execution prefix,vi_cv_path_python_epfx,
+      [ vi_cv_path_python_epfx=`
+	    ${vi_cv_path_python} -c \
+		"import sys; print sys.exec_prefix"` ])
+
+      dnl -- python's internal library path
+
+      AC_CACHE_VAL(vi_cv_path_pythonpath,
+      [ vi_cv_path_pythonpath=`
+	    unset PYTHONPATH; 
+	    ${vi_cv_path_python} -c \
+		"import sys, string; print string.join(sys.path,':')"` ])
+
+      dnl -- where the Python implementation library archives are
+
+      AC_ARG_WITH(python-config-dir,
+	[  --with-python-config-dir=path Python's config directory ],
+	[ vi_cv_path_python_conf="${withval}" ] )
+
+      AC_CACHE_CHECK(Python's configuration directory,vi_cv_path_python_conf,
+      [
+	vi_cv_path_python_conf=
+	for subdir in lib share; do
+	  d="${vi_cv_path_python_pfx}/${subdir}/python${vi_cv_var_python_version}/config"
+	  if test -d "$d" && test -f "$d/config.c"; then
+	      vi_cv_path_python_conf="$d"
+	  fi
+	done
+      ])
+
+      PYTHON_CONFDIR="${vi_cv_path_python_conf}"
+
+      if test "X$PYTHON_CONFDIR" = "X"; then
+	  AC_MSG_RESULT([can't find it!])
+      else
+
+	dnl -- we need to examine Python's config/Makefile too
+	dnl    see what the interpreter is built from
+	AC_CACHE_VAL(vi_cv_path_python_plibs,
+	[
+	    tmp_mkf="/tmp/Makefile-conf$$"
+	    cat ${PYTHON_CONFDIR}/Makefile - <<'eof' >${tmp_mkf}
+__:
+	@echo "python_MODLIBS='$(MODLIBS)'"
+	@echo "python_LIBS='$(LIBS)'"
+	@echo "python_SYSLIBS='$(SYSLIBS)'"
+eof
+	    dnl -- delete the lines from make about Entering/Leaving directory
+	    eval "`cd ${PYTHON_CONFDIR} && make -f ${tmp_mkf} __ | sed '/ directory /d'`"
+	    rm -f ${tmp_mkf}
+	    if test "${vi_cv_var_python_version}" = "1.4"; then
+		vi_cv_path_python_plibs="${PYTHON_CONFDIR}/libModules.a ${PYTHON_CONFDIR}/libPython.a ${PYTHON_CONFDIR}/libObjects.a ${PYTHON_CONFDIR}/libParser.a"
+	    else
+		vi_cv_path_python_plibs="${PYTHON_CONFDIR}/libpython${vi_cv_var_python_version}.a"
+	    fi
+	    vi_cv_path_python_plibs="${vi_cv_path_python_plibs} ${python_MODLIBS} ${python_LIBS} ${python_SYSLIBS}"
+	])
+
+	PYTHON_LIBS="${vi_cv_path_python_plibs}"
+	PYTHON_CFLAGS="-I${vi_cv_path_python_pfx}/include/python${vi_cv_var_python_version}"
+	PYTHON_SRC="if_python.c"
+	PYTHON_OBJ="if_python.o py_config.o"
+	if test "${vi_cv_var_python_version}" = "1.4"; then
+	   PYTHON_OBJ="$PYTHON_OBJ py_getpath.o"
+	fi
+	PYTHON_GETPATH_CFLAGS="-DPYTHONPATH='\"${vi_cv_path_pythonpath}\"' -DPREFIX='\"${vi_cv_path_python_pfx}\"' -DEXEC_PREFIX='\"${vi_cv_path_python_epfx}\"'"
+
+	AC_DEFINE(HAVE_PYTHON)
+
+      fi
+    else
+      AC_MSG_RESULT(too old)
+    fi
+  fi
+fi
+AC_SUBST(PYTHON_CONFDIR)
+AC_SUBST(PYTHON_LIBS)
+AC_SUBST(PYTHON_GETPATH_CFLAGS)
+AC_SUBST(PYTHON_CFLAGS)
+AC_SUBST(PYTHON_SRC)
+AC_SUBST(PYTHON_OBJ)
+
 test -z "$with_x" && with_x=yes
-test "${enable_gui-no}" != no && with_x=yes
+test "${enable_gui-yes}" != no && with_x=yes
 if test "$with_x" = no; then
   AC_MSG_RESULT(defaulting to: don't HAVE_X11)
 else
-  dnl do this header check early, so that its failure can override user
-  dnl requests.
+  dnl Do this check early, so that its failure can override user requests.
 
   AC_PATH_PROG(xmkmfpath, xmkmf)
 
   AC_PATH_XTRA
 
-  dnl On my system the X include dir is found, but the lib dir not. This is a
-  dnl desparate try to fix this.
+  dnl On my HPUX system the X include dir is found, but the lib dir not.
+  dnl This is a desparate try to fix this.
 
   if test -d "$x_includes" && test ! -d "$x_libraries"; then
     x_libraries=`echo "$x_includes" | sed s/include/lib/`
     AC_MSG_RESULT(Corrected X libraries to $x_libraries)
     X_LIBS="$X_LIBS -L$x_libraries"
     if test "`(uname) 2>/dev/null`" = SunOS &&
-          uname -r | grep '^5' >/dev/null; then
+	  uname -r | grep '^5' >/dev/null; then
       X_LIBS="$X_LIBS -R $x_libraries"
     fi
   fi
@@ -83,8 +247,11 @@ else
     X_CFLAGS="$X_CFLAGS -I$x_includes"
   fi
 
-  dnl remove "-I/usr/include " from X_CFLAGS, should not be needed.
+  dnl Remove "-I/usr/include " from X_CFLAGS, should not be needed.
   X_CFLAGS="`echo $X_CFLAGS\  | sed 's%-I/usr/include %%'`"
+  dnl Remove " -L/usr/lib" from X_LIBS, should not be needed.
+  X_LIBS="`echo $X_LIBS\  | sed 's% -L/usr/lib%%'`"
+
 
   dnl Check if the X11 header files are correctly installed. On some systems
   dnl Xlib.h includes files that don't exist
@@ -96,47 +263,63 @@ else
 	  AC_MSG_RESULT(no); no_x=yes)
     CFLAGS=$cflags_save
 
-  if test "${no_x-no}" = yes; then with_x=no; else 
-    AC_DEFINE(HAVE_X11) 
+  if test "${no_x-no}" = yes; then
+    with_x=no
+  else
+    AC_DEFINE(HAVE_X11)
     X_LIB=-lX11; AC_SUBST(X_LIB)
-  fi
 
-  dnl Some systems need -lnsl -lsocket when testing for ICE.
-  dnl The check above doesn't do this, try here (again) if X_PRE_LIBS is empty
-  dnl and X_EXTRA_LIBS is not empty.  Check for other function then above to
-  dnl avoid the cached value
+    dnl Some systems need -lnsl -lsocket when testing for ICE.
+    dnl The check above doesn't do this, try here (again) if X_PRE_LIBS is empty
+    dnl and X_EXTRA_LIBS is not empty.  Check for other function than above to
+    dnl avoid the cached value
 
-  if test -z "$X_PRE_LIBS" -a -n "$X_EXTRA_LIBS"; then
-    ac_save_LDFLAGS="$LDFLAGS"
-    LDFLAGS="$LDFLAGS -L$x_libraries"
-    AC_CHECK_LIB(ICE, IceOpenConnection,
-      [X_PRE_LIBS="$X_PRE_LIBS -lSM -lICE"],, [$X_EXTRA_LIBS])
-    LDFLAGS="$ac_save_LDFLAGS"
+    if test -z "$X_PRE_LIBS" -a -n "$X_EXTRA_LIBS"; then
+      ac_save_LDFLAGS="$LDFLAGS"
+      LDFLAGS="$LDFLAGS -L$x_libraries"
+      AC_CHECK_LIB(ICE, IceOpenConnection,
+	[X_PRE_LIBS="$X_PRE_LIBS -lSM -lICE"],, [$X_EXTRA_LIBS])
+      LDFLAGS="$ac_save_LDFLAGS"
+    fi
+
+    ldflags_save=$LDFLAGS
+    LDFLAGS="$LDFLAGS $X_LIBS"
+
+    dnl Check for -lXdmcp (needed on SunOS 4.1.4)
+    AC_CHECK_LIB(Xdmcp, _XdmcpAuthDoIt, [X_EXTRA_LIBS="$X_EXTRA_LIBS -lXdmcp"],,
+		[-lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS -lXdmcp])
+
+    dnl Check for -lXpm (needed for some versions of Motif)
+    AC_CHECK_LIB(Xpm, XpmFreeXpmImage, [X_PRE_LIBS="$X_PRE_LIBS -lXpm"],,
+		[-lXt $X_PRE_LIBS -lXpm -lX11 $X_EXTRA_LIBS])
+
+    LDFLAGS=$ldflags_save
+
   fi
 
 fi
 
-test "x$with_x" = xno -a "x$enable_gui" = xyes && enable_gui=no
+test "x$with_x" = xno && enable_gui=no
 
-AC_ARG_ENABLE(gui, 
- [  --enable-gui            X11-Athena or Motif Graphical User Interface],
- AC_MSG_RESULT(option GUI: $enableval), 
- AC_MSG_RESULT(defaulting to: don't support GUI))
- MOTIF_COMMENT=ZZZ; ATHENA_COMMENT=ZZZ
- case "$enable_gui" in
-   no | "" )        ;;
-   yes|YES)         MOTIF_COMMENT= ; ATHENA_COMMENT= ;;
-   motif|MOTIF)     MOTIF_COMMENT= ;;
-   athena|ATHENA)   ATHENA_COMMENT= ;;
-   *)               AC_MSG_ERROR([Sorry, $enable_gui GUI is not supported.]) ;;
- esac
+AC_MSG_CHECKING(--enable-gui option)
+AC_ARG_ENABLE(gui,
+ [  --enable-gui            X11-Athena or Motif Graphical User Interface], , )
+SKIP_MOTIF=YES; SKIP_ATHENA=YES; GUITYPE=NONE
+case "$enable_gui" in
+  no|No|NO)		AC_MSG_RESULT(no GUI support) ;;
+  yes|Yes|YES|"")	AC_MSG_RESULT(automatic GUI support);
+				SKIP_MOTIF= ; SKIP_ATHENA= ;;
+  motif|Motif|MOTIF)	AC_MSG_RESULT(Motif GUI support); SKIP_MOTIF= ;;
+  athena|Athena|ATHENA)	AC_MSG_RESULT(Athena GUI support); SKIP_ATHENA= ;;
+  *)			AC_MSG_RESULT(Sorry, $enable_gui GUI is not supported) ;;
+esac
 
 dnl Check for Motif include files location.
 dnl The LAST one found is used, this makes the highest version to be used,
 dnl e.g. when Motif1.2 and Motif2.0 are both present.
 
-if test -z "$MOTIF_COMMENT"; then
-  gui_includes="`echo $x_includes|sed 's%/[^/][^/]*$%%'` /local/Motif*/include /local/include/Motif* /usr/local/Motif*/include /usr/local/include/Motif* /usr/include/Motif* /usr/Motif*/include /usr/local/include /usr/local/X11*/include /usr/include /usr/X11*/include /usr/include/X11* /usr/dt/include $GUI_INC_LOC"
+if test -z "$SKIP_MOTIF"; then
+  gui_includes="`echo $x_includes|sed 's%/[^/][^/]*$%%'` /local/Motif*/include /local/include/Motif* /usr/local/Motif*/include /usr/local/include/Motif* /usr/include/Motif* /usr/Motif*/include /usr/local/include /usr/local/X11*/include /usr/include /usr/X11*/include /usr/include/X11* /usr/dt/include $MOTIFHOME/include $GUI_INC_LOC"
   AC_MSG_CHECKING(for location of Motif GUI includes)
   GUI_INC_LOC=
   for try in $gui_includes; do
@@ -147,10 +330,9 @@ if test -z "$MOTIF_COMMENT"; then
   if test -n "$GUI_INC_LOC"; then
     AC_MSG_RESULT($GUI_INC_LOC)
     test "$GUI_INC_LOC" = /usr/include && GUI_INC_LOC=.
-    AC_SUBST(GUI_INC_LOC)
   else
-    AC_MSG_RESULT(<not found>) 
-    MOTIF_COMMENT=ZZZ  
+    AC_MSG_RESULT(<not found>)
+    SKIP_MOTIF=YES
   fi
 fi
 
@@ -158,38 +340,42 @@ dnl Check for Motif library files location.
 dnl The LAST one found is used, this makes the highest version to be used,
 dnl e.g. when Motif1.2 and Motif2.0 are both present.
 
-if test -z "$MOTIF_COMMENT"; then
-  gui_libs="`echo $x_libraries|sed 's%/[^/][^/]*$%%'` `echo "$GUI_INC_LOC" | sed s/include/lib/` /local/Motif*/lib /local/lib/Motif* /usr/local/Motif*/lib /usr/local/lib/Motif* /usr/Motif*/lib /usr/lib/Motif* /usr/local/lib /usr/local/X11*/lib /usr/lib /usr/X11*/lib /usr/lib/X11* /usr/dt/lib $GUI_LIB_LOC"
+if test -z "$SKIP_MOTIF"; then
   AC_MSG_CHECKING(for location of Motif GUI libs)
+  gui_libs="`echo $x_libraries|sed 's%/[^/][^/]*$%%'` `echo "$GUI_INC_LOC" | sed s/include/lib/` /local/Motif*/lib /local/lib/Motif* /usr/local/Motif*/lib /usr/local/lib/Motif* /usr/Motif*/lib /usr/lib/Motif* /usr/local/lib /usr/local/X11*/lib /usr/lib /usr/X11*/lib /usr/lib/X11* /usr/dt/lib $MOTIFHOME/lib $GUI_LIB_LOC"
   GUI_LIB_LOC=
   for try in $gui_libs; do
     if test -f "$try/libXm.a" -o -f "$try/libXm.so" -o -f "$try/libXm.sl"; then
       GUI_LIB_LOC=$try
-      if test "`(uname) 2>/dev/null`" = SunOS &&
-            uname -r | grep '^5' >/dev/null; then
-        GUI_LIB_LOC="$GUI_LIB_LOC -R $try"
-      fi
     fi
   done
   if test -n "$GUI_LIB_LOC"; then
+    dnl Remove /usr/lib, causes trouble on some systems
+    if test "$GUI_LIB_LOC" = /usr/lib; then
+      GUI_LIB_LOC=.
+    else
+      if test "`(uname) 2>/dev/null`" = SunOS &&
+	    uname -r | grep '^5' >/dev/null; then
+	GUI_LIB_LOC="$GUI_LIB_LOC -R $GUI_LIB_LOC"
+      fi
+    fi
     AC_MSG_RESULT($GUI_LIB_LOC)
-    AC_SUBST(GUI_LIB_LOC)
   else
-    AC_MSG_RESULT(<not found>) 
-    MOTIF_COMMENT=ZZZ  
+    AC_MSG_RESULT(<not found>)
+    SKIP_MOTIF=YES
   fi
 fi
 
-if test -z "$MOTIF_COMMENT"; then
-  ATHENA_COMMENT=ZZZ
+if test -z "$SKIP_MOTIF"; then
+  SKIP_ATHENA=YES
+  GUITYPE=MOTIF
 fi
-AC_SUBST(MOTIF_COMMENT)
 
 dnl Check if the Athena files can be found
 
 GUI_X_LIBS=
 
-if test -z "$ATHENA_COMMENT"; then
+if test -z "$SKIP_ATHENA"; then
   AC_MSG_CHECKING(if Athena header files can be found)
   cflags_save=$CFLAGS
   CFLAGS="$CFLAGS $X_CFLAGS"
@@ -197,27 +383,29 @@ if test -z "$ATHENA_COMMENT"; then
 #include <X11/Intrinsic.h>
 #include <X11/Xaw/Paned.h>], ,
     AC_MSG_RESULT(yes),
-    AC_MSG_RESULT(no); ATHENA_COMMENT=ZZZ )
+    AC_MSG_RESULT(no); SKIP_ATHENA=YES )
   CFLAGS=$cflags_save
 fi
 
-if test -z "$ATHENA_COMMENT"; then
+if test -z "$SKIP_ATHENA"; then
   dnl The GUI_INC_LOC and GUI_LIB_LOC must not be empty, use "." (ugly!)
   if test -z "$GUI_INC_LOC"; then
     GUI_INC_LOC=.
   fi
-  AC_SUBST(GUI_INC_LOC)
   if test -z "$GUI_LIB_LOC"; then
     GUI_LIB_LOC=.
   fi
-  AC_SUBST(GUI_LIB_LOC)
+  GUITYPE=ATHENA
 fi
 
-if test -z "$ATHENA_COMMENT" -o -z "$MOTIF_COMMENT"; then
-  dnl Check for -lXext, needed on some systems
+if test -z "$SKIP_ATHENA" -o -z "$SKIP_MOTIF"; then
+  dnl Check for -lXext and then for -lXmu
   ldflags_save=$LDFLAGS
   LDFLAGS="$LDFLAGS $X_LIBS"
-  AC_CHECK_LIB(Xext, XShapeQueryExtension, GUI_X_LIBS="-lXext",, -lX11 $X_EXTRA_LIBS)
+  AC_CHECK_LIB(Xext, XShapeQueryExtension, [GUI_X_LIBS="-lXext"],,
+		[-lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS])
+  AC_CHECK_LIB(Xmu, XmuCreateStippledPixmap, [GUI_X_LIBS="-lXmu $GUI_X_LIBS"],,
+		[$GUI_X_LIBS -lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS])
   LDFLAGS=$ldflags_save
 
   dnl Execute xmkmf to figure out if -DNARROWPROTO is needed.
@@ -244,7 +432,9 @@ EOF
   AC_SUBST(NARROW_PROTO)
 fi
 
-AC_SUBST(ATHENA_COMMENT)
+AC_SUBST(GUI_INC_LOC)
+AC_SUBST(GUI_LIB_LOC)
+AC_SUBST(GUITYPE)
 AC_SUBST(GUI_X_LIBS)
 
 dnl Checks for libraries.
@@ -261,11 +451,12 @@ if test -n "$TERM_LIB"; then
 else
 	dnl  On HP-UX 10.10 termcap or termlib should be used instead of
 	dnl  curses, because curses is much slower.
-	dnl  Older versions of ncurses have bugs, avoid it.
-	AC_CHECK_LIB(termcap, tgetent,,
-	AC_CHECK_LIB(termlib, tgetent,,
-	AC_CHECK_LIB(curses, tgetent,,
+	dnl  Newer versions of ncurses are preferred over anything.
+	dnl  Older versions of ncurses have bugs, get a new one!
 	AC_CHECK_LIB(ncurses, tgetent,,
+	AC_CHECK_LIB(termlib, tgetent,,
+	AC_CHECK_LIB(termcap, tgetent,,
+	AC_CHECK_LIB(curses, tgetent,,
 	))))
 fi
 if test "x$olibs" != "x$LIBS"; then
@@ -278,7 +469,7 @@ fi
 
 AC_MSG_CHECKING(quality of toupper)
 AC_TRY_RUN([#include <ctype.h>
-main() { exit(toupper('A') == 'A' && tolower('z') == 'z'); }], 
+main() { exit(toupper('A') == 'A' && tolower('z') == 'z'); }],
  AC_DEFINE(BROKEN_TOUPPER) AC_MSG_RESULT(bad),
  AC_MSG_RESULT(good), AC_MSG_ERROR(failed to compile test program))
 
@@ -311,13 +502,14 @@ if test $ac_cv_header_sys_wait_h = no; then
 		AC_MSG_RESULT(no))
 fi
 
-AC_CHECK_HEADERS(stdlib.h string.h sys/select.h sys/utsname.h termcap.h)
-AC_CHECK_HEADERS(fcntl.h sgtty.h sys/ioctl.h sys/time.h termio.h)
-AC_CHECK_HEADERS(unistd.h stropts.h errno.h strings.h sys/systeminfo.h locale.h)
-AC_CHECK_HEADERS(sys/stream.h sys/ptem.h termios.h libc.h sys/statfs.h)
-AC_CHECK_HEADERS(sys/poll.h pwd.h)
+AC_CHECK_HEADERS(stdlib.h string.h sys/select.h sys/utsname.h termcap.h \
+	fcntl.h sgtty.h sys/ioctl.h sys/time.h termio.h \
+	unistd.h stropts.h errno.h strings.h sys/systeminfo.h locale.h \
+	sys/stream.h sys/ptem.h termios.h libc.h sys/statfs.h \
+	poll.h sys/poll.h pwd.h utime.h sys/param.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
+AC_PROG_GCC_TRADITIONAL
 AC_C_CONST
 AC_TYPE_MODE_T
 AC_TYPE_OFF_T
@@ -386,7 +578,6 @@ AC_TRY_COMPILE([
 dnl AC_DECL_SYS_SIGLIST
 
 dnl Checks for library functions. ===================================
-AC_PROG_GCC_TRADITIONAL
 AC_TYPE_SIGNAL
 
 dnl find out what to use at the end of a signal function
@@ -413,9 +604,10 @@ main()
 		AC_DEFINE(BAD_GETCWD),
 	AC_MSG_ERROR(failed to compile test program))
 
-AC_CHECK_FUNCS(sigset getcwd getwd select strcspn strtol setsid setpgid)
-AC_CHECK_FUNCS(tgetent memset strerror fchown fsync fchdir lstat)
-AC_CHECK_FUNCS(setenv putenv gettimeofday getpwuid getpwnam qsort)
+AC_CHECK_FUNCS(bcmp fchdir fchown fsync getcwd getpwnam getpwuid gettimeofday \
+	getwd lstat memcmp memset opendir putenv qsort select setenv setpgid \
+	setsid sigset strcasecmp strerror strftime stricmp strncasecmp \
+	strnicmp strpbrk strtol tgetent utime utimes)
 
 dnl fstatfs() can take 2 to 4 arguments, try to use st_blksize if possible
 AC_MSG_CHECKING(for st_blksize)
@@ -462,43 +654,39 @@ AC_TRY_RUN([#define bcopy(s,d,l) memmove(d,s,l) $bcopy_test_prog],
  AC_DEFINE(USEMEMMOVE) AC_MSG_RESULT(memmove does),
 AC_TRY_RUN([$bcopy_test_prog],
  AC_DEFINE(USEBCOPY) AC_MSG_RESULT(bcopy does),
-AC_TRY_RUN([#define bcopy(s,d,l) memcpy(d,s,l)  $bcopy_test_prog],
+AC_TRY_RUN([#define bcopy(s,d,l) memcpy(d,s,l) $bcopy_test_prog],
  AC_DEFINE(USEMEMCPY) AC_MSG_RESULT(memcpy does), AC_MSG_RESULT(no),
   AC_MSG_ERROR(failed to compile test program)),
-  AC_MSG_ERROR(failed to compile test program)), 
-  AC_MSG_ERROR(failed to compile test program)) 
+  AC_MSG_ERROR(failed to compile test program)),
+  AC_MSG_ERROR(failed to compile test program))
 
 dnl Check how we can run ctags
 dnl -t for typedefs (many ctags have this)
 dnl -s for static functions (Elvis ctags only?)
 dnl -v for variables. Dangerous, most ctags take this for 'vgrind style'.
-dnl -i+P to test for Darren Hiebert's ctags (no arguments really needed)
+dnl -i+m to test for Darren Hiebert's ctags
 AC_MSG_CHECKING(how to create tags)
 test -f tags && mv tags tags.save
-(eval etags       /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="etags"
-(eval etags -c    /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="etags -c"
-(eval ctags       /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags"
-(eval ctags -t    /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags -t"
-(eval ctags -ts   /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags -ts"
-(eval ctags -tvs  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags -tvs"
-(eval ctags -i+P  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags -i+P"
+(eval etags	  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="etags"
+(eval etags -c	  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="etags -c"
+(eval ctags	  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags"
+(eval ctags -t	  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags -t"
+(eval ctags -ts   /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags -ts"
+(eval ctags -tvs  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags -tvs"
+(eval ctags -i+m  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && TAGPRG="ctags -i+m"
 test -f tags.save && mv tags.save tags
-AC_MSG_RESULT($CTAGS) AC_SUBST(CTAGS)
+AC_MSG_RESULT($TAGPRG) AC_SUBST(TAGPRG)
 
-dnl Check if PREFIX/share exists
-dnl unfortunately prefix may not be set here yet
-AC_MSG_CHECKING(for default location to put help files)
-if test "x$prefix" = xNONE; then
-   tt=$ac_default_prefix
-else
-   tt=$prefix
-fi
-if test -d "$tt""/share"; then
-   HELPDIR="/share"
-else
-   HELPDIR="/lib"
-fi
-AC_MSG_RESULT("$tt""$HELPDIR") AC_SUBST(HELPDIR)
+dnl Check for BeOS, which needs an extra source file
+AC_MSG_CHECKING(for BeOS)
+case `uname` in
+    BeOS)	OS_EXTRA_SRC=os_beos.c; OS_EXTRA_OBJ=os_beos.o
+		AC_MSG_RESULT(yes);;
+    *)		OS_EXTRA_SRC=""; OS_EXTRA_OBJ=""
+		AC_MSG_RESULT(no);;
+esac
+AC_SUBST(OS_EXTRA_SRC)
+AC_SUBST(OS_EXTRA_OBJ)
 
 dnl write output files
 AC_OUTPUT(config.mk)

@@ -10,7 +10,28 @@ importantly, the defaults are so well thought out that you really dont have to
 change anything!!  Words cannot express my amazement and gratitude to the
 creators of VIM.  Keep it up.  (Vikas, USA)
 
+I wonder how long it will be before people will refer to other Vi editors as
+Vim clones?  (Darren Hiebert)
+
+I read about [auto-positioning-in-file-based-on-the-errors-from-make] in one
+of those "Perfect Programmer's Editor" threads and was delighted to discover
+that VIM already supports it.  (Brendan Macmillan, Australia)
+
+I think from now on "vi" should be called "Vim Imitation", not the other way
+around.  (Rungun Ramanathan)
+
+Whenever I move to a new computing platform, the first thing I do is to port
+Vim.  Lately, I am simply stunned by its ease of compilation using the
+configure facility.  (A.M. Sabuncu, Turkey)
+
 The options are really excellent and very powerful. (Anish Maharaj)
+
+I just wanted to take this opportunity to let you know that VIM 5 ROCKS!
+Syntax highlighting: how did I survive without it?!  Thank you for creating
+mankind's best editor!  (Mun Johl, USA)
+
+Thanks again for VIM.  I use it every day on Linux. (Eric Foster-Johnson,
+author of the book "UNIX Programming Tools")
 
 The BEST EDITOR EVER (Stuart Woolford)
 
@@ -19,10 +40,21 @@ can honestly say that I couldn't live with anything less anymore.  My
 productivity has easily doubled compared to what it was when I used vi.
 (Sitaram Chamarty)
 
+I luv vim.  It is incredible.  I'm naming my first-born Vimberly.  (Jose
+Unpingco, USA)
+
 Hint:  "VIM" is "vi improved" - much better! (Sven Guckes, Germany)
+
+I use VIM every day.  I spend more time in VIM than in any other program...
+It's the best vi clone there is.  I think it's great.  (Craig Sanders,
+Australia)
 
 I strongly advise using VIM--its infinite undo/redo saved me much grief.
 (Terry Brown)
+
+Thanks very much for writing what in my opinion is the finest text editor on
+the planet.  If I were to get another cat, I would name it "Vim".
+(Bob Sheehan, USA)
 
 I typed :set all and the screen FILLED up with options.  A whole screen of
 things to be set and unset.  I saw some of my old friends like wrapmargin,
@@ -50,6 +82,10 @@ C++, HTML what ever. (Tim Allwine)
 
 I discovered VIM after years of struggling with the original vi, and I just
 can't live without it any more.  (Emmanuel Mogenet, USA)
+
+Emacs has not a bit of chance to survive so long as VIM is around.  Besides,
+it also has the most detailed software documentation I have ever seen---much
+better than most commercial software!  (Leiming Qian)
 
 This version of VIM will just blow people apart when they discover just how
 fantastic it is! (Tony Nugent, Australia)
@@ -100,6 +136,8 @@ VIM is by far the best editor that I have used in a long time, and I have
 looked at just about every thing that is available for every platform that I
 use.  VIM is the best on all of them.  (Guy L. Oliver)
 
+VIM is the greatest editor since the stone chisel.  (Jose Unpingco, USA)
+
 I would like to say that with VIM I am finally making the 'emacs to vi'
 transition - as an Editor it is so much better in many ways: keyboard layout,
 memory usage, text alteration to name 3. (Mark Adam)
@@ -118,13 +156,13 @@ Eccettuato, Italy)
 
 
 In summary:
-     __     ___             _       _   _  ___ _____ 
+     __     ___             _       _   _  ___ _____
      \ \   / (_)_ __ ___   (_)___  | | | |/ _ \_   _|
-      \ \ / /| | '_ ` _ \  | / __| | |_| | | | || |  
-       \ V / | | | | | | | | \__ \ |  _  | |_| || |  
-        \_/  |_|_| |_| |_| |_|___/ |_| |_|\___/ |_|  
-             ____ _____ _   _ _____ _____ _ _ 
+      \ \ / /| | '_ ` _ \  | / __| | |_| | | | || |
+       \ V / | | | | | | | | \__ \ |  _  | |_| || |
+        \_/  |_|_| |_| |_| |_|___/ |_| |_|\___/ |_|
+             ____ _____ _   _ _____ _____ _ _
             / ___|_   _| | | |  ___|  ___| | |
             \___ \ | | | | | | |_  | |_  | | |
              ___) || | | |_| |  _| |  _| |_|_|
-            |____/ |_|  \___/|_|   |_|   (_|_)        (Tony Nugent, Australia)
+	    |____/ |_|  \___/|_|   |_|   (_|_)        (Tony Nugent, Australia)

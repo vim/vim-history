@@ -28,36 +28,36 @@ OPTIONS
        ter is in its place), results are sent to standard output.
 
        Note that a "lazy" parser is used which does not check for
-       more than the first letter, unless the option is  followed
-       by  a parameter.  Spaces between an option and a following
-       parameter is optional, and in that case the long  name  is
-       known to make equivalent -c8, -c 8, -cols 8, and -cols8.
+       more than the first option letter, unless  the  option  is
+       followed  by  a parameter.  Spaces between a single option
+       letter and its  parameter  are  optional.   Parameters  to
+       options  can be specified in decimal, hexadecimal or octal
+       notation.  Thus-c8, -c 8, -c  010  and  -cols  8  are  all
+       equivalent.
 
 
-       -a -autoskip
+       -a | -autoskip
               toggle  autoskip:  A single '*' replaces nul-lines.
               Default off.
 
        -c cols | -cols cols
               format <cols> octets per line. Default 16 (-i:  12,
-              -ps: 30). Max 64.
+              -ps: 30). Max 256.
 
-       -h -help
+       -E | -EBCDIC
+              Change the character encoding in the righthand col-
+              umn from ASCII to EBCDIC.  This does not change the
+              hexadecimal  representation. The option is meaning-
+              less in combinations with -r, -p or -i.
+
+       -g bytes | -groupsize bytes
+              seperate the output of every <bytes> bytes (two hex
+              characters  each) by a whitespace.  Specify -g 0 to
+              suppress grouping.  <Bytes> defaults to 2.   Group-
+              ing  does not apply to postscript or include style.
+
+       -h | -help
               print a summary of available commands and exit.  No
-              hex dumping is performed.
-
-       -i -include
-              output in C include file style.
-
-       -l len | -len len
-              stop after <len> octets.
-
-       -p -ps -postscript
-              output in postscript continuous hexdump style.
-
-       -r -revert
-              reverse operation: convert (or patch) hexdump  into
-              binary.
 
 
 
@@ -70,60 +70,60 @@ Manual page for xxd        August 1996                          1
 XXD(1)                                                     XXD(1)
 
 
-       -seek off
+              hex dumping is performed.
+
+       -i | -include
+              output  in  C include file style. A complete static
+              array definition is written (named after the  input
+              file), unless xxd reads from stdin.
+
+       -l len | -len len
+              stop after writing <len> octets.
+
+       -p | -ps | -postscript
+              output in postscript continuous hexdump style.
+
+       -r | -revert
+              reverse  operation: convert (or patch) hexdump into
+              binary.  If not writing to stdout, xxd  writes  its
+              output file without truncating it.
+
+       -seek offset
               When  used after -r : revert with <offset> added to
               file positions found in hexdump.
 
        -s [+][-]seek
-              start at <seek> bytes abs. (or +: rel.) infile off-
-              set.   seek  may  be hex (eg, 0x3f) or decimal (eg,
-              47).  + indicates that the seek is from  the  start
-              of  the input.  - indicates that the seek should be
-              that many characters from the end of the input.
+              start at <seek> bytes abs. (or rel.) infile offset.
+              +  indicates  that the seek is relative to the cur-
+              rent stdin  file  position  (meaningless  when  not
+              reading  from  stdin).   -  indicates that the seek
+              should be that many characters from the end of  the
+              input (or if combined with
+               +  :  before  the  current  stdin  file position).
+              Without -s option, xxd starts at the  current  file
+              position.
 
-       -u     use upper case hex letters (default is lower case).
+       -u     use  upper case hex letters. Default is lower case.
 
-       -v -version
+       -v | -version
               show version string.
 
 CAVEATS
-       xxd  -r  has  some  builtin magic.  The linenumbers at the
-       start of each line matter!
+       xxd -r has some builtin magic while evaluating line number
+       information.   If  the  ouput  file  is seekable, then the
+       linenumbers at the start of each hexdump line may  be  out
+       of  order,  lines may be missing, or overlapping. In these
+       cases xxd will lseek(2) to the next position. If the  out-
+       put  file  is  not  seekable, only gaps are allowed, which
+       will be filled by null-bytes.
 
-       Note that there is a difference between
-       % xxd -i file
-       and
-       % xxd -i < file
+       xxd -r never generates parse errors. Garbage  is  silently
+       skipped.
 
-       xxd -s +seek has some semantic differences, as lseek()  is
-       used  to  "rewind" input.  A '+' makes a difference if the
-       input source is stdin, and if stdin's file position is not
-       at  the  start  of the file by the time xxd is started and
-       given its input.  The following examples may help to clar-
-       ify (or further confuse!)...
-
-       Rewind  stdin before reading; needed because the `cat' has
-       already read to the end of stdin.
-       % sh -c 'cat > plain_copy; xxd -s 0 > hex_copy' < file
-
-       Hexdump from file position 0x480 (=1024+128) onwards.  The
-       `+'  sign  means  "relative to the current position", thus
-       the `128' adds to the 1k where dd left off.
-       % sh -c 'dd of=plain_snippet bs=1k count=1; xxd -s +128  >
-       hex_snippet' < file
-
-       Hexdump from file position 0x100 ( = 1024-768) on.
-       % sh -c 'dd of=plain_snippet bs=1k count=1; xxd -s +-768 >
-       hex_snippet' < file
-
-       However, this is a rare situation and the use  of  `+'  is
-       rarely needed.
-
-EXAMPLES
-       Print  everything  but  the  first  three  lines (hex 0x30
-       bytes) of file
-       % xxd -s 0x30 file
-
+       When  editing  hexdumps,  please  note  that  xxd -r skips
+       everything on the input line after reading enough  columns
+       of hexadecimal data (see option -c). This also means, that
+       changes to the printable ascii  (or  ebcdic)  columns  are
 
 
 
@@ -135,6 +135,43 @@ Manual page for xxd        August 1996                          2
 
 XXD(1)                                                     XXD(1)
 
+
+       always ignored.
+
+       Note the difference between
+       % xxd -i file
+       and
+       % xxd -i < file
+
+       xxd  -s  +seek  may  be  different  from  xxd -s seek , as
+       lseek(2) is used to "rewind" input.  A '+' makes a differ-
+       ence  if  the  input  source is stdin, and if stdin's file
+       position is not at the start of the file by the  time  xxd
+       is  started  and  given its input.  The following examples
+       may help to clarify (or further confuse!)...
+
+       Rewind stdin before reading; needed because the `cat'  has
+       already read to the end of stdin.
+       % sh -c 'cat > plain_copy; xxd -s 0 > hex_copy' < file
+
+       Hexdump from file position 0x480 (=1024+128) onwards.  The
+       `+' sign means "relative to the  current  position",  thus
+       the `128' adds to the 1k where dd left off.
+       %  sh -c 'dd of=plain_snippet bs=1k count=1; xxd -s +128 >
+       hex_snippet' < file
+
+       Hexdump from file position 0x100 ( = 1024-768) on.
+       % sh -c 'dd of=plain_snippet bs=1k count=1; xxd -s +-768 >
+       hex_snippet' < file
+
+       However,  this  is  a rare situation and the use of `+' is
+       rarely needed.  the author prefers to monitor  the  effect
+       of xxd with strace(1) or truss(1), whenever -s is used.
+
+EXAMPLES
+       Print  everything  but  the  first  three  lines (hex 0x30
+       bytes) of file
+       % xxd -s 0x30 file
 
        Print 3 lines (hex 0x30 bytes) from the end of file
        % xxd -s -0x30 file
@@ -153,6 +190,18 @@ XXD(1)                                                     XXD(1)
        octets per line.
        % xxd -l 120 -c 12 xxd.1
        0000000: 2e54 4820 5858 4420 3120 224d  .TH XXD 1 "M
+
+
+
+Manual page for xxd        August 1996                          3
+
+
+
+
+
+XXD(1)                                                     XXD(1)
+
+
        000000c: 616e 7561 6c20 7061 6765 2066  anual page f
        0000018: 6f72 2078 7864 220a 2e5c 220a  or xxd"..\".
        0000024: 2e5c 2220 3231 7374 204d 6179  .\" 21st May
@@ -191,17 +240,6 @@ XXD(1)                                                     XXD(1)
        the file; in effect, the leading bytes are suppressed.
        % echo '010000: 41' | xxd -r -s -0x10000 > file
 
-
-
-Manual page for xxd        August 1996                          3
-
-
-
-
-
-XXD(1)                                                     XXD(1)
-
-
        Use xxd as a filter within an editor  such  as  vim(1)  to
        hexdump a region marked between `a' and `z'.
        :'a,'z!xxd
@@ -215,34 +253,63 @@ XXD(1)                                                     XXD(1)
        line and type:
        !!xxd -r
 
+       Read single characters from a serial line
+       % xxd -c1 < /dev/term/b &
+       % stty < /dev/term/b -echo -opost -isig -icanon min 1
+
+
+
+Manual page for xxd        August 1996                          4
+
+
+
+
+
+XXD(1)                                                     XXD(1)
+
+
+       % echo -n foo > /dev/term/b
+
+
 RETURN VALUES
        The following error values are returned:
 
        0      no errors encountered.
 
-       1      parse error.
+       -1     operation not supported ( xxd -r -i still  impossi-
+              ble).
+
+       1      error while parsing options.
+
+       2      problems with input file.
+
+       3      problems with output file.
+
+       4,5    desired seek position is unreachable.
 
 SEE ALSO
        uuencode(1), uudecode(1), patch(1)
 
 WARNINGS
-       Use entirely at your own risk.
+       The  tools  weirdness  matches  its  creators  brain.  Use
+       entirely at your own risk. Copy files. Trace it. Become  a
+       wizard.
 
-BUGS
-       -seek3 and -skip3 (and others) do not work  (use  a  space
-       between the option and its parameter).
+VERSION
+       This manual page documents xxd version 1.7
 
 AUTHOR
-       (c) 1990-1996 by Juergen Weigert
+       (c) 1990-1997 by Juergen Weigert
        <jnweiger@informatik.uni-erlangen.de>
 
        Distribute freely and credit me,
        make money and share with me,
        lose money and don't ask me.
 
-       Manual page by Tony Nugent
+       Manual page started by Tony Nugent
        <tony@sctnugen.ppp.gu.edu.au> <T.Nugent@sct.gu.edu.au>
-       Small changes by Bram Moolenaar.
+       Small  changes  by  Bram  Moolenaar.   Edited  by  Juergen
+       Weigert.
 
 
 
@@ -258,7 +325,6 @@ AUTHOR
 
 
 
-
-Manual page for xxd        August 1996                          4
+Manual page for xxd        August 1996                          5
 
 

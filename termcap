@@ -65,7 +65,7 @@ AA|amiga|Amiga ANSI:\
 	:so=\E[2m:se=\E[m:us=\E[4m:ue=\E[m:mr=\E[7m:mb=\E[7;2m:me=\E[m:
 
 # Acorn VDU
-# For non-green text, change the ^B in the :cl= line to 
+# For non-green text, change the ^B in the :cl= line to
 # your favourite control code.
 a0|acorn0|Acorn VDU Driver Mode 0:\
 	:cl=^V\200^S^A^B\200\200\200:\

@@ -3,7 +3,7 @@
 .\" 21st May 1996
 .\" Man page author:
 .\"    Tony Nugent <tony@sctnugen.ppp.gu.edu.au> <T.Nugent@sct.gu.edu.au>
-.\"    Changes by Bram Moolenaar <mool@oce.nl>
+.\"    Changes by Bram Moolenaar <Bram@vim.org>
 .SH NAME
 .I xxd
 \- make a hexdump or do the reverse.
@@ -38,43 +38,66 @@ is specified as a
 character, then input is taken from standard input.
 If no
 .I outfile
-is given (or a 
+is given (or a
 .RB \` \- \'
 character is in its place), results are sent to standard output.
 .PP
 Note that a "lazy" parser is used which does not check for more than the first
-letter, unless the option is followed by a parameter.
-Spaces between an option and a following parameter is optional,
-and in that case the long name is known to make equivalent
-\fB\-c8\fR, \fB\-c 8\fR, \fB\-cols 8\fR, and \fB\-cols8\fR.
+option letter, unless the option is followed by a parameter.
+Spaces between a single option letter and its parameter are optional.
+Parameters to options can be specified in decimal, hexadecimal or octal
+notation. 
+.RB Thus \-c8 ,
+.BR "\-c 8" ,
+.B \-c 010
+and
+.B \-cols 8
+are all equivalent.  
 .PP
 .TP
-.I \-a \-autoskip
+.IR \-a " | " \-autoskip
 toggle autoskip: A single '*' replaces nul-lines.  Default off.
 .TP
-\fI\-c cols \fR| \fI\-cols cols
+.IR "\-c cols " | " \-cols cols"
 format
 .RI < cols >
-octets per line. Default 16 (-i: 12, -ps: 30). Max 64.
+octets per line. Default 16 (-i: 12, -ps: 30). Max 256.
 .TP
-.I \-h \-help
+.IR \-E " | " \-EBCDIC
+Change the character encoding in the righthand column from ASCII to EBCDIC.
+This does not change the hexadecimal representation. The option is
+meaningless in combinations with -r, -p or -i.
+.TP
+.IR "\-g bytes " | " \-groupsize bytes"
+seperate the output of every
+.RI < bytes >
+bytes (two hex characters each) by a whitespace.
+Specify 
+.I -g 0
+to suppress grouping. 
+.RI < Bytes "> defaults to " 2 .
+Grouping does not apply to postscript or include style.
+.TP
+.IR \-h " | " \-help
 print a summary of available commands and exit.  No hex dumping is performed.
 .TP
-.I \-i \-include
-output in C include file style.
+.IR \-i " | " \-include
+output in C include file style. A complete static array definition is written
+(named after the input file), unless xxd reads from stdin.
 .TP
-\fI\-l len \fR| \fI\-len len
-stop after
+.IR "\-l len " | " \-len len"
+stop after writing
 .RI  < len >
 octets.
 .TP
-.I \-p \-ps \-postscript
+.IR \-p " | " \-ps " | " \-postscript
 output in postscript continuous hexdump style.
 .TP
-.I \-r \-revert
+.IR \-r " | " \-revert
 reverse operation: convert (or patch) hexdump into binary.
+If not writing to stdout, xxd writes its output file without truncating it.
 .TP
-.I \-seek off
+.I \-seek offset
 When used after
 .I \-r
 : revert with
@@ -82,24 +105,39 @@ When used after
 added to file positions found in hexdump.
 .TP
 .I \-s [\+][\-]seek
-start at <seek> bytes abs. (or +: rel.) infile offset.
-.I seek
-may be hex (eg, 0x3f) or decimal (eg, 47).
-\fI\+ \fRindicates that the seek is from the start of the input.
-\fI\- \fRindicates that the seek should be that many characters from the end of the input.
+start at 
+.RI < seek >
+bytes abs. (or rel.) infile offset.
+\fI\+ \fRindicates that the seek is relative to the current stdin file position
+(meaningless when not reading from stdin).  \fI\- \fRindicates that the seek
+should be that many characters from the end of the input (or if combined with
+\fI \+ \fR: before the current stdin file position).
+Without -s option, xxd starts at the current file position.
 .TP
 .I \-u
-use upper case hex letters (default is lower case).
+use upper case hex letters. Default is lower case.
 .TP
-.I \-v \-version
+.IR \-v " | " \-version
 show version string.
 .SH CAVEATS
 .PP
 .I xxd \-r
-has some builtin magic.
-The linenumbers at the start of each line matter!
+has some builtin magic while evaluating line number information.
+If the ouput file is seekable, then the linenumbers at the start of each
+hexdump line may be out of order, lines may be missing, or overlapping. In
+these cases xxd will lseek(2) to the next position. If the output file is not
+seekable, only gaps are allowed, which will be filled by null-bytes.
 .PP
-Note that there is a difference between
+.I xxd \-r
+never generates parse errors. Garbage is silently skipped.
+.PP
+When editing hexdumps, please note that
+.I xxd \-r
+skips everything on the input line after reading enough columns of hexadecimal
+data (see option \-c). This also means, that changes to the printable ascii (or
+ebcdic) columns are always ignored.
+.PP
+Note the difference between
 .br
 \fI% xxd \-i file\fR
 .br
@@ -108,7 +146,9 @@ and
 \fI% xxd \-i \< file\fR
 .PP
 .I xxd \-s \+seek
-has some semantic differences, as lseek() is used to "rewind" input.  A '+'
+may be different from
+.I xxd \-s seek
+, as lseek(2) is used to "rewind" input.  A '+'
 makes a difference if the input source is stdin, and if stdin's file position
 is not at the start of the file by the time xxd is started and given its input.
 The following examples may help to clarify (or further confuse!)...
@@ -124,11 +164,12 @@ the 1k where dd left off.
 .br
 \fI% sh -c 'dd of=plain_snippet bs=1k count=1; xxd -s +128 > hex_snippet' < file
 .PP
-Hexdump from file position 0x100 ( = 1024-768) on. 
+Hexdump from file position 0x100 ( = 1024-768) on.
 .br
 \fI% sh -c 'dd of=plain_snippet bs=1k count=1; xxd -s +-768 > hex_snippet' < file
 .PP
 However, this is a rare situation and the use of `+' is rarely needed.
+the author prefers to monitor the effect of xxd with strace(1) or truss(1), whenever -s is used.
 .SH EXAMPLES
 .PP
 .br
@@ -230,60 +271,73 @@ Hexdump this file with autoskip.
 *
 .br
 000fffc: 0000 0000 40                   ....A
-.br
-
-.br
+.PP
 Create a 1 byte file containing a single 'A' character.
 The number after '-r -s' adds to the linenumbers found in the file;
 in effect, the leading bytes are suppressed.
 .br
 \fI% echo '010000: 41' | xxd \-r \-s \-0x10000 \> file\fR
 .PP
-.br
 Use xxd as a filter within an editor such as
 .B vim(1)
 to hexdump a region marked between `a' and `z'.
 .br
 \fI:'a,'z!xxd\fR
-.br
-
-.br
+.PP
 Use xxd as a filter within an editor such as
 .B vim(1)
 to recover a binary hexdump marked between `a' and `z'.
 .br
 \fI:'a,'z!xxd -r\fR
-.br
-
-.br
+.PP
 Use xxd as a filter within an editor such as
 .B vim(1)
 to recover one line of a hexdump.  Move the cursor over the line and type:
 .br
 \fI!!xxd -r\fR
+.PP
+Read single characters from a serial line
 .br
+\fI% xxd -c1 < /dev/term/b &\fR
+.br
+\fI% stty < /dev/term/b -echo -opost -isig -icanon min 1\fR
+.br
+\fI% echo -n foo > /dev/term/b\fR
+.PP
 .SH "RETURN VALUES"
 The following error values are returned:
 .TP
 0
 no errors encountered.
 .TP
+\-1
+operation not supported (
+.I xxd \-r \-i
+still impossible).
+.TP
 1
-parse error.
+error while parsing options.
+.TP
+2
+problems with input file.
+.TP
+3
+problems with output file.
+.TP
+4,5
+desired seek position is unreachable.
 .SH "SEE ALSO"
 uuencode(1), uudecode(1), patch(1)
 .br
 .SH WARNINGS
-Use entirely at your own risk.
+The tools weirdness matches its creators brain.
+Use entirely at your own risk. Copy files. Trace it. Become a wizard. 
 .br
-.SH BUGS
-.br
-\fB\-seek3\fR and \fB\-skip3\fR (and others) do not work
-(use a space between the option and its parameter).
-.br
+.SH VERSION
+This manual page documents xxd version 1.7
 .SH AUTHOR
 .br
-(c) 1990-1996 by Juergen Weigert
+(c) 1990-1997 by Juergen Weigert
 .br
 <jnweiger@informatik.uni-erlangen.de>
 .LP
@@ -293,9 +347,10 @@ make money and share with me,
 .br
 lose money and don't ask me.
 .PP
-Manual page by Tony Nugent
+Manual page started by Tony Nugent
 .br
 <tony@sctnugen.ppp.gu.edu.au> <T.Nugent@sct.gu.edu.au>
 .br
 Small changes by Bram Moolenaar.
+Edited by Juergen Weigert.
 .PP

@@ -1,4 +1,4 @@
-/* vi:set ts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4:
  * NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE
  *
  * This is NOT the original regular expression code as written by
@@ -10,25 +10,22 @@
  * NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE
  *
  * Definitions etc. for regexp(3) routines.
- *
- * Caveat:	this is V8 regexp(3) [actually, a reimplementation thereof],
- * not the System V one.
  */
 
 #ifndef _REGEXP_H
 #define _REGEXP_H
 
 #define NSUBEXP  10
-typedef struct regexp
+typedef struct
 {
-	char_u		   *startp[NSUBEXP];
-	char_u		   *endp[NSUBEXP];
-	char_u			regstart;	/* Internal use only. */
-	char_u			reganch;	/* Internal use only. */
-	char_u		   *regmust;	/* Internal use only. */
-	int 			regmlen;	/* Internal use only. */
-	char_u			program[1]; /* Unwarranted chumminess with compiler. */
-} regexp;
+    char_u	   *startp[NSUBEXP];
+    char_u	   *endp[NSUBEXP];
+    char_u	    regstart;	/* Internal use only. */
+    char_u	    reganch;	/* Internal use only. */
+    char_u	   *regmust;	/* Internal use only. */
+    int		    regmlen;	/* Internal use only. */
+    char_u	    program[1]; /* Unwarranted chumminess with compiler. */
+} vim_regexp;
 
 /*
  * The first byte of the regexp internal "program" is actually this magic
