@@ -1724,7 +1724,7 @@ installmacros: $(MACROSOURCE) $(DEST_VIM) $(DEST_RT) $(DEST_MACRO)
 	chmod $(FILEMOD) `find $(DEST_MACRO) -type f -print`
 	chmod $(SCRIPTMOD) $(DEST_MACRO)/less.sh
 # When using CVS some CVS directories might have been copied.
-	cvs=`find $(DEST_MACRO) -name CVS -print`; \
+	cvs=`find $(DEST_MACRO) -name CVS -or -name AAPDIR -print`; \
 	      if test -n "$$cvs"; then \
 		 rm -rf $$cvs; \
 	      fi
@@ -1751,7 +1751,7 @@ installtools: $(TOOLS) $(DESTDIR)$(exec_prefix) $(DEST_BIN) $(DEST_MAN) \
 # install the runtime tools
 	$(INSTALL_DATA_R) $(TOOLSSOURCE)/* $(DEST_TOOLS)
 # When using CVS some CVS directories might have been copied.
-	cvs=`find $(DEST_TOOLS) -name CVS -print`; \
+	cvs=`find $(DEST_TOOLS) -name CVS -or -name AAPDIR -print`; \
 	      if test -n "$$cvs"; then \
 		 rm -rf $$cvs; \
 	      fi
