@@ -5918,6 +5918,11 @@ ins_ctrl_g()
 	case 'j': ins_down(TRUE);
 		  break;
 
+        /* CTRL-G u: start new undoable edit */
+	case 'u': u_sync();
+		  ins_need_undo = TRUE;
+		  break;
+
 	/* Unknown CTRL-G command, reserved for future expansion. */
 	default:  vim_beep();
     }
