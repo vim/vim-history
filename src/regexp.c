@@ -701,7 +701,6 @@ static int	read_limits __ARGS((long *, long *));
 static void	regtail __ARGS((char_u *, char_u *));
 static void	regoptail __ARGS((char_u *, char_u *));
 
-#if defined(FEAT_SEARCH_EXTRA) || defined(PROTO)
 /*
  * Return TRUE if compiled regular expression "prog" can match a line break.
  */
@@ -711,7 +710,6 @@ re_multiline(prog)
 {
     return (prog->regflags & RF_HASNL);
 }
-#endif
 
 /*
  * Return TRUE if compiled regular expression "prog" looks before the start
