@@ -1545,7 +1545,7 @@ utf_ptr2len_check_len(p, size)
 	return 1;
     len = utf8len_tab[*p];
     if (len > size)
-	return 1;	/* Probably illegal byte sequence. */
+	return len;	/* incomplete byte sequence. */
     for (i = 1; i < len; ++i)
 	if ((p[i] & 0xc0) != 0x80)
 	    return 1;
@@ -1600,6 +1600,7 @@ utfc_ptr2len_check(p)
 /*
  * Return the number of bytes the UTF-8 encoding of the character at "p[size]"
  * takes.  This includes following composing characters.
+ * Returns 1 for an illegal char or an incomplete byte sequence.
  */
     int
 utfc_ptr2len_check_len(p, size)
@@ -1619,8 +1620,8 @@ utfc_ptr2len_check_len(p, size)
     /* Skip over first UTF-8 char, stopping at a NUL byte. */
     len = utf_ptr2len_check_len(p, size);
 
-    /* Check for illegal byte. */
-    if (len == 1 && p[0] >= 0x80)
+    /* Check for illegal byte and incomplete byte sequence. */
+    if ((len == 1 && p[0] >= 0x80) || len > size)
 	return 1;
 
     /*
