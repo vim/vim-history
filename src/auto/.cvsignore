@@ -5,3 +5,4 @@ osdef.h
 pathdef.c
 link.sed
 link.log
+.arch-ids
