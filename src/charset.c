@@ -1352,7 +1352,7 @@ getvvcol(wp, pos, start, cursor, end)
 	ptr = ml_get_buf(wp->w_buffer, pos->lnum, FALSE);
 	if (pos->col < STRLEN(ptr))
 	{
-	    int c = (*mb_ptr2char)(ptr);
+	    int c = (*mb_ptr2char)(ptr + pos->col);
 
 	    if (c != TAB && vim_isprintc(c))
 	    {
