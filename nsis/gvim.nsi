@@ -1,5 +1,6 @@
 # NSIS file to create a self-installing exe for Vim.
-# Last modification:	2001 Jul 21
+# It needs NSIS version 1.59 or later.
+# Last modification:	2001 Oct 31
 
 # WARNING: if you make changes to this script, look out for $0 to be valid,
 # because this line is very dangerous:		RMDir /r $0
@@ -11,15 +12,18 @@
 # comment the next line if you do not want to add Native Language Support
 !define HAVE_NLS
 
-Name "Vim 6.0"
-OutFile gVim60.exe
+!define VER_MINOR 0
+!define VER_MAJOR 6
+
+Name "Vim ${VER_MAJOR}.${VER_MINOR}"
+OutFile gvim${VER_MAJOR}${VER_MINOR}.exe
 CRCCheck on
-ComponentText "This will install Vim 6.0 on your computer."
-DirText "Choose a directory to install Vim (should end in 'vim')"
+ComponentText "This will install Vim ${VER_MAJOR}.${VER_MINOR} on your computer."
+DirText "Choose a directory to install Vim (must end in 'vim')"
 SetDatablockOptimize on
 Icon icons\vim_16c.ico
-UninstallText "This will uninstall Vim 6.0 from your system."
-UninstallExeName vim60\uninstall-gui.exe
+UninstallText "This will uninstall Vim ${VER_MAJOR}.${VER_MINOR} from your system."
+UninstallExeName vim${VER_MAJOR}${VER_MINOR}\uninstall-gui.exe
 UninstallIcon icons\vim_uninst_16c.ico
 BGGradient 004000 008200 ffffff
 LicenseText "You should read the following before installing:"
@@ -28,6 +32,8 @@ LicenseData ..\doc\uganda.nsis.txt
 !ifdef HAVE_UPX
   !packhdr temp.dat "upx --best --compress-icons=1 temp.dat"
 !endif
+# This add '\vim' to the user choice automagically.
+InstallDir "C:\vim"
 
 # Types of installs we can perform:
 InstType Typical
@@ -41,7 +47,8 @@ SilentInstall normal
 
 Function .onInit
   MessageBox MB_YESNO|MB_ICONQUESTION \
-	"This will install Vim 6.0 on your computer.$\n Continue?" IDYES NoAbort
+	"This will install Vim ${VER_MAJOR}.${VER_MINOR} on your computer.$\n Continue?" \
+	IDYES NoAbort
 
   Abort ; causes installer to quit.
   NoAbort:
@@ -77,7 +84,7 @@ Function .onInit
 # $1 - holds the parameters to be passed to install.exe.  Starts with OLE
 #      registration (since a non-OLE gvim will not complain, and we want to
 #      always register an OLE gvim).
-  StrCpy $0 "$INSTDIR\vim60"
+  StrCpy $0 "$INSTDIR\vim${VER_MAJOR}${VER_MINOR}"
   StrCpy $1 "-register-OLE"
 
 FunctionEnd
@@ -88,11 +95,10 @@ Function .onUserAbort
   NoCancelAbort:
 FunctionEnd
 
-# Only enable the "Next" button if the install directory is OK.
+# Only enable the "Install" button if the install directory ends in "vim".
 Function .onVerifyInstDir
-  StrCmp $INSTDIR $PROGRAMFILES PathBad 0
-  StrCmp $INSTDIR $WINDIR PathBad PathGood
-    PathBad:
+  StrCpy $0 $INSTDIR 3 -3
+  StrCmp $0 "vim" PathGood
     Abort
 
   PathGood:
@@ -111,7 +117,26 @@ Function .onInstFailed
 FunctionEnd
 
 Function un.onUnInstSuccess
-  MessageBox MB_OK|MB_ICONINFORMATION "Vim 6.0 has been (partly) removed from your system"
+  MessageBox MB_OK|MB_ICONINFORMATION \
+  "Vim ${VER_MAJOR}.${VER_MINOR} has been (partly) removed from your system"
+FunctionEnd
+
+Function un.GetParent 
+  Exch $0 ; old $0 is on top of stack
+  Push $1
+  Push $2
+  StrCpy $1 -1
+  loop:
+    StrCpy $2 $0 1 $1
+    StrCmp $2 "" exit
+    StrCmp $2 "\" exit
+    IntOp $1 $1 - 1
+  Goto loop
+  exit:
+    StrCpy $0 $0 $1
+    Pop $2
+    Pop $1
+    Exch $0 ; put $0 on top of stack, restore $0 to original value
 FunctionEnd
 
 ##########################################################
@@ -119,7 +144,7 @@ Section "Vim executables and runtime files"
 SectionIn 1,2,3
 
 # we need also this here if the user changes the instdir
-StrCpy $0 "$INSTDIR\vim60"
+StrCpy $0 "$INSTDIR\vim${VER_MAJOR}${VER_MINOR}"
 
 SetOutPath $0
 File ..\src\gvim.exe
@@ -127,6 +152,7 @@ File ..\src\install.exe
 File ..\src\uninstal.exe
 File ..\src\vimrun.exe
 File ..\src\xxd\xxd.exe
+File ..\..\diff.exe
 File ..\vimtutor.bat
 File ..\README.txt
 File ..\uninstal.txt
@@ -295,19 +321,31 @@ RMDir /r $0
 IfErrors ErrorMess NoErrorMess
   ErrorMess:
     MessageBox MB_OK|MB_ICONEXCLAMATION \
-      "Some files in $0 have not been deleted! You must do it manually."
+      "Some files in $0 have not been deleted!$\nYou must do it manually."
   NoErrorMess:
 
 NoRemoveExes:
 
-GetParentDir $0 $INSTDIR
+# get the parent dir of the installation
+Push $INSTDIR
+Call un.GetParent
+Pop $0
+
+StrCpy $1 $0
 
 # if a plugin dir was created at installation ask the user to remove it
-IfFileExists $0\vimfiles 0 NoRemove
+# first look in the root of the installation then in HOME
+IfFileExists $1\vimfiles AskRemove 0
+    ReadEnvStr $1 "HOME"
+    StrCmp $1 "" NoRemove 0
+  
+    IfFileExists $1\vimfiles 0 NoRemove
+  
+  AskRemove:
     MessageBox MB_YESNO|MB_ICONQUESTION \
-      "Remove all files in your $0\vimfiles directory? \
+      "Remove all files in your $1\vimfiles directory? \
       $\nIf you have created something there that you want to keep, click No" IDNO Fin
-    RMDir /r $0\vimfiles
+    RMDir /r $1\vimfiles
   NoRemove:
 
 # ask the user if the Vim root dir must be removed

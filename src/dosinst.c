@@ -1047,7 +1047,7 @@ init_bat_choices(void)
     static void
 install_vimrc(int idx)
 {
-    FILE	*fd;
+    FILE	*fd, *tfd;
     char	*fname;
 
     /* If an old vimrc file exists, overwrite it.
@@ -1092,6 +1092,20 @@ install_vimrc(int idx)
 	case mouse_mswin:
 		    fprintf(fd, "behave mswin\n");
 		    break;
+    }
+    if ((tfd = fopen("diff.exe", "r")) != NULL)
+    {
+	/* Use the diff.exe that comes with the self-extracting gvim.exe. */
+	fclose(tfd);
+	fprintf(fd, "\n");
+	fprintf(fd, "set diffexpr=MyDiff()\n");
+	fprintf(fd, "function MyDiff()\n");
+	fprintf(fd, "  let opt = ''\n");
+	fprintf(fd, "  if &diffopt =~ 'icase' | let opt = opt . '-i ' | endif\n");
+	fprintf(fd, "  if &diffopt =~ 'iwhite' | let opt = opt . '-b ' | endif\n");
+	fprintf(fd, "  silent execute '!%s\\diff -a ' . opt . v:fname_in . ' ' . v:fname_new . ' > ' . v:fname_out\n", installdir);
+	fprintf(fd, "endfunction\n");
+	fprintf(fd, "\n");
     }
     fclose(fd);
     printf("%s has been written\n", fname);
