@@ -45,7 +45,7 @@ void serverInitMessaging __ARGS((void));
 void serverSetName __ARGS((char_u *name));
 char_u *serverGetVimNames __ARGS((void));
 int serverSendReply __ARGS((char_u *name, char_u *reply));
-int serverSendToVim __ARGS((char_u *name, char_u *cmd, char_u **result, void *ptarget, int asExpr));
+int serverSendToVim __ARGS((char_u *name, char_u *cmd, char_u **result, void *ptarget, int asExpr, int silent));
 void serverForeground __ARGS((char_u *name));
 char_u *serverGetReply __ARGS((HWND server, int *expr_res, int remove, int wait));
 void serverProcessPendingMessages __ARGS((void));

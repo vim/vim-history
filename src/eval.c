@@ -5662,12 +5662,16 @@ remote_common(argvars, retvar, expr)
     server_name = get_var_string(&argvars[0]);
     keys = get_var_string_buf(&argvars[1], buf);
 # ifdef WIN32
-    if (serverSendToVim(server_name, keys, &r, &w, expr) < 0)
+    if (serverSendToVim(server_name, keys, &r, &w, expr, TRUE) < 0)
 # else
-    if (serverSendToVim(X_DISPLAY, server_name, keys, &r, &w, expr, 0) < 0)
+    if (serverSendToVim(X_DISPLAY, server_name, keys, &r, &w, expr, 0, TRUE)
+									  < 0)
 # endif
     {
-	EMSG2(_("E241: Unable to send to %s"), server_name);
+	if (r != NULL)
+	    EMSG(r);		/* sending worked but evaluation failed */
+	else
+	    EMSG2(_("E241: Unable to send to %s"), server_name);
 	return;
     }
 
