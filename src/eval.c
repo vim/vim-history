@@ -2944,6 +2944,11 @@ get_buf_var(avar)
 
     p_magic = save_magic;
     p_cpo = save_cpo;
+
+    /* If not found, try expanding the name, like done for bufexists(). */
+    if (buf == NULL)
+	buf = find_buffer(avar);
+
     return buf;
 }
 
