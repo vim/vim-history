@@ -1645,7 +1645,11 @@ win_update(wp)
 		    && wp->w_lines[idx].wl_lnum == lnum
 		    && lnum > wp->w_topline
 		    && !(dy_flags & DY_LASTLINE)
-		    && srow + wp->w_lines[idx].wl_size > wp->w_height)
+		    && srow + wp->w_lines[idx].wl_size > wp->w_height
+#ifdef FEAT_DIFF
+		    && diff_check_fill(wp, lnum) == 0
+#endif
+		    )
 	    {
 		/* This line is not going to fit.  Don't draw anything here,
 		 * will draw "@  " lines below. */
