@@ -467,7 +467,10 @@ gui_init()
 #endif
 	    gui_init_font(*p_guifont == NUL ? hl_get_font_name()
 						  : p_guifont, FALSE) == FAIL)
+    {
+	EMSG(_("E665: Cannot start GUI, no valid font found"));
 	goto error2;
+    }
 #ifdef FEAT_MBYTE
     if (gui_get_wide_font() == FAIL)
 	EMSG(_("E231: 'guifontwide' invalid"));
