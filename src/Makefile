@@ -775,7 +775,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60q
+VIMRTDIR = /vim60r
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -1698,6 +1698,7 @@ shadow:	runtime pixmaps
 	cd $(SHADOWDIR); rm -f auto/link.sed
 	cp Makefile configure $(SHADOWDIR)
 	cp -f config.mk.dist $(SHADOWDIR)/auto/config.mk
+	cp -f config.mk.dist $(SHADOWDIR)
 	mkdir $(SHADOWDIR)/xxd
 	cd $(SHADOWDIR)/xxd; ln -s ../../xxd/*.[ch] ../../xxd/Make* .
 	mkdir $(SHADOWDIR)/testdir
@@ -2161,8 +2162,7 @@ objects/hangulin.o: hangulin.c vim.h auto/config.h feature.h os_unix.h \
  gui.h globals.h farsi.h option.h ex_cmds.h proto.h
 objects/if_perl.o: auto/if_perl.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h globals.h farsi.h option.h ex_cmds.h proto.h \
- /usr/libdata/perl/5.00503/mach/CORE/patchlevel.h
+ gui.h globals.h farsi.h option.h ex_cmds.h proto.h
 objects/if_perlsfio.o: if_perlsfio.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h globals.h farsi.h option.h ex_cmds.h proto.h

@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Dec 10
+" Last Change:	2000 Dec 23
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -651,6 +651,8 @@ SynMenu CD.CUPL:cupl
 SynMenu CD.CUPL\ simulation:cuplsim
 SynMenu CD.CVS\ commit:cvs
 SynMenu CD.CWEB:cweb
+SynMenu CD.Debian.Debian\ ChangeLog:debchangelog
+SynMenu CD.Debian.Debian\ Control:debcontrol
 SynMenu CD.Diff:diff
 SynMenu CD.Digital\ Command\ Lang:dcl
 SynMenu CD.Diva\ (with\ SKILL):diva

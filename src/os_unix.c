@@ -1045,9 +1045,14 @@ get_x11_windis()
 #define XD_GUI	 2	/* x11_display used from gui.dpy */
 #define XD_XTERM 3	/* x11_display used from xterm_dpy */
     static int	    x11_display_from = XD_NONE;
+    static int	    did_set_error_handler = FALSE;
 
-    /* X just exits if it finds an error otherwise! */
-    XSetErrorHandler(x_error_handler);
+    if (!did_set_error_handler)
+    {
+	/* X just exits if it finds an error otherwise! */
+	(void)XSetErrorHandler(x_error_handler);
+	did_set_error_handler = TRUE;
+    }
 
 #if defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK)
     if (gui.in_use)
@@ -1489,19 +1494,6 @@ vim_is_xterm(name)
 		|| STRCMP(name, "builtin_xterm") == 0);
 }
 
-#if defined(FEAT_MOUSE_DEC) || defined(PROTO)
-/*
- * Return non-zero when using a DEC mouse, according to 'ttymouse'.
- */
-    int
-use_dec_mouse()
-{
-    if (STRNICMP(p_ttym, "dec", 3) == 0)
-	return 1;
-    return 0;
-}
-#endif
-
 #if defined(FEAT_MOUSE) || defined(PROTO)
 /*
  * Return non-zero when using an xterm mouse, according to 'ttymouse'.
@@ -1511,12 +1503,10 @@ use_dec_mouse()
     int
 use_xterm_mouse()
 {
-    if (STRNICMP(p_ttym, "xterm", 5) == 0)
-    {
-	if (isdigit(p_ttym[5]))
-	    return atoi((char *)&p_ttym[5]);
+    if (ttym_flags == TTYM_XTERM2)
+	return 2;
+    if (ttym_flags == TTYM_XTERM)
 	return 1;
-    }
     return 0;
 }
 #endif
@@ -1664,7 +1654,7 @@ mch_dirname(buf, len)
 #endif
 }
 
-#if defined(__EMX__) || defined(PROTO)
+#if defined(OS2) || defined(PROTO)
 /*
  * Replace all slashes by backslashes.
  * When 'shellslash' set do it the other way around.
@@ -1704,10 +1694,6 @@ mch_FullName(fname, buf, len, force)
     char_u	olddir[MAXPATHL];
     char_u	*p;
     int		retval = OK;
-
-    *buf = NUL;
-    if (fname == NULL)	/* always fail */
-	return FAIL;
 
     /* expand it if forced or not an absolute path */
     if (force || !mch_isFullName(fname))
@@ -1819,9 +1805,6 @@ mch_FullName(fname, buf, len, force)
 	return FAIL;
 
     STRCAT(buf, fname);
-#ifdef OS2
-    slash_adjust(buf);
-#endif
     return OK;
 }
 
@@ -2254,7 +2237,7 @@ mch_setmouse(on)
     }
 
 # ifdef FEAT_MOUSE_DEC
-    else if (use_dec_mouse())
+    else if (ttym_flags == TTYM_DEC)
     {
 	if (on)	/* enable mouse events */
 	    out_str_nf((char_u *)"\033[1;2'z\033[1;3'{");
@@ -4497,14 +4480,16 @@ setup_xterm_clip()
     open_app_context();
     if (app_context != NULL && xterm_Shell == (Widget)0)
     {
+	int (*oldhandler)();
+
 	/* Ignore X errors while opening the display */
-	XSetErrorHandler(x_error_check);
+	oldhandler = XSetErrorHandler(x_error_check);
 
 	xterm_dpy = XtOpenDisplay(app_context, xterm_display,
 		"vim_xterm", "Vim_xterm", NULL, 0, &z, &strp);
 
 	/* Now handle X errors normally. */
-	XSetErrorHandler(x_error_handler);
+	(void)XSetErrorHandler(oldhandler);
 
 	if (xterm_dpy == NULL)
 	    return;

@@ -21,7 +21,7 @@ int get_option_value __ARGS((char_u *name, long *numval, char_u **stringval));
 void set_option_value __ARGS((char_u *name, long number, char_u *string, int local));
 char_u *get_term_code __ARGS((char_u *tname));
 char_u *get_highlight_default __ARGS((void));
-int makeset __ARGS((FILE *fd));
+int makeset __ARGS((FILE *fd, int opt_flags));
 void clear_termoptions __ARGS((void));
 void set_term_defaults __ARGS((void));
 void comp_col __ARGS((void));

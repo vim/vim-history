@@ -483,8 +483,9 @@
 
 /*
  * +mksession		":mksession" command.
+ *			Requires +windows and +vertsplit.
  */
-#ifdef FEAT_NORMAL
+#if defined(FEAT_NORMAL) && defined(FEAT_WINDOWS) && defined(FEAT_VERTSPLIT)
 # define FEAT_SESSION
 #endif
 
@@ -504,9 +505,12 @@
 /*
  * +multi_byte		Generic multi-byte character handling.  Doesn't work
  *			with 16 bit ints.
+ * 
+ * Disabled for EBCDIC:
+ * Multibyte support doesn't work on OS390 Unix currently. 
  */
 #if defined(FEAT_BIG) && !defined(FEAT_MBYTE) && !defined(WIN16) \
-	&& SIZEOF_INT >= 4
+	&& SIZEOF_INT >= 4 && !defined(EBCDIC)
 # define FEAT_MBYTE
 #endif
 
@@ -702,6 +706,11 @@
  * GVIMRC_FILE		Name of the .gvimrc file in current dir.
  */
 /* #define GVIMRC_FILE	".gvimrc" */
+
+/*
+ * VIEW_FILE		Name of the default ":mkview" file.
+ */
+#define VIEW_FILE	"View.vim"
 
 /*
  * SESSION_FILE		Name of the default ":mksession" file.

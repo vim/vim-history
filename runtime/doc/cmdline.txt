@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0q.  Last change: 2000 Dec 10
+*cmdline.txt*   For Vim version 6.0r.  Last change: 2001 Jan 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -39,7 +39,7 @@ When the command line is getting longer than what fits on the screen, only the
 part that fits will be shown.  The cursor can only move in this visible part,
 thus you cannot edit beyond that.
 
-							*cmdline-history*
+						*cmdline-history* *history*
 The command-lines that you enter are remembered in a history table.  You can
 recall them with the up and down cursor keys.  There are actually four
 history tables:

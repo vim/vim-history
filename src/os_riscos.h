@@ -75,6 +75,9 @@
 #ifndef GVIMRC_FILE
 # define GVIMRC_FILE	"/gvimrc"
 #endif
+#ifndef VIEW_FILE
+# define VIEW_FILE	"/View.vim"
+#endif
 #ifndef SESSION_FILE
 # define SESSION_FILE	"/Session.vim"
 #endif

@@ -2,7 +2,7 @@
 " Language:	HTML
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/html.vim
-" Last Change:  2000 Nov 04
+" Last Change:  2000 Dec 20
 
 " Please check :help html.vim for some comments and a description of the options
 
@@ -83,11 +83,11 @@ syn match htmlSpecialChar "&[^;]\{1,6};"
 
 " Comments (the real ones or the old netscape ones)
 if exists("html_wrong_comments")
-  syn region htmlComment                start=+<!--+    end=+-->+
+  syn region htmlComment                start=+<!--+    end=+--\s*>+
 else
   syn region htmlComment                start=+<!+      end=+>+   contains=htmlCommentPart,htmlCommentError
   syn match  htmlCommentError contained "[^><!]"
-  syn region htmlCommentPart  contained start=+--+      end=+--+  contains=@htmlPreProc
+  syn region htmlCommentPart  contained start=+--+      end=+--\s*+  contains=@htmlPreProc
 endif
 syn region htmlComment                  start=+<!DOCTYPE+ keepend end=+>+
 
@@ -96,7 +96,7 @@ syn region htmlPreProc start=+<!--#+ end=+-->+ contains=htmlPreStmt,htmlPreError
 syn match htmlPreStmt contained "<!--#\(config\|echo\|exec\|fsize\|flastmod\|include\|printenv\|set\|if\|elif\|else\|endif\|geoguide\)\>"
 syn match htmlPreError contained "<!--#\S*"ms=s+4
 syn match htmlPreAttr contained "\w\+=[^"]\S\+" contains=htmlPreProcAttrError,htmlPreProcAttrName
-syn region htmlPreAttr contained start=+\w\+="+ skip=+\\\\\|\\"+ end=+"+ contains=htmlPreProcAttrName,htmlPreProcAttrError keepend
+syn region htmlPreAttr contained start=+\w\+="+ skip=+\\\\\|\\"+ end=+"+ contains=htmlPreProcAttrName keepend
 syn match htmlPreProcAttrError contained "\w\+="he=e-1
 syn match htmlPreProcAttrName contained "\(expr\|errmsg\|sizefmt\|timefmt\|var\|cgi\|cmd\|file\|virtual\|value\)="he=e-1
 

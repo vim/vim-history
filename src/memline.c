@@ -3672,8 +3672,13 @@ findswapname(buf, dirp, old_fname)
 				break;
 			}
 			vim_free(name);
+
 			/* pretend screen didn't scroll, need redraw anyway */
 			msg_scrolled = 0;
+
+			/* If the file was deleted this fname can be used. */
+			if (mch_getperm(fname) < 0)
+			    break;
 		    }
 		    else
 #endif
@@ -3805,11 +3810,11 @@ fnamecmp_ino(fname_c, fname_s, ino_block0)
 	return (ino_c != ino_s);
 
     /*
-     * One of the inode numbers is unknown, try a forced mch_FullName() and
+     * One of the inode numbers is unknown, try a forced vim_FullName() and
      * compare the file names.
      */
-    retval_c = mch_FullName(fname_c, buf_c, MAXPATHL, TRUE);
-    retval_s = mch_FullName(fname_s, buf_s, MAXPATHL, TRUE);
+    retval_c = vim_FullName(fname_c, buf_c, MAXPATHL, TRUE);
+    retval_s = vim_FullName(fname_s, buf_s, MAXPATHL, TRUE);
     if (retval_c == OK && retval_s == OK)
 	return (STRCMP(buf_c, buf_s) != 0);
 

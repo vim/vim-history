@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0q.  Last change: 2000 Dec 10
+*insert.txt*    For Vim version 6.0r.  Last change: 2000 Dec 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -97,7 +97,7 @@ CTRL-K {char1} [char2]
 CTRL-N		Find next keyword (see |i_CTRL-N|).  {not in Vi}
 CTRL-P		Find previous keyword (see |i_CTRL-P|).  {not in Vi}
 
-CTRL-R {0-9a-z"%#:.-=}				*i_CTRL-R* *i_<C-R>*
+CTRL-R {0-9a-z"%#*:.-=}				*i_CTRL-R* *i_<C-R>*
 		Insert the contents of a register.  Between typing CTRL-R and
 		the second character, '"' will be displayed to indicate that
 		you are expected to enter the name of a register.
@@ -120,7 +120,7 @@ CTRL-R {0-9a-z"%#:.-=}				*i_CTRL-R* *i_<C-R>*
 				enter an expression (see |expression|)
 		See |registers| about registers.  {not in Vi}
 
-CTRL-R CTRL-R {0-9a-z"%#/:.-=}		*i_CTRL-R_CTRL-R* *i_<C-R>_<C-R>*
+CTRL-R CTRL-R {0-9a-z"%#*/:.-=}		*i_CTRL-R_CTRL-R* *i_<C-R>_<C-R>*
 		Insert the contents of a register.  Works like using a single
 		CTRL-R, but the text is inserted literally, not as if typed.
 		This differs when the register contains characters like <BS>.
@@ -132,7 +132,7 @@ CTRL-R CTRL-R {0-9a-z"%#/:.-=}		*i_CTRL-R_CTRL-R* *i_<C-R>_<C-R>*
 		The '.' register (last inserted text) is still inserted as
 		typed.  {not in Vi}
 
-CTRL-R CTRL-O {0-9a-z"%#/:.-=}		*i_CTRL-R_CTRL-O* *i_<C-R>_<C-O>*
+CTRL-R CTRL-O {0-9a-z"%#*/:.-=}		*i_CTRL-R_CTRL-O* *i_<C-R>_<C-O>*
 		Insert the contents of a register literally and don't
 		auto-indent.  Does the same as pasting with the mouse
 		|<MiddleMouse>|.
@@ -140,7 +140,7 @@ CTRL-R CTRL-O {0-9a-z"%#/:.-=}		*i_CTRL-R_CTRL-O* *i_<C-R>_<C-O>*
 		The '.' register (last inserted text) is still inserted as
 		typed.  {not in Vi}
 
-CTRL-R CTRL-P {0-9a-z"%#/:.-=}		*i_CTRL-R_CTRL-P* *i_<C-R>_<C-P>*
+CTRL-R CTRL-P {0-9a-z"%#*/:.-=}		*i_CTRL-R_CTRL-P* *i_<C-R>_<C-P>*
 		Insert the contents of a register literally and fix the
 		indent, like |[<MiddleMouse>|.
 		Does not replace characters!

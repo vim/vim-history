@@ -99,6 +99,14 @@ static char_u	*tagmatchname = NULL;	/* name of last used tag */
 # define ftell ftello
 #endif
 
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+/*
+ * Tag for preview window is remembered separately, to avoid messing up the
+ * normal tagstack.
+ */
+static taggy_t ptag_entry = {NULL};
+#endif
+
 /*
  * Jump to tag; handling of tag commands and tag stack
  *
@@ -171,19 +179,19 @@ do_tag(tag, type, count, forceit, verbose)
 
     /*
      * Don't add a tag to the tagstack if 'tagstack' has been reset.
-     * Also don't do this for ":ptag".
      */
-    if ((!p_tgst && *tag != NUL)
-#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
-	    || g_do_tagpreview
-#endif
-	    )
+    if ((!p_tgst && *tag != NUL))
     {
 	use_tagstack = FALSE;
     }
     else
     {
-	use_tagstack = TRUE;
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+	if (g_do_tagpreview)
+	    use_tagstack = FALSE;
+	else
+#endif
+	    use_tagstack = TRUE;
 
 	/* new pattern, add to the tag stack */
 	if (*tag && (type == DT_TAG || type == DT_SELECT || type == DT_JUMP
@@ -192,40 +200,67 @@ do_tag(tag, type, count, forceit, verbose)
 #endif
 		    ))
 	{
-	    /*
-	     * If the last used entry is not at the top, delete all tag stack
-	     * entries above it.
-	     */
-	    while (tagstackidx < tagstacklen)
-		vim_free(tagstack[--tagstacklen].tagname);
-
-	    /* if the tagstack is full: remove oldest entry */
-	    if (++tagstacklen > TAGSTACKSIZE)
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+	    if (g_do_tagpreview)
 	    {
-		tagstacklen = TAGSTACKSIZE;
-		vim_free(tagstack[0].tagname);
-		for (i = 1; i < tagstacklen; ++i)
-		    tagstack[i - 1] = tagstack[i];
-		--tagstackidx;
+		if (ptag_entry.tagname != NULL
+			&& STRCMP(ptag_entry.tagname, tag) == 0)
+		{
+		    /* Jumping to same tag: keep the current match, so that
+		     * the CursorHold autocommand example works. */
+		    cur_match = ptag_entry.cur_match;
+		}
+		else
+		{
+		    vim_free(ptag_entry.tagname);
+		    if ((ptag_entry.tagname = vim_strsave(tag)) == NULL)
+			goto end_do_tag;
+		}
 	    }
-
-	    /*
-	     * put the tag name in the tag stack
-	     */
-	    if ((tagstack[tagstackidx].tagname = vim_strsave(tag)) == NULL)
+	    else
+#endif
 	    {
-		curwin->w_tagstacklen = tagstacklen - 1;
-		goto end_do_tag;
+		/*
+		 * If the last used entry is not at the top, delete all tag
+		 * stack entries above it.
+		 */
+		while (tagstackidx < tagstacklen)
+		    vim_free(tagstack[--tagstacklen].tagname);
+
+		/* if the tagstack is full: remove oldest entry */
+		if (++tagstacklen > TAGSTACKSIZE)
+		{
+		    tagstacklen = TAGSTACKSIZE;
+		    vim_free(tagstack[0].tagname);
+		    for (i = 1; i < tagstacklen; ++i)
+			tagstack[i - 1] = tagstack[i];
+		    --tagstackidx;
+		}
+
+		/*
+		 * put the tag name in the tag stack
+		 */
+		if ((tagstack[tagstackidx].tagname = vim_strsave(tag)) == NULL)
+		{
+		    curwin->w_tagstacklen = tagstacklen - 1;
+		    goto end_do_tag;
+		}
+		curwin->w_tagstacklen = tagstacklen;
+
+		save_pos = TRUE;	/* save the cursor position below */
 	    }
-	    curwin->w_tagstacklen = tagstacklen;
 
 	    new_tag = TRUE;
-	    save_pos = TRUE;	/* save the cursor position below */
 	}
 	else
 	{
-	    if (tagstacklen == 0)			/* empty stack */
+	    if (
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+		    g_do_tagpreview ? ptag_entry.tagname == NULL :
+#endif
+		    tagstacklen == 0)
 	    {
+		/* empty stack */
 		EMSG(_(e_tagstack));
 		goto end_do_tag;
 	    }
@@ -283,33 +318,49 @@ do_tag(tag, type, count, forceit, verbose)
 		goto end_do_tag;
 	    }
 
-	    if (type == DT_TAG)		/* go to newer pattern */
+	    if (type == DT_TAG)
 	    {
-		save_pos = TRUE;	/* save the cursor position below */
-		if ((tagstackidx += count - 1) >= tagstacklen)
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+		if (g_do_tagpreview)
+		    cur_match = ptag_entry.cur_match;
+		else
+#endif
 		{
-		    /*
-		     * Beyond the last one, just give an error message and go to
-		     * the last one.  Don't store the cursor postition.
-		     */
-		    tagstackidx = tagstacklen - 1;
-		    EMSG(_(topmsg));
-		    save_pos = FALSE;
+		    /* ":tag" (no argument): go to newer pattern */
+		    save_pos = TRUE;	/* save the cursor position below */
+		    if ((tagstackidx += count - 1) >= tagstacklen)
+		    {
+			/*
+			 * Beyond the last one, just give an error message and
+			 * go to the last one.  Don't store the cursor
+			 * postition.
+			 */
+			tagstackidx = tagstacklen - 1;
+			EMSG(_(topmsg));
+			save_pos = FALSE;
+		    }
+		    else if (tagstackidx < 0)	/* must have been count == 0 */
+		    {
+			EMSG(_(bottommsg));
+			tagstackidx = 0;
+			goto end_do_tag;
+		    }
+		    cur_match = tagstack[tagstackidx].cur_match;
 		}
-		else if (tagstackidx < 0)	/* must have been count == 0 */
-		{
-		    EMSG(_(bottommsg));
-		    tagstackidx = 0;
-		    goto end_do_tag;
-		}
-		cur_match = tagstack[tagstackidx].cur_match;
 		new_tag = TRUE;
 	    }
 	    else				/* go to other matching tag */
 	    {
-		if (--tagstackidx < 0)
-		    tagstackidx = 0;
-		cur_match = tagstack[tagstackidx].cur_match;
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+		if (g_do_tagpreview)
+		    cur_match = ptag_entry.cur_match;
+		else
+#endif
+		{
+		    if (--tagstackidx < 0)
+			tagstackidx = 0;
+		    cur_match = tagstack[tagstackidx].cur_match;
+		}
 		switch (type)
 		{
 		    case DT_FIRST: cur_match = count - 1; break;
@@ -333,22 +384,32 @@ do_tag(tag, type, count, forceit, verbose)
 	    }
 	}
 
-	/*
-	 * For ":tag [arg]" or ":tselect" remember position before the jump.
-	 */
-	saved_fmark = tagstack[tagstackidx].fmark;
-	if (save_pos)
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+	if (g_do_tagpreview)
 	{
-	    tagstack[tagstackidx].fmark.mark = curwin->w_cursor;
-	    tagstack[tagstackidx].fmark.fnum = curbuf->b_fnum;
+	    if (type != DT_SELECT && type != DT_JUMP)
+		ptag_entry.cur_match = cur_match;
 	}
+	else
+#endif
+	{
+	    /*
+	     * For ":tag [arg]" or ":tselect" remember position before the jump.
+	     */
+	    saved_fmark = tagstack[tagstackidx].fmark;
+	    if (save_pos)
+	    {
+		tagstack[tagstackidx].fmark.mark = curwin->w_cursor;
+		tagstack[tagstackidx].fmark.fnum = curbuf->b_fnum;
+	    }
 
-	/* Curwin will change in the call to jumpto_tag() if ":stag" was used
-	 * or an autocommand jumps to another window; store value of
-	 * tagstackidx now. */
-	curwin->w_tagstackidx = tagstackidx;
-	if (type != DT_SELECT && type != DT_JUMP)
-	    curwin->w_tagstack[tagstackidx].cur_match = cur_match;
+	    /* Curwin will change in the call to jumpto_tag() if ":stag" was
+	     * used or an autocommand jumps to another window; store value of
+	     * tagstackidx now. */
+	    curwin->w_tagstackidx = tagstackidx;
+	    if (type != DT_SELECT && type != DT_JUMP)
+		curwin->w_tagstack[tagstackidx].cur_match = cur_match;
+	}
     }
 
     /*
@@ -359,10 +420,14 @@ do_tag(tag, type, count, forceit, verbose)
 	/*
 	 * When desired match not found yet, try to find it (and others).
 	 */
-	if (!use_tagstack)
-	    name = tag;
-	else
+	if (use_tagstack)
 	    name = tagstack[tagstackidx].tagname;
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+	else if (g_do_tagpreview)
+	    name = ptag_entry.tagname;
+#endif
+	else
+	    name = tag;
 	other_name = (tagmatchname == NULL || STRCMP(tagmatchname, name) != 0);
 	if (new_tag
 		|| (cur_match >= num_matches && max_num_matches != MAXCOL)
@@ -472,8 +537,13 @@ do_tag(tag, type, count, forceit, verbose)
 		for (i = 0; i < num_matches; ++i)
 		{
 		    parse_match(matches[i], &tagp);
-		    if (!new_tag && use_tagstack
-				      && i == tagstack[tagstackidx].cur_match)
+		    if (!new_tag && (
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+				(g_do_tagpreview
+				 && i == ptag_entry.cur_match) ||
+#endif
+				(use_tagstack
+				 && i == tagstack[tagstackidx].cur_match)))
 			*IObuff = '>';
 		    else
 			*IObuff = ' ';
@@ -667,6 +737,10 @@ do_tag(tag, type, count, forceit, verbose)
 		tagstack[tagstackidx].cur_match = cur_match;
 		++tagstackidx;
 	    }
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+	    else if (g_do_tagpreview)
+		ptag_entry.cur_match = cur_match;
+#endif
 
 	    /*
 	     * Only when going to try the next match, report that the previous
@@ -739,7 +813,7 @@ do_tag(tag, type, count, forceit, verbose)
 	    {
 		/* We may have jumped to another window, check that
 		 * tagstackidx is still valid. */
-		if (tagstackidx > curwin->w_tagstacklen)
+		if (use_tagstack && tagstackidx > curwin->w_tagstacklen)
 		    tagstackidx = curwin->w_tagstackidx;
 #ifdef FEAT_CSCOPE
 		jumped_to_tag = TRUE;
@@ -750,7 +824,7 @@ do_tag(tag, type, count, forceit, verbose)
     }
 
 end_do_tag:
-    /* Only store the new index when using tha tagstack and it's valid. */
+    /* Only store the new index when using the tagstack and it's valid. */
     if (use_tagstack && tagstackidx <= curwin->w_tagstacklen)
 	curwin->w_tagstackidx = tagstackidx;
 #ifdef FEAT_WINDOWS
@@ -2355,7 +2429,7 @@ jumpto_tag(lbuf, forceit)
 	 * entering it (autocommands) so turn the tag filename
 	 * into a fullpath
 	 */
-	if (!curwin->w_preview)
+	if (!curwin->w_p_pvw)
 	{
 	    full_fname = FullName_save(fname, FALSE);
 	    fname = full_fname;
@@ -2607,7 +2681,7 @@ expand_tag_fname(fname, tag_fname, expand)
     }
 
     if ((p_tr || curbuf->b_help)
-	    && !mch_isFullName(fname)
+	    && !vim_isAbsName(fname)
 	    && (p = gettail(tag_fname)) != tag_fname)
     {
 	retval = alloc(MAXPATHL);

@@ -87,8 +87,8 @@ EXTERN int	cmdline_row;
 
 EXTERN int	redraw_cmdline INIT(= FALSE);	/* cmdline must be redrawn */
 EXTERN int	clear_cmdline INIT(= FALSE);	/* cmdline must be cleared */
-#ifdef FEAT_CRYPT
-EXTERN int	cmdline_crypt INIT(= FALSE);	/* cmdline is crypted */
+#if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
+EXTERN int	cmdline_star INIT(= FALSE);	/* cmdline is crypted */
 #endif
 EXTERN int	exec_from_reg INIT(= FALSE);	/* executing register */
 
@@ -182,6 +182,13 @@ EXTERN int	msg_no_more INIT(= FALSE);  /* don't use more prompt, truncate
 
 EXTERN char_u	*sourcing_name INIT( = NULL);/* name of error message source */
 EXTERN linenr_t	sourcing_lnum INIT(= 0);    /* line number of the source file */
+
+#ifdef FEAT_EVAL
+EXTERN int	debug_level INIT(= 0);		/* nesting level */
+EXTERN int	debug_break_level INIT(= 0);	/* break below this level */
+EXTERN int	debug_did_msg INIT(= FALSE);	/* did "debug mode" message */
+EXTERN int	debug_tick INIT(= 0);		/* breakpoint change count */
+#endif
 
 #ifdef FEAT_EVAL
 EXTERN scid_t	current_SID INIT(= 0);	    /* ID of script being sourced or
@@ -412,12 +419,6 @@ EXTERN int	VIsual_coladd INIT(= 0);
 # endif
 EXTERN int	redo_VIsual_busy INIT(= FALSE);
 				/* TRUE when redoing Visual */
-#endif
-
-#ifdef FEAT_VIRTUALEDIT
-EXTERN int	ve_block INIT(= FALSE);  /* 've' contains "block" or "all" */
-EXTERN int	ve_insert INIT(= FALSE); /* 've' contains "insert" or "all" */
-EXTERN int	ve_all INIT(= FALSE);	 /* 've' contains "all" */
 #endif
 
 #ifdef FEAT_MOUSE
@@ -667,8 +668,6 @@ EXTERN int	bangredo INIT(= FALSE);	    /* set to TRUE whith ! command */
 EXTERN int	searchcmdlen;		    /* length of previous search cmd */
 EXTERN int	reg_ic INIT(= 0);	    /* p_ic passed to vim_regexec() */
 EXTERN int	reg_syn INIT(= 0);	    /* vim_regexec() used for syntax */
-EXTERN char_u	*reg_folded_count INIT(= NULL); /* val of "\f" in 'foldtext' */
-EXTERN char_u	*reg_level_string INIT(= NULL); /* val of "\d" in 'foldtext' */
 #ifdef FEAT_SYN_HL
 EXTERN int	reg_do_extmatch INIT(= 0);  /* Used when compiling regexp:
 					     * REX_SET to allow \z\(...\),

@@ -2,7 +2,7 @@
 " Language:     Java
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:  2000 Nov 12
+" Last Change:  2000 Dec 20
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -135,7 +135,7 @@ hi link javaCommentCharacter javaCharacter
 
 syn cluster javaTop add=javaComment,javaLineComment
 
-if !exists("java_ignore_javadoc")
+if !exists("java_ignore_javadoc") && main_syntax != 'jsp'
   syntax case ignore
   " syntax coloring for javadoc comments (HTML)
   syntax include @javaHtml <sfile>:p:h/html.vim

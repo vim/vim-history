@@ -68,7 +68,7 @@
  */
 
 #ifndef PERL_VERSION
-#    include "patchlevel.h"
+#    include <patchlevel.h>
 #    define PERL_REVISION   5
 #    define PERL_VERSION    PATCHLEVEL
 #    define PERL_SUBVERSION SUBVERSION
@@ -77,6 +77,10 @@
 #ifndef pTHX
 #    define pTHX void
 #    define pTHX_
+#endif
+
+#ifndef EXTERN_C
+# define EXTERN_C
 #endif
 
 /* Compatibility hacks over */

@@ -24,11 +24,11 @@ static int coladvance2 __ARGS((int addspaces, int finetune, colnr_t wcol));
     int
 virtual_active()
 {
-    return (ve_all
+    return (ve_flags == VE_ALL
 #ifdef FEAT_VISUAL
-	    || (ve_block && VIsual_active && VIsual_mode == Ctrl_V)
+	    || ((ve_flags & VE_BLOCK) && VIsual_active && VIsual_mode == Ctrl_V)
 #endif
-	    || (ve_insert && (State & INSERT)));
+	    || ((ve_flags & VE_INSERT) && (State & INSERT)));
 }
 
 /*
@@ -399,7 +399,7 @@ check_cursor_col()
 #ifdef FEAT_VIRTUALEDIT
     /* If virtual editing is on, we can leave the cursor on the old position,
        only we must set it to virtual */
-    if (ve_all)
+    if (ve_flags == VE_ALL)
 	curwin->w_coladd = oldcol - curwin->w_cursor.col;
 #endif
 }
@@ -2982,10 +2982,10 @@ get_crypt_key(store)
 {
     char_u	*p;
 
-    cmdline_crypt = TRUE;
+    cmdline_star = TRUE;
     cmdline_row = msg_row;
     p = getcmdline_prompt(NUL, (char_u *)_("Enter encryption key: "), 0);
-    cmdline_crypt = FALSE;
+    cmdline_star = FALSE;
 
     /* since the user typed this, no need to wait for return */
     need_wait_return = FALSE;
@@ -3362,7 +3362,7 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
 	if (*++path != NUL)
 	    ++path;
     }
-    else if (!mch_isFullName(path) && !path_with_url(path))
+    else if (!vim_isAbsName(path))
     {
 	if (mch_dirname(ff_expand_buffer, MAXPATHL) == OK)
 	    ff_search_ctx->ffsc_start_dir = vim_strsave(ff_expand_buffer);
@@ -3734,8 +3734,7 @@ vim_findfile(void *search_ctx)
 		dirptrs[1] = NULL;
 
 		/* if we have a start dir copy it in */
-		if (!mch_isFullName(ctx->ffs_fix_path)
-			&& !path_with_url(ctx->ffs_fix_path)
+		if (!vim_isAbsName(ctx->ffs_fix_path)
 			&& ff_search_ctx->ffsc_start_dir)
 		{
 		    STRCPY(file_path, ff_search_ctx->ffsc_start_dir);
@@ -4230,7 +4229,7 @@ ff_check_visited(visited_list, fname
 #ifdef UNIX
 	if (mch_stat((char *)fname, &st) < 0)
 #else
-	if (mch_FullName(fname, ff_expand_buffer, MAXPATHL, TRUE) == FAIL)
+	if (vim_FullName(fname, ff_expand_buffer, MAXPATHL, TRUE) == FAIL)
 #endif
 	    return FAIL;
     }
@@ -4583,13 +4582,12 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 	    goto theend;
 	}
 #ifdef VMS
-	if (mch_isFullName(file_to_find))
+	if (vim_isAbsName(file_to_find))
 	    file_to_find = vms_fixfilename(file_to_find);
 #endif
     }
 
-    if (mch_isFullName(file_to_find)
-	    || path_with_url(file_to_find)
+    if (vim_isAbsName(file_to_find)
 	    /* "..", "../path", "." and "./path": don't use the path_option */
 	    || (file_to_find[0] == '.'
 		&& (file_to_find[1] == NUL

@@ -2561,6 +2561,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
     if ((flags & ECMD_SET_HELP) || keep_help_flag)
     {
 	curbuf->b_help = TRUE;
+	curbuf->b_p_ma = FALSE;
 	curbuf->b_p_bin = FALSE;	/* reset 'bin' before reading file */
     }
 
@@ -4027,10 +4028,10 @@ prepare_tagpreview()
     /*
      * If there is already a preview window open, use that one.
      */
-    if (!curwin->w_preview)
+    if (!curwin->w_p_pvw)
     {
 	for (wp = firstwin; wp != NULL; wp = wp->w_next)
-	    if (wp->w_preview)
+	    if (wp->w_p_pvw)
 		break;
 	if (wp != NULL)
 	    win_enter(wp, TRUE);
@@ -4042,14 +4043,9 @@ prepare_tagpreview()
 	    if (win_split(g_do_tagpreview > 0 ? g_do_tagpreview : 0, 0)
 								      == FAIL)
 		return;
-	    curwin->w_preview = TRUE;
+	    curwin->w_p_pvw = TRUE;
 	}
     }
-
-#if 0	/* don't think we need this, cursor goes back to other window */
-    if (!p_im)
-	restart_edit = 0;	/* don't want insert mode in preview window */
-#endif
 }
 
 #endif
@@ -4101,6 +4097,11 @@ ex_help(eap)
      */
     if (*arg != NUL)
     {
+	/* remove trailing blanks */
+	p = arg + STRLEN(arg) - 1;
+	while (p > arg && vim_iswhite(*p) && p[-1] != '\\')
+	    *p-- = NUL;
+
 	n = find_help_tags(arg, &num_matches, &matches);
 	if (num_matches == 0 || n == FAIL)
 	{
@@ -4166,6 +4167,7 @@ ex_help(eap)
 	    /* Disable folding in the help window */
 	    curwin->w_p_fdl = 0;
 	    curwin->w_p_fen = FALSE;
+	    curwin->w_allbuf_opt.wo_fen = FALSE;
 #endif
 
 	    /*
@@ -4208,7 +4210,6 @@ ex_help(eap)
 
     curbuf->b_p_ts = 8;
     curwin->w_p_list = FALSE;
-    curbuf->b_p_ma = FALSE;
 
 erret:
     if (need_free)

@@ -19,8 +19,12 @@ extern int	usleep __ARGS((unsigned int));
 extern unsigned int	alarm __ARGS((unsigned int));
 extern int	chdir __ARGS((char *));
 extern int	fchdir __ARGS((int));
+#ifndef stat	/* could be redefined to stat64() */
 extern int	stat __ARGS((char *, struct stat *));
+#endif
+#ifndef lstat	/* could be redefined to lstat64() */
 extern int	lstat __ARGS((char *, struct stat *));
+#endif
 extern int	fstat __ARGS((int, struct stat *));
 extern int	open __ARGS((char *, int, ...));
 extern int	close __ARGS((int));

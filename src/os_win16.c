@@ -637,6 +637,7 @@ dos_expandpath(
     struct ffblk	fb;
     int			matches;
     int			len;
+    int			dot_at_start;
 
     start_len = gap->ga_len;
     buf = alloc_clear(STRLEN(path) + BASENAMELEN + 5);   /* make room for file name */
@@ -676,6 +677,7 @@ dos_expandpath(
     }
     /* now we have one wildcard component between s and e */
     *e = NUL;
+    dot_at_start = (*s == '.');
 
     /* If we are expanding wildcards we try both files and directories */
     if ((c = findfirst((char *)buf, &fb,
@@ -689,8 +691,8 @@ dos_expandpath(
     while (!c)
     {
 	namelowcpy((char *)s, fb.ff_name);
-	/* ignore "." and ".." */
-	if (*s != '.' || (s[1] != NUL && (s[1] != '.' || s[2] != NUL)))
+	/* ignore entries starting with "." unless when asked for */
+	if (*s != '.' || dot_at_start)
 	{
 	    len = STRLEN(buf);
 	    STRCPY(buf + len, path);

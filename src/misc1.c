@@ -3312,8 +3312,8 @@ fullpathcmp(s1, s2, checkname)
 	{
 	    if (fnamecmp(exp1, s2) == 0)
 		return FPC_SAMEX;
-	    r1 = mch_FullName(exp1, full1, MAXPATHL, FALSE);
-	    r2 = mch_FullName(s2, full2, MAXPATHL, FALSE);
+	    r1 = vim_FullName(exp1, full1, MAXPATHL, FALSE);
+	    r2 = vim_FullName(s2, full2, MAXPATHL, FALSE);
 	    if (r1 == OK && r2 == OK && fnamecmp(full1, full2) == 0)
 		return FPC_SAMEX;
 	}
@@ -3338,10 +3338,10 @@ fullpathcmp(s1, s2, checkname)
 	full2 = full1 + MAXPATHL;
 
 	expand_env(s1, exp1, MAXPATHL);
-	r1 = mch_FullName(exp1, full1, MAXPATHL, FALSE);
-	r2 = mch_FullName(s2, full2, MAXPATHL, FALSE);
+	r1 = vim_FullName(exp1, full1, MAXPATHL, FALSE);
+	r2 = vim_FullName(s2, full2, MAXPATHL, FALSE);
 
-	/* If mch_FullName() fails, the file probably doesn't exist. */
+	/* If vim_FullName() fails, the file probably doesn't exist. */
 	if (r1 != OK && r2 != OK)
 	{
 	    if (checkname && fnamecmp(exp1, s2) == 0)
@@ -3568,7 +3568,7 @@ FullName_save(fname, force)
     buf = alloc((unsigned)MAXPATHL);
     if (buf != NULL)
     {
-	if (mch_FullName(fname, buf, MAXPATHL, force) != FAIL)
+	if (vim_FullName(fname, buf, MAXPATHL, force) != FAIL)
 	    new_fname = vim_strsave(buf);
 	else
 	    new_fname = vim_strsave(fname);
@@ -5966,8 +5966,7 @@ expand_wildcards(num_pat, pat, num_file, file, flags)
 	    while (*p)
 	    {
 		copy_option_part(&p, buf, 100, ",");
-		regpat = file_pat_to_reg_pat(buf, buf + STRLEN(buf),
-							  &allow_dirs, FALSE);
+		regpat = file_pat_to_reg_pat(buf, NULL, &allow_dirs, FALSE);
 		if (regpat == NULL)
 		    break;
 		match = match_file_pat(regpat, ffname, (*file)[i], tail,

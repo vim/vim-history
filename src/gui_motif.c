@@ -733,12 +733,12 @@ gui_mch_add_menu_item(menu, idx)
 	}
 	else
 	{
-	    Pixmap pixmap;
-	    Pixmap insensitive;
+	    Pixmap pixmap = 0;
+	    Pixmap insensitive = 0;
 
 	    if (strstr((const char *)p_toolbar, "icons") != NULL)
 		get_pixmap(menu->name, &pixmap, &insensitive);
-	    if (pixmap == NULL)
+	    if (pixmap == 0)
 	    {
 		xms = XmStringCreate((char *) menu->dname, STRING_TAG);
 		XtSetArg(args[n], XmNlabelString, xms); n++;

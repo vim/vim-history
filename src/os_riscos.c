@@ -560,8 +560,6 @@ mch_FullName(fname, buf, len, force)
 			 * Not used under RISC OS.
 			 */
 {
-    if (fname == NULL)
-	return FAIL;
     if (xswi(OS_FSControl, 37, fname, buf, 0, 0, len) & v_flag)
 	return FAIL;
     return OK;
@@ -1107,12 +1105,13 @@ ro_buflist_add(old_name)
     int	    retval;
 
     if (old_name == NULL)
-	return buflist_add(NULL);
+	return buflist_add(NULL, FALSE);
 
     /* Copy the name so we can mess around with it. */
     fname = vim_strsave(old_name);
     if (fname == NULL)
-	return buflist_add(old_name);    /* Out of memory - can't modify name */
+	/* Out of memory - can't modify name */
+	return buflist_add(old_name, FALSE);
 
     /* Change `dir/main.c' into `dir.c.main' */
     leaf = fname;
@@ -1140,7 +1139,7 @@ ro_buflist_add(old_name)
 		leaf - fname + old_name);
     }
 
-    retval = buflist_add(fname);
+    retval = buflist_add(fname, FALSE);
     free(fname);
     return retval;
 }

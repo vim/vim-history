@@ -17,6 +17,7 @@ long mch_getperm __ARGS((char_u *name));
 int mch_setperm __ARGS((char_u *name, long perm));
 void mch_hide __ARGS((char_u *name));
 int mch_isdir __ARGS((char_u *name));
+int mch_writable __ARGS((char_u *name));
 int mch_can_exe __ARGS((char_u *name));
 int mch_nodetype __ARGS((char_u *name));
 vim_acl_t mch_get_acl __ARGS((char_u *fname));

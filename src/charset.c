@@ -1113,8 +1113,9 @@ getvvcol(wp, pos, start, cursor, end)
 }
 #endif
 
+#if defined(FEAT_VISUAL) || defined(PROTO)
 /*
- * Get the most left and most right virtual column of pos1 and pos2.
+ * Get the leftmost and rightmost virtual column of pos1 and pos2.
  * Used for Visual block mode.
  */
     void
@@ -1135,6 +1136,7 @@ getvcols(pos1, pos2, left, right)
     else
 	*right = r2;
 }
+#endif
 
 /*
  * skipwhite: skip over ' ' and '\t'.

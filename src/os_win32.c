@@ -189,16 +189,6 @@ static int s_dont_use_vimrun = TRUE;
 static char *vimrun_path = "vimrun ";
 #endif
 
-/*
- * The old solution for opening a console is still there.
- */
-//#define OLD_CONSOLE_STUFF
-
-#ifdef OLD_CONSOLE_STUFF
-static void mch_open_console(void);
-static void mch_close_console(int wait_key, DWORD ret);
-#endif
-
 #ifndef FEAT_GUI_W32
 static int suppress_winsize = 1;	/* don't fiddle with console */
 #endif
@@ -1236,7 +1226,7 @@ mch_inchar(
     static int
 executable_exists(char *name)
 {
-    char vimrun_location[2 * _MAX_PATH + 2];
+    char location[2 * _MAX_PATH + 2];
     char widename[2 * _MAX_PATH];
 
     /* There appears to be a bug in FindExecutableA() on Windows NT.
@@ -1246,13 +1236,13 @@ executable_exists(char *name)
 	MultiByteToWideChar(CP_ACP, 0, (LPCTSTR)name, -1,
 						 (LPWSTR)widename, _MAX_PATH);
 	if (FindExecutableW((LPCWSTR)widename, (LPCWSTR)"",
-				     (LPWSTR)vimrun_location) > (HINSTANCE)32)
+					    (LPWSTR)location) > (HINSTANCE)32)
 	    return TRUE;
     }
     else
     {
 	if (FindExecutableA((LPCTSTR)name, (LPCTSTR)"",
-				     (LPTSTR)vimrun_location) > (HINSTANCE)32)
+					    (LPTSTR)location) > (HINSTANCE)32)
 	    return TRUE;
     }
     return FALSE;
@@ -2087,6 +2077,17 @@ mch_isdir(char_u *name)
     return (f & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
+/*
+ * Return TRUE if file or directory "name" is writable (not readonly).
+ */
+    int
+mch_writable(char_u *name)
+{
+    int perm = mch_getperm(name);
+
+    return (perm != -1 && !(perm & FILE_ATTRIBUTE_READONLY));
+}
+
 #if defined(FEAT_EVAL) || defined(PROTO)
 /*
  * Return 1 if "name" can be executed, 0 if not.
@@ -2498,87 +2499,6 @@ mch_set_winsize_now()
 
 #if defined(FEAT_GUI_W32) || defined(PROTO)
 
-#ifdef OLD_CONSOLE_STUFF
-/*
- * Functions to open and close a console window.
- * The open function sets the size of the window to 25x80, to avoid problems
- * with Windows 95.  In the long term should make sure that the "close" icon
- * cannot crash vim (it doesn't do so at the moment!).
- * The close function waits for the user to press a key before closing the
- * window.
- */
-
-    static BOOL
-ConsoleCtrlHandler(DWORD what)
-{
-    return TRUE;
-}
-
-    static void
-mch_open_console(void)
-{
-    COORD	size;
-    SMALL_RECT	window_size;
-    HANDLE	console_handle;
-
-    AllocConsole();
-
-    /* On windows 95, we must use a 25x80 console size, to avoid trouble with
-     * some DOS commands */
-    if (g_PlatformId != VER_PLATFORM_WIN32_NT)
-    {
-	console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-
-	size.X = 80;
-	size.Y = 25;
-	window_size.Left = 0;
-	window_size.Top = 0;
-	window_size.Right = 79;
-	window_size.Bottom = 24;
-
-	/* First set the window size, then also resize the screen buffer, to
-	 * avoid a scrollbar */
-	SetConsoleWindowInfo(console_handle, TRUE, &window_size);
-	SetConsoleScreenBufferSize(console_handle, size);
-    }
-
-    SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleCtrlHandler, TRUE);
-}
-
-    static void
-mch_close_console(int wait_key, DWORD ret)
-{
-    if (wait_key)
-    {
-	HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-	HANDLE hStderr = GetStdHandle(STD_ERROR_HANDLE);
-	DWORD number;
-	static char message[] = N_("\nPress any key to close this window...");
-	static char err_buf[80];
-	char buffer[1];
-
-	if (ret)
-	{
-	    sprintf(err_buf, _("\nshell returned %ld."), ret);
-	    WriteConsole(hStderr, err_buf, strlen(err_buf), &number, NULL);
-	}
-	/* Write a message to the user */
-	WriteConsole(hStderr, _(message), sizeof(_(message))-1, &number, NULL);
-
-	/* Clear the console input buffer, and set the input to "raw" mode */
-	FlushConsoleInputBuffer(hStdin);
-	SetConsoleMode(hStdin, 0);
-
-	/* Wait for a keypress */
-	ReadConsole(hStdin, buffer, 1, &number, NULL);
-    }
-
-    /* Close the console window */
-    FreeConsole();
-}
-#endif
-
-
 /*
  * Specialised version of system() for Win32 GUI mode.
  * This version proceeds as follows:
@@ -2587,8 +2507,6 @@ mch_close_console(int wait_key, DWORD ret)
  *    3. Wait for the subprocess to terminate and get its exit code
  *    4. Prompt the user to press a key to close the console window
  */
-static BOOL fUseConsole = TRUE;
-
     static int
 mch_system(char *cmd, int options)
 {
@@ -2614,35 +2532,12 @@ mch_system(char *cmd, int options)
     si.cbReserved2 = 0;
     si.lpReserved2 = NULL;
 
-#ifdef OLD_CONSOLE_STUFF
-    /* Create a console for the process. This lets us write a termination
-     * message at the end, and wait for the user to close the console
-     * window manually...
-     */
-    if (fUseConsole)
-    {
-	mch_open_console();
-
-	/*
-	 * Write the command to the console, so the user can see what is going
-	 * on.
-	 */
-	{
-	    HANDLE hStderr = GetStdHandle(STD_ERROR_HANDLE);
-	    DWORD number;
-
-	    WriteConsole(hStderr, cmd, STRLEN(cmd), &number, NULL);
-	    WriteConsole(hStderr, "\n", 1, &number, NULL);
-	}
-    }
-#else
     /* There is a strange error on Windows 95 when using "c:\\command.com".
      * When the "c:\\" is left out it works OK...? */
     if (mch_windows95()
 	    && (STRNICMP(cmd, "c:/command.com", 14) == 0
 		|| STRNICMP(cmd, "c:\\command.com", 14) == 0))
 	cmd += 3;
-#endif
 
     /* Now, run the command */
     CreateProcess(NULL,			/* Executable name */
@@ -2651,11 +2546,7 @@ mch_system(char *cmd, int options)
 		  NULL,			/* Thread security attributes */
 		  FALSE,		/* Inherit handles */
 		  CREATE_DEFAULT_ERROR_MODE |	/* Creation flags */
-#ifdef OLD_CONSOLE_STUFF
-		  0,
-#else
-		  CREATE_NEW_CONSOLE,
-#endif
+			CREATE_NEW_CONSOLE,
 		  NULL,			/* Environment */
 		  NULL,			/* Current directory */
 		  &si,			/* Startup information */
@@ -2663,45 +2554,34 @@ mch_system(char *cmd, int options)
 
 
     /* Wait for the command to terminate before continuing */
-    if (fUseConsole)
+    if (g_PlatformId != VER_PLATFORM_WIN32s)
     {
-	if (g_PlatformId != VER_PLATFORM_WIN32s)
-	{
-	    WaitForSingleObject(pi.hProcess, INFINITE);
+	WaitForSingleObject(pi.hProcess, INFINITE);
 
-	    /* Get the command exit code */
-	    GetExitCodeProcess(pi.hProcess, &ret);
-	}
-	else
+	/* Get the command exit code */
+	GetExitCodeProcess(pi.hProcess, &ret);
+    }
+    else
+    {
+	/*
+	 * This ugly code is the only quick way of performing
+	 * a synchronous spawn under Win32s. Yuk.
+	 */
+	num_windows = 0;
+	EnumWindows(win32ssynch_cb, 0);
+	old_num_windows = num_windows;
+	do
 	{
-	    /*
-	     * This ugly code is the only quick way of performing
-	     * a synchronous spawn under Win32s. Yuk.
-	     */
+	    Sleep(1000);
 	    num_windows = 0;
 	    EnumWindows(win32ssynch_cb, 0);
-	    old_num_windows = num_windows;
-	    do
-	    {
-		Sleep(1000);
-		num_windows = 0;
-		EnumWindows(win32ssynch_cb, 0);
-	    } while (num_windows == old_num_windows);
-	    ret = 0;
-	}
+	} while (num_windows == old_num_windows);
+	ret = 0;
     }
 
     /* Close the handles to the subprocess, so that it goes away */
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
-
-    /* Close the console window. If we are not redirecting output, wait for
-     * the user to press a key.
-     */
-#ifdef OLD_CONSOLE_STUFF
-    if (fUseConsole)
-	mch_close_console(!(options & SHELL_DOOUT), ret);
-#endif
 
     /* Try to get input focus back.  Doesn't always work though. */
     SetFocus(hwnd);
@@ -2855,8 +2735,10 @@ mch_call_shell(
 	    }
 	    else
 	    {
-#if !defined(OLD_CONSOLE_STUFF) && defined(FEAT_GUI_W32)
+#if defined(FEAT_GUI_W32)
 		if (!(options & SHELL_DOOUT) && !s_dont_use_vimrun)
+		    /* Use vimrun to execute the command.  It opens a console
+		     * window, which can be closed without killing Vim. */
 		    sprintf((char *)newcmd, "%s%s%s %s %s",
 			    vimrun_path, msg_silent ? "-s " : "",
 			    p_sh, p_shcf, cmd);
@@ -2871,11 +2753,7 @@ mch_call_shell(
 
     settmode(TMODE_RAW);	    /* set to raw mode */
 
-    if (x && !(options & SHELL_SILENT)
-#ifdef FEAT_GUI_W32
-	    && !fUseConsole
-#endif
-       )
+    if (x && !(options & SHELL_SILENT))
     {
 	smsg(_("shell returned %d"), x);
 	msg_putchar('\n');
@@ -2997,7 +2875,7 @@ win32_expandpath(
     }
 #endif
 
-    start_dot_ok = (s[0] == '.' || s[0] == '*');
+    start_dot_ok = (*s == '.');
 
     /* If we are expanding wildcards, we try both files and directories */
     if ((hFind = FindFirstFile(buf, &fb)) != INVALID_HANDLE_VALUE)
@@ -3006,15 +2884,9 @@ win32_expandpath(
 	    STRCPY(s, fb.cFileName);
 
 	    /*
-	     * Ignore "." and "..".  When more follows, this must be a
-	     * directory.
-	     * Find*File() returns matches that start with a '.', even though
-	     * the pattern doesn't start with '.'.  Filter them out manually.
+	     * Ignore entries starting with a dot, unless when asked for.
 	     */
-	    if ((s[0] != '.'
-			|| (start_dot_ok
-			    && s[1] != NUL
-			    && (s[1] != '.' || s[2] != NUL)))
+	    if ((s[0] != '.' || start_dot_ok)
 		    && (*path == NUL || mch_isdir(buf)))
 	    {
 		len = STRLEN(buf);

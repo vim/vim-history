@@ -5064,7 +5064,7 @@ ins_reg()
 
 #ifdef FEAT_EVAL
     /*
-     * Don't call u_sync while getting the expression,
+     * Don't call u_sync() while getting the expression,
      * evaluating it or giving an error message for it!
      */
     ++no_u_sync;

@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0q.  Last change: 2000 Oct 31
+*help.txt*	For Vim version 6.0r.  Last change: 2000 Dec 18
 
 			VIM - main help file
 									 k
@@ -145,6 +145,7 @@ Versions ~
 |vi_diff.txt|	main differences between Vim and Vi
 |version4.txt|	differences between Vim version 3.0 and 4.x
 |version5.txt|	differences between Vim version 4.6 and 5.x
+|version6.txt|	differences between Vim version 5.7 and 6.x
 						*sys-file-list*
 Remarks about specific systems ~
 |os_390.txt|	OS/390 Unix
@@ -166,6 +167,9 @@ Standard plugins	*standard-plugin-list* ~
 |pi_expl.txt|	File explorer
 
 LOCAL ADDITIONS:
+|example.txt|	Example for a locally added help file
+|test.txt|	Testing the help command now
+|typecorr.txt|	Plugin for correcting typing mistakes
 
 ------------------------------------------------------------------------------
 *bars*		Bars example

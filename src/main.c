@@ -136,6 +136,7 @@ usage()
     main_msg(_("-C\t\t\tCompatible with Vi: 'compatible'"));
     main_msg(_("-N\t\t\tNot fully Vi compatible: 'nocompatible'"));
     main_msg(_("-V[N]\t\tVerbose level"));
+    main_msg(_("-D\t\t\tDebugging mode"));
     main_msg(_("-n\t\t\tNo swap file, use memory only"));
     main_msg(_("-r\t\t\tList swap files and exit"));
     main_msg(_("-r (with file name)\tRecover crashed session"));
@@ -274,6 +275,7 @@ main
     int		    no_swap_file = FALSE;   /* "-n" option used */
     int		    c;
     int		    i;
+    char_u	    *p = NULL;
     int		    bin_mode = FALSE;	    /* -b option used */
 #ifdef FEAT_WINDOWS
     int		    window_count = 1;	    /* number of windows to use */
@@ -338,7 +340,6 @@ main
     setlocale(LC_ALL, "");	/* for ctype() and the like */
 # ifdef FEAT_GETTEXT
     {
-	char_u	*p;
 	int	mustfree = FALSE;
 
 	/* expand_env() doesn't work yet, because chartab[] is not initialized
@@ -362,7 +363,7 @@ main
      * Get the name of the display, before gui_prepare() removes it from
      * argv[].  Used for the xterm-clipboard display.
      */
-    for (i = 0; i < argc; i++)
+    for (i = 1; i < argc; i++)
     {
 	if (STRICMP(argv[i], "-display") == 0
 #ifdef FEAT_GUI_GTK
@@ -370,6 +371,8 @@ main
 #endif
 		)
 	{
+	    if (i == argc - 1)
+		mainerr(ME_ARG_MISSING, (char_u *)argv[i]);
 	    xterm_display = argv[i + 1];
 	    break;
 	}
@@ -404,7 +407,7 @@ main
     init_yank();		/* init yank buffers */
 
     /* Init the argument list to empty. */
-    ga_init2(&global_alist.al_ga, (int)sizeof(char_u *), 5);
+    alist_init(&global_alist);
 
     /*
      * Set the default values for the options.
@@ -669,6 +672,12 @@ main
 		    want_argument = TRUE;
 		break;
 
+#ifdef FEAT_EVAL
+	    case 'D':		/* "-D"		Debugging */
+		debug_break_level = 9999;
+		break;
+#endif
+
 	    case 'V':		/* "-V{N}"	Verbose level */
 		/* default is 10: a little bit verbose */
 		p_verbose = get_number_arg((char_u *)argv[0], &argv_idx, 10);
@@ -747,8 +756,6 @@ main
 			mainerr(ME_EXTRA_CMD, NULL);
 		    if (c == 'S')
 		    {
-			char_u *p;
-
 			p = alloc((unsigned)(STRLEN(argv[0]) + 4));
 			if (p == NULL)
 			    mch_windexit(2);
@@ -850,17 +857,23 @@ main
 	else
 	{
 	    argv_idx = -1;	    /* skip to next argument */
+
+	    /* Check for only one type of editing. */
 	    if (edit_type != EDIT_NONE && edit_type != EDIT_FILE)
 		mainerr(ME_TOO_MANY_ARGS, (char_u *)argv[0]);
 	    edit_type = EDIT_FILE;
-	    if (ga_grow(&global_alist.al_ga, 1) == FAIL)
+
+	    /* Add the file to the global argument list. */
+	    if (ga_grow(&global_alist.al_ga, 1) == FAIL
+		    || (p = vim_strsave((char_u *)argv[0])) == NULL)
 		mch_windexit(2);
-	    GARGLIST[GARGCOUNT] = vim_strsave((char_u *)argv[0]);
-	    if (GARGLIST[GARGCOUNT] != NULL)
-	    {
-		--global_alist.al_ga.ga_room;
-		++GARGCOUNT;
-	    }
+	    alist_add(&global_alist, p,
+#if (!defined(UNIX) && !defined(__EMX__)) || defined(ARCHIE)
+		    0		/* add buffer number after expanding */
+#else
+		    2		/* add buffer number now and use curbuf */
+#endif
+		    );
 	}
 
 	/*
@@ -894,32 +907,15 @@ main
 # endif
 #endif
 
-    /*
-     * May expand wildcards in file names.
-     */
     if (GARGCOUNT > 0)
     {
 #if (!defined(UNIX) && !defined(__EMX__)) || defined(ARCHIE)
-	char_u	    **new_arg_files;
-	int	    new_arg_file_count;
-	char_u	    *save_p_su = p_su;
-
-	/* Don't use 'suffixes' here.  This should work like the shell did the
-	 * expansion.  Also, the vimrc file isn't read yet, thus the user
-	 * can't set the options. */
-	p_su = empty_option;
-	if (expand_wildcards(GARGCOUNT, GARGLIST, &new_arg_file_count,
-			&new_arg_files, EW_FILE|EW_NOTFOUND|EW_ADDSLASH) == OK
-		&& new_arg_file_count > 0)
-	{
-	    FreeWild(GARGCOUNT, GARGLIST);
-	    GARGCOUNT = new_arg_file_count;
-	    GARGLIST = new_arg_files;
-	    global_alist.al_ga.ga_room = 0;
-	}
-	p_su = save_p_su;
+	/*
+	 * Expand wildcards in file names.
+	 */
+	alist_expand();
 #endif
-	fname = GARGLIST[0];
+	fname = alist_name(&GARGLIST[0]);
     }
     if (GARGCOUNT > 1)
 	printf(_("%d files to edit\n"), GARGCOUNT);
@@ -1492,9 +1488,9 @@ main
 	{
 	    curwin->w_arg_idx = arg_idx;
 	    /* edit file from arg list, if there is one */
-	    (void)do_ecmd(0,
-			 arg_idx < GARGCOUNT ? GARGLIST[arg_idx] : NULL,
-					  NULL, NULL, ECMD_LASTL, ECMD_HIDE);
+	    (void)do_ecmd(0, arg_idx < GARGCOUNT
+			  ? alist_name(&GARGLIST[arg_idx]) : NULL,
+			  NULL, NULL, ECMD_LASTL, ECMD_HIDE);
 	    if (arg_idx == GARGCOUNT - 1)
 		arg_had_last = TRUE;
 	    ++arg_idx;
@@ -1516,13 +1512,6 @@ main
     if (window_count > 1)
 	win_equal(curwin, 'b');		/* adjust heights */
 #endif /* FEAT_WINDOWS */
-
-    /*
-     * If there are more file names in the argument list than windows,
-     * put the rest of the names in the buffer list.
-     */
-    while (arg_idx < GARGCOUNT)
-	(void)buflist_add(GARGLIST[arg_idx++]);
 
     /*
      * Shorten any of the filenames, but only when absolute.

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0q.  Last change: 2000 Dec 17
+*options.txt*   For Vim version 6.0r.  Last change: 2001 Jan 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -8,8 +8,7 @@ Options							*options*
 
 1. Setting options			|set-option|
 2. Automatically setting options	|auto-setting|
-3. Saving settings			|save-settings|
-4. Options summary			|option-summary|
+3. Options summary			|option-summary|
 
 For an overview of options see help.txt |option-list|.
 
@@ -98,18 +97,6 @@ achieve special effects.  These options come in three forms:
 			becomes empty.
 			Also see |:set-args| above.
 			{not in Vi}
-
-:se[t] {option}@{expression}				*:set@*
-:se[t] {option}+@{expression}				*:set_@*
-:se[t] {option}^@{expression}				*:set^@*
-:se[t] {option}-@{expression}				*:set-@*
-			Like ":set {option}=", but evaluate {expression} to
-			obtain the value.  Useful to avoid the need for extra
-			backslashes in the argument.  Example: >
-				:set dir@'\path\file'
-<			Also useful to include special characters: >
-				:set breakat@" \t!@*-+;:,./?"
-<			{not in Vi}
 
 The {option} arguments to ":set" may be repeated.  For example: >
 	:set ai nosi sw=3 ts=3
@@ -299,61 +286,6 @@ On Unix systems the form "${HOME}" can be used too.  The name between {} can
 contain non-id characters then.  Note that if you want to use this for the
 "gf" command, you need to add the '{' and '}' characters to 'isfname'.
 
-								*$VIM*
-The environment variable "$VIM" is used to locate various user files for Vim,
-such as the user startup script ".vimrc".  This depends on the system, see
-|startup|.
-
-To avoid the need for every user to set the $VIM environment variable, Vim
-will try to get the value for $VIM in this order:
-1. The value defined by the $VIM environment variable.  You can use this to
-   make Vim look in a specific directory for its support files.  Example: >
-	setenv VIM /home/paul/vim
-2. The path from 'helpfile' is used, unless it contains some environment
-   variable too (the default is "$VIMRUNTIME/doc/help.txt": chicken-egg
-   problem).  The file name ("help.txt" or any other) is removed.  Then
-   trailing directory names are removed, in this order: "doc", "runtime" and
-   "vim{version}" (e.g., "vim54").
-3. For MSDOS, Win32 and OS/2 Vim tries to use the directory name of the
-   executable.  If it ends in "/src", this is removed.  This is useful if you
-   unpacked the .zip file in some directory, and adjusted the search path to
-   find the vim executable.  Trailing directory names are removed, in this
-   order: "runtime" and "vim{version}" (e.g., "vim54").
-4. For Unix the compile-time defined installation directory is used (see the
-   output of ":version").
-
-Once Vim has done this once, it will set the $VIM environment variable.  To
-change it later, use a ":let" command like this: >
-	:let $VIM = "/home/paul/vim/"
-<
-								*$VIMRUNTIME*
-The environment variable "$VIMRUNTIME" is used to locate various support
-files, such as the on-line documentation and files used for syntax
-highlighting.  For example, the main help file is normally
-"$VIMRUNTIME/doc/help.txt".
-You don't normally set $VIMRUNTIME yourself, but let Vim figure it out.  This
-is the order used to find the value of $VIMRUNTIME:
-1. If the environment variable $VIMRUNTIME is set, it is used.  You can use
-   this when the runtime files are in an unusual location.
-2. If "$VIM/vim{version}" exists, it is used.  {version} is the version
-   number of Vim, without any '-' or '.'.  For example: "$VIM/vim54".  This is
-   the normal value for $VIMRUNTIME.
-3. If "$VIM/runtime" exists, it is used.
-4. The value of $VIM is used.  This is for backwards compatibility with older
-   versions.
-5. When the 'helpfile' option is set and doesn't contain a '$', its value is
-   used, with "doc/help.txt" removed from the end.
-
-For Unix, when there is a compiled-in default for $VIMRUNTIME (check the
-output of ":version"), steps 2, 3 and 4 are skipped, and the compiled-in
-default is used after step 5.  This means that the compiled-in default
-overrules the value of $VIM.  This is useful if $VIM is "/etc" and the runtime
-files are in "/user/share/vim/vim54".
-
-Once Vim has done this once, it will set the $VIMRUNTIME environment variable.
-To change it later, use a ":let" command like this: >
-	:let $VIMRUNTIME = "/home/piet/vim/vim54"
-
 
 Note the maximum length of an expanded option is limited.  How much depends on
 the system, mostly it is something like 256 or 1024 characters.
@@ -415,6 +347,8 @@ to set options automatically for one or more files:
 1. When starting Vim initializations are read from various places.  See
    |initialization|.  Most of them are performed for all editing sessions,
    and some of them depend on the directory where Vim is started.
+   You can create an initialization file with |:mkvimrc|, |:mkview| and
+   |:mksession|.
 2. If you start editing a new file, the automatic commands are executed.
    This can be used to set options for files matching a particular pattern and
    many other things.  See |autocommand|.
@@ -488,111 +422,7 @@ And define a function SetVar() that does something with the line containing
 "VAR".
 
 ==============================================================================
-3. Saving settings					*save-settings*
-
-							*:mk* *:mkexrc*
-:mk[exrc] [file]	Write current key mappings and changed options to
-			[file] (default ".exrc" in the current directory),
-			unless it already exists.  {not in Vi}
-
-:mk[exrc]! [file]	Always write current key mappings and changed
-			options to [file] (default ".exrc" in the current
-			directory).  {not in Vi}
-
-							*:mkv* *:mkvimrc*
-:mkv[imrc][!] [file]	Like ":mkexrc", but the default is ".vimrc" in the
-			current directory.  The ":version" command is also
-			written to the file.  {not in Vi}
-
-							*:mks* *:mksession*
-:mks[ession][!] [file]	Like ":mkvimrc", but write commands to the end of the
-			file that reload the files being edited at the time of
-			the command.  |session-file|
-			The default file name is "Session.vim".
-			The created file can be loaded with a |:source|
-			command to recreate the current edit session.
-			{not in Vi} {only when compiled with the |+mksession|
-			feature enabled}
-
-These commands will write ":map" and ":set" commands to a file, in such a way
-that when these commands are executed, the current key mappings and options
-will be set to the same values.  The options 'columns', 'endofline',
-'fileformat', 'key', 'lines', 'modified', 'scroll', 'term', 'textmode',
-'ttyfast' and 'ttymouse' are not included, because these are terminal or file
-dependent.  Note that the options 'binary', 'paste' and 'readonly' are
-included, this might not always be what you want.
-
-When special keys are used in mappings, The 'cpoptions' option will be
-temporarily set to its Vim default, to avoid the mappings to be
-misinterpreted.  This makes the file incompatible with Vi, but makes sure it
-can be used with different terminals.
-
-Only global mappings are stored, not mappings local to a buffer.
-
-A common method is to use a default ".vimrc" file, make some modifications
-with ":map" and ":set" commands and write the modified file.  First read the
-default ".vimrc" in with a command like ":source ~piet/.vimrc.Cprogs", change
-the settings and then save them in the current directory with ":mkvimrc!".  If
-you want to make this file your default .vimrc, move it to your home directory
-(on Unix), s: (Amiga) or $VIM directory (MS-DOS).  You could also use
-autocommands |autocommand| and/or modelines |modeline|.
-
-If you only want to add a single option setting to your vimrc, you can use
-these steps:
-1. Edit your vimrc file with Vim.
-2. Play with the option until it's right.  E.g., try out different values for
-   'guifont'.
-3. Append a line to set the value of the option, using the expression register
-   '=' to enter the value.  E.g., for the 'guifont' option: >
-   o:set guifont=<C-R>=&guifont<CR><Esc>
-<  [<C-R> is a CTRL-R, <CR> is a return, <Esc> is the escape key]
-
-Note that when you create a .vimrc file, this can influence the 'compatible'
-option, which has several side effects.  See |'compatible'|.
-":mkvimrc", ":mkexrc" and ":mksession" write the command to set or reset the
-'compatible' option to the output file first, because of these side effects.
-
-						    *session-file*
-You can use session files to quickly switch between different projects,
-automatically loading the files you were last working on in that project.
-Session files are a nice addition to viminfo-files, which are used to remember
-information for all sessions together |viminfo-file|.
-
-You can quickly start editing with a session file with the |-S| argument: >
-	vim -S session.vim
-
-The output of ":mksession" is like ":mkvimrc", but additional commands are
-added to the file.  Which ones depends on the 'sessionoptions' option.  The
-resulting file, when executed with a ":source" command:
-1. Restores mappings and options, if 'sessionoptions' contains "options".
-2. Restores global variables that start with an uppercase letter and contain
-   at least one lowercase letter, if 'sessionoptions' contains "globals".
-3. Unloads all currently loaded buffers.
-4. Restores the working directory.
-5. Restores GUI vim window position, if 'sessionoptions' contains "winpos".
-6. Restores screen height, if 'sessionoptions' contains "resize".
-7. Reloads the files you were editing, at the lines where you left them.  If
-   'sessionoptions' contains "buffers" then all buffers are restored,
-   including hidden and unloaded buffers.  Otherwise only buffers in windows
-   are restored.
-8. Restores windows, if 'sessionoptions' contains "winsize".
-   If the Vim window size has been restored or is already the same as in the
-   loaded session, the window sizes are restored exactly.  Otherwise, the
-   windows are just given sensible sizes
-9. If a file exists with the same name as the session file, but ending in
-   "x.vim" (for eXtra), executes that as well.  You can use *x.vim files to
-   specify additional settings and actions associated with a given session,
-   such as creating menu items in the GUI version.
-
-The full filename of your current session is available in the internal
-variable "v:this_session".  See |this_session-variable|.
-
-So an example mapping might be (all one line): >
-  :nmap <S-F1> :wa<Bar>exe "mksession! " . v:this_session<CR>:so $VIM/sessions/
-which saves the files and session, and starts off the command to load another.
-
-==============================================================================
-4. Options summary					*option-summary*
+3. Options summary					*option-summary*
 
 In the list below all the options are mentioned with their full name and with
 an abbreviation if there is one.  Both forms may be used.
@@ -1166,6 +996,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Encryption is not done by Vim when using 'charconvert'.  If you want
 	to encrypt the file after conversion, 'charconvert' should take care
 	of this.
+	This option cannot be set from a |modeline|.
 
 				   *'cindent'* *'cin'* *'nocindent'* *'nocin'*
 'cindent' 'cin'		boolean	(default off)
@@ -2162,13 +1993,13 @@ A jump table for the options with a short description can be found at |X_op|.
 	|fold-syntax|	syntax	    Syntax highlighting items specify folds.
 
 						*'foldtext'* *'fdt'*
-'foldtext' 'fdt'	string (default: complicated)
+'foldtext' 'fdt'	string (default: "foldtext()")
 			local to window
 			{not in Vi}
 			{not available when compiled without the |+folding|
 			feature}
-	A pattern and substitute string which is used to specify the text
-	displayed for a fold.  See |fold-foldtext|.
+	An expression which is used to specify the text displayed for a closed
+	fold.  See |fold-foldtext|.
 
 					*'formatoptions'* *'fo'*
 'formatoptions' 'fo'	string (Vim default: "tcq", Vi default: "vt")
@@ -2704,6 +2535,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	option to a file name.  Mostly useful to change "." to "/" for Java: >
 		:set includeexpr=substitute(v:fname,'\\.','/','g')
 <	The "v:fname" variable will be set to the file name that was detected.
+	Evaluated in the |sandbox|.
 
 				 *'incsearch'* *'is'* *'noincsearch'* *'nois'*
 'incsearch' 'is'	boolean	(default off)
@@ -3577,9 +3409,9 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not in Vi}
 	When non-empty the oldest version of a file is kept.  This can be used
 	to keep the original version of a file if you are changing files in a
-	source distribution.  Only the first time that a file is edited a copy
-	of the original file will be kept.  The name of the copy is the name
-	of the original file with the string in the 'patchmode' option
+	source distribution.  Only the first time that a file is written a
+	copy of the original file will be kept.  The name of the copy is the
+	name of the original file with the string in the 'patchmode' option
 	appended.  This option should start with a dot.  Use a string like
 	".org".  'backupdir' must not be empty for this to work (Detail: The
 	backup file is renamed to the patchmode file after the new file has
@@ -3656,8 +3488,20 @@ A jump table for the options with a short description can be found at |X_op|.
 'previewheight' 'pvh'	number (default 12)
 			global
 			{not in Vi}
+			{not available when compiled without the |+windows| or
+			|+quickfix| feature}
 	Default height for a preview window.  Used for |:ptag| and associated
 	commands.  Used for |CTRL-W_}| when no count is given.
+
+			*'previewwindow'* *'nopreviewwindow'* *'pvw'* *'nopvw'*
+'previewwindow' 'pvw'	boolean (default off)
+			local to window
+			{not in Vi}
+			{not available when compiled without the |+windows| or
+			|+quickfix| feature}
+	Identifies the preview window.  Only one window can have this option
+	set.  It's normally not set directly, but by using one of the commands
+	|:ptag|, |:pedit|, etc.
 
 				   *'readonly'* *'ro'* *'noreadonly'* *'noro'*
 'readonly' 'ro'		boolean	(default off)
@@ -3936,35 +3780,43 @@ A jump table for the options with a short description can be found at |X_op|.
 	The 'selectmode' option is set by the |:behave| command.
 
 						*'sessionoptions'* *'ssop'*
-'sessionoptions' 'ssop'	string	(default "buffers,winsize,options,help,blank")
+'sessionoptions' 'ssop'	string	(default: "blank,buffers,curdir,folds,
+							help,options,winsize")
 			global
 			{not in Vi}
 	Changes the effect of the |:mksession| command.  It is a comma
 	separated list of words.  Each word enables saving and restoring
 	something:
 	   word		save and restore ~
+	   blank	empty windows
 	   buffers	hidden and unloaded buffers, not just those in windows
+	   curdir	the current directory
+	   folds	manually created folds
 	   globals	global variables that start with an uppercase letter
 			and contain at least one lowercase letter.
 	   help		the help window
-	   blank	empty windows
 	   options	options and mappings
-	   winpos	position of the GUI vim window
-	   resize	size of the screen: 'lines' and 'columns'
-	   winsize	window sizes (where possible)
+	   resize	size of the Vim window: 'lines' and 'columns'
+	   sesdir	the directory in which the session file is located
+	   		will become the current directory (useful with
+			projects accessed over a network from different
+			systems)
 	   slash	backslashes in file names replaced with forward
 			slashes
 	   unix		with Unix end-of-line format (single <NL>), even when
 			on Windows or DOS
+	   winpos	position of the whole Vim window
+	   winsize	window sizes
 
+	Don't include both "curdir" and "sesdir".
 	"slash" and "unix" are useful on Windows when sharing session files
 	with Unix.  The Unix version of Vim cannot source dos format scripts,
 	but the Windows version of Vim can source unix format scripts.
 
 						*'shell'* *'sh'*
 'shell' 'sh'		string	(default $SHELL or "sh",
-					MS-DOS and Win32: "command",
-					OS/2: "cmd")
+					MS-DOS and Win32: "command.com" or
+					"cmd.exe", OS/2: "cmd")
 			global
 	Name of the shell to use for ! and :! commands.  When changing the
 	value also check the 'shelltype', 'shellpipe', 'shellslash' and
@@ -4083,9 +3935,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	useful when a Unix-like shell is used instead of command.com or
 	cmd.exe.  Backward slashes can still be typed, but they are changed to
 	forward slashes by Vim.
-	Note that setting or resetting this option has no effect for existing
-	file names, thus this option needs to be set before opening any file
-	for best results.  This might change in the future.
+	Note that setting or resetting this option has no effect for some
+	existing file names, thus this option needs to be set before opening
+	any file for best results.  This might change in the future.
 
 						*'shelltype'* *'st'*
 'shelltype' 'st'	number	(default 0)
@@ -4878,9 +4730,10 @@ A jump table for the options with a short description can be found at |X_op|.
 			feature}
 	When on, the title of the window will be set to the value of
 	'titlestring' (if it is not empty), or to:
-		filename [+=x] (path) - VIM
+		filename [+=-] (path) - VIM
 	Where:
 		filename	the name of the file being edited
+		-		indicates the file canot be modified, 'ma' off
 		+		indicates the file was modified
 		=		indicates the file is read-only
 		=+		indicates the file is read-only and modified

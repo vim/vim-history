@@ -2938,7 +2938,7 @@ gui_mch_register_sign(signfile)
     int		    status;
 
     /*
-     * Setup  the color subsititution table.
+     * Setup the color substitution table.
      */
     sign = NULL;
     if ((signfile[0] != 0) && (signfile[0] != '-'))

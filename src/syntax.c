@@ -52,7 +52,7 @@ struct hl_group
     int		sg_sign_type;	/* index of sign */
 #endif
     int		sg_link;	/* link to this highlight group ID */
-    int		sg_set;		/* combination of SG_* */
+    int		sg_set;		/* combination of SG_* flags */
 };
 
 #define SG_TERM		1	/* term has been set */
@@ -975,7 +975,7 @@ syn_update_ends(dolast)
  * valid entries.  b_sst_first points to the first one, then follow sst_next.
  * The entries are sorted on line number.  The first entry is often for line 2
  * (line 1 always starts with an empty stack).
- * There is also a list for free entries.  This construction was used to avoid
+ * There is also a list for free entries.  This construction is used to avoid
  * having to allocate and free memory blocks too often.
  *
  * When making changes to the buffer, this is logged in b_mod_*.  When calling

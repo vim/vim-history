@@ -16,7 +16,9 @@ extern int	printf __ARGS((char *, ...));
 extern int	fprintf __ARGS((FILE *, char *, ...));
 extern int	sprintf __ARGS((char *, char *, ...));
 extern int	sscanf __ARGS((char *, char *, ...));
+#ifndef fopen	/* could be redefined to fopen64() */
 extern FILE	*fopen __ARGS((const char *, const char *));
+#endif
 extern int	fclose __ARGS((FILE *));
 extern int	fseek __ARGS((FILE *, long, int));
 #ifdef HAVE_FSEEKO

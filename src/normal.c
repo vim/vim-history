@@ -337,7 +337,7 @@ struct nv_cmd
     {'~',	nv_tilde,	0,			0},
 
     /* pound sign */
-    {0xA3,	nv_ident,	0,			0},
+    {POUND,	nv_ident,	0,			0},
 #ifdef FEAT_MOUSE
     {K_MOUSEUP, nv_mousescroll,	0,			TRUE},
     {K_MOUSEDOWN, nv_mousescroll, 0,			FALSE},
@@ -1222,7 +1222,7 @@ do_pending_operator(cap, old_col, gui_yank)
 #ifdef FEAT_VIRTUALEDIT
        /* If virtual editing is ON, we have to make sure the cursor position
 	* is identical with the text position. */
-	if (ve_all
+	if (ve_flags == VE_ALL
 		&& !VIsual_active
 		&& curwin->w_coladd
 		&& oap->motion_type != MLINE
@@ -1545,12 +1545,11 @@ do_pending_operator(cap, old_col, gui_yank)
 # endif
 		    ))
 	{
-	    char_u	*p;
 	    int		l;
 
-	    p = ml_get(oap->end.lnum);
-	    l = mb_ptr2len_check(p + oap->end.col);
-	    oap->end.col += l - 1;
+	    l = mb_ptr2len_check(ml_get_pos(&oap->end));
+	    if (l > 1)
+		oap->end.col += l - 1;
 	}
 #endif
 	curwin->w_set_curswant = TRUE;
@@ -3176,9 +3175,9 @@ check_scrollbind(topline_diff, leftcol_diff)
 
 		y = topline - curwin->w_topline;
 		if (y > 0)
-		    scrollup(y);
+		    scrollup(y, TRUE);
 		else
-		    scrolldown(-y);
+		    scrolldown(-y, TRUE);
 
 		redraw_later(VALID);
 		cursor_correct();
@@ -3534,9 +3533,9 @@ scroll_redraw(up, count)
     linenr_t	prev_lnum = curwin->w_cursor.lnum;
 
     if (up)
-	scrollup(count);
+	scrollup(count, TRUE);
     else
-	scrolldown(count);
+	scrolldown(count, TRUE);
     if (p_so)
     {
 	cursor_correct();
@@ -4156,7 +4155,7 @@ nv_ident(cap)
 	g_cmd = FALSE;
     }
 
-    if (cmdchar == 0xA3)	/* the pound sign, '#' for English keyboards */
+    if (cmdchar == POUND)	/* the pound sign, '#' for English keyboards */
 	cmdchar = '#';
 
     /*
@@ -5212,7 +5211,7 @@ nv_replace(cap)
 #ifdef FEAT_VIRTUALEDIT
    /* If virtual editing is ON, we have to make sure the cursor position
     * is identical with the text position */
-    if (ve_all && curwin->w_coladd)
+    if (ve_flags == VE_ALL && curwin->w_coladd)
     {
 	u_save_cursor();
 	coladvance_force(getviscol());
@@ -5407,7 +5406,7 @@ nv_Replace(cap)
 #ifdef FEAT_VIRTUALEDIT
 	    /* If virtual editing is ON, we have to make sure the cursor
 	     * position is identical with the text position. */
-	    if (ve_all && curwin->w_coladd)
+	    if (ve_flags == VE_ALL && curwin->w_coladd)
 		coladvance_force(getviscol());
 #endif
 	    /* This is a new edit command, not a restart.  We don't edit
@@ -6245,7 +6244,7 @@ nv_g_cmd(cap)
      */
     case '*':
     case '#':
-    case 0xA3:		/* pound sign */
+    case POUND:		/* pound sign */
     case Ctrl_RSB:		/* :tag or :tselect for current identifier */
     case ']':			/* :tselect for current identifier */
 	nv_ident(cap);
@@ -6279,7 +6278,7 @@ nv_g_cmd(cap)
 	    curwin->w_cursor = curbuf->b_last_insert;
 	    check_cursor_lnum();
 	    i = STRLEN(ml_get_curline());
-	    if (curwin->w_cursor.col > i)
+	    if (curwin->w_cursor.col > (colnr_t)i)
 		curwin->w_cursor.col = i;
 	}
 	cap->cmdchar = 'i';
@@ -6959,7 +6958,7 @@ nv_edit(cap)
 	    case 'A':	/* "A"ppend after the line */
 		curwin->w_set_curswant = TRUE;
 #ifdef FEAT_VIRTUALEDIT
-		if (ve_all)
+		if (ve_flags == VE_ALL)
 		{
 		    int save_State = State;
 

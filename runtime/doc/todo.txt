@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0q.  Last change: 2000 Dec 17
+*todo.txt*      For Vim version 6.0r.  Last change: 2001 Jan 01
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -30,7 +30,8 @@ See |develop.txt| for development plans.
 -------------------- Known bugs and current work -----------------------
 
 Syntax syncing: sometimes a wrong state used from lines below a change which
-is not redisplayed?
+is not redisplayed?  Happens when using "J" moves a "{" into the display, but
+only after making some changes that highlighted the "{" as an error.
 
 
 Main items for 6.0:
@@ -38,7 +39,7 @@ A.  Folding
 	Defining and displaying folds works properly.
 	Need to check all commands if they work well with closed folds.
 	Need to automatically open/close folds when jumping around.
-	Need to store and retrieve fold state in the "view" of a file.
+	Need to store and retrieve view automatically.
 B.  UTF-8 support
 	Mostly works.  Many small items still to be fixed.
 C.  Multi-line regexp patterns
@@ -55,6 +56,7 @@ G.  Edit command line with Vi commands
 H.  More automatic testing
 	Nothing done yet.
 I.  Multi-language support
+	Message translation works.
 	":menutrans" works, but how to handle different encodings?
 J.  User Friendlier
 	Enhance Windows install program.
@@ -66,16 +68,9 @@ A. Folding:
       open a fold and click on a "-" to close a fold.
       When an open fold contains another fold at the same line, show "+-".
     - color closed folds differently.
--   Change 'foldtext' to an expression?
-    When the result is an empty string, display some default info (at least
-    the nesting depth and the nr of lines).
--   ":bdel" and ":buf main.c" don't create folds (foldmethod=syntax).
-    (Stocker) ":edit" does.
--   In 'foldcolumn': Show "+" for closed fold, "-" for open fold.  clicking on
-    it will toggle the open/close status.
--   When opening the help window, don't use fold settings copied from the
-    current buffer.
--   Allow one-line manual folds.
+    - Fold column shouldn't stop at end-of-file.
+-   ":bdel" and ":buf main.c" don't create or delete folds
+    (foldmethod=syntax).  (Stocker) ":edit" does.
 -   Fold problem: (Raul)
     1) create a new buffer with just 4 lines and set scrolloff=1
     2) fold lines 3 and 4
@@ -99,8 +94,6 @@ A. Folding:
 -   Fold problem: When switching 'foldmarker' and then editing the same file
     again while setting the foldmarker in a modeline, an old fold with the
     other marker isn't removed. (Sylvain Viart)
--   'foldtext' should catch a fold that starts with an empty line.  Always
-    show info about the fold (depth, nr of lines)
 -   "zo" should accept a count: number of folds to open.
 -   Add command to open enough folds to have the cursor line in an open fold.
     "zv" "view".
@@ -114,7 +107,6 @@ A. Folding:
     (also available: "zg" "zj", "zk" "zp" "zq" "zv" "zw" "zx" "zy")
 -   Make "zc", "zC", "zo" and "zO" work in Visual mode to work on all selected
     lines.
--   Fold column shouldn't stop at end-of-file.
 -   Also use 'number' for closed fold.
 -   Make all operations that end or start in a closed fold work on the whole
     fold?  Thus "dw" closes the whole fold.
@@ -122,6 +114,7 @@ A. Folding:
 -   Command to delete one fold only ("zd" also deletes nested folds).
     Or change it: "zd" normally deletes only one fold (the top level fold
     under the cursor), in Visual mode it also deletes nested folds.
+-   Allow one-line manual folds.
 -   'foldminlines': Only close folds more than this number of window lines.
     Implement this in win_update().  Still keep the fold defined, just don't
     show it closed.
@@ -156,38 +149,34 @@ A. Folding:
 	from the popup menu?
     Also: open fold when moving horizontally: "h", "l", etc.
     Add option to apply 'foldlevel' when the cursor moves out of a fold.
--   Be able to open/close folds by clicking in the 'foldcolumn'.
+-   When 'foldmethod' is "marker", Use "zf" command to add markers?  Works
+    like manually defining a fold region.  Need to define a template.
 -   Disable making changes while cursor in folded line, except ones that work
     on the whole fold?
 -   'foldstart': specifies initial folding state when entering a file:
 	- value of 'foldlevel'
 	- all folds closed, all open or from view
--   Store fold state in "view" of the file.  Store "view" in viminfo.
+-   Store "view" in viminfo?  Or some other way to automatically restore the
+    last used view (and folding).
     Keep two views of a file: normal and alternate.
-    A view stores:
-	- fold state (use line numbers for folds that are open).
-	- 'number', 'wrap', 'linebreak', 'list', 'rightleft', 'hlsearch'
-	- cursor position, also relative in window (or topline)
-	- marks
-    A session stores several views, one for each open window.
-    Be able to store and retrieve views with ":mkview {name}".
 -   Folding remembered:
-    1. In viminfo (or view).  File itself is not modified
+    1. In viminfo.  Store "view" in viminfo?
     2. In separate file, one for each file (hidden)
+	2a. In same directory as the file, like backup and swapfile.  Doesn't
+	    work if directory isn't writable.
+        2b. In personal directory, file name munged to find it.  Doesn't work
+	    when absolute path changes (links, network mounts).
     3. In one file per directory.
 -   "zF" command: define a fold for a number of lines. Works like "3zfzf".
 -   'foldmethod' "textobject": fold on sections and paragraph text objects.
 -   Add commands to jump to start/end of fold.  Use "[|" and "]|"?
 -   Separate highlighting for 'foldcolumn'.
--   In 'foldtext', use "\l" for foldlevel number?
 -   Ex range which stands for folded lines and non-folded lines.
 	:=d cmd	    displayed (not folded) lines
 	:=f cmd	    folded lines
     Or: Add ":onfold cmd" and ":onfold! cmd": execute cmd on all (not) folded
     lines.
 -   Add 'hidecomment' option: don't display comments in /* */ and after //.
--   When 'foldmethod' is "marker", Use "zf" command to add markers?  Works
-    like manually defining a fold region.  Need to define a template.
 -   'foldmethod' "syntax": "fold=3": set fold level for a region.
 -   Can set 'foldtext' to empty string: don't display any line.  How to
     implement this?
@@ -204,6 +193,13 @@ B. UTF-8 support:
 -   GUI: Cursor is sometimes not removed.
 -   show other non-printable as <xx>.
 -   Check mbyte with 'fontset'.
+-   Setting 'charcode' to "latin-1" is used for all 8bit encodings.  Allow
+    setting to another value and assume it's an 8-bit encoding?  Would at
+    least handle conversions much better.  But how to give a warning for a
+    multi-byte encoding name that's not recognized?
+-   When deleting characters with "x", only delete the last composing
+    character or both the base character and the composing characters?  Add
+    an option to chose.  Also for <BS> in Insert mode.
 -   When inserting a UTF-8 byte sequence in the input stream, does a K_SPECIAL
     byte (0x80) get inserted as one byte or as K_SPECIAL - KS_SPECIAL -
     KE_FILLER?  See cmdline_paste_str().  Check all occurences of
@@ -248,19 +244,16 @@ C.  Multi-line regexp patterns
 -   "\(\s*\S.*\n\)*^{$" doesn't match (should find start of a function,
     including non-empty lines before it).
 
+
 D. Vertical window split:
--   Add a flag in 'guioptions' to make a scrollbar use the full height and
-    work for the current window.  Makes it possible to scroll inner windows.
--   ";vertical resize" for width.
+-   ":vertical resize" for width.
 -   Make window-rotate commands also work with vertically split windows.  Be
     able to move the preview window to a vertically split window.
 -   "-O" command line argument, like "-o" but split vertically?
 -   When there is not enough room, remove the ruler from the status line of
     windows which are not the current one, so that there is more room for the
     file name.
--   Specify char for separator with 'vsep'? (Zellner)
 -   Patch for VerticalSep highlighting. (Zellner)
--   Storing Vertical splits in session.
 -   Should use scroll region that also defines columns.
 -   Check clear-to-end-of-screen calls to only clear in current window.
 -   When resizing the shell, try to keep aspect of windows instead of making
@@ -353,6 +346,8 @@ I. Multi-language support:
 
 J. User Friendlier
 -   ":setlocal option<": reset local option to global value.
+9   Add a menu (or sub-men) with most often used options: 'wrap', 'textwidth',
+    etc.
 -   Add a way to save local settings and mappings into a new plugin file.
     ":mkplugin <file>"?
 9   Add buffer-local menu.  Should offer a choice between removing the menu or
@@ -366,9 +361,6 @@ J. User Friendlier
 -   Make Windows uninstall program better:
     Delete the vim.bat and gvim.bat files.
     Delete a whole tree of Vim files.
--   Is it possible to add a "Save Settings" command?  All manual :set, :map
-    etc. should be stored in a file.  Automatically set options _not_.  How do
-    we know what to write and what not?
 -   Add mappings local to a window: ":map <window> ..."?
 
 
@@ -384,9 +376,6 @@ Messages:
 
 
 Various recent:
-8   Vi compatibility: ":e" ":cd" ":w" keeps the actual directory of the file,
-    while ":n *.c" :cd" ":n" doesn't.  Make this consistent, and add a flag in
-    'cpoptions'.
 8   Using "gf" in Visual mode should use the selected text as a file name.
 9   This pattern in syntax/java.vim causes a recursive call of regmatch():
 	syn match   javaStringError      +"\([^"\\]\|\\.\)*$+
@@ -472,7 +461,6 @@ Various recent:
 9   ":cwindow!" always open quickfix window, ":cwindow" only open it if there
     are recognized errors.  ":cclose" to close quickfix window?
 8   For ":silent !cmd":
-    ":silent let password = input('')" should put stars on cmdline.
     ":silent write" still writes a message.
     ":silent s//" still writes a message.
     How to use ":silent" for a search command?  ":silent /pat" uses ":/pat".
@@ -494,8 +482,6 @@ Various recent:
     Still do the messages for ":redir"?
     -> ":silent redir": Remember the last message, print it if waiting for a
        key (otherwise the hit-enter prompt could be missed).
-    -> ":silent ptag": don't complain when tag doesn't exist.  Use in example
-       for ":ptag" CursorHold autocommand.
     Ideas in ~/vim/patches/wall.noredir.tgz (Stephen P. Wall).
 -   In ":ptag" preview window highlight the tag.
 -   Make syntax keyword table configurable.  Set number of bits used with
@@ -629,10 +615,6 @@ Vi incompatibility:
 	.		    line4/
 6   ":e /tmp/$tty" doesn't work.  ":e $uid" does.  Is $tty not set because of
     the way the shell is started?
-6   After ":cd", meaning of file names for existing buffers changes.  Do we
-    care?
-    Also: ":n *.c" ":cd .." ":n" uses the new current directory, but that's
-    not what most people expect.  Add a flag in 'cpoptions' for this?
 6   Vi compatibility (optional): make "ia<CR><ESC>10." do the same strange
     thing.  (only repeat insert for the first line).
 8   When "cm" termcap entry is missing, starting gvim shouldn't complain about
@@ -882,6 +864,9 @@ MSDOS/DJGPP:
 MSDOS, OS/2 and Win32:
 8   OS/2: Add backtick expansion.  Undefine NO_EXPANDPATH and use
     gen_expand_wildcards().
+8   OS/2: Add clipboard support?  See example clipbrd.exe from Alexander
+    Wagner.
+8   OS/2: Add Extended Attributes support and define HAVE_ACL.
 8   Win32 console: <M-Up> and <M-Down> don't work. (Geddes)  We don't have
     special keys for these.  Should use modifier + key.
 8   Environment variables in DOS are not case sensitive.  Make a define for
@@ -1210,6 +1195,7 @@ Problems that will (probably) not be solved:
 						    *extensions-improvements*
 
 Documentation:
+9   Merge in ideas from ~/vim/patches/tutor.txt (Gabriel Zachmann)
 9   Errors in doc to HTML conversion:
     autocmd.txt "like \| in a |pattern|"
 9   Add 'fold' section to quick reference.
@@ -1431,8 +1417,6 @@ Built-in script language:
 	mapname({idx}, mode)	return the name of the idx'th mapping.
 	match({pat}, {string}, [count]) get index of count'th match
 	sprintf(format, arg, ..) How to prevent a crash???
-	inputpassword()		Ask user to enter password without showing it.
-				Or extra argument to input() (Haegg)
 	attributes()		return file protection flags "drwxrwxrwx"
 	perl(cmd)		call Perl and return string
 	shorten(fname)		shorten a file name, like home_replace()
@@ -1737,6 +1721,8 @@ Security:
 
 
 Win32 GUI:
+8   Make debug mode work while starting up (vim -D).  Open console window for
+    the message and input?
 8   Add font argument to set the lfCharSet. (Bobcik)
 8   Could keep console open to run multiple commands, to avoid the need to hit
     return in every console.
@@ -2546,6 +2532,14 @@ Options:
     "curdir" (cd to current directory when session file was generated)
     "sessiondir" (cd to directory of session file)
     "nodir" (don't cd at all)
+8   Add Edit.Settings menu with most often used options:
+	line numbering on/off
+	wrap on/off
+	hlsearch on/off
+	toolbar on/off
+	scrollbars left, right, bottom on/off
+	shiftwidth 2, 3, 4, 5, 6, 8
+	expandtab on/off
 8   Make "old" number options that really give a number of effects into string
     options that are a comma separated list.  The old number values should
     also be supported.

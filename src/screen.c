@@ -884,18 +884,23 @@ win_update(wp)
      * 2: wp->w_topline is below wp->w_lines[0].wl_lnum: may scroll up
      * 3: wp->w_topline is wp->w_lines[0].wl_lnum: find first entry in
      *    w_lines[] that needs updating.
-     * Don't do this when w_topline is the first changed line, the scrolling
-     * will be done further down then.
      * Also don't do this when the window is part of a vertical split.
      */
     if ((type == VALID || type == INVERTED)
-	    && !(buf->b_mod_set && wp->w_topline == mod_top)
 #ifdef FEAT_VERTSPLIT
 	    && W_WIDTH(wp) == Columns
 #endif
 	    )
     {
-	if (wp->w_topline < wp->w_lines[0].wl_lnum && wp->w_lines[0].wl_valid)
+	if (buf->b_mod_set && wp->w_topline == mod_top)
+	{
+	    /*
+	     * w_topline is the first changed line, the scrolling will be done
+	     * further down.
+	     */
+	}
+	else if (wp->w_topline < wp->w_lines[0].wl_lnum
+						   && wp->w_lines[0].wl_valid)
 	{
 	    /*
 	     * New topline is above old topline: May scroll down.
@@ -1704,57 +1709,44 @@ fold_line(wp, fold_count, level, lnum, row)
     /* Compose the folded-line string with 'foldtext', if set. */
     if (*wp->w_p_fdt != NUL)
     {
-	for (p = wp->w_p_fdt + 1; *p; ++p)
+	/* Set "v:foldstart" and "v:foldend". */
+	set_vim_var_nr(VV_FOLDSTART, lnum);
+	set_vim_var_nr(VV_FOLDEND, lnume);
+
+	/* Set "v:folddashes" to a string of "level" dashes. */
+	if (level > 50)
+	    level = 50;
+	vim_memset(dashes, '-', (size_t)level);
+	dashes[level] = NUL;
+	set_vim_var_string(VV_FOLDDASHES, dashes, -1);
+
+	++emsg_off;
+	text = eval_to_string_safe(wp->w_p_fdt, NULL);
+	--emsg_off;
+
+	set_vim_var_string(VV_FOLDDASHES, NULL, -1);
+
+	if (text != NULL)
 	{
-	    if (*p == '\\' && p[1] != NUL)
-		++p;
-	    else if (*p == *wp->w_p_fdt)
+	    /* Replace unprintable characters, if there are any.  But
+	     * replace a TAB with a space. */
+	    for (p = text; *p; ++p)
 	    {
-		*p = NUL;
-
-		/* Set "reg_folded_count" to number of folded lines, for "\f"
-		 * in substitute pattern. */
-		sprintf((char *)buf, "%3ld", fold_count);
-		reg_folded_count = buf;
-
-		/* Set "reg_level_string" to a string of "level" dashes, for
-		 * "\d" in substitute pattern. */
-		if (level > 50)
-		    level = 50;
-		reg_level_string = dashes;
-		vim_memset(dashes, '-', (size_t)level);
-		dashes[level] = NUL;
-
-		/* Match the pattern and replace with substitution. */
-		text = do_string_sub(ml_get_buf(wp->w_buffer, lnum, FALSE),
-					wp->w_p_fdt + 1, p + 1, (char_u *)"");
-		*p = *wp->w_p_fdt;
-		reg_folded_count = NULL;
-		reg_level_string = NULL;
-		if (text != NULL)
-		{
-		    /* Replace unprintable characters, if there are any.  But
-		     * replace a TAB with a space. */
-		    for (p = text; *p; ++p)
-		    {
 #ifdef FEAT_MBYTE
-			if (has_mbyte && (len = mb_ptr2len_check(p)) > 1)
-			    p += len - 1;
-			else
+		if (has_mbyte && (len = mb_ptr2len_check(p)) > 1)
+		    p += len - 1;
+		else
 #endif
-			    if (*p == TAB)
-			    *p = ' ';
-			else if (ptr2cells(p) > 1)
-			    break;
-		    }
-		    if (*p)
-		    {
-			p = transstr(text);
-			vim_free(text);
-			text = p;
-		    }
-		}
-		break;
+		    if (*p == TAB)
+			*p = ' ';
+		    else if (ptr2cells(p) > 1)
+			break;
+	    }
+	    if (*p)
+	    {
+		p = transstr(text);
+		vim_free(text);
+		text = p;
 	    }
 	}
     }
@@ -1886,6 +1878,7 @@ win_line(wp, lnum, startrow, endrow)
     unsigned	off;			/* offset in ScreenLines/ScreenAttrs */
     int		c = 0;			/* init for GCC */
     long	vcol = 0;		/* virtual column (for tabs) */
+    long	vcol_prev = -1;		/* "vcol" of previous character */
     char_u	*line;			/* current line */
     char_u	*ptr;			/* current position in "line" */
     int		row;			/* row in the window, excl w_winrow */
@@ -2362,13 +2355,13 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 				))
 			|| (noinvcur
-			    && (colnr_t)vcol == wp->w_virtcol + 1
+			    && (colnr_t)vcol_prev == wp->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
 								+ wp->w_coladd
 #endif
 			    && vcol >= fromcol))
 		    && vcol < tocol)
-		area_attr = attr;		    /* start highlighting */
+		area_attr = attr;		/* start highlighting */
 	    else if (area_attr
 		    && (vcol == tocol
 			|| (noinvcur
@@ -2378,7 +2371,7 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 			    )))
 #ifdef FEAT_SIGNS
-		area_attr = debug_attr;		    /* stop highlighting */
+		area_attr = debug_attr;		/* stop highlighting */
 	    else if (debug_attr && ((fromcol == -10 && tocol == MAXCOL)
 					 || (vcol < fromcol || vcol > tocol)))
 		area_attr = debug_attr;
@@ -2728,7 +2721,7 @@ win_line(wp, lnum, startrow, endrow)
 #ifdef FEAT_VIRTUALEDIT
 		else if (VIsual_active
 			 && VIsual_mode == Ctrl_V
-			 && ve_block
+			 && (ve_flags & VE_BLOCK)
 			 && tocol != MAXCOL
 			 && vcol < tocol
 			 && col < W_WIDTH(wp))
@@ -2851,6 +2844,7 @@ win_line(wp, lnum, startrow, endrow)
 	 * Store character to be displayed.
 	 * Skip characters that are left of the screen for 'nowrap'.
 	 */
+	vcol_prev = vcol;
 	if (draw_state < WL_LINE || n_skip <= 0)
 	{
 	    /*
@@ -3813,7 +3807,7 @@ win_redr_status(wp)
 
 	if (wp->w_buffer->b_help
 #ifdef FEAT_QUICKFIX
-		|| wp->w_preview
+		|| wp->w_p_pvw
 #endif
 		|| bufIsChanged(wp->w_buffer)
 		|| wp->w_buffer->b_p_ro)
@@ -3824,7 +3818,7 @@ win_redr_status(wp)
 	    len += STRLEN(p + len);
 	}
 #ifdef FEAT_QUICKFIX
-	if (wp->w_preview)
+	if (wp->w_p_pvw)
 	{
 	    STRCPY(p + len, _("[Preview]"));
 	    len += STRLEN(p + len);
@@ -4044,7 +4038,6 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 #ifdef FEAT_EVAL
     win_t	*o_curwin;
     buf_t	*o_curbuf;
-    void	*save_funccalp;
 #endif
     int		empty_line;
     colnr_t	virtcol;
@@ -4285,10 +4278,13 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    o_curwin = curwin;
 	    curwin = wp;
 	    curbuf = wp->w_buffer;
-	    /* Don't want to use local function variables here. */
-	    save_funccalp = save_funccal();
 
-	    str = eval_to_string(p, &t);
+	    str = eval_to_string_safe(p, &t);
+
+	    curwin = o_curwin;
+	    curbuf = o_curbuf;
+	    do_unlet((char_u *)"g:actual_curbuf");
+
 	    if (str != NULL && *str != 0)
 	    {
 		t = str;
@@ -4304,10 +4300,6 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		    itemisflag = FALSE;
 		}
 	    }
-	    restore_funccal(save_funccalp);
-	    curwin = o_curwin;
-	    curbuf = o_curbuf;
-	    do_unlet((char_u *)"g:actual_curbuf");
 #endif
 	    break;
 
@@ -4436,7 +4428,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	case STL_PREVIEWFLAG:
 	case STL_PREVIEWFLAG_ALT:
 	    itemisflag = TRUE;
-	    if (wp->w_preview)
+	    if (wp->w_p_pvw)
 		str = (char_u *)((opt == STL_PREVIEWFLAG_ALT) ? ",PRV"
 							    : _("[Preview]"));
 	    break;
@@ -6587,7 +6579,7 @@ scroll_cursor_bot(min_scroll, set_topbot)
     if (line_count >= curwin->w_height && line_count > min_scroll)
 	scroll_cursor_halfway(FALSE);
     else
-	scrollup(line_count);
+	scrollup(line_count, TRUE);
 
     /*
      * If topline didn't change we need to restore w_botline and w_empty_rows
@@ -7647,7 +7639,7 @@ curs_columns(scroll)
     endcol += extra;
 
 #ifdef FEAT_VIRTUALEDIT
-    if (ve_all
+    if (ve_flags == VE_ALL
 # ifdef FEAT_FOLDING
 	    && !curwin->w_cline_folded
 # endif
@@ -7841,13 +7833,15 @@ curs_columns(scroll)
 /*
  * Scroll the current window down by "line_count" logical lines.
  */
+/*ARGSUSED*/
     void
-scrolldown(line_count)
-    long    line_count;
+scrolldown(line_count, byfold)
+    long	line_count;
+    int		byfold;		/* TRUE: count a closed fold as one line */
 {
-    long    done = 0;		/* total # of physical lines done */
-    int	    wrow;
-    int	    moved = FALSE;
+    long	done = 0;	/* total # of physical lines done */
+    int		wrow;
+    int		moved = FALSE;
 
 #ifdef FEAT_FOLDING
     linenr_t	first;
@@ -7856,7 +7850,7 @@ scrolldown(line_count)
     (void)hasFolding(curwin->w_topline, &curwin->w_topline, NULL);
 #endif
     validate_cursor();		/* w_wrow needs to be valid */
-    while (line_count--)
+    while (line_count-- > 0)
     {
 	if (curwin->w_topline == 1)
 	    break;
@@ -7866,6 +7860,8 @@ scrolldown(line_count)
 	if (hasFolding(curwin->w_topline, &first, NULL))
 	{
 	    ++done;
+	    if (!byfold)
+		line_count -= curwin->w_topline - first - 1;
 	    curwin->w_botline -= curwin->w_topline - first;
 	    curwin->w_topline = first;
 	}
@@ -7922,16 +7918,19 @@ scrolldown(line_count)
 /*
  * Scroll the current window up by "line_count" logical lines.
  */
+/*ARGSUSED*/
     void
-scrollup(line_count)
-    long    line_count;
+scrollup(line_count, byfold)
+    long	line_count;
+    int		byfold;		/* TRUE: count a closed fold as one line */
 {
 #ifdef FEAT_FOLDING
-    if (hasAnyFolding(curwin))
-    {
-	linenr_t	lnum = curwin->w_topline;
+    linenr_t	lnum;
 
+    if (byfold && hasAnyFolding(curwin))
+    {
 	/* count each sequence of folded lines as one logical line */
+	lnum = curwin->w_topline;
 	while (line_count--)
 	{
 	    (void)hasFolding(lnum, NULL, &lnum);
@@ -7952,6 +7951,14 @@ scrollup(line_count)
 	curwin->w_topline += line_count;
 	curwin->w_botline += line_count;	/* approximate w_botline */
     }
+
+#ifdef FEAT_FOLDING
+    if (!byfold && hasAnyFolding(curwin))
+    {
+	/* Make sure w_topline is at the first of a sequence of folded lines. */
+	(void)hasFolding(curwin->w_topline, &curwin->w_topline, NULL);
+    }
+#endif
 
     curwin->w_valid &= ~(VALID_WROW|VALID_CROW|VALID_BOTLINE);
     if (curwin->w_topline > curbuf->b_ml.ml_line_count)
@@ -9604,6 +9611,7 @@ intro_message()
     int		i;
     int		row;
     int		col;
+    int		blanklines;
     char_u	vers[20];
     static char	*(lines[]) =
     {
@@ -9625,17 +9633,21 @@ intro_message()
 	N_("type  :help cp-default<Enter> for info on this"),
     };
 
-    row = ((int)Rows - (int)(sizeof(lines) / sizeof(char *))) / 2;
+    /* blanklines = screen height - # message lines */
+    blanklines = (int)Rows - ((sizeof(lines) / sizeof(char *)) - 1);
     if (!p_cp)
-	row += 2;
+	blanklines += 4;  /* add 4 for not showing "Vi compatible" message */
 #if defined(WIN32) && !defined(FEAT_GUI_W32)
     if (mch_windows95())
-	row -= 2;
+	blanklines -= 3;  /* subtract 3 for showing "Windows 95" message */
 #endif
 #if defined(__BEOS__) && defined(__INTEL__)
-    row -= 2;
+    blanklines -= 3;      /* subtract 3 for showing "BEOS on Intel" message */
 #endif
-    if (row > 2 && Columns >= 50)
+
+    /* start displaying the message lines after half of the blank lines */
+    row = blanklines / 2;
+    if (row >= 2 && Columns >= 50)
     {
 	for (i = 0; i < (int)(sizeof(lines) / sizeof(char *)); ++i)
 	{
@@ -9674,8 +9686,8 @@ intro_message()
 #if defined(WIN32) && !defined(FEAT_GUI_W32)
 	if (mch_windows95())
 	{
-	    screen_puts((char_u *)_("WARNING: Windows 95 detected"),
-					    row + 1, col + 8, hl_attr(HLF_E));
+	    screen_puts((char_u *)_("WARNING: Windows 95/98/ME detected"),
+					    row + 1, col + 6, hl_attr(HLF_E));
 	    screen_puts((char_u *)_("type  :help windows95<Enter>  for info on this"),
 							     row + 2, col, 0);
 	}

@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.0q.  Last change: 2000 Dec 12
+*index.txt*     For Vim version 6.0r.  Last change: 2000 Dec 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1087,6 +1087,7 @@ The commands are sorted on the non-optional part of their name.
 |:mkexrc|	:mk[exrc]	write current mappings and settings to a file
 |:mksession|	:mks[ession]	write session info to a file
 |:mkvimrc|	:mkv[imrc]	write current mappings and settings to a file
+|:mkview|	:mkvie[w]	write view of current window to a file
 |:mode|		:mod[e]		show or change the screen mode
 |:next|		:n[ext]		go to next file in the argument list
 |:new|		:new		create a new empty window

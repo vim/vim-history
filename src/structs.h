@@ -123,6 +123,10 @@ typedef struct
 #define w_p_list w_onebuf_opt.wo_list
     int		wo_nu;			/* 'number' */
 #define w_p_nu w_onebuf_opt.wo_nu
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+    int		wo_pvw;			/* 'previewwindow' */
+#define w_p_pvw w_onebuf_opt.wo_pvw
+#endif
 #ifdef FEAT_RIGHTLEFT
     int		wo_rl;			/* 'rightleft' */
 #define w_p_rl w_onebuf_opt.wo_rl
@@ -434,15 +438,29 @@ typedef struct arglist
     int		al_refcount;	/* number of windows using this arglist */
 } alist_t;
 
+/*
+ * For each argument remember the file name as it was given, and the buffer
+ * number that contains the expanded file name (required for when ":cd" is
+ * used.
+ */
+typedef struct argentry
+{
+    char_u	*ae_fname;	/* file name as specified */
+    int		ae_fnum;	/* buffer number with expanded file name */
+} aentry_t;
+
 #ifdef FEAT_WINDOWS
 # define ALIST(win) (win)->w_alist
 #else
 # define ALIST(win) (&global_alist)
 #endif
-#define ARGLIST ((char_u **)ALIST(curwin)->al_ga.ga_data)
-#define GARGLIST ((char_u **)global_alist.al_ga.ga_data)
-#define ARGCOUNT (ALIST(curwin)->al_ga.ga_len)
-#define GARGCOUNT (global_alist.al_ga.ga_len)
+#define GARGLIST	((aentry_t *)global_alist.al_ga.ga_data)
+#define ARGLIST		((aentry_t *)ALIST(curwin)->al_ga.ga_data)
+#define WARGLIST(wp)	((aentry_t *)ALIST(wp)->al_ga.ga_data)
+#define AARGLIST(al)	((aentry_t *)((al)->al_ga.ga_data))
+#define GARGCOUNT	(global_alist.al_ga.ga_len)
+#define ARGCOUNT	(ALIST(curwin)->al_ga.ga_len)
+#define WARGCOUNT(wp)	(ALIST(wp)->al_ga.ga_len)
 
 #ifdef FEAT_EVAL
 /*
@@ -618,7 +636,7 @@ struct file_buffer
     int		b_sniff;	/* file was loaded through Sniff */
 #endif
 
-    int		b_fnum;		/* file number for this file. */
+    int		b_fnum;		/* buffer number for this file. */
 
     int		b_changed;	/* 'modified': Set to TRUE if something in the
 				   file has been changed and not written out. */
@@ -1136,10 +1154,6 @@ struct window
 
 #ifdef FEAT_SCROLLBIND
     long	w_scbind_pos;
-#endif
-
-#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
-    int		w_preview;	/* Flag to indicate a preview window */
 #endif
 
 #ifdef FEAT_EVAL
