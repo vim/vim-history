@@ -28,6 +28,7 @@ void gui_mch_free_font __ARGS((GuiFont font));
 GuiColor gui_mch_get_color __ARGS((char_u *name));
 void gui_mch_set_fg_color __ARGS((GuiColor color));
 void gui_mch_set_bg_color __ARGS((GuiColor color));
+void ImeSetCompositionWindow __ARGS((void));
 void ImeSetOriginMode __ARGS((void));
 void ImeSetEnglishMode __ARGS((void));
 void gui_mch_draw_string __ARGS((int row, int col, char_u *s, int len, int flags));
