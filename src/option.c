@@ -4523,7 +4523,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     /* 'fileformat' */
     else if (gvarp == &p_ff)
     {
-	if (!curbuf->b_p_ma && (opt_flags & OPT_LOCAL))
+	if (!curbuf->b_p_ma && !(opt_flags & OPT_GLOBAL))
 	    errmsg = e_modifiable;
 	else if (check_opt_strings(*varp, p_ff_values, FALSE) != OK)
 	    errmsg = e_invarg;
