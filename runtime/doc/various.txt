@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 5.6.  Last change: 1999 Dec 21
+*various.txt*   For Vim version 5.7a.  Last change: 2000 Apr 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -183,7 +183,8 @@ ga			Print the ascii value of the character under the
 *+browse*		|:browse| command
 *+builtin_terms*	some terminals builtin |builtin-terms|
 *++builtin_terms*	maximal terminals builtin |builtin-terms|
-*+byte_offset*		support for 'o' flag in 'statusline' option
+*+byte_offset*		support for 'o' flag in 'statusline' option, "go"
+			and ":goto" commands.
 *+cindent*		|'cindent'|, C indenting
 *+cmdline_compl*	command line completion |cmdline-completion|
 *+cmdline_info*		|'showcmd'| and |'ruler'|

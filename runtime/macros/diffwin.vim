@@ -9,9 +9,11 @@
 "		You may wish to modify the maps' temporary directory;
 "		its easiest to use vms's version: copy it, then :s/tmp:/newpath/g
 "
-" To use: start Vim as shown below and hit the <F8> key:
+" To use: start Vim as shown below, use \df to generate differences,
+"         and then hit the <F8> key:
 "
 "		vim -o newfile oldfile
+"       \df
 "		<F8>
 "
 " The resulting three windows will look like this:
@@ -39,7 +41,7 @@
 if has("unix")
   map \df <C-W>k<C-W>j:!diff -c <C-R>% <C-R># > /tmp/vimtmp.dif<C-M><C-W>k<C-W>s:e! /tmp/vimtmp.dif<C-M>:!/bin/rm -f /tmp/vimtmp.dif<C-M><C-M>
 elseif has("win32")
-  map \df   <C-W>k<C-W>j:!diff -c <C-R>% <C-R># > c:\sw\vim\vimtmp\vimtmp.dif<C-M><C-W>k<C-W>s:e c:\sw\vim\vimtmp\vimtmp.dif<C-M>:!rm c:\sw\vim\vimtmp\vimtmp.dif<C-M><C-M>
+  map \df   <C-W>k<C-W>j:!diff -c <C-R>% <C-R># > vimtmp.dif<C-M><C-W>k<C-W>s:e vimtmp.dif<C-M>:!erase vimtmp.dif<C-M><C-M>
 elseif has("vms")
   map \df <C-W>k<C-W>j:!diff -c <C-R>% <C-R># > tmp:vimtmp.dif<C-M><C-W>k<C-W>s:e! tmp:vimtmp.dif<C-M>:!/bin/rm -f tmp:vimtmp.dif<C-M><C-M>
 endif

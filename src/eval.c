@@ -4970,6 +4970,7 @@ do_function(eap, getline, cookie)
 	    goto erret;
 	}
 
+	/* Check for "endfunction" (should be more strict...). */
 	for (p = theline; vim_iswhite(*p) || *p == ':'; ++p)
 	    ;
 	if (STRNCMP(p, "endf", 4) == 0 && nesting-- == 0)
@@ -4977,10 +4978,13 @@ do_function(eap, getline, cookie)
 	    vim_free(theline);
 	    break;
 	}
+
+	/* Increase indent inside "if" and "while", decrease at "end" */
 	if (indent > 2 && STRNCMP(p, "end", 3) == 0)
 	    indent -= 2;
 	else if (STRNCMP(p, "if", 2) == 0 || STRNCMP(p, "wh", 2) == 0)
 	    indent += 2;
+
 	/* Check for defining a function inside this function. */
 	if (STRNCMP(p, "fu", 2) == 0)
 	{
@@ -5565,11 +5569,15 @@ repeat:
     {
 	valid |= VALID_PATH;
 	*usedlen += 2;
-	*fnamep = FullName_save(*fnamep, FALSE);
-	vim_free(*bufp);	/* free any allocated file name */
-	*bufp = *fnamep;
-	if (*fnamep == NULL)
-	    return -1;
+	/* FullName_save() is slow, don't use it when not needed. */
+	if (!mch_isFullName(*fnamep))
+	{
+	    *fnamep = FullName_save(*fnamep, FALSE);
+	    vim_free(*bufp);	/* free any allocated file name */
+	    *bufp = *fnamep;
+	    if (*fnamep == NULL)
+		return -1;
+	}
     }
 
     /* ":." - path relative to the current directory */

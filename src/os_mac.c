@@ -113,8 +113,8 @@ mac_expandpath(
 
     if (prog == NULL)
     {
-	    vim_free(buf);
-	    return 0;
+	vim_free(buf);
+	return 0;
     }
 
     /* open the directory for scanning */
@@ -244,6 +244,8 @@ mac_expandpath(
 	}
 	while (gErr == noErr);
     }
+
+    vim_free(prog);
 
     return gap->ga_len - start_len;
 }

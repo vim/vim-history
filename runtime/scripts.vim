@@ -1,7 +1,7 @@
 " Vim support file to detect file types in scripts
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Jan 06
+" Last change:	2000 Jun 08
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the type of file can be recognized by
@@ -22,22 +22,8 @@ let scr_cpo_save = &cpo
 set cpo-=C
 
 " Bourne-like shell scripts: sh ksh bash
-if getline(1) =~ '^#!.*[/\\][bk]\=a\=sh\>'
-  if exists("is_bash")
-    unlet is_bash
-  endif
-  if exists("is_kornshell")
-    unlet is_kornshell
-  endif
-  " if bash is sh on your system as on Linux, you may prefer to
-  " add the following in your .vimrc file:
-  " let bash_is_sh=1
-  if exists("bash_is_sh") || getline(1) =~ '^#!.*[/\\]bash\>'
-    let is_bash=1
-  elseif getline(1) =~ '^#!.*[/\\]ksh\>'
-    let is_kornshell=1
-  endif
-  set ft=sh
+if getline(1) =~ '^#!.*[/\\]\(bash\|ksh\|sh\)\>'
+  call SetFileTypeSH(getline(1))	" defined in filetype.vim
 
 " csh and tcsh scripts
 elseif getline(1) =~ '^#!.*[/\\]t\=csh\>'
@@ -76,6 +62,14 @@ elseif getline(1) =~ '^#!.*[/\\][^/\\]*perl[^/\\]*\>'
 " Python
 elseif getline(1) =~ '^#!.*[/\\][^/\\]*python[^/\\]*\>'
   set ft=python
+
+" Ruby
+elseif getline(1) =~ '^#!.*[/\\][^/\\]*ruby[^/\\]*\>'
+  set ft=ruby
+
+" BC calculator
+elseif getline(1) =~ '^#!.*[/\\]bc\>'
+  set ft=bc
 
 " sed
 elseif getline(1) =~ '^#!.*sed\>'
@@ -140,6 +134,23 @@ elseif getline(1) =~ '^\x\{7}: \x\{4} \x\{4} '
 " RCS/CVS log output
 elseif getline(1) =~ '^RCS file:' || getline(2) =~ '^RCS file:'
   set ft=rcslog
+
+" SNNS files
+elseif getline(1) =~ '^SNNS network definition file'
+  set ft=snnsnet
+elseif getline(1) =~ '^SNNS pattern definition file'
+  set ft=snnspat
+elseif getline(1) =~ '^SNNS result file'
+  set ft=snnsres
+
+" Website MetaLanguage
+elseif getline(1) =~ '^#!.*wml.*'
+  set ft=wml
+
+" Generic configuration file (check this last, it's just guessing!)
+elseif getline(1) =~ '^#' || getline(2) =~ '^#' || getline(3) =~ '^#'
+	\ || getline(4) =~ '^#' || getline(5) =~ '^#'
+  set ft=conf
 
 endif
 

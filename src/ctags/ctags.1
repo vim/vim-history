@@ -1,4 +1,4 @@
-.TH CTAGS 1 "Version 3.4" "Darren Hiebert"
+.TH CTAGS 1 "Version 3.5.1" "Darren Hiebert"
 
 
 .SH NAME
@@ -303,9 +303,9 @@ int foo ARGDECL4(void *, ptr, long int, nbytes)
 
 .PP
 .RS 5
-In the above example, the macro "ARGDECL2" would be mistakenly interpreted to
+In the above example, the macro "ARGDECL4" would be mistakenly interpreted to
 be the name of the function instead of the correct name of "foo". Specifying
-\fB-I\fP \fIARGDECL2\fP results in the correct behavior.
+\fB-I\fP \fIARGDECL4\fP results in the correct behavior.
 .RE
 
 .PP
@@ -1040,6 +1040,11 @@ of a routine or class, where \fIvalue\fP is specific to the language
 ("virtual" or "pure virtual" for C++; "abstract" for Java).
 
 .TP 12
+.I inherits
+When present, \fIvalue\fP. is a comma-separated list of classes from which
+this class is derived (i.e. inherits from).
+
+.TP 12
 .I interface
 Indicates that this tag is a member of the interface whose name is given by
 \fIvalue\fP.
@@ -1076,6 +1081,20 @@ file.
 Similar to the \fBCTAGS\fP variable above, this variable, if found, will be
 read when \fBetags\fP starts. If this variable is not found, \fBetags\fP will
 try to use \fBCTAGS\fP instead.
+
+.TP 8
+.B TMPDIR
+On Unix-like hosts where mkstemp() is available, the value of this variable
+specifies the directory in which to place temporary files. This can be useful
+if the size of a temporary file becomes too large to fit on the partition
+holding the default temporary directory defined at compilation time.
+\fBctags\fP creates temporary files only if either (1) an emacs-style tag file
+is being generated, (2) the tag file is being sent to standard output, or (3)
+the program was compiled to use an internal sort algorithm to sort the tag
+files instead of the the sort utility of the operating system. If the sort
+utility of the operating system is being used, it will generally observe this
+variable also. Note that if \fBctags\fP is setuid, the value of TMPDIR will be
+ignored.
 
 .SH "HOW TO USE WITH VI"
 Vi will, by default, expect a tag file by the name "tags" in the current

@@ -208,7 +208,7 @@ debug: scoptions $(OBJ) version.c version.h
 
 proto: $(GST) $(PRO)
 
-ctags:
+tags:
 	spat ctags $(SRC) *.h
 #	csh -c ctags $(SRC) *.h
 

@@ -102,8 +102,6 @@ static void	nv_join __ARGS((CMDARG *cap));
 static void	nv_put __ARGS((CMDARG *cap));
 
 /*
- * normal
- *
  * Execute a command in Normal mode.
  *
  * This is basically a big switch with the cases arranged in rough categories
@@ -2215,7 +2213,8 @@ do_mouse(oap, c, dir, count, fix_indent)
 		return FALSE;
 #endif
 #if defined(USE_GUI_MOTIF) || defined(USE_GUI_GTK) \
-	    || defined(USE_GUI_ATHENA) || defined(USE_GUI_MSWIN)
+	    || defined(USE_GUI_ATHENA) || defined(USE_GUI_MSWIN) \
+	    || defined(USE_GUI_MAC)
 	    if (gui.in_use)
 	    {
 		jump_flags = 0;

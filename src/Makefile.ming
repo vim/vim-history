@@ -1,5 +1,5 @@
 # Makefile for VIM on Win32, using 'EGCS/mingw32 1.1.2'.
-# Available at http://www.xraylith.wisc.edu/~khan/
+# Info at http://www.mingw.org
 # Also requires 'GNU make 3.77', which you can get through a link
 # to 'JanJaap's page from the above page.
 #

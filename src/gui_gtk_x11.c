@@ -1315,6 +1315,48 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
 }
 #endif /* GTK_DND */
 
+#if 0
+/* Not used yet, because I don't know how to catch the WM_SAVE_YOURSELF event.
+ */
+/*
+ * Setup the WM_PROTOCOLS to indicate we want the WM_SAVE_YOURSELF event.
+ * This is an ugly use of X functions.  GTK doesn't offer an alternative.
+ */
+static void
+setup_save_yourself(void)
+{
+    Atom	*existing;
+    Atom	*new;
+    int		count;
+    int		i;
+
+    /* first get the existing value */
+    if (XGetWMProtocols(GDK_DISPLAY(),
+		  GDK_WINDOW_XWINDOW(gui.mainwin->window), &existing, &count))
+    {
+	/* check if WM_SAVE_YOURSELF isn't there yet */
+	for (i = 0; i < count; ++i)
+	    if (existing[i] == save_yourself_atom)
+		break;
+	if (i == count)
+	{
+	    /* allocate an Atoms array which is one item longer */
+	    new = (Atom *)alloc((count + 1) * sizeof(Atom));
+	    if (new != NULL)
+	    {
+		for (i = 0; i < count; ++i)
+		    new[i] = existing[i];
+		new[count] = save_yourself_atom;
+		XSetWMProtocols(GDK_DISPLAY(),
+		     GDK_WINDOW_XWINDOW(gui.mainwin->window), new, count + 1);
+		vim_free(new);
+	    }
+	}
+	XFree(existing);
+    }
+}
+#endif
+
 /*
  * Setup the window icon after the main window has bee realized.
  */
@@ -1332,6 +1374,12 @@ mainwin_realize(GtkWidget *widget)
 	icon = gdk_pixmap_create_from_xpm_d(gui.mainwin->window,
 						    &icon_mask, NULL, magick);
     gdk_window_set_icon(gui.mainwin->window, NULL, icon, icon_mask);
+#if 0
+
+    /* Setup to indicate to the window manager that we want to catch the
+     * WM_SAVE_YOURSELF event. */
+    setup_save_yourself();
+#endif
 }
 
 /*
@@ -1689,7 +1737,8 @@ form_configure_event(GtkWidget * widget, GdkEventConfigure * event)
 static gint
 client_event_cb(GtkWidget *widget, GdkEventClient *event)
 {
-    if (event->message_type == save_yourself_atom ) {
+    if (event->message_type == save_yourself_atom) {
+	/* NOTE: this is never reached! */
 	out_flush();
 	ml_sync_all(FALSE, FALSE);      /* preserve all swap files */
 	return TRUE;
@@ -1777,6 +1826,7 @@ gui_mch_open()
      */
     gtk_signal_connect_after(GTK_OBJECT(gui.mainwin), "client_event",
                        GTK_SIGNAL_FUNC(client_event_cb), NULL);
+
 #ifdef HANGUL_INPUT
     hangul_keyboard_set();
 #endif

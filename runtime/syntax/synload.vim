@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Jan 02
+" Last Change:	2000 Jun 07
 
 " This file sets up for syntax highlighting.
 " It is loaded from "syntax.vim" and "manual.vim".
@@ -88,37 +88,45 @@ au Syntax ON		if &filetype != "" | exe "set syntax=" . &filetype | else | echohl
 " defined the ":SynAu" command somewhere.  You should rename it.
 command -nargs=1  SynAu  au Syntax <args> so $VIMRUNTIME/syntax/<args>.vim
 
+SynAu abaqus
 SynAu abc
 SynAu abel
 SynAu ada
 SynAu ahdl
 SynAu amiga
 SynAu aml
+SynAu apache
 SynAu apachestyle
 SynAu asm
 SynAu asmh8300
 SynAu asn
+SynAu aspperl
 SynAu aspvbs
 SynAu atlas
 SynAu ave
 SynAu awk
 SynAu basic
+SynAu bc
 SynAu bib
 SynAu btm
 SynAu c
 SynAu cf
+SynAu ch
 SynAu change
 SynAu clean
 SynAu clipper
 SynAu cobol
+SynAu conf
 SynAu config
 SynAu cpp
 SynAu csh
+SynAu csp
 SynAu css
 SynAu cterm
 SynAu ctrlh
 SynAu cupl
 SynAu cuplsim
+SynAu cvs
 SynAu cweb
 SynAu dcl
 SynAu def
@@ -136,6 +144,7 @@ SynAu esqlc
 SynAu expect
 SynAu exports
 SynAu focexec
+SynAu form
 SynAu forth
 SynAu fortran
 SynAu fvwm
@@ -145,6 +154,7 @@ SynAu gedcom
 SynAu gnuplot
 SynAu gp
 SynAu haskell
+SynAu hb
 SynAu help
 SynAu html
 SynAu htmlm4
@@ -158,7 +168,9 @@ SynAu java
 SynAu javacc
 SynAu javascript
 SynAu jgraph
+SynAu jproperties
 SynAu jsp
+SynAu kscript
 SynAu kwt
 SynAu lace
 SynAu lex
@@ -178,6 +190,7 @@ SynAu maple
 SynAu masm
 SynAu master
 SynAu matlab
+SynAu mel
 SynAu mf
 SynAu mib
 SynAu model
@@ -188,11 +201,13 @@ SynAu mp
 SynAu msql
 SynAu muttrc
 SynAu nasm
+SynAu nastran
 SynAu ncf
 SynAu nroff
 SynAu objc
 SynAu ocaml
 SynAu opl
+SynAu ora
 SynAu pascal
 SynAu pcap
 SynAu pccts
@@ -218,6 +233,8 @@ SynAu rebol
 SynAu remind
 SynAu rexx
 SynAu rpcgen
+SynAu ruby
+SynAu samba
 SynAu sas
 SynAu sather
 SynAu scheme
@@ -235,6 +252,10 @@ SynAu slrnrc
 SynAu slrnsc
 SynAu sm
 SynAu smil
+SynAu sml
+SynAu snnsnet
+SynAu snnspat
+SynAu snnsres
 SynAu spec
 SynAu spice
 SynAu spup
@@ -242,11 +263,13 @@ SynAu sql
 SynAu sqr
 SynAu squid
 SynAu st
+SynAu stp
 SynAu tads
 SynAu tags
 SynAu tcl
 SynAu tex
 SynAu texinfo
+SynAu tli
 SynAu tf
 SynAu tsalt
 SynAu uil
@@ -258,6 +281,7 @@ SynAu vim
 SynAu viminfo
 SynAu vrml
 SynAu web
+SynAu webmacro
 SynAu whitespace
 SynAu winbatch
 SynAu xdefaults

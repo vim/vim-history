@@ -32,8 +32,9 @@
 #endif
 
 /* On AIX 4.2 there is a conflicting prototype for ioctl() in stropts.h and
- * unistd.h.  This hack should fix that (suggested by Jeff George) */
-#if defined(USE_GUI) && defined(_AIX) && !defined(_NO_PROTO)
+ * unistd.h.  This hack should fix that (suggested by Jeff George).
+ * But on AIX 4.3 it's alright (suggested by Jake Hamby). */
+#if defined(USE_GUI) && defined(_AIX) && !defined(_AIX43) && !defined(_NO_PROTO)
 # define _NO_PROTO
 #endif
 
@@ -83,7 +84,9 @@
 #endif
 
 /* always use unlink() to remove files */
-#define mch_remove(x) unlink((char *)(x))
+#ifndef PROTO
+# define mch_remove(x) unlink((char *)(x))
+#endif
 
 /* The number of arguments to a signal handler is configured here. */
 /* It used to be a long list of almost all systems. Any system that doesn't
@@ -319,6 +322,7 @@
 # endif
 #endif
 
+#ifndef PROTO
 #ifdef HAVE_RENAME
 # define mch_rename(src, dst) rename(src, dst)
 #else
@@ -327,6 +331,7 @@ int mch_rename __ARGS((const char *src, const char *dest));
 #define mch_chdir(s) chdir(s)
 #define mch_getenv(x) (char_u *)getenv((char *)(x))
 #define mch_setenv(name, val, x) setenv(name, val, x)
+#endif
 
 #if !defined(S_ISDIR) && defined(S_IFDIR)
 # define	S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)

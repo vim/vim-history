@@ -2203,7 +2203,7 @@ ExpandOne(str, orig, options, mode)
 		    if (str[0] == '\\' && str[1] == '~'
 						    && cmd_files[i][0] == '~')
 		    {
-			p = alloc(STRLEN(cmd_files[i]) + 2);
+			p = alloc((unsigned)(STRLEN(cmd_files[i]) + 2));
 			if (p != NULL)
 			{
 			    p[0] = '\\';

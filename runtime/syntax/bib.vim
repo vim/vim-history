@@ -1,10 +1,11 @@
 " Vim syntax file
-" Language:	BibTeX (bibtex)
+" Language:	BibTeX (bibliographic database format for (La)TeX)
 " Maintainer:	Bernd Feige <Bernd.Feige@gmx.net>
-" Last Change:	Aug 27, 1999
+" Filenames:	*.bib
+" Last Change:	May 10, 2000
+" URL:          http://home.t-online.de/home/Bernd.Feige/bib.vim
 
-" Thanks go to David Squire <squire@cui.unige.ch> for the change to
-" discriminate between inside and outside of bib entries :-)
+" Thanks to those who pointed out problems with this file or supplied fixes!
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -28,13 +29,15 @@ syn keyword bibNSEntryKw contained	abstract isbn issn keywords url
 
 syn match bibUnescapedSpecial contained /[^\\][%&]/hs=s+1
 syn match bibKey contained /\s*[^ \t}="]\+,/hs=s,he=e-1 nextgroup=bibField
-syn match bibVariable contained /[^{}," \t=\k]/
-syn region bibQuote contained start=/"/ end=/"/ skip=/\(\\"\)/ contains=bibUnescapedSpecial,bibBrace
-syn region bibBrace contained start=/{/ end=/}/ contains=bibUnescapedSpecial,bibBrace
-syn region bibField contained start=/\k\+\s*=\s*/ end=/[},]/me=e-1 contains=bibEntryKw,bibNSEntryKw,bibBrace,bibQuote,bibVariable
+syn match bibVariable contained /[^{}," \t=]/
+syn region bibComment start=/^/ end=/^\s*\@/me=e-1 nextgroup=bibEntry
+syn region bibComment start=/[})]/hs=s+1 end=/^\s*\@/me=e-1 nextgroup=bibEntry
+syn region bibQuote contained start=/"/ end=/"/ skip=/\(\\"\)/ contains=bibUnescapedSpecial,bibBrace,bibParen
+syn region bibBrace contained start=/{/ end=/}/ skip=/\(\\[{}]\)/ contains=bibUnescapedSpecial,bibBrace,bibParen
+syn region bibParen contained start=/(/ end=/)/ skip=/\(\\[()]\)/ contains=bibUnescapedSpecial,bibBrace,bibParen
+syn region bibField contained start="\S\+\s*=\s*" end=/[}),]/me=e-1 contains=bibEntryKw,bibNSEntryKw,bibBrace,bibParen,bibQuote,bibVariable
 syn region bibEntryData contained start=/[{(]/ms=e+1 end=/[})]/me=e-1 contains=bibKey,bibField
-syn region bibEntry start=/\@\k\+[{(]/ end=/[})]/ contains=bibType,bibEntryData nextgroup=bibEntry,bibComment
-syn region bibComment start=/^[^\@]/ end=/^\s*\@/me=e-1 nextgroup=bibEntry
+syn region bibEntry start=/\@\S\+[{(]/ end=/[})]/me=e-1 contains=bibType,bibEntryData nextgroup=bibComment
 
 syn sync match All grouphere bibEntry /^\s*\@/
 syn sync maxlines=200

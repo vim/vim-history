@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	GNU Assembler
 " Maintainer:	Kevin Dahlhausen <ap096@po.cwru.edu>
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Feb 09
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -73,10 +73,14 @@ if !exists("did_asm_syntax_inits")
   hi link octNumber	Number
   hi link binNumber	Number
 
+  hi link asmSpecialComment Comment
+  hi link asmIdentifier Identifier
+  hi link asmType	Type
+
   " My default color overrides:
-  hi asmSpecialComment ctermfg=red
-  hi asmIdentifier ctermfg=lightcyan
-  hi asmType ctermbg=black ctermfg=brown
+  " hi asmSpecialComment ctermfg=red
+  " hi asmIdentifier ctermfg=lightcyan
+  " hi asmType ctermbg=black ctermfg=brown
 
 endif
 

@@ -3699,6 +3699,7 @@ findswapname(buf, dirp, old_fname)
 	{
 	    if (fname[n - 2] == 'a')    /* ".saa": tried enough, give up */
 	    {
+		EMSG("Too many swap files found");
 		vim_free(fname);
 		fname = NULL;
 		break;

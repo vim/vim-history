@@ -569,8 +569,8 @@ struct builtin_term builtin_termcaps[] =
     {K_F8,		"\316B"},
     {K_F9,		"\316C"},
     {K_F10,		"\316D"},
-    {K_F11,		"\316\205"},	/* only when nobioskey */
-    {K_F12,		"\316\206"},	/* only when nobioskey */
+    {K_F11,		"\316\205"},
+    {K_F12,		"\316\206"},
     {K_S_F1,		"\316T"},
     {K_S_F2,		"\316U"},
     {K_S_F3,		"\316V"},
@@ -581,8 +581,8 @@ struct builtin_term builtin_termcaps[] =
     {K_S_F8,		"\316["},
     {K_S_F9,		"\316\\"},
     {K_S_F10,		"\316]"},
-    {K_S_F11,		"\316\207"},	/* only when nobioskey */
-    {K_S_F12,		"\316\210"},	/* only when nobioskey */
+    {K_S_F11,		"\316\207"},
+    {K_S_F12,		"\316\210"},
     {K_INS,		"\316R"},
     {K_DEL,		"\316S"},
     {K_HOME,		"\316G"},
@@ -1346,11 +1346,11 @@ parse_builtin_tcap(term)
 				 || term_strings[p->bt_entry] == empty_option)
 	    {
 		/* 8bit terminal: use CSI instead of <Esc>[ */
-		if (term_8bit && term_7to8bit(p->bt_string) != 0)
+		if (term_8bit && term_7to8bit((char_u *)p->bt_string) != 0)
 		{
 		    char_u  *s, *t;
 
-		    s = vim_strsave(p->bt_string);
+		    s = vim_strsave((char_u *)p->bt_string);
 		    if (s != NULL)
 		    {
 			for (t = s; *t; ++t)
@@ -2506,7 +2506,7 @@ term_color(s, n)
     /* Also accept "\e[3%dm" for TERMINFO, it is sometimes used */
     /* Also accept CSI instead of <Esc>[ */
     if (n > 7 && atoi((char *)T_CCO) == 16
-	      && ((s[0] == ESC && s[1] == '[') || (s[0] == CSI && (i = 1)))
+	      && ((s[0] == ESC && s[1] == '[') || (s[0] == CSI && (i = 1) == 1))
 	      && s[i] != NUL
 	      && (STRCMP(s + i + 1, "%p1%dm") == 0
 		  || STRCMP(s + i + 1, "%dm") == 0))
@@ -2537,7 +2537,7 @@ term_color(s, n)
     OUT_STR(tgoto((char *)s, 0, n));
 }
 
-#if (defined(WANT_TITLE) && (defined(UNIX) || defined(OS2))) || defined(PROTO)
+#if (defined(WANT_TITLE) && (defined(UNIX) || defined(OS2) || defined(VMS))) || defined(PROTO)
 /*
  * Generic function to set window title, using t_ts and t_fs.
  */
@@ -3832,7 +3832,8 @@ check_termcode(max_offset, buf, buflen)
 	    /* Work out our pseudo mouse event */
 	    key_name[0] = (int)KS_EXTRA;
 	    if (wheel_code != 0)
-		key_name[1] = (wheel_code & 1) ? KE_MOUSEUP : KE_MOUSEDOWN;
+		key_name[1] = (wheel_code & 1)
+					? (int)KE_MOUSEUP : (int)KE_MOUSEDOWN;
 	    else
 		key_name[1] = get_pseudo_mouse_code(current_button,
 							   is_click, is_drag);

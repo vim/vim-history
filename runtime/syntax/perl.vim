@@ -54,9 +54,11 @@ syn keyword perlStatementRegexp  pos quotemeta split study
 syn keyword perlStatementNumeric abs atan2 cos exp hex int log oct rand sin sqrt srand
 syn keyword perlStatementList    splice unshift shift push pop split join reverse grep map sort unpack
 syn keyword perlStatementHash    each exists keys values
-syn keyword perlStatementIOfunc  binmode carp close closedir confess croak dbmclose dbmopen die eof fileno flock getc print printf read readdir rewinddir seek seekdir select syscall sysopen sysread syswrite tell telldir truncate warn write
+syn keyword perlStatementIOfunc  carp confess croak dbmclose dbmopen die syscall
+syn keyword perlStatementFiledesc binmode close closedir eof fileno getc lstat print printf readdir rewinddir select stat tell telldir write nextgroup=perlFiledescStatementNocomma
+syn keyword perlStatementFiledesc fcntl flock ioctl open opendir read seek seekdir sysopen sysread sysseek syswrite truncate nextgroup=perlFiledescStatementComma
 syn keyword perlStatementVector  pack vec
-syn keyword perlStatementFiles   chdir chmod chown chroot fcntl glob ioctl link lstat mkdir open opendir readlink rename rmdir stat symlink umask unlink utime
+syn keyword perlStatementFiles   chdir chmod chown chroot glob link mkdir readlink rename rmdir symlink umask unlink utime
 syn match   perlStatementFiles   "-[rwxoRWXOezsfdlpSbctugkTBMAC]\>"
 syn keyword perlStatementFlow    caller die dump eval exit wantarray
 syn keyword perlStatementInclude require
@@ -69,7 +71,7 @@ syn keyword perlStatementNetwork endprotoent endservent gethostbyaddr gethostbyn
 syn keyword perlStatementPword   getgrent getgrgid getgrnam getlogia
 syn keyword perlStatementTime    gmtime localtime time times
 
-syn keyword perlStatementMisc    print warn formline reset scalar new delete STDIN STDOUT STDERR
+syn keyword perlStatementMisc    warn formline reset scalar new delete
 
 syn keyword perlTodo             TODO TBD FIXME XXX contained
 
@@ -106,9 +108,11 @@ syn match perlPackageRef "\(\h\w*\)\=\(::\|'\)\I"me=e-1 contained
 " with transparency. Or maybe we should handle the bare word in that case. or make it into
 
 if exists("perl_want_scope_in_variables")
-  syn match perlVarPlain   "\\\=\([@%&$]\|\$#\)\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" contains=perlPackageRef nextgroup=perlVarMember,perlVarSimpleMember
+  syn match perlVarPlain   "\\\=\([@%$]\|\$#\)\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" contains=perlPackageRef nextgroup=perlVarMember,perlVarSimpleMember
+  syn match perlFunctionName   "\\\=\&\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" contains=perlPackageRef nextgroup=perlVarMember,perlVarSimpleMember
 else
-  syn match perlVarPlain   "\\\=\([@%&$]\|\$#\)\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" nextgroup=perlVarMember,perlVarSimpleMember
+  syn match perlVarPlain   "\\\=\([@%$]\|\$#\)\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" nextgroup=perlVarMember,perlVarSimpleMember
+  syn match perlFunctionName   "\\\=\&\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" nextgroup=perlVarMember,perlVarSimpleMember
 endif
 
 if exists("perl_extended_vars")
@@ -121,6 +125,13 @@ if exists("perl_extended_vars")
   syn region perlVarMember matchgroup=perlVarPlain start="\(->\)\=\[" skip="\\]" end="]" contained contains=@perlExpr nextgroup=perlVarMember,perlVarSimpleMember
 endif
 
+" File Descriptors
+syn match perlFiledescRead "[<]\h\w\+[>]"
+
+syn match perlFiledescStatementComma  "\s*(\=\s*\h\w\+\>\s*," transparent contained contains=perlFiledescStatement
+syn match perlFiledescStatementNocomma  "\s*(\=\s*\h\w\+\>\s*[^,]"me=e-1 transparent contained contains=perlFiledescStatement
+
+syn match perlFiledescStatement "\h\w\+" contained
 
 " Special characters in strings and matches
 syn match perlSpecialString  "\\\(\d\+\|[xX]\x\+\|c\u\|.\)" contained
@@ -138,6 +149,8 @@ syn match perlSpecialMatch   "(?[imsx]\+)" contained
 "
 " Highlight lines with only whitespace (only in blank delimited here documents) as errors
 syn match perlNotEmptyLine  "^\s\+$" contained
+" Highlight '} else if (...) {', it should be '} else { if (...) { ' or
+" '} elsif (...) {'.
 syn keyword perlElseIfError if contained
 
 
@@ -284,6 +297,8 @@ if !exists("did_perl_syntax_inits")
   hi link perlList              perlStatement
   hi link perlMisc              perlStatement
   hi link perlVarPlain          perlIdentifier
+  hi link perlFiledescRead      perlIdentifier
+  hi link perlFiledescStatement perlIdentifier
   hi link perlVarSimpleMember   perlIdentifier
   hi link perlVarSimpleMemberName	perlString
   hi link perlVarNotInMatches   perlIdentifier
@@ -315,6 +330,7 @@ if !exists("did_perl_syntax_inits")
   hi link perlStatementList     perlStatement
   hi link perlStatementHash     perlStatement
   hi link perlStatementIOfunc   perlStatement
+  hi link perlStatementFiledesc perlStatement
   hi link perlStatementVector   perlStatement
   hi link perlStatementFiles    perlStatement
   hi link perlStatementFlow     perlStatement

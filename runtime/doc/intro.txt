@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 5.6.  Last change: 2000 Apr 18
+*intro.txt*     For Vim version 5.7a.  Last change: 2000 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -68,7 +68,8 @@ Frequently Asked Questions.  Read this if you have problems.
 
 Usenet News group where Vim is discussed:		*news* *usenet*
 	comp.editors
-See http://www.vim.org/usenet.html.
+See http://www.vim.org/usenet.html.  This group is also for other editors.  If
+you write about Vim, don't forget to mention that.
 
 						*mail-list* *maillist*
 There are four mailing lists for Vim:
@@ -105,12 +106,15 @@ give you help on how to subscribe.
 You can retrieve old messages from the maillist software, and an index of
 messages.  Ask vim-help for instructions.
 
-Archives are kept at:
+Archives are kept at:				*maillist-archive*
 http://www.egroups.com/group/vim
 http://www.egroups.com/group/vimdev
 http://www.egroups.com/group/vimannounce
 http://www.egroups.com/group/vim-multibyte
 http://www.egroups.com/group/vim-mac
+
+Another archive is at http://www.somelist.com in the "Editeurs" section (the
+site is in French, the messages are in English).
 
 
 Additional maillists:
@@ -312,9 +316,13 @@ literally is often highlighted with the Special group.  These are items in [],
 		character.
 
 							*{motion}*
-{motion}	A command that moves the cursor.  See the list at
-		|motion.txt|.  This is used after an operator command
-		|operator| to move over the text that is to be operated upon.
+{motion}	A command that moves the cursor.  These are explained in
+		|motion.txt|.  Examples:
+			w		to start of next word
+			4j		four lines down
+			/The<CR>	to next occurrence of "The"
+		This is used after an |operator| command to move over the text
+		that is to be operated upon.
 		If the motion includes a count and the operator also had a
 		count, the two counts are multiplied.  For example: "2d3w"
 		deletes six words.  The motion can also be a mouse click.  The
@@ -324,9 +332,11 @@ literally is often highlighted with the Special group.  These are items in [],
 
 							*{Visual}*
 {Visual}	A selected text area.  It is started with the "v", "V", or
-		CTRL-V command and ends at the cursor position.  This is used
-		before an operator command |operator| to highlight the text
-		that is to be operated upon.  See |Visual-mode|.
+		CTRL-V command, then any cursor movement command can be used
+		to change the end of the selected text.
+		This is used before an |operator| command to highlight the
+		text that is to be operated upon.
+		See |Visual-mode|.
 
 							*<character>*
 <character>	A special character from the table below, optionally with
@@ -607,6 +617,8 @@ Q			Switch to "Ex" mode.  This is a bit like typing ":"
 			Vim will enter this mode by default if it's invoked as
 			"ex" on the command-line.
 			Use the ":vi" command |:visual| to exit "Ex" mode.
+			Note: In older versions of Vim "Q" formatted text,
+			that is now done with |gq|.
 
 ==============================================================================
 7. The window contents					*window-contents*

@@ -18,6 +18,9 @@
 #include <Memory.h>
 #include <OSUtils.h>
 #include <Files.h>
+#ifdef MULTI_BYTE
+#include <Script.h>
+#endif
 
 #include <unistd.h>
 #include <utsname.h>
@@ -72,6 +75,7 @@
 #ifndef MIN_FEAT
 # define VIM_BACKTICK		    /* internal backtick expansion */
 #endif
+#define HAVE_STRFTIME
 
 #if defined(__POWERPC__) || defined (__fourbyteints__)
 # define SIZEOF_INT 4

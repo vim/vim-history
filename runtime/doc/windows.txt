@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 5.6.  Last change: 1999 Dec 21
+*windows.txt*   For Vim version 5.7a.  Last change: 2000 Apr 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -515,7 +515,7 @@ the keyword under the cursor.
 
 A hidden buffer is not displayed in a window, but is still loaded into memory.
 This makes it possible to jump from file to file, without the need to read or
-write the file every time and having to keep the file in a window.
+write the file every time you get another buffer in a window.
 
 							*:buffer-!*
 If the option 'hidden' ('hid') is set, abandoned buffers are kept for all

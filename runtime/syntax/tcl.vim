@@ -8,7 +8,7 @@
 
 " Remove any old syntax stuff hanging around
 syn clear
-set comments=:#
+
 " A bunch of useful keywords
 syn keyword tclStatement	proc global return lindex
 syn keyword tclStatement	llength lappend lreplace lrange list concat incr

@@ -1,0 +1,20 @@
+README_dosbin.txt for version 5.7a of Vim: Vi IMproved.
+
+See "README.txt" for general information about Vim.
+See "README_dos.txt" for installation instructions for MS-DOS and MS-Windows.
+These files are in the runtime archive (vim57rt.zip).
+
+
+There are several binary distributions of Vim for the PC.  You would normally
+pick only one of them, but it's also possible to install several.
+These ones are available (the version number may differ):
+	vim57d16.zip	16 bit DOS version
+	vim57d32.zip	32 bit DOS version
+	vim57w32.zip	Windows 95/98/NT console version
+	gvim57.zip	Windows 95/98/NT GUI version
+	gvim57ole.zip	Windows 95/98/NT GUI version with OLE
+	gvim57_s.zip	Windows 3.1 GUI version
+
+You MUST also get the runtime archive (vim57rt.zip).
+The sources are also available (vim57src.zip).
+

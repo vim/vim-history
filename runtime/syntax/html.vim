@@ -2,7 +2,7 @@
 " Language:	HTML
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/html.vim
-" Last Change:	1999 Sept 28
+" Last Change:  2000 May 12
 
 " Please check :help html.vim for some comments and a description of the options
 
@@ -18,8 +18,8 @@ if !exists("main_syntax")
 endif
 
 " tags
-syn region  htmlString   contained start=+"+ end=+"+ contains=htmlSpecialChar,javaScriptExpression,@htmlPreproc
-syn region  htmlString   contained start=+'+ end=+'+ contains=htmlSpecialChar,javaScriptExpression,@htmlPreproc
+syn region  htmlString   contained start=+"+ end=+"+ keepend contains=htmlSpecialChar,javaScriptExpression,@htmlPreproc
+syn region  htmlString   contained start=+'+ end=+'+ keepend contains=htmlSpecialChar,javaScriptExpression,@htmlPreproc
 syn match   htmlValue    contained "=[\t ]*[^'" \t>][^ \t>]*"hs=s+1   contains=javaScriptExpression,@htmlPreproc
 syn region  htmlEndTag             start=+</+      end=+>+ contains=htmlTagN,htmlTagError
 syn region  htmlTag                start=+<[^/]+   end=+>+ contains=htmlTagN,htmlString,htmlArg,htmlValue,htmlTagError,htmlEvent,htmlCssDefinition,@htmlPreproc,@htmlArgCluster
@@ -79,7 +79,7 @@ syn keyword htmlArg contained rules scheme scope span standby style
 syn keyword htmlArg contained summary tabindex valuetype version
 
 " special characters
-syn match htmlSpecialChar "&[^;]*;"
+syn match htmlSpecialChar "&[^;]\{1,6};"
 
 " Comments (the real ones or the old netscape ones)
 if exists("html_wrong_comments")
@@ -93,7 +93,7 @@ syn region htmlComment                  start=+<!DOCTYPE+ keepend end=+>+
 
 " server-parsed commands
 syn region htmlPreProc start=+<!--#+ end=+-->+ contains=htmlPreStmt,htmlPreError,htmlPreAttr
-syn match htmlPreStmt contained "<!--#\(config\|echo\|exec\|fsize\|flastmod\|include\|printenv\|set\|if\|elif\|else\|endif\)\>"
+syn match htmlPreStmt contained "<!--#\(config\|echo\|exec\|fsize\|flastmod\|include\|printenv\|set\|if\|elif\|else\|endif\|geoguide\)\>"
 syn match htmlPreError contained "<!--#\S*"ms=s+4
 syn match htmlPreAttr contained "\w\+=[^"]\S\+" contains=htmlPreProcAttrError,htmlPreProcAttrName
 syn region htmlPreAttr contained start=+\w\+="+ skip=+\\\\\|\\"+ end=+"+ contains=htmlPreProcAttrName,htmlPreProcAttrError keepend

@@ -1138,7 +1138,7 @@ gui_mch_dialog(int type,		/* type of dialog */
 	label = gtk_accel_label_new("");
         gtk_accel_label_set_accel_widget(GTK_ACCEL_LABEL(label), dialog);
 
-	accel_key = gtk_label_parse_uline(GTK_LABEL(label), p);
+	accel_key = gtk_label_parse_uline(GTK_LABEL(label), (const gchar *)p);
 # ifdef GTK_USE_ACCEL
 	/* Don't add accelator if 'winaltkeys' is "no". */
 	if (accel_key != GDK_VoidSymbol) {

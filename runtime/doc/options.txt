@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 5.6.  Last change: 2000 Jan 05
+*options.txt*   For Vim version 5.7a.  Last change: 2000 Jun 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -153,6 +153,9 @@ option, without changing the existing ones, you can do it like this:
 Remove a flag from an option like this:
 >  :set guioptions-=a
 This removes the 'a' flag from 'guioptions'.
+Note that you should add or remove one flag at a time.  If 'guioptions' has
+the value "ab", using "set guioptions-=ba" won't work, because the string "ba"
+doesn't appear.
 
 			   *:set_env* *expand-env* *expand-environment-var*
 Environment variables in most string options will be expanded.  If the
@@ -772,6 +775,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	These keywords start an extra indent in the next line when
 	'smartindent' or 'cindent' is set.  For 'cindent' this is only done at
 	an appropriate place (inside {}).
+	Note that 'ignorecase' isn't used for 'cinwords'.  If case doesn't
+	matter, include the keyword both the upper case and lower case:
+	"if,If,IF".
 
 						*'clipboard'* *'cb'*
 'clipboard' 'cb'	string	(default "")
@@ -833,12 +839,14 @@ A jump table for the options with a short description can be found at |X_op|.
 'compatible' 'cp'	boolean	(default on, off when a .vimrc file is found)
 			global
 			{not in Vi}
-	This option has the function of making Vim either more Vi-compatible,
-	or behave in a more useful way.  This is a special kind of option,
-	because when it's set or reset, other options are also changed as a
-	side effect.  CAREFUL: Setting or resetting this option can have a lot
-	of unexpected effects: Mappings are interpreted in another way, undo
-	behaves differently, etc.
+	This option has the effect of making Vim either more Vi-compatible, or
+	make Vim behave in a more useful way.
+	This is a special kind of option, because when it's set or reset,
+	other options are also changed as a side effect.  CAREFUL: Setting or
+	resetting this option can have a lot of unexpected effects: Mappings
+	are interpreted in another way, undo behaves differently, etc.  If you
+	set this option in your vimrc file, you should probably put it at the
+	very start.
 	By default this option is on and the Vi defaults are used for the
 	options.  This default was chosen for those people who want to use Vim
 	just like Vi, and don't even (want to) know about the 'compatible'
@@ -1281,6 +1289,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Makes the 'g' and 'c' flags of the ":substitute" command to be
 	toggled each time the flag is given.  See |complex-change|.  See
 	also 'gdefault' option.
+	Switching this option on is discouraged!
 
 			*'endofline'* *'eol'* *'noendofline'* *'noeol'*
 'endofline' 'eol'	boolean	(default on)
@@ -1402,7 +1411,6 @@ A jump table for the options with a short description can be found at |X_op|.
 			{only available when compiled with the |+multi_byte|
 			feature}
 			{not in Vi}
-
 	Enables editing of alternative encoded files, for example shift-JIS or
 	Unicode.  When you set this option, it fires of a 'FileEncoding'
 	autocommand so you can set up fonts if necessary.
@@ -1506,12 +1514,16 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not in Vi}
 			{not available when compiled without the |+autocmd|
 			feature}
-	When this option is set, the FileType autocommand event with this name
-	is triggered.  Otherwise this option does not always reflect the
-	current file type.
-	This option is most useful in a modeline, for a file for which the
-	file type is not automatically recognized.  Example, for in an IDL
-	file:
+	When this option is set, the FileType autocommand event is triggered.
+	All autocommands that match with the value of this option will be
+	executed.  Thus the value of 'filetype' is used in place of the file
+	name.
+	Otherwise this option does not always reflect the current file type.
+	This option is normally set when the file type is detected.  To enable
+	this use the ":filetype on" command. |:filetype|
+	Setting this option to a different value is most useful in a modeline,
+	for a file for which the file type is not automatically recognized.
+	Example, for in an IDL file:
 >		/* vim: set filetype=idl : */
 	|FileType| |autocmd-filetypes|
 	Do not confuse this option with 'osfiletype', which is for the file
@@ -1738,8 +1750,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	|xfontset|.
 
 						*'guioptions'* *'go'*
-'guioptions' 'go'	string	(default "agimrtT" (GTK), "agimrt" (Unix) or
-					"gmrt")
+'guioptions' 'go'	string	(default "agimrtT" (Win32 and GTK),
+					 "agimrt" (Unix) or "gmrt")
 			global
 			{not in Vi}
 			{only available when compiled with GUI enabled}
@@ -1763,13 +1775,15 @@ A jump table for the options with a short description can be found at |X_op|.
 		applications after the VISUAL mode has ended.
 		    If not present, then Vim won't become the owner of the
 		windowing system's global selection unless explicitly told to
-		by a yank or delete operation.
+		by a yank or delete operation for the "* register.
 
 	  'f'	Foreground: Don't use fork() to detach the GUI from the shell
 		where it was started.  Use this for programs that wait for the
 		editor to finish (e.g., an e-mail program).  Alternatively you
 		can use "gvim -f" or ":gui -f" to start the GUI in the
 		foreground.  |gui-fork|
+		Note: Set this option in the vimrc file.  The forking may have
+		happened already when the gvimrc file is read.
 
 	  'i'	Use a Vim icon.  For GTK with KDE it is used in the left-upper
 		corner of the window.  It's black&white on non-GTK, because of
@@ -2138,8 +2152,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	set and to the Vim default value when 'compatible' is reset.
 
 						*'isprint'* *'isp'*
-'isprint' 'isp'	string	(default for MS-DOS and Win32: "@,~-255"
-				  otherwise:	       "@,161-255")
+'isprint' 'isp'	string	(default for MS-DOS, Win32, OS/2 and Macintosh:
+				"@,~-255"; otherwise: "@,161-255")
 			global
 			{not in Vi}
 	The characters given by this option are displayed directly on the
@@ -2358,7 +2372,8 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not in Vi}
 			{not available when compiled without the |+quickfix|
 			feature}
-	Name of the errorfile for the ":make" command (see |:make_makeprg|).
+	Name of the errorfile for the |:make| command (see |:make_makeprg|)
+	and the |:grep| command.
 	When "##" is included, it is replaced by a number to make the name
 	unique.  This makes sure that the ":make" command doesn't overwrite an
 	existing file.
@@ -2394,6 +2409,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	pairs must be separated by a comma.  Example for including '<' and '>'
 	(HTML):
 >		set mps+=<:>
+	A more exotic example, to jump between the '=' and ';' in an
+	assignment, useful for languages like C and Java:
+>		au FileType c,cpp,java set mps+==:;
 
 						*'matchtime'* *'mat'*
 'matchtime' 'mat'	number	(default 5)
@@ -2621,7 +2639,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	Setting this option is useful when using Vim in a terminal, where Vim
 	cannot distinguish between typed text and pasted text.  In the GUI, Vim
 	knows about pasting and will mostly do the right thing without 'paste'
-	being set.
+	being set.  Also in a terminal where Vim handles the mouse clicks
+	itself.
 	When the 'paste' option is switched on (also when it was already on):
 		- mapping in Insert mode and Command-line mode is disabled
 		- abbreviations are disabled
@@ -2914,16 +2933,24 @@ A jump table for the options with a short description can be found at |X_op|.
 	The following words are available:
 	    ver		Bind vertical scrolling for 'scrollbind' windows
 	    hor		Bind horizontal scrolling for 'scrollbind' windows
-	    jump	When switching between 'scrollbind' windows, make sure
-			that the relative vertical offset is valid for the new
-			window.  The relative offset is invalid whenever
-			another 'scrollbind' window has scrolled to a point
-			that would force the current window to scroll past the
-			beginning or end of its buffer.  When the resync is
-			performed, some of the other 'scrollbind' windows may
-			need to jump so that the current window's relative
-			position is visible on-screen.  If this jump is
-			undesirable, omit this word from 'scrollopt'
+	    jump	Applies to the offset between two windows for vertical
+			scrolling.  This offset is the difference in the first
+			displayed line of the bound windows.  When moving
+			around in a window, another 'scrollbind' window may
+			reach a position before the start or after the end of
+			the buffer.  The offset is not changed though, when
+			moving back the 'scrollbind' window will try to scroll
+			to the desired position when possible.
+			When now making that window the current one, two
+			things can be done with the relative offset:
+			1. When "jump" is not included, the relative offset is
+			   adjusted for the scroll position in the new current
+			   window.  When going back to the other window, the
+			   the new relative offset will be used.
+			2. When "jump" is included, the other windows are
+			   scrolled to keep the same relative offset.  When
+			   going back to the other window, it still uses the
+			   same relative offset.
 
 						*'sections'* *'sect'*
 'sections' 'sect'		string	(default "SHNHH HUnhsh")
@@ -3170,7 +3197,8 @@ A jump table for the options with a short description can be found at |X_op|.
 						*'shiftwidth'* *'sw'*
 'shiftwidth' 'sw'	number	(default 8)
 			local to buffer
-	Number of spaces to use for each step of (auto)indent.
+	Number of spaces to use for each step of (auto)indent.  Used for
+	|'cindent'|, |>>|, |<<|, etc.
 
 						*'shortmess'* *'shm'*
 'shortmess' 'shm'	string	(Vim default "filnxtToO", Vi default: "")
@@ -3337,8 +3365,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	mapping: ":inoremap # X^H#", where ^H is entered with CTRL-V CTRL-H.
 	When using the ">>" command, lines starting with '#' are not shifted
 	right.
-	NOTE: 'smartindent' is reset when 'compatible' or 'paste' option is
-	set.
+	NOTE: 'smartindent' is reset when 'compatible' or 'paste' is set.
 
 				 *'smarttab'* *'sta'* *'nosmarttab'* *'nosta'*
 'smarttab' 'sta'	boolean	(default off)
@@ -3440,11 +3467,13 @@ A jump table for the options with a short description can be found at |X_op|.
 	W F   Preview window flag, text is ",PRV".
 	y F   Type of file in the buffer, e.g., " [vim]".  See 'filetype'.
 	Y F   Type of file in the buffer, e.g., ",VIM".  See 'filetype'.
+	      {not available when compiled without |+autocmd| feature}
 	n N   Buffer number.
 	b N   Value of byte under cursor.
 	B N   As above, in hexadecimal.
 	o N   Byte number in file of byte under cursor, first byte is 1.
 	      Mnemonic: Offset from start of file (with one added)
+	      {not available when compiled without |+byte_offset| feature}
 	O N   As above, in hexadecimal.
 	l N   Line number.
 	L N   Number of lines in buffer.
@@ -3605,6 +3634,27 @@ A jump table for the options with a short description can be found at |X_op|.
 	Number of spaces that a <Tab> in the file counts for.  Also see
 	|:retab| command, and 'softtabstop' option.
 
+	Note: Setting 'tabstop' to any other value than 8 can make your file
+	appear wrong in many places (e.g., when printing it).
+
+	There are three main ways to use tabs in Vim:
+	1. Always keep 'tabstop' at 8, set 'softtabstop' and 'shiftwidth' to 4
+	   (or 3 or whatever you prefer) and use 'noexpandtabs'.  Then Vim
+	   will use a mix of tabs and spaces, but typing Tab and BS will
+	   behave like a tab appears every 4 (or 3) characters.
+	2. Set 'tabstop' and 'shiftwidth' to whatever you prefer and use
+	   'expandtabs'.  This way you will always insert spaces.  The
+	   formatting will never be messed up when 'tabstop' is changed.
+	3. Set 'tabstop' and 'shiftwidth' to whatever you prefer and use a
+	   |modeline| to set these values when editing the file again.  Only
+	   works when using Vim to edit the file.
+	4. Always set 'tabstop' and 'shiftwidth' to the same value, and
+	   'noexpandtabs'.  This should then work (for initial indents only)
+	   for any tabstop setting that people use.  It might be nice to have
+	   tabs after the first non-blank inserted as spaces if you do this
+	   though.  Otherwise aligned comments will be wrong when 'tabstop' is
+	   changed.
+
 			*'tagbsearch'* *'tbs'* *'notagbsearch'* *'notbs'*
 'tagbsearch' 'tbs'	boolean	(default on)
 			global
@@ -3710,7 +3760,6 @@ A jump table for the options with a short description can be found at |X_op|.
 						*'terse'* *'noterse'*
 'terse'			boolean	(default off)
 			global
-			{not in Vi}
 	When set: Add 's' flag to 'shortmess' option (this makes the message
 	for a search that hits the start or end of the file not being
 	displayed).  When reset: Remove 's' flag from 'shortmess' option.  {Vi
@@ -3911,6 +3960,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	'toolbar' is empty, this option is ignored.  If you want to disable
 	the toolbar, you need to set the 'guioptions' option.  For example:
 >		:set guioptions-=T
+	Also see |gui-toolbar|.
 
 			     *'ttybuiltin'* *'tbi'* *'nottybuiltin'* *'notbi'*
 'ttybuiltin' 'tbi'	boolean	(default on)
@@ -3996,7 +4046,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	Alias for 'term', see above.
 
 						*'undolevels'* *'ul'*
-'undolevels' 'ul'		number	(default 100, 1000 for Unix and OS/2)
+'undolevels' 'ul'		number	(default 100, 1000 for Unix, VMS,
+						Win32 and OS/2)
 			global
 			{not in Vi}
 	Maximum number of changes that can be undone.  Since undo information
@@ -4134,8 +4185,11 @@ A jump table for the options with a short description can be found at |X_op|.
 	use ":set vb t_vb=".
 	Note: When the GUI starts, 't_vb' is reset to its default value.  You
 	might want to set it again in your |gvimrc|.
-	Does not work on the Amiga, you always get a screen flash.  Also see
-	'errorbells'.
+	In the GUI, 't_vb' defaults to "<Esc>|f", which inverts the display
+	for 20 msec.  If you want to use a different time, use "<Esc>|40f",
+	where 40 is the time in msec.
+	Does not work on the Amiga, you always get a screen flash.
+	Also see 'errorbells'.
 
 						*'warn'* *'nowarn'*
 'warn'			boolean	(default on)

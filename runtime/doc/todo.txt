@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 5.6.  Last change: 2000 Jan 04
+*todo.txt*      For Vim version 5.7a.  Last change: 2000 Jun 10
 
 
 				  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -35,8 +35,6 @@ See |develop.txt| for development plans.
 -------------------- Known bugs and current work -----------------------
 
 Vi incompatibility:
-9	":s/e/\^M/" should replace an "e" with a CTRL-M, not split the line.
-	(Calder)
 8	With undo/redo only marks in the changed lines should be changed.  Other
 	marks should be kept.  Vi keeps each mark at the same text, even when it
 	is deleted or restored. (Webb)
@@ -108,6 +106,10 @@ Vi incompatibility:
 
 
 GTK+ GUI known bugs:
+9	When logging out from KDE, vim is not told to save its files.  Catching
+	the WM_SAVE_YOURSELF event doesn't work.
+8	For some fonts characters are drawn in the line above.  Include fix
+	~/vim/patches/dalecki-5.6 . (Marcin Dalecki)
 8	Move gtk_main_quit() calls from call to add_to_input_buf() to inside the
 	function?
 9	GTK GUI: Include changes in gtklayout.c since GTK 1.1.6 in gui_gtk_f.c?
@@ -131,6 +133,8 @@ GTK+ GUI known bugs:
 8	Dialogs sometimes appear a bit far away.  Apply a patch from Brent Verner
 	to position the dialogs on top of the gvim window (Jul 1999)?  Check that
 	it still works for focus-follows-mouse.
+8	When "cm" termcap entry is missing, starting gvim shouldn't complain about
+	it. (Lohner) Try out with "vt100" entry (cm replaced with cX).
 
 
 Win32 GUI known bugs:
@@ -153,7 +157,7 @@ Win32 GUI known bugs:
 8	MessageBox used for error messages can be too big.	There is no way to
 	scroll it, or even hit the OK button (but you can hit return).
 7	Add an option to disable adding a pixel row for bold and italic fonts?
-	Same option as for multy-byte (patch from Nam)?
+	Same option as for multi-byte (patch from Nam)?
 	Add another option to add one to the character width?  Lucida Console
 	italic is wider than the normal font ("d" overlaps with next char).
 7	At the hit-return prompt scrolling now no longer works.  Need to use the
@@ -168,6 +172,7 @@ Win32 GUI known bugs:
 6	Drawing text transparantly doesn't seem to work (when drawing part cursor).
 8	CTRL key doesn't always work in combination with ALT key.  It does work
 	for function keys, not for alphabetic characters.
+8	CTRL-@ doesn't work.  Don't even get a message for it?
 8	CTRL-- doesn't work for AZERTY, because it's CTRL-[ for QWERTY.  How do we
 	know which keyboard is being used?
 8	When using ":se guifont=Courier_New" bold chars leave pixels behind, in
@@ -177,6 +182,7 @@ Win32 GUI known bugs:
 	area (Koloseike).
 7	File/Print uses notepad, which puts the name of the temp file on top of
 	each page.  How do we get the actual file name there?
+	Alternative: use prfile32 (Aaron)
 8	install.exe, vimrun.exe and ctags are not build from Gvim_vc.mak.  When
 	added, check that this works from the command line and from the IDE.
 8	":r !mycommand" doesn't pass the environment to the external command.
@@ -184,6 +190,8 @@ Win32 GUI known bugs:
 	the shortcut itself.
 9	OleVim doesn't send <C-\><C-N>, which causes trouble if Vim is in Insert
 	mode. (Thakkar)
+8	Tear-off menu causes a crash when it contains many items (>100).
+	(Pedro Gomes)  Probably because DLG_ALLOC_SIZE is a fixed number.
 
 
 Athena GUI:
@@ -195,6 +203,7 @@ Athena GUI:
 9	Because destroying a menu can cause a crash, it is not destroyed but
 	unmanaged.  The destoyed Widgets are remembered, this list is never
 	cleaned up.
+9	When closing the confirm() dialog, Vim exits.
 9	Menu ordering doesn't work.
 9	When using "menu a.b.c.d lll", the "b" submenu does not disappear.
 8	When "j" or "k" repeated quickly, display is messed up (Lauther).
@@ -222,14 +231,11 @@ Motif GUI:
 8	Lesstif: When deleting a menu that's torn off, the torn off menu becomes
 	very small instead of disappearing.  When closing it, Vim crashes.
 	(Phillipps)
-5	There is a small white box that appears in the upper left-hand corner of
-	the root window.  It appears to be a problem with the popup menu.  When
-	the popup menu is removed from runtime/menu.vim, the little box no longer
-	appears.  Stepping through the debugger, the box appears when
-	gui_x11.c::gui_mch_menu_hidden() handles a popup menu.
 
 
 GUI:
+9	When using a very small font, 'columns' can be very big.  Either handle a
+	large value everywhere, or set a maximum MAX_COLUMNS.
 9	On Solaris, creating the popup menu causes the right mouse button no
 	longer to work for extending the selection. (Halevy)
 9	When running an external program, it can't always be killed with CTRL-C.
@@ -248,6 +254,8 @@ GUI:
 8	Menu priority for sub-menus for: Athena, Amiga, Mac, VMS, BeOS.
 8	Commands to enable/disable menu entries.  Patch in HierAssist. (Shah)
 8	Add menu separators for Athena, Amiga, Mac, RISCOS.
+8	Add way to specify the file filter for the browse dialog.  At least for
+	browse().
 8	Add dialog for search/replace to other GUIs?  Tk has something for this,
 	use that code?  Or use console dialog.
 8	gui_check_colors() is not called at the right moment.  Do it much later,
@@ -265,6 +273,7 @@ GUI:
 8	A dead circumflex followed by a space should give the '^' character
 	(Rommel).  Look how xterm does this.
 	Also: Bednar has some code for dead key handling.
+	Also: Nedit 5.0.2 with USE_XMIM does it right. (Gaya)
 8	The compose key doesn't work properly (Cepas).  Both for Win32 and X11.
 7	The compiled-in highlight defaults allocate colors, which will never be
 	freed.  Move them to a startup script?  Only use bold and underline for
@@ -301,15 +310,16 @@ MSDOS/DJGPP:
 8	Vim busy waits for new characters or mouse clicks.	Should put in some
 	sort of sleep, to avoid eating 50% of the CPU time.  Test on an unpatched
 	Windows 95 system!
+8	DJGPP: when shell is bash, make fails. (Donahoe)
 8	DJGPP: ":mode" doesn't work for many modes.  Fix "fast" text output
 	functions?
-7	F11 and F12 under MSDOS don't work.  Can this be fixed?  Check the
-	interrupt list for a BIOS function for an extended keyboard.
 7	Hitting CTRL-P twice quickly (e.g. in keyword completion) on a 8088
 	machine, starts printer echo! (John Mullin).
 7	MSDOS 16 bit version can't work with COMSPEC that has an argument, e.g.:
 	COMSPEC=C:\WINDOWS\COMMAND.COM /E:4096	  (Bradley)
 	Caused by BCC system() function (Borland "make" has the same problem).
+8	Makefile.bor can't compile xxd and ctags without editing the makefiles.
+	Create a Makefile.bor for xxd and ctags.
 8	Check if with DJGPP 2.01 the problem of a path starting with a backslash is
 	still present.
 8	Mouse: handle left&right button pressed as middle button pressed.  Add
@@ -331,6 +341,9 @@ MSDOS, OS/2 and Win32:
 	STRCMP_ENV(), and use it when comparing environment var names.
 8	Setting 'shellslash' has no immediate effect.  Change all file names when
 	it is set/reset?  Or only use it when actually executing a shell command?
+8	When editing a file on a Samba server, case might matter.  ":e file"
+	followed by ":e FILE" will edit "file" again, even though "FILE" might be
+	another one.  Set last used name in buflist_new()?  Fix do_ecmd(), etc.
 
 
 Windows 95:
@@ -357,7 +370,9 @@ Win32 console:
 	long name.
 8	Add an option (command line?) not to switch console buffers.  Required for
 	telnetd (Ford).  Change termcap_mode_start() and termcap_mode_end().
-	Test with ataman telnet daemon.
+	Test with ataman telnet daemon or Anzio Lite.
+	Use 'conskey' and/or 'bioskey' options for this?
+	Alternative: Use BIOS screen output like in os_msdos.c.
 8	Also implement 'conskey' option for the Win32 console version?  Look at
 	how Xvi does console I/O under Windows NT.
 7	Re-install the use of $TERM and support the use of different terminals,
@@ -369,6 +384,9 @@ Win32 console:
 8	When exiting, sends ^M^M^J to the console in raw mode (Webb).
 8	In os_win32.h, HAVE_STRICMP and HAVE_STRNICMP are defined only if __GNUC__
 	is not defined.  Shouldn't that be the other way around?
+9	When using libcall() for a function that returns an invalid pointer, Vim
+	crashes.  Check for a bad pointer with isBadReadPtr(). (Zeitlin)
+	Doesn't appear to work really, at least check for "1".
 
 
 Amiga:
@@ -379,6 +397,13 @@ Amiga:
 
 
 Macintosh:
+9	When DiskLock is running, using a swap file causes a crash.  Appears to be
+	a problem with writing a file that starts with a dot. (Giacalone)
+9	On G3 Mac, OS version 8, control strip causes characters messed up when
+	scrolling (CTRL-L cleans it up). (Benji Fisher)
+9	On G3 Mac, OS version 8, variable-speed scrolling doesn't work, after two
+	seconds of scrolling the screen freezes. (Benji Fisher)
+	scrolling (CTRL-L cleans it up). (Benji Fisher)
 9	In mac_expandpath() check that handling of backslashes is done properly.
 9	Executable is called "vimPPC" instead of "gvim"? (Amerige)
 8	Standard Mac buttons and shortcuts are missing.  No close button.
@@ -399,6 +424,14 @@ VMS:
 
 
 "Small" problems:
+9	When jumping to a tag, the search pattern is put in the history.  When
+	'magic' is on, the pattern may not work.  Translate the pattern depending
+	on p_magic when putting it in the history?  Alternative: Store value of
+	'magic' in history.  (Margo)
+9	Viminfo file becomes corrupt when editing a file with a <NL> in the name.
+	(file marks, buffer list, history of marks) (Alexander N.Benner, Wichert
+	Akkerman, Weisselberg)
+	Also problems with buffer menu.
 9	optwin.vim: Restoring a mapping for <Space> or <CR> is not correct for
 	":noremap".  Add "mapcmd({string}, {mode})?  Use code from ":mkexrc".
 8	When some features are disabled, the related commands cannot check for a
@@ -407,9 +440,6 @@ VMS:
 	the feature is not included.
 9	When starting gvim in an xterm, Vim sends t_vi and t_ve to the terminal
 	(cursor invisible/visible).  Should not happen.
-9	On non-Unix systems it's possible to write over a readonly file, when
-	'readonly' is not set.  Need to check the file permissions explicitly.
-	Add a mch_writable(perm) function for each OS.
 9	incsearch is incorrect for "/that/<Return>/this/;//" (last search pattern
 	isn't updated).
 9	term_console is used before it is set (msdos, Amiga).
@@ -418,11 +448,18 @@ VMS:
 	cause another redraw, etc.
 9	When a library is added twice, it will add to the size of Vim.  E.g. for
 	"-lXt".  Remove the first one?
-8	When a function ends while an "endif" or "endwhile" is missing, there
-	should be a warning message.
+9	When first editing file "test", which is symlink to "test2", and then
+	editing "test2", you end up editing buffer "test" again.  Change the name
+	of the buffer to the actual file, instead of using the name of the
+	symlink?
+8	[<C-I> doesn't work when '*' is in 'iskeyword'.  find_pattern_in_path()
+	must escape special characters in the pattern.
 8	Vim can overwrite a read-only file.  ":w" can't overwrite an existing
 	file, "w!" can, but perhaps not a read-only file?  Then use ":w!!" for
 	that.
+	Or ask for permission to overwrite it (if file can be made writable) and
+	restore file to readonly afterwards.
+8	Buffers menu, when torn-off, disappears when being refreshed.
 8	Is calling msg_start() in main() really needed?  Any printed message
 	should include it already.
 8	When in Insert mode with 'scrolloff' set, inserting text at the end of the
@@ -433,6 +470,11 @@ VMS:
 	<S-MiddleMouse> pastes the selection, but <MiddleMouse> doesn't.  Xterm
 	first tries getting the primary selection, and if that doesn't work it
 	gets CUT_BUFFER0.
+8	When owning the PRIMARY selection, also get the CLIPBOARD selection.
+	(Neil Bird)  Use the "+ register to access the clipboard? (Bird)
+	Use "unnamed", "clipboard" and "autoselect" in the 'clipboard' option.
+	(Wall)  Also copy text to CUT_BUFFER0, but don't do it too often (can be
+	slow when there is a lot of text).  Or just recommend xcb?
 8	When compiled with "xterm_clipboard", startup can be slower and might get
 	error message for invalid $DISPLAY.  Use an option to disable connecting
 	to the X server, so that Vim doesn't have to be recompiled for this?
@@ -574,6 +616,9 @@ I can't reproduce these (if you can, let me know how!):
 
 
 Problems that will (probably) not be solved:
+-	X windows: When $DISPLAY points to a X server where there is no access
+	permission, trying to connect to the X server causes an error message.
+	XtOpenDisplay() prints this directly, there is no way to avoid it.
 -	Win32: All files created on the day of switching from winter to summer
 	time cause "changed since editing started" messages.  It goes away when
 	the file is written again the next day, or the timezone is adjusted.
@@ -665,6 +710,8 @@ Considered for release 6.0:
 8	Rename vim-5.5x to vim55x for all distributions, also Unix.  Easier to
 	type and no differences between systems.
 8	Include patch to speedup display updating for DJGPP version. (Negri)
+	~/Mail/oldmail/negri/in.00918 .
+8	Make clipboard work for Dos32 version. (Negri)
 8	Include Gnome support? ~/vim/patches/kahn.gnome.gz (Kahn)
 8	Add ":bnew" command?  ~/vim/patches/wall.bnew (Wall)
 9	":redir @*" should work: Redirect to the clipboard.  Just allow using this
@@ -722,6 +769,10 @@ Help:
 
 
 Syntax highlighting:
+8	Make it easier to add new or modified syntax files.  Use a search path for
+	syntax files instead of synload?
+8	Allow the user to add items to the Syntax menu sorted, without having to
+	change this for each release.
 8	Add patch from Scott Bigham for back referencing.
 	~/vim/patches/bigham.regexp3 .
 8	Some syntax files set 'iskeyword'.  When switching to another filetype
@@ -821,6 +872,8 @@ Syntax highlighting:
 	backwards, and use the result of matching a pattern.
 7	Build a few more syntax files from the file "/usr/share/misc/vgrindefs":
 	ISP, LDL, Icon, ratfor.  And check "nedit/source/highlight.c".
+6	Add possibility to have background color continue until the right edge of
+	the window.  Useful for comment blocks and function headings. (Rogall)
 -	Make it possible to add "contains" items for all items in a group.	Useful
 	when extending an already existing syntax file.
 -	Allow the use of "blink".  Make a new attr when it's used.
@@ -886,6 +939,7 @@ Built-in script language:
 		cursor(lnum, col)		Position cursor (when lnum or col 0 keep val)
 		col("$")				Column number of last char in line.  See
 								~/vim/patches/wall.coldollar .
+		multibyteidx(string, idx) Byte index in multi-byte character.
 		menuname({menu_name}, {idx})  get name of menu.  menuname("", 1)
 								returns "File", menuname("File", 1) returns
 								"Open...".
@@ -901,6 +955,7 @@ Built-in script language:
 		perl(cmd)				call Perl and return string
 		shorten(fname)			shorten a file name, like home_replace()
 		input(prompt, complete)	like input() but do specified completion
+		filewritable()			like filereadable()
 		getfperm()				file permissions, in form "rwxrwxrwx"
 		getfsize()				file size in bytes (directory is 0)
 		getftype()				"file", "dir", "link", "other"?
@@ -923,6 +978,7 @@ Built-in script language:
 		filter({cmd} [, {string}])	Filter {string} through the shell command
 								{cmd} and return the result.  If {string} is
 								omitted no input is given to {cmd}.
+		getkey()				Like input() but get only one char.
 8	argc() returns 0 when using "vim -t tag".  How to detect that no file was
 	specified in any way?  To be able to jump to the last edited file.
 8	When starting to source a vim script, delete all functions that it has
@@ -931,9 +987,7 @@ Built-in script language:
 7	Add optional arguments to user functions:
 		:func myFunc(arg1, arg2, arg3 = "blah", arg4 = 17)
 6	User functions: Functions local to buffer "b:func()"?
-7	Allow writing to the "= register, in which case the expression must be the
-	name of a variable which is written to. (Erhardt)
-8	Add ":let var[{expr}] = {expr}".
+8	Add ":let var[{expr}] = {expr}".  When past the end of "var" just ignore.
 8	The "= register should be writable, if followed by the name of a variable,
 	option or environment variable.
 8	":let &option" should list the value of the option.
@@ -981,6 +1035,8 @@ Performance:
 	Win16.
 9	Setting GUI options in the console (e.g., 'guifont') should not cause a
 	redraw.
+8	Profiling shows that in_id_list() is used very often for C code.  Can this
+	function be improved?
 8	For an existing file, the page size of the swap file is always the
 	default, instead of using the block size of the device, because the swap
 	file is created only after setting the block size in mf_open().  How can
@@ -1078,13 +1134,7 @@ Messages:
 	typing, error messages must be switched back on.
 	Also a flag to ignore error messages for shell commands (for mappings).
 8	Add ":silent {cmd}", silently run a command: no echoing, no hit-return
-	prompt.  Use ":silent!" to also skip error messages.  Should work for
-	":silent !cmd".  Still do the messages for ":redir"?
-	Ideas in ~/vim/patches/wall.noredir.tgz (Stephen P. Wall).
-8	When using ":silent !cmd", run the external command silently, don't give
-	the hit-return prompt.  Already done for Risc OS with ":!~cmd", see
-	do_shell().  Don't redraw the screen, make a note in the docs that CTRL-L
-	should be used if the command has any output.
+	prompt.  Use ":silent!" to also skip error messages.
 -	Option to set time for emsg() sleep. Interrupt sleep when key is typed?
 	sleep before second message?
 8	In Ex silent mode or when reading commands from a file, what exactly is
@@ -1241,18 +1291,23 @@ Win32 GUI:
 
 
 GUI:
+9	Make <S-Insert> paste from the clipboard by default. (Kunze)
 8	Dragging the mouse pointer outside of a Vim Window should make the text
 	scroll.  Return a value from gui_send_mouse_event() to the machine
 	specific code to indicate the time in which the event should be repeated.
+8	Make it possible to ignore a mouse click when it's used to give Vim (gvim)
+	window focus.  Also when a mouse click is used to bring a window to front.
 8	Make the split into system independend code and system specific code more
 	explicit.  There are too many #ifdefs in gui.c.
 	If possible, separate the Vim code completely from the GUI code, to allow
 	running them in separate processes.
+8	Support a background bitmap.  Useful for marking a column.  Patch from
+	Heather Downs (GTK) and Vince Negri (Win32).
 8	Visual highlighting should keep the same font (bold, italic, etc.).
 8	Make the "Save As.." menu item work like other GUI programs: ":w file",
 	":e file".
-8	Add an option to use console dialogs instead of GUI dialogs.  Esp. for the
-	ATTENTION prompt.
+8	Add 'c' flag in 'guioptios' to use console dialogs instead of GUI dialogs.
+	Esp. for the ATTENTION prompt.
 7	Allow setting the mouse pointer shape, for different modes.  Ralston has
 	an old patch for this.  Negri has one for Win32.
 8	Add flag to 'guioptions' to not put anything in the clipboard at all?
@@ -1399,6 +1454,7 @@ Insert mode completion:
 8	Add thesaurus completion: ~/vim/patches/negri.thesaurus-mouseshape .
 7	Add CTRL-X command in Insert mode like CTRL-X CTRL-N, that completes WORDS
 	instead of words.
+8	Add CTRL-X CTRL-R: complete words from register contents.
 8	Add completion of previously inserted texts (like what CTRL-A does).
 	Requires remembering a number of insertions.
 8	Add 'f' flag to 'complete': Expand file names.
@@ -1416,8 +1472,10 @@ Insert mode completion:
 	(e.g. to complete "Pointer->element" with CTRL-X CTRL-P CTRL-W CTRL-W)
 -	CTRL-X CTRL-F: Use 'path' to find completions.
 -	CTRL-X CTRL-F: Don't replace "$VIM" with the actual value. (Kelly)
--	Add option 'isexpand', containing characters when doing expansion (so that
+8	Add option 'isexpand', containing characters when doing expansion (so that
 	"." and "\" can be included, without changing 'iskeyword'). (Goldfarb)
+	Also: 'istagword': characters used for CTRL-].
+	When 'isexpand' or 'istagword' are empty, use 'iskeyword'.
 
 
 Command line completion:
@@ -1445,6 +1503,7 @@ Command line completion:
 	Also: when there are several matches, show them line a CTRL-D.
 7	With command line completion after '%' and '#', expand current/alternate
 	file name, so it can be edited.
+-	Add completion for Environment variables: ":echo $SH<Tab>" -> "$SHELL".
 
 
 Command line history:
@@ -1493,6 +1552,7 @@ Insert mode:
 -	In Insert mode (and command line editing?): Allow undo of the last typed
 	character.	This is useful for CTRL-U, CTRL-W, delete and backspace, and
 	also for characters that wrap to the next line.
+	Also: be able to undo CTRL-R (insert register).
 	Possibly use 'backspace'="whole" for a mode where at least a <CR> that
 	inserts autoindent is undone by a single <BS>.
 -	Use CTRL-G in Insert mode for an extra range of commands, like "g" in
@@ -1506,6 +1566,10 @@ Insert mode:
 
 
 'cindent', 'smartindent':
+9	closing } not recognized?  (Francois-Xavier Menard)
+	(char *tab[] = {"aaa",
+		NULL};
+		char *name;
 9	When using 'cino' "f1s" the indent after a function is set to the indent
 	of the "}", should be zero.
 7	Allow aligning a closing ")" with the line above, instead of the matching
@@ -1629,6 +1693,11 @@ Select mode:
 
 
 Visual mode:
+9	With blockwise Visual mode, "A" works different than "I" when there are
+	short lines.  Make them work the same way.  Also make it possible to add
+	the text to short lines too, with padding where needed.
+8	"p" should replace the Visual area with the contents of a register (swap
+	register contents with Visual text).
 8	In non-blockwise Visual mode, "r" should replace all characters with the
 	typed one, like in blockwise Visual mode.
 	What is "R" supposed to do?
@@ -1658,17 +1727,14 @@ Visual mode:
 	current buffer.
 7	CTRL-A and CTRL-X should increase/decrease all numbers in the Visual area.
 7	"g_CTRL-G" should count the number of characters in the Visual area.
-6	"I" should insert the same text in front of the selected text, in each
-	line.
-6	"A" should append the same text after the selected text, in each line.
-6	"p" should replace the Visual area with the contents of a register (swap
-	register contents with Visual text).
+6	"I" should insert the same text in front of each line, before the first
+	non-blank, "gI" in column 1.
+6	"A" should append the same text after each line.
 6	":'<,'>source" should read the selected lines and ":source" them.
 6	When in blockwise visual selection (CTRL-V), allow cursor to be placed
 	right of the line. Could also allow cursor to be placed anywhere on a TAB
 	or other special character.
 6	Add commands to move selected text, without deselecting.
-6	Add visual command to swap selected text with unnamed register.
 
 
 Quickfix:
@@ -1690,7 +1756,7 @@ More advanced repeating commands:
 
 Mappings and Abbreviations:
 8	To make a mapping work with a prepended "x to select a register, store the
-	last _typed_ register name and access it with "+.
+	last _typed_ register name and access it with "&.
 8	Add ":amap", like ":amenu".
 8	Add ":cab!", abbreviations that only apply to Command-line mode and not to
 	entering search strings.
@@ -1772,14 +1838,24 @@ Incsearch:
 Searching:
 8	Allow identical pairs in 'matchpairs'.  Restrict the search to the current
 	line.
+8	Make it possible to define the character that "%" checks for in
+	#if/#endif.  For nmake it's !if/!endif.
+-	For "%" command: set hierarchy for which things include other things that
+	should be ignored (like "*/" or "#endif" inside /* */).
+	Also: use "%" to jump from start to end of syntax region and back.
 8	"/:/e+1" gets stuck on a match at the end of the line.	Do we care?
 8	A pattern like "\([^a]\+\)\+" takes an awful long time.  Recognize that
 	the recursive "\+" is meaningless and optimize for it.
 	This one is also very slow on "/* some comment */": "^\/\*\(.*[^/]\)*$".
 7	Recognize "[a-z]", "[0-9]", etc. and replace them with the faster "\l" and
 	"\d".
--	Add an option not to use 'hlsearch' highlighting for ":s" and ":g"
-	commands. (Kahn)  Or an extra flag to skip it once.
+8	Flags that apply to the whole pattern.
+	This works for all places where a regexp is used.
+	Add "\q" to not store this pattern as the last search pattern?
+8	Add an option not to use 'hlsearch' highlighting for ":s" and ":g"
+	commands. (Kahn)  It would work like ":noh" is used after that command.
+	Also: An extra flag to do this once, and a flag to keep the existing
+	search pattern.
 -	Add {group-name} flag for search string, to restrict the search to a
 	specific highlight group.  Use "/./<Group>" to find the start of a group.
 -	Support Perl regexp.  Use PCRE (Perl Compatible RE) package. (Shade)
@@ -1788,11 +1864,13 @@ Searching:
 7	Add POSIX regexp, like Nvi, with 'extended' option?  It's like very-magic.
 -	Remember flags for backreferenced items, so that "*" can be used after it.
 	Check with "\(\S\)\1\{3}". (Hemmerling)
--	Add flags to search command:
+-	Add flags to search command (also for ":s"?):
 	i	ignore case
 	I	use case
 	p	use Perl regexp syntax (or POSIX?)
 	v	use Vi regexp syntax
+	f	forget pattern, don't keep it for "n" command
+	r   remember patter, keep it for "n" command
 	Perl uses these too:
 	e	evaluate the right side as an expression (Perl only)
 	m	multiple line expression
@@ -1805,8 +1883,6 @@ Searching:
 -	Add command to display the last used substitute pattern and last used
 	pattern. (Margo)  Maybe make it accessible through a register (like "/
     for search string)?
-8	Make "/ register writable. (Maxi)
-    How to take care of the flags (offset, magic)?
 7	Should notice that "\(a\|ab\|abc\|abcd\)" doesn't work, automatically
 	change it to "\(abcd\|abc\|ab\|a\)"? (Campbell)
 7	Use T-search algorithm, to speed up searching for strings without special
@@ -1816,8 +1892,6 @@ Searching:
 -	Add 'v' flag to search command: enter Visual mode, with the matching text
 	as Visual area. (variation on idea from Bertin)
 -	Searching: "/this//that/" should find "that" after "this".
--	Add flag to search command to forget it for "n", e.g. "/foo/f".  Also for
-	":s/pat//f".  Also add flag to 'r'emember (for mappings).
 -	Add global search commands: Instead of wrapping at the end of the buffer,
 	they continue in another buffer. Use flag after search pattern:
 	a	for the next file in the argument list
@@ -1833,7 +1907,7 @@ Searching:
 	Inside []:
 	\012  octal character
 	\0x1a hex character
-	\<BS> special character
+	\<BS> \<Esc>: special character
 7	When searching with 'n' give message when getting back where the search
 	first started. Remember start of search in '/ mark.
 7	Add option that scrolls screen to put cursor in middle of screen after
@@ -1841,15 +1915,16 @@ Searching:
 	specify how many lines below the screen causes a redraw with the cursor in
 	the middle (default would be half a screen, zero means always).
 6	Add \! to search patterns: matches string that does not match previous
-	atom.
+	atom.  Note that this only works for lookahead.
+5	Add \<= and \<! to search patterns: lookbehind assertion, like Perl's
+	(?<=pat) and (?<!pat).  \(foo\)\<=bar matches "bar" in "foobar".
+	\(foo\)\<!bar doesn't match "bar" in "foobar".
 6	Use \& for "and", like \| for "or".
 6	Support multiple search buffers, so macros can be made without side
 	effects.
 7	From xvim: Allow a newline in search patterns (also for :s, can delete
 	newline).  Add BOW, EOW, NEWL, NLORANY, NLBUTANY, magic 'n' and 'r', etc.
 	[not in xvim:] Add option to switch on matches crossing ONE line boundary.
-7	Add register for '?' and '/' commands? (yank_buf()).
--	In regexp, allow use of special characters with "\<nn>" notation?
 7	Add ":iselect", a combination of ":ilist" and ":tselect". (Aaron)
 	Also ":dselect".
 
@@ -1945,6 +2020,7 @@ Viminfo:
 	else's viminfo file.
 8	Add argument to keep the list of buffers when Vim is started with a file
 	name. (Schild)
+8	Keep the last used directory of the file browser (File/Open menu).
 8	Remember a list of last accessed files.  To be used in the
 	"File.Open Recent" menu.  Default is to remember 10 files or so.
 	Also remember which files have been read and written.  How to display
@@ -1966,6 +2042,8 @@ Modelines:
 -	When an option value is coming from a modeline, do not carry it over to
 	another edited file?  Would need to remember the value from before the
 	modeline setting.
+-	Allow setting a variable from a modeline?  Only allow using fixed strings,
+	no function calls, to avoid a security problem.
 -	Allow ":doauto BufRead x.cpp" in modelines, to execute autocommands for
 	.cpp files.
 -	Support the "abbreviate" command in modelines (Kearns).  Careful for
@@ -2086,6 +2164,9 @@ Marks:
 	to the nearest line.
 8	The '" mark is set to the first line, even when doing ":next" a few times.
 	Only set the '" mark when the cursor was really moved in a file.
+8	Make `` and '', which would position the new cursor position in the middle
+	of the window, restore the old topline (or relative position) from when
+	the mark was set.
 7	Make a list of file marks in a separate window.  For listing all buffers,
 	matching tags, errors, etc.  Normal commands to move around.  Add commands
 	to jump to the mark (in current window or new window).  Start it with
@@ -2125,15 +2206,15 @@ Multibyte support:
 -	Substitute doesn't work well on multibyte characters:
 	":s/\(.\)/\1\1/g" replaces each byte instead of each multi-byte.
 	Requires regexp code that sees a multibyte character as one char.
-9	Include patch from Muraoka for multi-byte  search patterns.
+9	Include patch from Muraoka for multi-byte search patterns.
 9	Include some of Japanese multibyte patches: (Muraoka)
 	~/vim/patches/muraoka_gvim55_w32.tz
+8	Include some of the patches ~/vim/patches/muraoka2.diff.tgz (Muraoka)
+	Find another solution for CSI from the GUI.  Prepare for UTF-8.
 9	Check "gR" for proper working of backspacing.
 9	With Athena and Motif the status line overwrites a bottom scrollbar?
 9	The BROKEN_LOCALE check should be done at runtime, not at compile time.
 	Helps when compiling on one machine and running on another.
-8	Include some of the patches ~/vim/patches/muraoka2.diff.tgz (Muraoka)
-	Find another solution for CSI from the GUI.  Prepare for UTF-8.
 -	When wrapping words, allow splitting at each multibyte character, not only
 	at a space (with an option). (Nishioka)
 -	Support full UTF8 format, also three to eight byte characters.  Use a skip
@@ -2245,7 +2326,25 @@ Argument list:
 7	Allow multiple arguments for ":edit", add them to the argument list.
 
 
+Registers:
+8	Don't display empty registers with ":display". (Etienne)
+-	When appending to a register, also report the total resulting number of
+	lines.	Or just say "99 more lines yanked", add the "more".
+-	When inserting a register in Insert mode with CTRL-R, don't insert comment
+	leader when line wraps?
+-	The ":@r" commands should take a range and execute the register for each
+	line in the range.
+-	Add "P" command to insert contents of unnamed register, move selected text
+		to position of previous deleted (to swap foo and bar in " + foo")
+8	Make "/ register writable. (Maxi)
+    How to take care of the flags (offset, magic)?
+7	Add ! register, for shell commands. (patch from Grenie)
+
+
 Various improvements:
+8	Support printing on Unix.  Can use "lpansi.c" as an example. (Bookout)
+8	Add put command that replaces the text under it.  Esp. for blockwise
+	Visual mode.
 6	Add 'extendex' option, to make Ex mode work like repeated use of ":",
 	instead of the crippled Vi-compatible Ex mode. (Carlsson)
 	~/vim/patches/carlsson.exextend
@@ -2262,7 +2361,6 @@ Various improvements:
 	feature.h.  How to make this consistent?  Feature.h is required for
 	non-unix systems.  Perhaps let configure define CONF_XXX, and use #ifdef
 	CONF_XXX in feature.h?  Then what should min-features and max-features do?
-8	Don't display empty registers with ":display". (Etienne)
 8	Add "g^E" and "g^Y", to scroll a screen-full line up and down.
 6	Add ":timer" command, to set a command to be executed at a certain
 	interval, or once after some time has elapsed. (Aaron)
@@ -2443,8 +2541,6 @@ Various improvements:
 	sufficient.  ":setflush" resets the option stack?
 	How to handle an aborted mapping?  Remember position in tag stack when
 	mapping starts, restore it when an error aborts the mapping?
--	When appending to a register, also report the total resulting number of
-	lines.	Or just say "99 more lines yanked", add the "more".
 -	Use a builtin grep command for ":grep"?  Makes it possible to add the
 	column number.
 -	Keep a list of most recently used files for each window, use "[o" to go
@@ -2468,14 +2564,14 @@ Various improvements:
 	the last TYPED command.
 -	Support URL links for ^X^F in Insert mode, like for "gf".
 -	Add 'wwwpath', used like 'path' for when "gf" used on an URL?
+-	When finding an URL or file name, and it doesn't exist, try removing a
+	trailing '.'.
 -	Add ":path" command modifier.  Should work for every command that takes a
 	file name argument, to search for the file name in 'path'.	Use
 	find_file_in_path().
 -	Highlight control characters on the screen: Shows the difference between
 	CTRL-X and "^" followed by "X" (Colon).
 -	Integrate parsing of cmdline command and parsing for expansion.
--	When inserting a register in Insert mode with CTRL-R, don't insert comment
-	leader when line wraps?
 -	Create a program that can translate a .swp file from any machine into a
 	form usable by Vim on the current machine.
 -	Add ":noro" command: Reset 'ro' flag for all buffers, except ones that have
@@ -2483,8 +2579,6 @@ Various improvements:
 -	Add a variant of CTRL-V that stops interpretation of more than one
 	character.	For entering mappings on the command line where a key contains
 	several special characters, e.g. a trailing newline.
--	The ":@r" commands should take a range and execute the register for each
-	line in the range.
 -	Add regex for 'paragraphs' and 'sections': 'parare' and 'sectre'. Combine
 	the two into a regex for searching. (Ned Konz)
 -	Make '2' option in 'formatoptions' also work inside comments.
@@ -2517,8 +2611,6 @@ Various improvements:
 -	Screen updating is inefficient with CTRL-F and CTRL-B when there are long
 	lines.
 -	Uppercase characters in ex commands can be made lowercase?
--	Add "P" command to insert contents of unnamed register, move selected text
-		to position of previous deleted (to swap foo and bar in " + foo")
 -	Add word count to "g CTRL-G".
 8	Add option to show characters in text not as "|A" but as decimal ("^129"),
 	hex ("\x81") or octal ("\201") or meta (M-x).  Nvi has the 'octal' option
@@ -2554,7 +2646,6 @@ Various improvements:
 -	When :unab without matching "from" part and several matching "to" parts,
 	delete the entry that was used last, instead of the first in the list.
 -	Add text justification option.
--	Add put function that replaces the text under it.
 -	Set boolean options on/off with ":set paste=off", ":set paste=on".
 -	After "inv"ing an option show the value: ":set invpaste" gives "paste is
 	off".
@@ -2568,19 +2659,13 @@ Various improvements:
 -	Settings edit mode: make file with ":set opt=xx", edit it, parse it as ex
 	commands.
 -	":set -w all": list one option per line.
--	When writing to a not writable file (with ":w!") ask for permission to
-	overwrite it (if file can be made writable) and restore file to readonly
-	afterwards.
 -	Amiga: test for 'w' flag when reading a file.
 -	:table command (Webb)
 -	Add command to go to last non-blank in line (like 0 vs. ^, $ vs. ???)
--	Add new operator: clear, make area white (replace with spaces): "gb".
+-	Add new operator: clear, make area white (replace with spaces): "g ".
 -	Make it possible for a user to define a new operator.  Implementation with
 	internal scripting language or Perl?
 -	Add command to ":read" a file at a certain column (blockwise read?).
--	For "%" command: set hierarchy for which things include other things that
-	should be ignored (like "*/" or "#endif" inside /* */).
-	Also: use "%" to jump from start to end of syntax region and back.
 -	Add 'resizecmd' option: vi command to be executed when window is resized.
 -	Add sort of replace mode where case is taken from the old text (Goldfarb).
 -	Allow multiple arguments for ":read", read all the files.

@@ -901,87 +901,78 @@ mch_can_restore_icon(void)
 /*
  *	mch_settitle	set the window title and icon (xterm only)
  */
-
     void
-mch_settitle(char_u *title, char_u *icon)
+mch_settitle(title, icon)
+    char_u *title;
+    char_u *icon;
 {
     int		type = 0;
-    char_u	title_buf[80];
+    static int	recursive = 0;
 
-    if (term_str(KS_NAME) == NULL)		/* no terminal name (yet) */
+    if (T_NAME == NULL)		/* no terminal name (yet) */
 	return;
-    if (title == NULL && icon == NULL)		/* nothing to do */
+    if (title == NULL && icon == NULL)	/* nothing to do */
 	return;
-/*
- * if the window ID and the display is known, we may use X11 calls
- */
+
+    /* When one of the X11 functions causes a deadly signal, we get here again
+     * recursively.  Avoid hanging then (something is probably locked). */
+    if (recursive)
+	return;
+    ++recursive;
+
+    /*
+     * if the window ID and the display is known, we may use X11 calls
+     */
 #if defined(HAVE_X11) && defined(WANT_X11)
     if (get_x11_windis() == OK)
 	type = 1;
+#else
+# ifdef USE_GUI_BEOS
+    /* we always have a 'window' */
+    type = 1;
+# endif
 #endif
 
     /*
-     * Note: if terminal is xterm, title is set with escape sequence rather
-     *		 than x11 calls, because the x11 calls don't always work
-     * Check only if the start of the terminal name is "xterm", also catch
-     * "xterms".
+     * Note: if "t_TS" is set, title is set with escape sequence rather
+     *	     than x11 calls, because the x11 calls don't always work
      */
-    if (vim_is_xterm(term_str(KS_NAME)))
-	type = 2;
-    if (vim_is_iris(term_str(KS_NAME)))
-	type = 3;
-    if (type)
+
+    if ((type || *T_TS != NUL) && title != NULL)
     {
-	if (title != NULL)
-	{
-	    if (oldtitle == NULL)		/* first call, save title */
-		(void)get_x11_title(FALSE);
-	    switch(type)
-	    {
+	if (oldtitle == NULL)		/* first call, save title */
+	    (void)get_x11_title(FALSE);
+
+	if (*T_TS != NUL)		/* it's OK if t_fs is empty */
+	    term_settitle(title);
 #if defined(HAVE_X11) && defined(WANT_X11)
-		case 1:
-		    set_x11_title(title);			/* x11 */
-		    break;
-#endif /*HAVE_X11+WANT_X11*/
-		case 2:
-		    sprintf((char *)title_buf, "\033]2;%s\007", title);
-		    OUT_STR_NF(title_buf);
-		    vms_flushbuf();
-		    break;
-		case 3:
-		    sprintf((char *)title_buf, "\033P1.y%s\234", title);
-		    OUT_STR_NF(title_buf);
-		    vms_flushbuf();
-		    break;
-	    }
-	    did_set_title = TRUE;
-	}
-	if (icon != NULL)
-	{
-	    if (oldicon == NULL)		/* first call, save icon */
-		get_x11_icon(FALSE);
-	    switch(type)
-	    {
-#if defined(HAVE_X11) && defined(WANT_X11)
-		case 1:
-		    set_x11_icon(icon);			/* x11 */
-		    break;
-#endif /*HAVE_X11&&WANT_X11*/
-		case 2:					/* xterm */
-		    sprintf((char *)title_buf, "\033]1;%s\007", icon);
-		    OUT_STR_NF(title_buf);
-		    vms_flushbuf();
-		    break;
-		case 3:					/* iris-ansi */
-		    sprintf((char *)title_buf, "\033P3.y%s\234", icon);
-		    OUT_STR_NF(title_buf);
-		    vms_flushbuf();
-		    break;
-	    }
-	    did_set_icon = TRUE;
-	}
+	else
+	    set_x11_title(title);		/* x11 */
+#endif
+	did_set_title = TRUE;
     }
+
+    if ((type || *T_CIS != NUL) && icon != NULL)
+    {
+	if (oldicon == NULL)		/* first call, save icon */
+	    get_x11_icon(FALSE);
+
+	if (*T_CIS != NUL)
+	{
+	    out_str(T_CIS);			/* set icon start */
+	    out_str_nf(icon);
+	    out_str(T_CIE);			/* set icon end */
+	    out_flush();
+	}
+#if defined(HAVE_X11) && defined(WANT_X11)
+	else
+	    set_x11_icon(icon);			/* x11 */
+#endif
+	did_set_icon = TRUE;
+    }
+    --recursive;
 }
+
 
 /*
  * Restore the window/icon title.
@@ -1027,11 +1018,11 @@ vim_is_vt300(name)
     char_u  *name;
 {
     if (name == NULL)
-        return FALSE;       /* actually all ANSI comp. terminals should be here  */
+	return FALSE;	/* actually all ANSI comp. terminals should be here  */
     return (STRNICMP(name, "vt3", 3) == 0  /* it will cover all from VT100-VT300 */
-         || STRNICMP(name, "vt2", 3) == 0  /* Note: from VT340 can hanle colors  */
-         || STRNICMP(name, "vt1", 3) == 0  
-         || STRCMP(name, "builtin_vt320") == 0);
+	    || STRNICMP(name, "vt2", 3) == 0  /* Note: from VT340 can hanle colors  */
+	    || STRNICMP(name, "vt1", 3) == 0
+	    || STRCMP(name, "builtin_vt320") == 0);
 }
 
 
@@ -1123,13 +1114,13 @@ mch_dirname(char_u *buf, int len)
 	return FAIL;
     }
 
-    /********************************************* 
+    /*********************************************
     If we want tranlate from VMS to UNIX format, but
     it is much more useful to use native VMS path
-    internally as well.  
+    internally as well.
 
     STRNCPY(buf, decc$translate_vms((char *)buf), len);
-    STRCAT(buf, "/"); 
+    STRCAT(buf, "/");
 
     **********************************************/
 
@@ -1534,21 +1525,21 @@ check_mouse_termcode()
 # ifdef XTERM_MOUSE
     if (use_xterm_mouse())
     {
-        set_mouse_termcode(KS_MOUSE, (char_u *)"\033[M");
-        if (*p_mouse != NUL)
-        {
-            /* force mouse off and maybe on to send possibly new mouse
-             * activation sequence to the xterm, with(out) drag tracing. */
-            mch_setmouse(FALSE);
-            setmouse();
-        }
+	set_mouse_termcode(KS_MOUSE, (char_u *)"\033[M");
+	if (*p_mouse != NUL)
+	{
+	    /* force mouse off and maybe on to send possibly new mouse
+	     * activation sequence to the xterm, with(out) drag tracing. */
+	    mch_setmouse(FALSE);
+	    setmouse();
+	}
     }
     else
-        del_mouse_termcode(KS_MOUSE);
+	del_mouse_termcode(KS_MOUSE);
 # endif
 # ifdef GPM_MOUSE
     if (!use_xterm_mouse())
-        set_mouse_termcode(KS_MOUSE, (char_u *)"\033MG");
+	set_mouse_termcode(KS_MOUSE, (char_u *)"\033MG");
 # endif
 # ifdef NETTERM_MOUSE
     /* can be added always, there is no conflict */
@@ -1557,9 +1548,9 @@ check_mouse_termcode()
 # ifdef DEC_MOUSE
     /* conflicts with xterm mouse: "\033[" and "\033[M" */
     if (!use_xterm_mouse())
-        set_mouse_termcode(KS_DEC_MOUSE, (char_u *)"\033[");
+	set_mouse_termcode(KS_DEC_MOUSE, (char_u *)"\033[");
     else
-        del_mouse_termcode(KS_DEC_MOUSE);
+	del_mouse_termcode(KS_DEC_MOUSE);
 # endif
 }
 
@@ -1573,9 +1564,9 @@ use_xterm_mouse()
 {
     if (STRNICMP(p_ttym, "xterm", 5) == 0)
     {
-        if (isdigit(p_ttym[5]))
-            return atoi((char *)&p_ttym[5]);
-        return 1;
+	if (isdigit(p_ttym[5]))
+	    return atoi((char *)&p_ttym[5]);
+	return 1;
     }
     return 0;
 }
@@ -2304,31 +2295,31 @@ vms_fixfilename(void *instring)
      * else translate mixed unix-vms file specs to pure vms
      */
 
-    Fspec_Rms = buf;	                        /* for decc$to_vms              */
+    Fspec_Rms = buf;				/* for decc$to_vms */
     if (strchr(instring,'/') == NULL)
-	strcpy(buf, instring);                  /* already a vms file spec      */
-    else if (strchr(instring,'"') == NULL){     /* regular file                 */
+	strcpy(buf, instring);			/* already a vms file spec */
+    else if (strchr(instring,'"') == NULL){	/* regular file */
 	if (decc$to_vms(instring, vms_fspec_proc, 0, 0) <= 0)
 	    vms_unix_mixed_filespec(instring, buf);
-        }
-    else 
-	vms_unix_mixed_filespec(instring, buf); /* we have a passwd in the path */    
+    }
+    else
+	vms_unix_mixed_filespec(instring, buf); /* we have a passwd in the path */
 
     return buf;
 }
 /*
  * Remove version number from file name
  * we need it in some special cases as:
- * creating swap file name and writing new file 
+ * creating swap file name and writing new file
  */
 
 void *
 vms_remove_version(void * fname)
 {
-    char_u          *cp;
+    char_u	*cp;
 
     if ((cp = vim_strchr( fname, ';')) != NULL) /* remove version */
-        *cp = '\0';
+	*cp = '\0';
     vms_fixfilename(fname);
     return fname;
 }

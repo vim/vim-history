@@ -61,7 +61,7 @@ DESCRIPTION
 
 
 
-Darren Hiebert             Version 3.4                          1
+Darren Hiebert            Version 3.5.1                         1
 
 
 
@@ -127,7 +127,7 @@ SOURCE FILES
 
 
 
-Darren Hiebert             Version 3.4                          2
+Darren Hiebert            Version 3.5.1                         2
 
 
 
@@ -193,7 +193,7 @@ OPTIONS
 
 
 
-Darren Hiebert             Version 3.4                          3
+Darren Hiebert            Version 3.5.1                         3
 
 
 
@@ -259,7 +259,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.4                          4
+Darren Hiebert            Version 3.5.1                         4
 
 
 
@@ -306,10 +306,10 @@ CTAGS(1)                                                 CTAGS(1)
                int foo ARGDECL4(void *, ptr, long int, nbytes)
 
 
-            In the above example, the macro "ARGDECL2"  would  be
+            In the above example, the macro "ARGDECL4"  would  be
             mistakenly interpreted to be the name of the function
             instead of the correct name of "foo".  Specifying  -I
-            ARGDECL2 results in the correct behavior.
+            ARGDECL4 results in the correct behavior.
 
 
                /* creates an RCS version string in module */
@@ -325,7 +325,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.4                          5
+Darren Hiebert            Version 3.5.1                         5
 
 
 
@@ -391,7 +391,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.4                          6
+Darren Hiebert            Version 3.5.1                         6
 
 
 
@@ -457,7 +457,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.4                          7
+Darren Hiebert            Version 3.5.1                         7
 
 
 
@@ -523,7 +523,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.4                          8
+Darren Hiebert            Version 3.5.1                         8
 
 
 
@@ -589,7 +589,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.4                          9
+Darren Hiebert            Version 3.5.1                         9
 
 
 
@@ -655,7 +655,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.4                         10
+Darren Hiebert            Version 3.5.1                        10
 
 
 
@@ -721,7 +721,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.4                         11
+Darren Hiebert            Version 3.5.1                        11
 
 
 
@@ -787,7 +787,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.4                         12
+Darren Hiebert            Version 3.5.1                        12
 
 
 
@@ -853,7 +853,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.4                         13
+Darren Hiebert            Version 3.5.1                        13
 
 
 
@@ -919,7 +919,7 @@ OPERATIONAL DETAILS
 
 
 
-Darren Hiebert             Version 3.4                         14
+Darren Hiebert            Version 3.5.1                        14
 
 
 
@@ -985,7 +985,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.4                         15
+Darren Hiebert            Version 3.5.1                        15
 
 
 
@@ -1051,7 +1051,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.4                         16
+Darren Hiebert            Version 3.5.1                        16
 
 
 
@@ -1113,11 +1113,11 @@ EXTENSION FLAGS
                    "abstract" for Java).
 
 
-       interface   Indicates that this tag is  a  member  of  the
+       inherits    When present, value. is a comma-separated list
 
 
 
-Darren Hiebert             Version 3.4                         17
+Darren Hiebert            Version 3.5.1                        17
 
 
 
@@ -1126,6 +1126,11 @@ Darren Hiebert             Version 3.4                         17
 CTAGS(1)                                                 CTAGS(1)
 
 
+                   of  classes  from  which this class is derived
+                   (i.e. inherits from).
+
+
+       interface   Indicates that this tag is  a  member  of  the
                    interface whose name is given by value.
 
 
@@ -1159,12 +1164,40 @@ ENVIRONMENT VARIABLES
                CTAGS instead.
 
 
+       TMPDIR  On Unix-like hosts where mkstemp()  is  available,
+               the value of this variable specifies the directory
+               in which to place temporary  files.  This  can  be
+               useful if the size of a temporary file becomes too
+               large to fit on the partition holding the  default
+               temporary  directory  defined at compilation time.
+               ctags creates temporary files only if  either  (1)
+               an  emacs-style  tag  file is being generated, (2)
+               the tag file is being sent to standard output,  or
+               (3)  the  program  was compiled to use an internal
+               sort algorithm to sort the tag  files  instead  of
+               the  the  sort utility of the operating system. If
+               the sort utility of the operating system is  being
+               used,  it  will  generally  observe  this variable
+               also. Note that if ctags is setuid, the  value  of
+               TMPDIR will be ignored.
+
+
+
+Darren Hiebert            Version 3.5.1                        18
+
+
+
+
+
+CTAGS(1)                                                 CTAGS(1)
+
+
 HOW TO USE WITH VI
-       Vi will, by default, expect a tag file by the name  "tags"
-       in  the current directory. Once the tag file is built, the
+       Vi  will, by default, expect a tag file by the name "tags"
+       in the current directory. Once the tag file is built,  the
        following commands exercise the tag indexing feature:
 
-       vi -t tag   Start vi and position the cursor at  the  file
+       vi -t tag   Start  vi  and position the cursor at the file
                    and line where "tag" is defined.
 
        Control-]   Find the tag under the cursor.
@@ -1177,39 +1210,27 @@ HOW TO USE WITH VI
 
 
 HOW TO USE WITH GNU EMACS
-       Emacs will, by default, expect a  tag  file  by  the  name
-       "TAGS"  in  the  current  directory.  Once the tag file is
-       built, the following commands exercise  the  tag  indexing
-
-
-
-Darren Hiebert             Version 3.4                         18
-
-
-
-
-
-CTAGS(1)                                                 CTAGS(1)
-
-
+       Emacs  will,  by  default,  expect  a tag file by the name
+       "TAGS" in the current directory.  Once  the  tag  file  is
+       built,  the  following  commands exercise the tag indexing
        feature:
 
        Meta-x visit-tags-table
                    Visit a TAGS file.
 
-       Meta-.      Find  a definition for a tag.  The default tag
-                   is the identifier under the cursor.  There  is
+       Meta-.      Find a definition for a tag.  The default  tag
+                   is  the identifier under the cursor.  There is
                    name completion in the minibuffer; typing "foo
-                   TAB" completes the  identifier  starting  with
-                   `foo'  (`foobar',  for  example)  or lists the
+                   TAB"  completes  the  identifier starting with
+                   `foo' (`foobar', for  example)  or  lists  the
                    alternatives.
 
-       Meta-,      Find the next definition for the  tag.   Exact
-                   matches  are  found first, followed by fuzzier
+       Meta-,      Find  the  next definition for the tag.  Exact
+                   matches are found first, followed  by  fuzzier
                    matches.
 
 
-       For more commands, see the Tags topic in  the  Emacs  info
+       For  more  commands,  see the Tags topic in the Emacs info
        tree.
 
 
@@ -1218,38 +1239,17 @@ BUGS (CAVEATS)
        Ctags has as many options as ls(1).
 
 
-       Because  ctags  is  neither a preprocessor nor a compiler,
-       use of preprocessor macros  can  fool  ctags  into  either
-       missing  tags or improperly generating inappropriate tags.
-       Although ctags has been designed to handle certain  common
-       cases,  this is the single biggest cause of reported prob-
-       lems. In particular, the use  of  preprocessor  constructs
-       which  alter  the  textual syntax of C can fool ctags. You
-       can work around many such problems by using the -I option.
-
-
-       When  parsing  a  C++  member  function  definition  (e.g.
-       "className::function"), ctags cannot determine whether the
-       scope  specifier  is a class name or a namespace specifier
-       and always lists it as a class name in the  scope  portion
-       of the extension flags.
-
-
-       White  space  is treated as a separator for file names and
-       options read from  list  files,  specified  using  the  -L
-       option,  and  in filter mode (specified using the --filter
-       option). Therefore, it is not currently possible to supply
-       file  names  or  other  options  containing embedded white
-       space (spaces, etc.) through these options.
-
-
-       Legacy C source code which uses C++ reserved  keywords  as
-       variable  or  parameter  names  (e.g.  "class", etc.) in a
-       header file may fail to have correct  tags  generated  for
+       Because ctags is neither a preprocessor  nor  a  compiler,
+       use  of  preprocessor  macros  can  fool ctags into either
+       missing tags or improperly generating inappropriate  tags.
+       Although  ctags has been designed to handle certain common
+       cases, this is the single biggest cause of reported  prob-
+       lems.  In  particular,  the use of preprocessor constructs
+       which alter the textual syntax of C can  fool  ctags.  You
 
 
 
-Darren Hiebert             Version 3.4                         19
+Darren Hiebert            Version 3.5.1                        19
 
 
 
@@ -1258,15 +1258,36 @@ Darren Hiebert             Version 3.4                         19
 CTAGS(1)                                                 CTAGS(1)
 
 
-       the  objects  using them. In order to properly handle such
+       can work around many such problems by using the -I option.
+
+
+       When  parsing  a  C++  member  function  definition  (e.g.
+       "className::function"), ctags cannot determine whether the
+       scope specifier is a class name or a  namespace  specifier
+       and  always  lists it as a class name in the scope portion
+       of the extension flags.
+
+
+       White space is treated as a separator for file  names  and
+       options  read  from  list  files,  specified  using the -L
+       option, and in filter mode (specified using  the  --filter
+       option). Therefore, it is not currently possible to supply
+       file names or  other  options  containing  embedded  white
+       space (spaces, etc.) through these options.
+
+
+       Legacy  C  source code which uses C++ reserved keywords as
+       variable or parameter names  (e.g.  "class",  etc.)  in  a
+       header  file  may  fail to have correct tags generated for
+       the objects using them. In order to properly  handle  such
        code, use the --lang option.
 
 
-       Note that when ctags generates uses patterns for  locating
-       tags  (see  the  --excmd  option), it is entirely possible
-       that the wrong line may be found by your editor  if  there
-       exists  another source line which is identical to the line
-       containing the tag.  The  following  example  demonstrates
+       Note  that when ctags generates uses patterns for locating
+       tags (see the --excmd option),  it  is  entirely  possible
+       that  the  wrong line may be found by your editor if there
+       exists another source line which is identical to the  line
+       containing  the  tag.  The  following example demonstrates
        this condition:
 
 
@@ -1280,48 +1301,49 @@ CTAGS(1)                                                 CTAGS(1)
               }
 
 
-       Depending  upon which editor you use and where in the code
-       you happen to be, it is possible that the  search  pattern
+       Depending upon which editor you use and where in the  code
+       you  happen  to be, it is possible that the search pattern
        may locate the local parameter declaration in foo() before
-       it finds the actual global variable definition, since  the
+       it  finds the actual global variable definition, since the
        lines (and therefore their search patterns are identical).
        This can be avoided by use of the --excmd=n option.
 
 
 
 FILES
-       /etc/ctags.conf
-       /usr/local/etc/ctags.conf
-       $HOME/.ctags
-       .ctags
-                 If any of these configuration files exist,  each
-                 will  be  expected  to  contain a set of default
-                 options which are read in the order listed  when
-                 ctags  starts,  but  before the CTAGS enviroment
-                 variable is read or any command line options are
-                 read.  This  makes  it  possible to set up site-
-                 wide, personal or project-level defaults. It  is
-                 possible  to compile ctags to read an additional
-                 configuration    file     immediately     before
-                 $HOME/.ctags,  which  will  be  indicated if the
-                 output produced by the  --version  option  lists
-                 the  "custom-conf" feature. Options appearing in
-                 the CTAGS enviroment variable or on the  command
-                 line  will  override  options specified in these
-                 files. Only options  will  be  read  from  these
-                 files.
 
 
 
 
-
-Darren Hiebert             Version 3.4                         20
+Darren Hiebert            Version 3.5.1                        20
 
 
 
 
 
 CTAGS(1)                                                 CTAGS(1)
+
+
+       /etc/ctags.conf
+       /usr/local/etc/ctags.conf
+       $HOME/.ctags
+       .ctags
+                 If  any of these configuration files exist, each
+                 will be expected to contain  a  set  of  default
+                 options  which are read in the order listed when
+                 ctags starts, but before  the  CTAGS  enviroment
+                 variable is read or any command line options are
+                 read. This makes it possible  to  set  up  site-
+                 wide,  personal or project-level defaults. It is
+                 possible to compile ctags to read an  additional
+                 configuration     file     immediately    before
+                 $HOME/.ctags, which will  be  indicated  if  the
+                 output  produced  by  the --version option lists
+                 the "custom-conf" feature. Options appearing  in
+                 the  CTAGS enviroment variable or on the command
+                 line will override options  specified  in  these
+                 files.  Only  options  will  be  read from these
+                 files.
 
 
        tags      The default tag file created by ctags.
@@ -1336,7 +1358,7 @@ SEE ALSO
            http://darren.hiebert.com/ctags/index.html
 
 
-       Also  ex(1),  vi(1), elvis, or, better yet, vim, the offi-
+       Also ex(1), vi(1), elvis, or, better yet, vim,  the  offi-
        cial editor of ctags. For more information on vim, see the
        VIM Pages web site at:
 
@@ -1352,36 +1374,14 @@ AUTHOR
 
 
 MOTIVATION
-       "Think  ye at all times of rendering some service to every
+       "Think ye at all times of rendering some service to  every
        member of the human race."
 
 
-       "All effort and exertion put forth by man from  the  full-
-       ness  of  his  heart  is worship, if it is prompted by the
-       highest motives and the will to do service to humanity."
-
-
-                 -- From the Baha'i Writings
 
 
 
-CREDITS
-       This version of ctags  was  originally  derived  from  and
-       inspired  by  the ctags program by Steve Kirkendall <kirk-
-       enda@cs.pdx.edu>  that  comes  with  the  Elvis  vi  clone
-       (though virtually none of the original code remains).
-
-
-       Credit  is  also  due  Bram  Moolenaar <Bram@vim.org>, the
-       author of vim, who has devoted so much  of  his  time  and
-       energy  both to developing the editor as a service to oth-
-       ers, and to helping the orphans of Uganda.
-
-
-
-
-
-Darren Hiebert             Version 3.4                         21
+Darren Hiebert            Version 3.5.1                        21
 
 
 
@@ -1390,7 +1390,29 @@ Darren Hiebert             Version 3.4                         21
 CTAGS(1)                                                 CTAGS(1)
 
 
-       The section entitled "HOW  TO  USE  WITH  GNU  EMACS"  was
+       "All  effort  and exertion put forth by man from the full-
+       ness of his heart is worship, if it  is  prompted  by  the
+       highest motives and the will to do service to humanity."
+
+
+                 -- From the Baha'i Writings
+
+
+
+CREDITS
+       This  version  of  ctags  was  originally derived from and
+       inspired by the ctags program by Steve  Kirkendall  <kirk-
+       enda@cs.pdx.edu>  that  comes  with  the  Elvis  vi  clone
+       (though virtually none of the original code remains).
+
+
+       Credit is also  due  Bram  Moolenaar  <Bram@vim.org>,  the
+       author  of  vim,  who  has devoted so much of his time and
+       energy both to developing the editor as a service to  oth-
+       ers, and to helping the orphans of Uganda.
+
+
+       The  section  entitled  "HOW  TO  USE  WITH GNU EMACS" was
        shamelessly stolen from the man page for GNU etags.
 
 
@@ -1425,28 +1447,6 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Darren Hiebert             Version 3.4                         22
+Darren Hiebert            Version 3.5.1                        22
 
 

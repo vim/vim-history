@@ -13,16 +13,20 @@ HEADERS		=	args.h ctags.h debug.h entry.h general.h get.h \
 				keyword.h main.h options.h parse.h read.h sort.h \
 				strlist.h vstring.h
 
-VERSION_FILES=	ctags.h ctags.1 ctags.lsm configure.in NEWS
+DOS_VER_FILES=	ctags.h ctags.1 ctags.lsm NEWS
+
+VERSION_FILES=	$(DOS_VER_FILES) configure.in
 
 DIST_FILES	=	COPYING FAQ INSTALL INSTALL.DOS QUOTES README configure.in \
 				acconfig.h mkinstalldirs Makefile.in Makefile.amiga \
-				Makefile.bcc Makefile.djg Makefile.maint Makefile.os2 \
-				Makefile.qdos Makefile.w32 Makefile.ming descrip.mms \
+				Makefile.bc3 Makefile.bc5 Makefile.djg Makefile.maint \
+				Makefile.mvc Makefile.os2 Makefile.qdos Makefile.ming \
+				descrip.mms \
 				$(DSOURCES) qdos.c strstr.c $(HEADERS) ctags.1 ctags.lsm NEWS
 
-DOS_FILES	=	COPYING FAQ INSTALL.DOS QUOTES README Makefile.bcc \
-				Makefile.djg Makefile.os2 Makefile.w32 Makefile.ming \
+DOS_FILES	=	COPYING FAQ INSTALL.DOS QUOTES README \
+				Makefile.bc3 Makefile.bc5 Makefile.djg Makefile.os2 \
+				Makefile.ming Makefile.mvc \
 				$(DSOURCES) $(HEADERS)
 
 CVS_FILES	=	$(DIST_FILES) ctags.spec
@@ -214,7 +218,7 @@ dos1-%: $(DOS_FILES)
 	cd $(CTAGS_DOSDIR); mv makefile makefile.bak; \
 		sed -e 's/^\(VERSION =\) [0-9]\+/\1 $*/' makefile.bak > makefile
 
-dos2-%: $(VERSION_FILES) ctags.man
+dos2-%: $(DOS_VER_FILES) ctags.man
 	for file in $^ ;do \
 		rm -f $(CTAGS_DOSDIR)/ctags`echo $*|sed 's/\.//g'`/$${file} ;\
 		sed -e "s/@@VERSION@@/$*/" \

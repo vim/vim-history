@@ -961,6 +961,10 @@ static void parseInherit( token )
 		locateKeyword(token, KEYWORD_end);
 		break;
 
+	    case KEYWORD_end:
+		readToken(token);
+		break;
+
 	    default: break;
 	}
     } while (! isType(token, TOKEN_KEYWORD));

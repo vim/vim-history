@@ -5,6 +5,7 @@ $	motion.txt	/*$*
 $HOME	options.txt	/*$HOME*
 $HOME-use	version5.txt	/*$HOME-use*
 $LANG	change.txt	/*$LANG*
+$LANG-multibyte	multibyte.txt	/*$LANG-multibyte*
 $VIM	options.txt	/*$VIM*
 $VIM-use	version5.txt	/*$VIM-use*
 $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
@@ -531,6 +532,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'sxq'	options.txt	/*'sxq'*
 'syn'	options.txt	/*'syn'*
 'syntax'	options.txt	/*'syntax'*
+'t_#2'	term.txt	/*'t_#2'*
 't_#4'	term.txt	/*'t_#4'*
 't_%1'	term.txt	/*'t_%1'*
 't_%i'	term.txt	/*'t_%i'*
@@ -559,6 +561,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 't_K5'	term.txt	/*'t_K5'*
 't_K6'	term.txt	/*'t_K6'*
 't_K7'	term.txt	/*'t_K7'*
+'t_K8'	term.txt	/*'t_K8'*
 't_K9'	term.txt	/*'t_K9'*
 't_KA'	term.txt	/*'t_KA'*
 't_RI'	term.txt	/*'t_RI'*
@@ -613,6 +616,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 't_se'	term.txt	/*'t_se'*
 't_so'	term.txt	/*'t_so'*
 't_sr'	term.txt	/*'t_sr'*
+'t_star7'	term.txt	/*'t_star7'*
 't_te'	term.txt	/*'t_te'*
 't_ti'	term.txt	/*'t_ti'*
 't_ts'	term.txt	/*'t_ts'*
@@ -887,6 +891,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 /\.	pattern.txt	/*\/\\.*
 /\1	pattern.txt	/*\/\\1*
 /\2	pattern.txt	/*\/\\2*
+/\3	pattern.txt	/*\/\\3*
 /\9	pattern.txt	/*\/\\9*
 /\<	pattern.txt	/*\/\\<*
 /\=	pattern.txt	/*\/\\=*
@@ -1539,8 +1544,11 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :syn-start	syntax.txt	/*:syn-start*
 :syn-sync	syntax.txt	/*:syn-sync*
 :syn-sync-ccomment	syntax.txt	/*:syn-sync-ccomment*
+:syn-sync-first	syntax.txt	/*:syn-sync-first*
 :syn-sync-maxlines	syntax.txt	/*:syn-sync-maxlines*
 :syn-sync-minlines	syntax.txt	/*:syn-sync-minlines*
+:syn-sync-second	syntax.txt	/*:syn-sync-second*
+:syn-sync-third	syntax.txt	/*:syn-sync-third*
 :syn-transparent	syntax.txt	/*:syn-transparent*
 :syncbind	scroll.txt	/*:syncbind*
 :syntax	syntax.txt	/*:syntax*
@@ -1673,6 +1681,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 <C-Right>	motion.txt	/*<C-Right>*
 <C-RightMouse>	tagsearch.txt	/*<C-RightMouse>*
 <CR>	motion.txt	/*<CR>*
+<CSI>	intro.txt	/*<CSI>*
 <Del>	change.txt	/*<Del>*
 <Down>	motion.txt	/*<Down>*
 <EOL>	intro.txt	/*<EOL>*
@@ -1759,6 +1768,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 <cfile>	cmdline.txt	/*<cfile>*
 <character>	intro.txt	/*<character>*
 <count>	map.txt	/*<count>*
+<kDivide>	term.txt	/*<kDivide>*
 <kEnd>	motion.txt	/*<kEnd>*
 <kEnter>	term.txt	/*<kEnter>*
 <kHome>	motion.txt	/*<kHome>*
@@ -1773,6 +1783,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 <reg>	map.txt	/*<reg>*
 <register>	map.txt	/*<register>*
 <sfile>	cmdline.txt	/*<sfile>*
+<xCSI>	intro.txt	/*<xCSI>*
 <xEnd>	term.txt	/*<xEnd>*
 <xEnd>-xterm	term.txt	/*<xEnd>-xterm*
 <xF1>	term.txt	/*<xF1>*
@@ -1823,6 +1834,8 @@ BufWritePre	autocmd.txt	/*BufWritePre*
 C	change.txt	/*C*
 C-editing	tips.txt	/*C-editing*
 C-indenting	change.txt	/*C-indenting*
+CCS	multibyte.txt	/*CCS*
+CES	multibyte.txt	/*CES*
 COMSPEC	starting.txt	/*COMSPEC*
 CR-used-for-NL	pattern.txt	/*CR-used-for-NL*
 CTRL-A	change.txt	/*CTRL-A*
@@ -1905,6 +1918,7 @@ CTRL-\_CTRL-N	intro.txt	/*CTRL-\\_CTRL-N*
 CTRL-]	tagsearch.txt	/*CTRL-]*
 CTRL-^	editing.txt	/*CTRL-^*
 CTRL-{char}	intro.txt	/*CTRL-{char}*
+Chinese	multibyte.txt	/*Chinese*
 Cmdline	cmdline.txt	/*Cmdline*
 Cmdline-mode	cmdline.txt	/*Cmdline-mode*
 Command-line	cmdline.txt	/*Command-line*
@@ -1951,16 +1965,25 @@ GUI-X11	gui_x11.txt	/*GUI-X11*
 GUIEnter	autocmd.txt	/*GUIEnter*
 H	motion.txt	/*H*
 I	insert.txt	/*I*
+I18N	multibyte.txt	/*I18N*
+IM-server	multibyte.txt	/*IM-server*
 Insert	insert.txt	/*Insert*
 Insert-mode	insert.txt	/*Insert-mode*
+Internationalization	multibyte.txt	/*Internationalization*
 J	change.txt	/*J*
+Japanese	multibyte.txt	/*Japanese*
 K	various.txt	/*K*
+Korean	multibyte.txt	/*Korean*
 L	motion.txt	/*L*
+L10N	multibyte.txt	/*L10N*
 Linux-backspace	options.txt	/*Linux-backspace*
+Localization	multibyte.txt	/*Localization*
 M	motion.txt	/*M*
+M17N	multibyte.txt	/*M17N*
 MS-DOS	os_msdos.txt	/*MS-DOS*
 MS-Windows	os_win32.txt	/*MS-Windows*
 MSDOS	os_msdos.txt	/*MSDOS*
+MSVisualStudio	if_ole.txt	/*MSVisualStudio*
 Mac	os_mac.txt	/*Mac*
 Mac-format	editing.txt	/*Mac-format*
 Mac-format-write	editing.txt	/*Mac-format-write*
@@ -1968,6 +1991,7 @@ Macintosh	os_mac.txt	/*Macintosh*
 Mark	motion.txt	/*Mark*
 MiNT	os_mint.txt	/*MiNT*
 Motif	gui_x11.txt	/*Motif*
+Multilingualization	multibyte.txt	/*Multilingualization*
 N	pattern.txt	/*N*
 N%	motion.txt	/*N%*
 N:	cmdline.txt	/*N:*
@@ -1980,8 +2004,11 @@ Nvi	intro.txt	/*Nvi*
 O	insert.txt	/*O*
 OS/2	os_os2.txt	/*OS\/2*
 OS2	os_os2.txt	/*OS2*
+OffTheSpot	multibyte.txt	/*OffTheSpot*
+OnTheSpot	multibyte.txt	/*OnTheSpot*
 Operator-pending	intro.txt	/*Operator-pending*
 Operator-pending-mode	intro.txt	/*Operator-pending-mode*
+OverTheSpot	multibyte.txt	/*OverTheSpot*
 P	change.txt	/*P*
 Pattern	pattern.txt	/*Pattern*
 Perl	if_perl.txt	/*Perl*
@@ -1995,6 +2022,7 @@ RISC-OS	os_riscos.txt	/*RISC-OS*
 RISCOS	os_riscos.txt	/*RISCOS*
 Replace	insert.txt	/*Replace*
 Replace-mode	insert.txt	/*Replace-mode*
+Root	multibyte.txt	/*Root*
 S	change.txt	/*S*
 SHELL	starting.txt	/*SHELL*
 Select	visual.txt	/*Select*
@@ -2024,6 +2052,7 @@ VimEnter	autocmd.txt	/*VimEnter*
 VimLeave	autocmd.txt	/*VimLeave*
 VimLeavePre	autocmd.txt	/*VimLeavePre*
 Virtual-replace-mode	insert.txt	/*Virtual-replace-mode*
+VisVim	if_ole.txt	/*VisVim*
 Visual	visual.txt	/*Visual*
 Visual-mode	visual.txt	/*Visual-mode*
 W	motion.txt	/*W*
@@ -2034,6 +2063,8 @@ WinLeave	autocmd.txt	/*WinLeave*
 X	change.txt	/*X*
 X11	options.txt	/*X11*
 X11-icon	gui_x11.txt	/*X11-icon*
+XIM	multibyte.txt	/*XIM*
+XLFD	multibyte.txt	/*XLFD*
 X_ab	help.txt	/*X_ab*
 X_ac	help.txt	/*X_ac*
 X_ai	help.txt	/*X_ai*
@@ -2165,6 +2196,7 @@ added-5.3	version5.txt	/*added-5.3*
 added-5.4	version5.txt	/*added-5.4*
 added-5.5	version5.txt	/*added-5.5*
 added-5.6	version5.txt	/*added-5.6*
+added-5.7	version5.txt	/*added-5.7*
 added-BeOS	version5.txt	/*added-BeOS*
 added-Mac	version5.txt	/*added-Mac*
 added-VMS	version5.txt	/*added-VMS*
@@ -2222,6 +2254,7 @@ backup-extension	version4.txt	/*backup-extension*
 backup-table	editing.txt	/*backup-table*
 bar	motion.txt	/*bar*
 bars	help.txt	/*bars*
+base_font_name_list	multibyte.txt	/*base_font_name_list*
 basic.vim	syntax.txt	/*basic.vim*
 beep	options.txt	/*beep*
 beos-colors	os_beos.txt	/*beos-colors*
@@ -2272,6 +2305,7 @@ cW	change.txt	/*cW*
 c_<BS>	cmdline.txt	/*c_<BS>*
 c_<C-Left>	cmdline.txt	/*c_<C-Left>*
 c_<C-R>	cmdline.txt	/*c_<C-R>*
+c_<C-R>_<C-R>	cmdline.txt	/*c_<C-R>_<C-R>*
 c_<C-Right>	cmdline.txt	/*c_<C-Right>*
 c_<CR>	cmdline.txt	/*c_<CR>*
 c_<Del>	cmdline.txt	/*c_<Del>*
@@ -2307,6 +2341,7 @@ c_CTRL-N	cmdline.txt	/*c_CTRL-N*
 c_CTRL-P	cmdline.txt	/*c_CTRL-P*
 c_CTRL-Q	cmdline.txt	/*c_CTRL-Q*
 c_CTRL-R	cmdline.txt	/*c_CTRL-R*
+c_CTRL-R_CTRL-R	cmdline.txt	/*c_CTRL-R_CTRL-R*
 c_CTRL-U	cmdline.txt	/*c_CTRL-U*
 c_CTRL-V	cmdline.txt	/*c_CTRL-V*
 c_CTRL-W	cmdline.txt	/*c_CTRL-W*
@@ -2326,9 +2361,12 @@ changed-5.5	version5.txt	/*changed-5.5*
 changed-5.6	version5.txt	/*changed-5.6*
 changing	change.txt	/*changing*
 char2nr()	eval.txt	/*char2nr()*
+character-encode-scheme	multibyte.txt	/*character-encode-scheme*
 characterwise	motion.txt	/*characterwise*
 characterwise-register	change.txt	/*characterwise-register*
 characterwise-visual	visual.txt	/*characterwise-visual*
+charset	multibyte.txt	/*charset*
+charset-conversion	multibyte.txt	/*charset-conversion*
 cinoptions-values	change.txt	/*cinoptions-values*
 cmdline-arguments	vi_diff.txt	/*cmdline-arguments*
 cmdline-changed	version5.txt	/*cmdline-changed*
@@ -2341,11 +2379,13 @@ cmdline-special	cmdline.txt	/*cmdline-special*
 cmdline-too-long	cmdline.txt	/*cmdline-too-long*
 cmdline.txt	cmdline.txt	/*cmdline.txt*
 cobol.vim	syntax.txt	/*cobol.vim*
+coded-character-set	multibyte.txt	/*coded-character-set*
 coding-style	develop.txt	/*coding-style*
 col()	eval.txt	/*col()*
 collapse	tips.txt	/*collapse*
 color-xterm	syntax.txt	/*color-xterm*
 coloring	syntax.txt	/*coloring*
+colortest.vim	syntax.txt	/*colortest.vim*
 command-mode	intro.txt	/*command-mode*
 compatible-default	starting.txt	/*compatible-default*
 compile-changes	version5.txt	/*compile-changes*
@@ -2360,8 +2400,10 @@ compl-whole-line	insert.txt	/*compl-whole-line*
 complex-change	change.txt	/*complex-change*
 complex-repeat	repeat.txt	/*complex-repeat*
 confirm()	eval.txt	/*confirm()*
+connection-refused	message.txt	/*connection-refused*
 console-menus	gui.txt	/*console-menus*
 control	intro.txt	/*control*
+conversion-server	multibyte.txt	/*conversion-server*
 convert-to-HTML	syntax.txt	/*convert-to-HTML*
 copy-move	change.txt	/*copy-move*
 copying	uganda.txt	/*copying*
@@ -2369,6 +2411,7 @@ copyright	uganda.txt	/*copyright*
 count	intro.txt	/*count*
 count-items	tips.txt	/*count-items*
 count-variable	eval.txt	/*count-variable*
+count1-variable	eval.txt	/*count1-variable*
 cp-default	version5.txt	/*cp-default*
 crash-recovery	recover.txt	/*crash-recovery*
 creating-menus	gui.txt	/*creating-menus*
@@ -2393,6 +2436,7 @@ csverb	if_cscope.txt	/*csverb*
 ctags	tagsearch.txt	/*ctags*
 cterm-colors	syntax.txt	/*cterm-colors*
 ctrl	intro.txt	/*ctrl*
+current-directory	editing.txt	/*current-directory*
 current-file	editing.txt	/*current-file*
 cursor-blinking	options.txt	/*cursor-blinking*
 cursor-down	intro.txt	/*cursor-down*
@@ -2415,6 +2459,7 @@ daw	motion.txt	/*daw*
 dd	change.txt	/*dd*
 debug	intro.txt	/*debug*
 dec-mouse	options.txt	/*dec-mouse*
+definition-search	tagsearch.txt	/*definition-search*
 delete()	eval.txt	/*delete()*
 delete-insert	change.txt	/*delete-insert*
 delete-menus	gui.txt	/*delete-menus*
@@ -2582,17 +2627,22 @@ fixed-5.3	version5.txt	/*fixed-5.3*
 fixed-5.4	version5.txt	/*fixed-5.4*
 fixed-5.5	version5.txt	/*fixed-5.5*
 fixed-5.6	version5.txt	/*fixed-5.6*
+fixed-5.7	version5.txt	/*fixed-5.7*
 fnamemodify()	eval.txt	/*fnamemodify()*
 fo-table	change.txt	/*fo-table*
 font-sizes	gui_x11.txt	/*font-sizes*
+fontset	multibyte.txt	/*fontset*
 fork	os_unix.txt	/*fork*
+form.vim	syntax.txt	/*form.vim*
 format-bullet-list	tips.txt	/*format-bullet-list*
 format-comments	change.txt	/*format-comments*
 formatting	change.txt	/*formatting*
 formfeed	intro.txt	/*formfeed*
+fortran.vim	syntax.txt	/*fortran.vim*
 french-maillist	intro.txt	/*french-maillist*
 ftp	intro.txt	/*ftp*
 function-key	intro.txt	/*function-key*
+function-range-example	eval.txt	/*function-range-example*
 function_key	intro.txt	/*function_key*
 functions	eval.txt	/*functions*
 fvwm.vim	syntax.txt	/*fvwm.vim*
@@ -2751,6 +2801,7 @@ histdel()	eval.txt	/*histdel()*
 histget()	eval.txt	/*histget()*
 histnr()	eval.txt	/*histnr()*
 hit-return	message.txt	/*hit-return*
+hitest.vim	syntax.txt	/*hitest.vim*
 hl-Cursor	syntax.txt	/*hl-Cursor*
 hl-Directory	syntax.txt	/*hl-Directory*
 hl-ErrorMsg	syntax.txt	/*hl-ErrorMsg*
@@ -2908,6 +2959,7 @@ install-registry	gui_w32.txt	/*install-registry*
 intellimouse-wheel-problems	gui_w32.txt	/*intellimouse-wheel-problems*
 interfaces-5.2	version5.txt	/*interfaces-5.2*
 internal-variables	eval.txt	/*internal-variables*
+internationalized	multibyte.txt	/*internationalized*
 internet	intro.txt	/*internet*
 intro	intro.txt	/*intro*
 intro.txt	intro.txt	/*intro.txt*
@@ -2952,7 +3004,11 @@ linewise-register	change.txt	/*linewise-register*
 linewise-visual	visual.txt	/*linewise-visual*
 lite.vim	syntax.txt	/*lite.vim*
 literal-string	eval.txt	/*literal-string*
+load-vim-script	repeat.txt	/*load-vim-script*
 locale	change.txt	/*locale*
+locale-multibyte	multibyte.txt	/*locale-multibyte*
+locale-name	multibyte.txt	/*locale-name*
+localized	multibyte.txt	/*localized*
 localtime()	eval.txt	/*localtime()*
 long-lines	version5.txt	/*long-lines*
 lowercase	change.txt	/*lowercase*
@@ -2964,8 +3020,10 @@ mac-filename	os_mac.txt	/*mac-filename*
 mac-lack	os_mac.txt	/*mac-lack*
 mac-vimfile	os_mac.txt	/*mac-vimfile*
 macintosh	os_mac.txt	/*macintosh*
+macro	map.txt	/*macro*
 mail-list	intro.txt	/*mail-list*
 maillist	intro.txt	/*maillist*
+maillist-archive	intro.txt	/*maillist-archive*
 map-backtick	tips.txt	/*map-backtick*
 map-comments	map.txt	/*map-comments*
 map-examples	map.txt	/*map-examples*
@@ -3013,6 +3071,8 @@ modeline	options.txt	/*modeline*
 more-compatible	version5.txt	/*more-compatible*
 more-prompt	message.txt	/*more-prompt*
 motion.txt	motion.txt	/*motion.txt*
+mouse-mode-table	term.txt	/*mouse-mode-table*
+mouse-overview	term.txt	/*mouse-overview*
 mouse-swap-buttons	term.txt	/*mouse-swap-buttons*
 mouse-using	term.txt	/*mouse-using*
 ms-dos	os_msdos.txt	/*ms-dos*
@@ -3032,14 +3092,22 @@ msql.vim	syntax.txt	/*msql.vim*
 multi-byte	multibyte.txt	/*multi-byte*
 multi-repeat	repeat.txt	/*multi-repeat*
 multibyte	multibyte.txt	/*multibyte*
+multibyte-compiling	multibyte.txt	/*multibyte-compiling*
+multibyte-display	multibyte.txt	/*multibyte-display*
+multibyte-input	multibyte.txt	/*multibyte-input*
+multibyte-intro	multibyte.txt	/*multibyte-intro*
 multibyte.txt	multibyte.txt	/*multibyte.txt*
+multilingualized	multibyte.txt	/*multilingualized*
 myfiletypefile	autocmd.txt	/*myfiletypefile*
 myscriptsfile	autocmd.txt	/*myscriptsfile*
 mysyntaxfile	syntax.txt	/*mysyntaxfile*
+mysyntaxfile-add	syntax.txt	/*mysyntaxfile-add*
 mysyntaxfile-file	syntax.txt	/*mysyntaxfile-file*
+mysyntaxfile-replace	syntax.txt	/*mysyntaxfile-replace*
 n	pattern.txt	/*n*
 nasm.vim	syntax.txt	/*nasm.vim*
 navigation	motion.txt	/*navigation*
+ncf.vim	syntax.txt	/*ncf.vim*
 netterm-mouse	options.txt	/*netterm-mouse*
 new-GTK-GUI	version5.txt	/*new-GTK-GUI*
 new-Select-mode	version5.txt	/*new-Select-mode*
@@ -3067,6 +3135,7 @@ no_buffers_menu	gui.txt	/*no_buffers_menu*
 normal-index	index.txt	/*normal-index*
 not-edited	editing.txt	/*not-edited*
 notation	intro.txt	/*notation*
+notepad	gui_w32.txt	/*notepad*
 nr2char()	eval.txt	/*nr2char()*
 o	insert.txt	/*o*
 object-motions	motion.txt	/*object-motions*
@@ -3139,7 +3208,7 @@ popup-menu	gui.txt	/*popup-menu*
 popup-menu-added	version5.txt	/*popup-menu-added*
 ports-5.2	version5.txt	/*ports-5.2*
 postscr.vim	syntax.txt	/*postscr.vim*
-printcap	syntax.txt	/*printcap*
+printcap-syntax	syntax.txt	/*printcap-syntax*
 ptcap.vim	syntax.txt	/*ptcap.vim*
 put	change.txt	/*put*
 python	if_python.txt	/*python*
@@ -3157,6 +3226,7 @@ python-range	if_python.txt	/*python-range*
 python-vim	if_python.txt	/*python-vim*
 python-window	if_python.txt	/*python-window*
 python-windows	if_python.txt	/*python-windows*
+python.vim	syntax.txt	/*python.vim*
 q	repeat.txt	/*q*
 quickfix	quickfix.txt	/*quickfix*
 quickfix-directory-stack	quickfix.txt	/*quickfix-directory-stack*
@@ -3215,6 +3285,8 @@ rename-files	tips.txt	/*rename-files*
 repeat.txt	repeat.txt	/*repeat.txt*
 repeating	repeat.txt	/*repeating*
 replacing	change.txt	/*replacing*
+restore-position	tips.txt	/*restore-position*
+restricted-mode	starting.txt	/*restricted-mode*
 retab-example	change.txt	/*retab-example*
 rexx.vim	syntax.txt	/*rexx.vim*
 rgb.txt	gui_w32.txt	/*rgb.txt*
@@ -3234,6 +3306,7 @@ riscos-porting	os_riscos.txt	/*riscos-porting*
 riscos-remote	os_riscos.txt	/*riscos-remote*
 riscos-shell	os_riscos.txt	/*riscos-shell*
 riscos-temp-files	os_riscos.txt	/*riscos-temp-files*
+ruby.vim	syntax.txt	/*ruby.vim*
 rview	starting.txt	/*rview*
 rvim	starting.txt	/*rvim*
 rxvt	syntax.txt	/*rxvt*
@@ -3288,6 +3361,7 @@ splitfind	windows.txt	/*splitfind*
 splitview	windows.txt	/*splitview*
 spoon	os_unix.txt	/*spoon*
 spup.vim	syntax.txt	/*spup.vim*
+sscanf	eval.txt	/*sscanf*
 star	pattern.txt	/*star*
 starting	starting.txt	/*starting*
 starting-amiga	starting.txt	/*starting-amiga*
@@ -3297,6 +3371,7 @@ startup-options	starting.txt	/*startup-options*
 startup-terminal	term.txt	/*startup-terminal*
 static-tag	tagsearch.txt	/*static-tag*
 status-line	windows.txt	/*status-line*
+statusmsg-variable	eval.txt	/*statusmsg-variable*
 strftime()	eval.txt	/*strftime()*
 strlen()	eval.txt	/*strlen()*
 strpart()	eval.txt	/*strpart()*
@@ -3336,6 +3411,7 @@ sys-file-list	help.txt	/*sys-file-list*
 system()	eval.txt	/*system()*
 system-vimrc	starting.txt	/*system-vimrc*
 t	motion.txt	/*t*
+t_#2	term.txt	/*t_#2*
 t_#4	term.txt	/*t_#4*
 t_%1	term.txt	/*t_%1*
 t_%i	term.txt	/*t_%i*
@@ -3364,6 +3440,7 @@ t_K4	term.txt	/*t_K4*
 t_K5	term.txt	/*t_K5*
 t_K6	term.txt	/*t_K6*
 t_K7	term.txt	/*t_K7*
+t_K8	term.txt	/*t_K8*
 t_K9	term.txt	/*t_K9*
 t_KA	term.txt	/*t_KA*
 t_RI	term.txt	/*t_RI*
@@ -3453,6 +3530,7 @@ t_skr	version4.txt	/*t_skr*
 t_sku	version4.txt	/*t_sku*
 t_so	term.txt	/*t_so*
 t_sr	term.txt	/*t_sr*
+t_star7	term.txt	/*t_star7*
 t_tb	version4.txt	/*t_tb*
 t_te	term.txt	/*t_te*
 t_ti	term.txt	/*t_ti*
@@ -3514,6 +3592,7 @@ tcl-ex-commands	if_tcl.txt	/*tcl-ex-commands*
 tcl-examples	if_tcl.txt	/*tcl-examples*
 tcl-expr	if_tcl.txt	/*tcl-expr*
 tcl-linenumbers	if_tcl.txt	/*tcl-linenumbers*
+tcl-misc	if_tcl.txt	/*tcl-misc*
 tcl-option	if_tcl.txt	/*tcl-option*
 tcl-output	if_tcl.txt	/*tcl-output*
 tcl-var-current	if_tcl.txt	/*tcl-var-current*
@@ -3585,14 +3664,14 @@ using-menus	gui.txt	/*using-menus*
 using-xxd	tips.txt	/*using-xxd*
 using_CTRL-V	map.txt	/*using_CTRL-V*
 v	visual.txt	/*v*
-v:count-variable	eval.txt	/*v:count-variable*
-v:count1-variable	eval.txt	/*v:count1-variable*
-v:errmsg-variable	eval.txt	/*v:errmsg-variable*
-v:shell_error-variable	eval.txt	/*v:shell_error-variable*
-v:statusmsg-variable	eval.txt	/*v:statusmsg-variable*
-v:this_session-variable	eval.txt	/*v:this_session-variable*
-v:version-variable	eval.txt	/*v:version-variable*
-v:warningmsg-variable	eval.txt	/*v:warningmsg-variable*
+v:count	eval.txt	/*v:count*
+v:count1	eval.txt	/*v:count1*
+v:errmsg	eval.txt	/*v:errmsg*
+v:shell_error	eval.txt	/*v:shell_error*
+v:statusmsg	eval.txt	/*v:statusmsg*
+v:this_session	eval.txt	/*v:this_session*
+v:version	eval.txt	/*v:version*
+v:warningmsg	eval.txt	/*v:warningmsg*
 v_!	change.txt	/*v_!*
 v_$	visual.txt	/*v_$*
 v_:	cmdline.txt	/*v_:*
@@ -3690,6 +3769,7 @@ version-5.3	version5.txt	/*version-5.3*
 version-5.4	version5.txt	/*version-5.4*
 version-5.5	version5.txt	/*version-5.5*
 version-5.6	version5.txt	/*version-5.6*
+version-5.7	version5.txt	/*version-5.7*
 version-variable	eval.txt	/*version-variable*
 version4.txt	version4.txt	/*version4.txt*
 version5.txt	version5.txt	/*version5.txt*
@@ -3733,6 +3813,7 @@ visual.txt	visual.txt	/*visual.txt*
 visualmode()	eval.txt	/*visualmode()*
 vms	os_vms.txt	/*vms*
 vms-authors	os_vms.txt	/*vms-authors*
+vms-changes	os_vms.txt	/*vms-changes*
 vms-compiling	os_vms.txt	/*vms-compiling*
 vms-deploy	os_vms.txt	/*vms-deploy*
 vms-download	os_vms.txt	/*vms-download*
@@ -3746,6 +3827,7 @@ vreplace-mode	insert.txt	/*vreplace-mode*
 vt100-cursor-keys	term.txt	/*vt100-cursor-keys*
 vt100-function-keys	term.txt	/*vt100-function-keys*
 w	motion.txt	/*w*
+warningmsg-variable	eval.txt	/*warningmsg-variable*
 white-space	pattern.txt	/*white-space*
 whitespace	pattern.txt	/*whitespace*
 win32	os_win32.txt	/*win32*
@@ -3788,14 +3870,15 @@ write-quit	editing.txt	/*write-quit*
 write-readonly	editing.txt	/*write-readonly*
 www	intro.txt	/*www*
 x	change.txt	/*x*
-x-fontset	multibyte.txt	/*x-fontset*
 x-input-method	multibyte.txt	/*x-input-method*
 x-resources	version5.txt	/*x-resources*
 xargs	starting.txt	/*xargs*
 xfontset	multibyte.txt	/*xfontset*
 xim	multibyte.txt	/*xim*
+xim-input-style	multibyte.txt	/*xim-input-style*
 xiterm	syntax.txt	/*xiterm*
 xpm.vim	syntax.txt	/*xpm.vim*
+xterm-8bit	term.txt	/*xterm-8bit*
 xterm-blink	syntax.txt	/*xterm-blink*
 xterm-clipboard	term.txt	/*xterm-clipboard*
 xterm-color	syntax.txt	/*xterm-color*

@@ -75,7 +75,7 @@ xxd/xxd.exe: xxd/xxd.c
 obj:
 	mkdir obj
 
-ctags:
+tags:
 	command /c ctags *.c $(INCL)
 
 clean:

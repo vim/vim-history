@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	printcap/termcap database
 " Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last Change:	1999 Sep 14
+" Last Change:	2000 Apr 06
 
 " Clear old syntax defs
 syn clear
@@ -57,7 +57,7 @@ syn match ptcapSpecialCap   "\W[#@]\d" contains=ptcapDelimiter contained
 " If editing a termcap file, an entry in the database is terminated by
 " a (non-escaped) newline.  Otherwise, it is terminated by a line which
 " does not start with a colon (:)
-if bufname("%") =~ ".*termcap.*"
+if exists("b:ptcap_type") && b:ptcap_type[0] == 't'
     syn region ptcapEntry   start="^\s*[^[:space:]:]" end="[^\\]\(\\\\\)*$" end="^$" contains=ptcapNames,ptcapField,ptcapLeadBlank keepend
 else
     syn region ptcapEntry   start="^\s*[^[:space:]:]"me=e-1 end="^\s*[^[:space:]:#]"me=e-1 contains=ptcapNames,ptcapField,ptcapLeadBlank,ptcapComment

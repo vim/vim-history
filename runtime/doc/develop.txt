@@ -1,4 +1,4 @@
-*develop.txt*   For Vim version 5.6.  Last change: 2000 Jan 01
+*develop.txt*   For Vim version 5.7a.  Last change: 2000 Apr 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -136,6 +136,9 @@ VIM IS... NOT						*design-not*
 - Vim is not a shell or an Operating System.  You will not be able to run a
   shell inside Vim or use it to control a debugger.  This should work the
   other way around: Use Vim as a component from a shell or in an IDE.
+  A satirical way to say this: "Unlike Emacs, Vim does not attempt to include
+  everything but the kitchen sink, but some people say that you can clean one
+  with it.  ;-)"
 - Vim is not a fancy GUI editor that tries to look nice at the cost of
   being less consistent over all platforms.  But functional GUI features are
   welcomed.

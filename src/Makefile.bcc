@@ -22,8 +22,8 @@ TLINK = tlink
 #
 #LIBPATH = C:\BC4\LIB
 #INCLUDEPATH = C:\BC4\INCLUDE
-LIBPATH = E:\BC4\LIB;C:\CC\SPAWN
-INCLUDEPATH = E:\BC4\INCLUDE;C:\CC\SPAWN
+LIBPATH = E:\BORLANDC\LIB;C:\CC\SPAWN
+INCLUDEPATH = E:\BORLANDC\INCLUDE;C:\CC\SPAWN
 
 
 #		*Implicit Rules*
@@ -130,7 +130,7 @@ install.exe: dosinst.c
 
 ctags/ctags.exe: ctags/main.c
 	cd ctags
-	copy Makefile.bcc Makefile
+	copy Makefile.bc3 Makefile
 	$(MAKE)
 	cd ..
 

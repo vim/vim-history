@@ -1,0 +1,30 @@
+# Makefile for Win32 using Borland C++ compiler, version 5.5 (free version)
+
+SOURCES	= args.c eiffel.c entry.c fortran.c get.c keyword.c main.c \
+	options.c parse.c read.c sort.c strlist.c vstring.c
+
+!if ("$(BOR)"!="")
+INCL = -I$(BOR)\include
+!endif
+!if ("$(BCC)"=="")
+BCC = bcc32
+!endif
+
+ctags: ctags.exe
+
+ctags.exe: $(SOURCES) respw32
+	$(BCC) -DWIN32 $(INCL) -O2 -w-par -w-pia -w-sus -e$@ @respw32
+
+# Debug version
+dctags.exe: $(SOURCES) respw32
+	$(BCC) -DWIN32 -DDEBUG $(INCL) -w-par -w-pia -w-sus -e$@ @respw32 debug.c
+
+respw32:
+	echo $(SOURCES) > $@
+
+clean:
+	- del *.obj
+	- del ctags.exe
+	- del dctags.exe
+	- del respw32
+	- del tags

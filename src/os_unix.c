@@ -1452,12 +1452,12 @@ mch_dirname(buf, len)
 #endif
 }
 
-#ifdef __EMX__
+#if defined(__EMX__) || defined(PROTO)
 /*
  * Replace all slashes by backslashes.
  * When 'shellslash' set do it the other way around.
  */
-    static void
+    void
 slash_adjust(p)
     char_u  *p;
 {

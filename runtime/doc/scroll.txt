@@ -1,4 +1,4 @@
-*scroll.txt*    For Vim version 5.6.  Last change: 1999 Dec 08
+*scroll.txt*    For Vim version 5.7a.  Last change: 2000 Feb 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -51,6 +51,12 @@ CTRL-D			Scroll window Downwards in the buffer.  The number of
 CTRL-F			Scroll window [count] pages Forwards (downwards) in
 			the buffer.  See also 'startofline' option.
 
+							*z+*
+z+			Without [count]: Redraw with the line just below the
+			window at the top of the window.  Put the cursor in
+			that line, at the first non-blank in the line.
+			With [count]: just like "z<CR>".
+
 ==============================================================================
 2. Scrolling upwards					*scroll-up*
 
@@ -80,6 +86,16 @@ CTRL-U			Scroll window Upwards in the buffer.  The number of
 CTRL-B			Scroll window [count] pages Backwards (upwards) in the
 			buffer.  See also 'startofline' option.
 
+							*z^*
+z^			Without [count]: Redraw with the line just above the
+			window at the bottom of the window.  Put the cursor in
+			that line, at the first non-blank in the line.
+			With [count]: First scroll the text to put the [count]
+			line at the bottom of the window, then redraw with the
+			line which is now at the top of the window at the
+			bottom of the window.  Put the cursor in that line, at
+			the first non-blank in the line.
+
 ==============================================================================
 3. Scrolling relative to cursor				*scroll-cursor*
 
@@ -94,12 +110,6 @@ z<CR>			Redraw, line [count] at top of window (default
 							*zt*
 zt			Like "z<CR>", but leave the cursor in the same
 			column.  {not in Vi}
-
-							*z+*
-z+			Without [count]: Redraw with the line just above the
-			window at the bottom of the window.  Put the cursor in
-			that line, at the first non-blank in the line.
-			With [count]: just like "z<CR>".
 
 							*zN<CR>*
 z{height}<CR>		Redraw, make window {height} lines tall.  This is
@@ -125,16 +135,6 @@ z-			Redraw, line [count] at bottom of window (default
 							*zb*
 zb			Like "z-", but leave the cursor in the same column.
 			{not in Vi}
-
-							*z^*
-z^			Without [count]: Redraw with the line just above the
-			window at the bottom of the window.  Put the cursor in
-			that line, at the first non-blank in the line.
-			With [count]: First scroll the text to put the [count]
-			line at the bottom of the window, then redraw with the
-			line which is now at the top of the window at the
-			bottom of the window.  Put the cursor in that line, at
-			the first non-blank in the line.
 
 ==============================================================================
 4. Scrolling horizontally				*scroll-horizontal*

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Fvwm{1,2} configuration file
 " Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last Change:	1999 Dec 16
+" Last Change:	2000 Mar 29
 
 " Clear old syntax defs
 syn clear
@@ -63,8 +63,11 @@ syn match   fvwmPath		"\<ModulePath\s.*$"lc=10 contains=fvwmEnvVar
 syn match   fvwmPath		"\<PixmapPath\s.*$"lc=10 contains=fvwmEnvVar
 syn match   fvwmModule		"\<Module\s\+\w\+"he=s+6
 syn match   fvwmKey		"\<Key\s\+\w\+"he=s+3
+syn keyword fvwmExec		Exec
+syn match   fvwmComment		"^#.*$"
 
-if exists("use_fvwm_1") && use_fvwm_1
+if (exists("b:fvwm_version") && b:fvwm_version == 1)
+    \ || (exists("use_fvwm_1") && use_fvwm_1)
     syn match  fvwmEnvVar	"\$(\w\+)"
     syn region fvwmStyle	matchgroup=fvwmFunction start="^\s*Style\>"hs=e-5 end="$" oneline keepend contains=fvwmString,fvwmKeyword,fvwmWhiteSpace
 
@@ -111,7 +114,8 @@ if exists("use_fvwm_1") && use_fvwm_1
     syn keyword fvwmKeyword	StartsAnyWhere StartsOnDesk StaysOnTop contained
     syn keyword fvwmKeyword	StaysPut Sticky Title WindowListHit contained
     syn keyword fvwmKeyword	WindowListSkip contained
-elseif exists("use_fvwm_2") && use_fvwm_2
+elseif (exists("b:fvwm_version") && b:fvwm_version == 2)
+    \ || (exists("use_fvwm_2") && use_fvwm_2)
     syn match   fvwmEnvVar	"\${\w\+}"
     syn match   fvwmDef		'^\s*+\s*".\{-}"' contains=fvwmMenuString,fvwmWhitespace
     syn match   fvwmIcon	'%.\{-}%' contained
@@ -212,9 +216,6 @@ elseif exists("use_fvwm_2") && use_fvwm_2
     syn keyword fvwmKeyword	Vector VGradient Warp WarpTitle West
     syn keyword fvwmKeyword	WIN WindowListHit WindowListSkip Windows
 endif
-
-syn keyword fvwmExec		Exec
-syn match   fvwmComment		"^#.*$"
 
 if !exists("did_fvwm_syntax_inits")
     let did_fvwm_syntax_inits = 1

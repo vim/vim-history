@@ -16,6 +16,7 @@
 ============================================================================*/
 #include "general.h"
 #include "vstring.h"
+#include <stdio.h>
 
 /*============================================================================
 =   Data declarations
@@ -33,6 +34,7 @@ extern void *realloc __ARGS((void *ptr, size_t));
 #endif
 
 extern void error __ARGS((const errorSelection selection, const char *const format, ...));
+extern FILE *tempFile __ARGS((const char *const mode, char **const pName));
 extern boolean strequiv __ARGS((const char *const s1, const char *const s2));
 extern void *eMalloc __ARGS((const size_t size));
 extern void *eRealloc __ARGS((void *const ptr, const size_t size));

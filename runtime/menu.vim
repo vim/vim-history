@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Apr 15
+" Last change:	2000 Jun 07
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -482,15 +482,18 @@ fun SynMenu(arg)
   let g:current_menu_item = g:current_menu_item + 10
 endfun
 
+SynMenu AB.Abaqus:abaqus
 SynMenu AB.ABC:abc
 SynMenu AB.ABEL:abel
 SynMenu AB.Ada:ada
-SynMenu AB.Active\ Server\ Pages:aspvbs
 SynMenu AB.AHDL:ahdl
 SynMenu AB.Amiga\ DOS:amiga
 SynMenu AB.Arc\ Macro\ Language:aml
+SynMenu AB.Apache\ config:apache
 SynMenu AB.Apache-style\ config:apachestyle
 SynMenu AB.Applix\ ELF:elf
+SynMenu AB.ASP\ with\ VBSages:aspvbs
+SynMenu AB.ASP\ with\ Perl:aspperl
 SynMenu AB.Assembly\ (GNU):asm
 SynMenu AB.Assembly\ (H8300):asmh8300
 SynMenu AB.Assembly\ (Microsoft):masm
@@ -500,12 +503,14 @@ SynMenu AB.Atlas:atlas
 SynMenu AB.Avenue:ave
 SynMenu AB.Awk:awk
 SynMenu AB.BASIC:basic
+SynMenu AB.BC\ calculator:bc
 SynMenu AB.BibFile:bib
 
 SynMenu CD.C:c
 SynMenu CD.C++:cpp
 SynMenu CD.Cascading\ Style\ Sheets:css
 SynMenu CD.Century\ Term:cterm
+SynMenu CD.CHILL:ch
 SynMenu CD.Change:change
 SynMenu CD.Clean:clean
 SynMenu CD.Clipper:clipper
@@ -514,8 +519,10 @@ SynMenu CD.Configure\ script:config
 SynMenu CD.Csh\ shell\ script:csh
 SynMenu CD.Ctrl-H:ctrlh
 SynMenu CD.Cobol:cobol
+SynMenu CD.CSP:csp
 SynMenu CD.CUPL:cupl
 SynMenu CD.CUPL\ simulation:cuplsim
+SynMenu CD.CVS\ commit:cvs
 SynMenu CD.CWEB:cweb
 SynMenu CD.Diff:diff
 SynMenu CD.Digital\ Command\ Lang:dcl
@@ -531,6 +538,7 @@ SynMenu EFGH.Expect:expect
 SynMenu EFGH.Exports:exports
 SynMenu EFGH.Focus\ Executable:focexec
 SynMenu EFGH.Focus\ Master:master
+SynMenu EFGH.FORM:form
 SynMenu EFGH.Forth:forth
 SynMenu EFGH.Fortran:fortran
 SynMenu EFGH.Fvwm\ configuration:fvwm1
@@ -544,6 +552,7 @@ SynMenu EFGH.Haskell:haskell
 SynMenu EFGH.Haskell-literal:lhaskell
 SynMenu EFGH.HTML:html
 SynMenu EFGH.HTML\ with\ M4:htmlm4
+SynMenu EFGH.Hyper\ Builder:hb
 
 SynMenu IJKL.Icon:icon
 SynMenu IJKL.IDL:idl
@@ -554,7 +563,9 @@ SynMenu IJKL.Java:java
 SynMenu IJKL.JavaCC:javacc
 SynMenu IJKL.JavaScript:javascript
 SynMenu IJKL.Java\ Server\ Pages:jsp
+SynMenu IJKL.Java\ Properties:jproperties
 SynMenu IJKL.Jgraph:jgraph
+SynMenu IJKL.KDE\ script:kscript
 SynMenu IJKL.Kimwitu:kwt
 SynMenu IJKL.Lace:lace
 SynMenu IJKL.Lex:lex
@@ -573,6 +584,7 @@ SynMenu MNO.MakeIndex:ist
 SynMenu MNO.Man\ page:man
 SynMenu MNO.Maple:maple
 SynMenu MNO.Matlab:matlab
+SynMenu MNO.Maya\ Ext\.\ Lang\.:mel
 SynMenu MNO.Metafont:mf
 SynMenu MNO.MetaPost:mp
 SynMenu MNO.MS\ Module\ Definition:def
@@ -586,11 +598,13 @@ SynMenu MNO.4DOS\ \.bat\ file:btm
 SynMenu MNO.MS-DOS\ \.ini\ file:dosini
 SynMenu MNO.MS\ Resource\ file:rc
 SynMenu MNO.Muttrc:muttrc
+SynMenu MNO.Nastran\ input/DMAP:nastran
 SynMenu MNO.Novell\ batch:ncf
 SynMenu MNO.Nroff:nroff
 SynMenu MNO.Objective\ C:objc
 SynMenu MNO.OCAML:ocaml
 SynMenu MNO.Open\ Psion\ Lang:opl
+SynMenu MNO.Oracle\ config:ora
 
 SynMenu PQR.Pascal:pascal
 SynMenu PQR.PCCTS:pccts
@@ -617,8 +631,10 @@ SynMenu PQR.Remind:remind
 SynMenu PQR.Renderman\ Shader\ Lang:sl
 SynMenu PQR.Rexx:rexx
 SynMenu PQR.Rpcgen:rpcgen
+SynMenu PQR.Ruby:ruby
 
 SynMenu S.S-lang:slang
+SynMenu S.Samba\ config:samba
 SynMenu S.SAS:sas
 SynMenu S.Sather:sather
 SynMenu S.Scheme:scheme
@@ -636,16 +652,22 @@ SynMenu S.SLRN\ score:slrnsc
 SynMenu S.SmallTalk:st
 SynMenu S.SMIL:smil
 SynMenu S.SNMP\ MIB:mib
+SynMenu S.SNNS\ network:snnsnet
+SynMenu S.SNNS\ pattern:snnspat
+SynMenu S.SNNS\ result:snnsres
 SynMenu S.SPEC\ (Linux\ RPM):spec
 SynMenu S.Spice:spice
 SynMenu S.Speedup:spup
 SynMenu S.Squid:squid
 SynMenu S.SQL:sql
 SynMenu S.SQR:sqr
+SynMenu S.Standard\ ML:sml
+SynMenu S.Stored\ Procedures:stp
 
 SynMenu TUV.Tads:tads
 SynMenu TUV.Tags:tags
 SynMenu TUV.Tcl/Tk:tcl
+SynMenu TUV.TealInfo:tli
 SynMenu TUV.Telix\ Salt:tsalt
 SynMenu TUV.Termcap:ptcap
 SynMenu TUV.TeX:tex
@@ -662,6 +684,8 @@ SynMenu TUV.Visual\ Basic:vb
 SynMenu TUV.VRML:vrml
 
 SynMenu WXYZ.WEB:web
+SynMenu WXYZ.Webmacro:webmacro
+SynMenu WXYZ.Website\ MetaLanguage:wml
 SynMenu WXYZ.Whitespace\ (add):whitespace
 SynMenu WXYZ.WinBatch/Webbatch:winbatch
 SynMenu WXYZ.X\ Pixmap:xpm

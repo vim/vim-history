@@ -2965,14 +2965,15 @@ vim_regnewptr(prog, old_ptr, new_ptr)
     char_u	*new_ptr;
 {
     int		j;
-    long	off = new_ptr - old_ptr;
 
     for (j = 0; j < NSUBEXP; ++j)
     {
+	/* Careful with these pointer computations, it can go wrong for
+	 * segmented memory (16 bit MS-DOS). */
 	if (prog->startp[j] != NULL)
-	    prog->startp[j] += off;
+	    prog->startp[j] = new_ptr + (prog->startp[j] - old_ptr);
 	if (prog->endp[j] != NULL)
-	    prog->endp[j] += off;
+	    prog->endp[j] = new_ptr + (prog->endp[j] - old_ptr);
     }
 }
 

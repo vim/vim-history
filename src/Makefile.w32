@@ -199,6 +199,7 @@ OLE_LIB = ole32.lib oleaut32.lib uuid.lib
 !endif
 
 !if "$(IME)" == "yes"
+CFLAGS = $(CFLAGS) -DMULTI_BYTE_IME
 IME_LIB = imm32.lib
 !endif
 
@@ -238,7 +239,8 @@ SUBSYSTEM = console
 CFLAGS  = $(CFLAGS) -DHAVE_TCL
 TCL_OBJ	= $(OUTDIR)\if_tcl.obj
 TCL_INC	= /I "$(TCL)\Include" /I "$(TCL)"
-TCL_LIB	= $(TCL)\lib\tcl80vc.lib
+#TCL_LIB = $(TCL)\lib\tcl80vc.lib
+TCL_LIB = $(TCL)\lib\tcl83vc.lib
 !endif
 
 # PYTHON interface
@@ -291,7 +293,7 @@ vimrun.exe: vimrun.c
 
 ctags/ctags.exe: ctags/main.c
 	cd ctags
-	$(MAKE) -f Makefile.w32
+	$(MAKE) -f Makefile.mvc
 	cd ..
 
 xxd/xxd.exe: xxd/xxd.c
@@ -300,7 +302,7 @@ xxd/xxd.exe: xxd/xxd.c
 	cd ..
 
 
-ctags tags: notags
+tags: notags
 	$(CTAGS) *.c *.h proto\*.pro
 
 notags:

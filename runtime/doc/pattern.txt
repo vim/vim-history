@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 5.6.  Last change: 1999 Oct 27
+*pattern.txt*   For Vim version 5.7a.  Last change: 2000 Apr 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -360,8 +360,10 @@ Patterns may contain special characters, depending on the setting of the
 			Example: "\([a-z]\).\1" matches "ata", "ehe", "tot",
 			etc.
 	\2      \2	Like "\1", but uses second sub-expression,	*/\2*
-	   ...
+	   ...								*/\3*
 	\9      \9	Like "\1", but uses ninth sub-expression.	*/\9*
+			Note: The numbering of groups is done based on which
+			"\(" comes first (going left to right).
 
 	x	x	A single character, with no special meaning,
 			matches itself
@@ -427,6 +429,8 @@ Patterns may contain special characters, depending on the setting of the
 				\t	<Tab>
 				\r	<CR>
 				\b	<BS>
+			  NOTE: The other backslash codes mentioned above do
+			  not work inside []!
 			- Matching ranges can be slow, use one of the other
 			  items above when possible.
 

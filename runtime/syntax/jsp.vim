@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	JSP (Java Server Pages)
-" Maintainer:	Rafael Garcia-Suarez <rafael@stellarx.com>
+" Maintainer:	Rafael Garcia-Suarez <garcia_suarez@hotmail.com>
 " URL:		http://altern.org/rgs/vim/syntax/jsp.vim
-" Last Change:	1999 12 13
+" Last Change:	2000 Apr 12
 
 " Remove any old syntax stuff hanging around
 syn clear

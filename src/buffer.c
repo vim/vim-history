@@ -66,17 +66,6 @@ open_buffer(read_stdin)
 					&& (curbuf->b_flags & BF_NEVERLOADED))
 	curbuf->b_p_ro = TRUE;
 
-#ifdef VMS
-    if (curbuf->b_ffname != NULL)
-    {
-	char *ptr;
-
-	ptr = strrchr((char *)curbuf->b_ffname, ';');
-	if (ptr != NULL)
-	    *ptr = '\0';
-    }
-#endif
-
     if (ml_open() == FAIL)
     {
 	/*
@@ -2732,10 +2721,11 @@ write_viminfo_bufferlist(fp)
 
 	putc('%', fp);
 	home_replace(NULL, buf->b_ffname, line, MAXPATHL, TRUE);
-	sprintf(line + STRLEN(line), "\t%ld\t%d",
+	sprintf((char *)line + STRLEN(line), "\t%ld\t%d",
 			(long)buf->b_last_cursor.lnum,
 			buf->b_last_cursor.col);
 	viminfo_writestring(fp, line);
     }
+    vim_free(line);
 }
 #endif

@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 5.6.  Last change: 2000 Jan 01
+*editing.txt*   For Vim version 5.7a.  Last change: 2000 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -8,10 +8,11 @@ Editing files						*edit-files*
 
 1. Introduction			|edit-intro|
 2. Editing a file		|edit-a-file|
-3. The argument list		|argument-list|
-4. Writing and quitting		|write-quit|
-5. Editing binary files		|edit-binary|
-6. Encryption			|encryption|
+3. The current directory	|current-directory|
+4. The argument list		|argument-list|
+5. Writing and quitting		|write-quit|
+6. Editing binary files		|edit-binary|
+7. Encryption			|encryption|
 
 ==============================================================================
 1. Introduction						*edit-intro*
@@ -278,38 +279,9 @@ unmodified.
 			{not available when the |+file_in_path| feature was
 			disabled at compile time}
 
-							*:cd*
-:cd			On non-Unix systems: Print the current directory
-			name.  On Unix systems: Change the current directory
-			to the home directory.
-
-:cd {path}		Change the current directory to {path}.  Does not
-			change the meaning of an already entered file name,
-			because its full path name is remembered.  On MS-DOS
-			this also changes the active drive.
-
-							*:cd-*
-:cd -			Change to the previous current directory (before the
-			previous ":cd {path}" command).
-
-							*:chd* *:chdir*
-:chd[ir] [path]		Same as :cd.
-
-							*:pw* *:pwd*
-:pw[d]			Print the current directory name.  {Vi: no pwd}
-
 These commands are used to start editing a single file.  This means that the
-file is read into the buffer and the current file name is set.  You may use
-the ":cd" command to get to another directory, so you will not have to type
-that directory name in front of the file names.  One warning: After using
-":cd" the full path name will be used for reading and writing files.  On some
-networked file systems this may cause problems.  The result of using the full
-path name is that the file names currently in use will remain referring to the
-same file.  Example: If you have a file a:test and a directory a:vim the
-commands ":e test" ":cd vim" ":w" will overwrite the file a:test and not write
-a:vim/test.  But if you do ":w test" the file a:vim/test will be written,
-because you gave a new file name and did not refer to a filename before the
-":cd".
+file is read into the buffer and the current file name is set.  The file that
+is opened depends on the current directory, see |:cd|.
 
 							*:filename*
 Note for systems other than Unix and MS-DOS: When using a command that
@@ -406,7 +378,42 @@ You can encrypt files that are written by setting the 'key' option.  This
 provides some security against others reading your files. |encryption|
 
 ==============================================================================
-3. The argument list				*argument-list* *arglist*
+3. The current directory				*current-directory*
+
+							*:cd*
+:cd			On non-Unix systems: Print the current directory
+			name.  On Unix systems: Change the current directory
+			to the home directory.
+
+:cd {path}		Change the current directory to {path}.  Does not
+			change the meaning of an already entered file name,
+			because its full path name is remembered.  On MS-DOS
+			this also changes the active drive.
+
+							*:cd-*
+:cd -			Change to the previous current directory (before the
+			previous ":cd {path}" command).
+
+							*:chd* *:chdir*
+:chd[ir] [path]		Same as :cd.
+
+							*:pw* *:pwd*
+:pw[d]			Print the current directory name.  {Vi: no pwd}
+			Also see |getcwd()|.
+
+You may use the |:cd| command to get to another directory, so you will not
+have to type that directory name in front of the file names.  One warning:
+After using |:cd| the full path name will be used for reading and writing
+files.  On some networked file systems this may cause problems.  The result of
+using the full path name is that the file names currently in use will remain
+referring to the same file.  Example: If you have a file a:test and a
+directory a:vim the commands ":e test" ":cd vim" ":w" will overwrite the file
+a:test and not write a:vim/test.  But if you do ":w test" the file a:vim/test
+will be written, because you gave a new file name and did not refer to a
+filename before the ":cd".
+
+==============================================================================
+4. The argument list				*argument-list* *arglist*
 
 If you give more than one file name when starting Vim, this list is
 remembered as the argument list.  Do not confuse this with the file list,
@@ -511,6 +518,12 @@ expression functions |argc()| and |argv()|.
 The [count] in the commands above defaults to one.  For some commands it is
 possible to use two counts.  The last one (rightmost one) is used.
 
+If no [+cmd] argument is present, the cursor is positioned at the last known
+cursor position for the file.  If 'startofline' is set, the cursor will be
+positioned at the first non-blank in the line, otherwise the last know column
+is used.  If there is no last known cursor position the cursor will be in the
+first line (the last line in Ex mode).
+
 The wildcards in the argument list are expanded and the file names are sorted.
 Thus you can use the command "vim *.c" to edit all the C files.  From within
 Vim the command ":n *.c" does the same.  On Unix you can also use backticks,
@@ -541,7 +554,7 @@ This means that you are position 4 in the argument list, but not editing the
 fourth file in the argument list.  This happens when you do ":e file".
 
 ==============================================================================
-4. Writing and quitting				*write-quit* *save-file*
+5. Writing and quitting				*write-quit* *save-file*
 
 Note: When the 'write' option is off, you are not able to write any file.
 
@@ -721,7 +734,7 @@ message "[mac format]" is shown.
 See also |file-formats| and the 'fileformat' and 'fileformats' options.
 
 ==============================================================================
-5. Editing binary files					*edit-binary*
+6. Editing binary files					*edit-binary*
 
 Although Vim was made to edit text files, it is possible to edit binary
 files.  The "-b" Vim argument (b for binary) makes Vim do file I/O in binary
@@ -757,7 +770,7 @@ There are a few things to remember when editing binary files:
   in the text).
 
 ==============================================================================
-6. Encryption						*encryption*
+7. Encryption						*encryption*
 
 Vim is able to write files encrypted, and read them back.  The encrypted text
 cannot be read without the right key.

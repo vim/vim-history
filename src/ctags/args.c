@@ -88,7 +88,7 @@ static char* nextStringArg( next )
     const char* start;
 
     Assert(*next != NULL);
-    for (start = *next  ;  isspace(*start)  ;  ++start)
+    for (start = *next  ;  isspace((int)*start)  ;  ++start)
 	;
     if (*start == '\0')
 	*next = start;
@@ -97,7 +97,7 @@ static char* nextStringArg( next )
 	size_t length;
 	const char* end;
 
-	for (end = start ;  *end != '\0'  &&  ! isspace(*end)  ;  ++end)
+	for (end = start ;  *end != '\0'  &&  ! isspace((int)*end)  ;  ++end)
 	    ;
 	length = end - start;
 	Assert(length > 0);

@@ -3107,6 +3107,8 @@ get_syn_options(arg, flagsp, sync_idx, cont_list, next_list)
 		    {"skipempty",   9,	HL_SKIPEMPTY},
 		    {"grouphere",   9,	HL_SYNC_HERE},
 		    {"groupthere",  10,	HL_SYNC_THERE},
+		    {"display",	    7,	0},
+		    {"fold",	    4,	0},
 		};
 
     if (arg == NULL)		/* already detected error */

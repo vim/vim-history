@@ -858,12 +858,12 @@ do_shell(cmd, flags)
 # else
 #  ifdef RISCOS
 	if (cmd == NULL || silent)
-	{
+	{   /* } */
 	    if (!silent)
 		must_redraw = CLEAR;
 #  else
 	if (cmd == NULL)
-	{
+	{   /* } */
 	    must_redraw = CLEAR;
 #  endif
 # endif

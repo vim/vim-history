@@ -1,4 +1,4 @@
-README.txt for version 5.6 of Vim: Vi IMproved.
+README.txt for version 5.7a of Vim: Vi IMproved.
 
 
 WHAT IS VIM
@@ -83,30 +83,13 @@ obtained a source distribution, all the stuff for compiling Vim is in the
 
 INSTALLATION
 
-First check for a "README_xxx.txt" file for specific instructions for your
-system.
-
-For Unix, when you use the source distribution, "make install" is used to
-install Vim.  See src/INSTALL.  If you use a compiled package, follow the
-instructions for the package.
-
-For most other systems, unpack the distributed files in the place where you
-want to keep them.  It is wise to have a "vim" directory to keep your vimrc
-file and any other files you change.  The distributed files go into a
-subdirectory.  This way you can easily upgrade to a new version.  For example:
-  dh0:editors/vim		contains your vimrc and modified files
-  dh0:editors/vim/vim54		contains the Vim version 5.4 distributed files
-  dh0:editors/vim/vim55		contains the Vim version 5.5 distributed files
-
-Set the $VIM environment variable to point to the top directory of your Vim
-files.  For the above example:
-  set VIM=dh0:editors/vim
-Vim version 5.4 will look for your vimrc file in $VIM, and for the runtime
-files in $VIM/vim54.  See ":help $VIM" for more information.
-
-Make sure the Vim executable is in your search path.  Either copy the Vim
-executable to a directory that is in your search path, or (preferred) modify
-the search path to include the directory where the Vim executable is.
+See one of these files for system-specific instructions:
+README_ami.txt		Amiga
+README_unix.txt		Unix
+README_dos.txt		MS-DOS and MS-Windows
+README_os2.txt		OS/2
+README_mac.txt		Macintosh
+README_vms.txt		VMS
 
 
 INFORMATION
@@ -133,6 +116,8 @@ There are four mailing lists for Vim:
 <vim-multibyte@vim.org>
 	For discussions about using and improving the multi-byte aspects of
 	Vim: XIM, Hangul, fontset, etc.
+<vim-mac@vim.org>
+	For discussions about using and improving Vim on the Macintosh.
 
 See "http://www.vim.org/mail.html"
 
@@ -154,5 +139,5 @@ Send any other comments, patches, pizza and suggestions to:
 
 	Bram Moolenaar		E-mail:	Bram@vim.org
 	Clematisstraat 30
-	5925 BE  Venlo		Fax: +31 20 8823205
-	The Netherlands		Tel: +31 77 3872340
+	5925 BE  Venlo		Tel: +31 77 3872340
+	The Netherlands		Fax/voice-mail: +31 20 8823205

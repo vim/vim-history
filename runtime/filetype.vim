@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Jan 02
+" Last change:	2000 Jun 08
 
 if !exists("did_load_filetypes")
 let did_load_filetypes = 1
@@ -17,6 +17,9 @@ au BufNewFile,BufRead *.orig,*.bak,*.old	exe "doau filetype BufRead " . expand("
 au BufNewFile,BufRead *~		exe "doau filetype BufRead " . substitute(expand("<afile>"), '\~$', '', '')
 
 
+" Abaqus
+au BufNewFile,BufRead *.inp			if getline(1) =~ '^\*'|set ft=abaqus|endif
+
 " ABC music notation
 au BufNewFile,BufRead *.abc			set ft=abc
 
@@ -29,8 +32,11 @@ au BufNewFile,BufRead *.adb,*.ads		set ft=ada
 " AHDL
 au BufNewFile,BufRead *.tdf			set ft=ahdl
 
-" Apache Style
-au BufNewFile,BufRead proftpd.conf*,httpd.conf*,srm.conf*,access.conf* set ft=apachestyle
+" Apache style config file
+au BufNewFile,BufRead proftpd.conf*		set ft=apachestyle
+
+" Apache config file
+au BufNewFile,BufRead httpd.conf*,srm.conf*,access.conf*,.htaccess,apache.conf* set ft=apache
 
 " Applix ELF
 au BufNewFile,BufRead *.am			set ft=elf
@@ -42,7 +48,10 @@ au BufNewFile,BufRead *.aml			set ft=aml
 au BufNewFile,BufRead *.asn,*.asn1		set ft=asn
 
 " Active Server Pages (with Visual Basic Script)
-au BufNewFile,BufRead *.asp,*.asa		set ft=aspvbs
+au BufNewFile,BufRead *.asa			set ft=aspvbs
+
+" Active Server Pages (with Perl or Visual Basic Script)
+au BufNewFile,BufRead *.asp			if getline(1) . getline(2) .  getline(3) =~? "perlscript" | set ft=aspperl | else | set ft=aspvbs | endif
 
 " Assembly (all kinds)
 " *.lst is not pure assembly, it has two extra columns (address, byte codes)
@@ -88,17 +97,26 @@ au BufNewFile,BufRead *.ave			set ft=ave
 au BufNewFile,BufRead *.awk			set ft=awk
 
 " BASIC or Visual Basic
+au BufNewFile,BufRead *.bas			call FTCheck_VB("basic")
+
 " Check if one of the first five lines contains "VB_Name".  In that case it is
-" probably a Visual Basic file.  Otherwise it's assumed to be 'normal' basic.
-au BufNewFile,BufRead *.bas			if getline(1).getline(2).
-	\getline(3).getline(4).getline(5) =~? 'VB_Name'|set ft=vb|
-	\else|set ft=basic|endif
+" probably a Visual Basic file.  Otherwise it's assumed to be "alt" filetype.
+fun! FTCheck_VB(alt)
+  if getline(1).getline(2).getline(3).getline(4).getline(5) =~? 'VB_Name'
+    set ft=vb
+  else
+    exe "set ft=" . a:alt
+  endif
+endfun
 
 " Batch file for MSDOS
 au BufNewFile,BufRead *.bat,*.sys		set ft=dosbatch
 
 " Batch file for 4DOS
 au BufNewFile,BufRead *.btm			set ft=btm
+
+" BC calculator
+au BufNewFile,BufRead *.bc			set ft=bc
 
 " BibTeX bibliography database file
 au BufNewFile,BufRead *.bib			set ft=bib
@@ -108,7 +126,7 @@ au BufNewFile,BufRead *.c			set ft=c
 
 " C++
 if has("fname_case")
-  au BufNewFile,BufRead *.cpp,*.cc,*.cxx,*.c++,*.C,*.H,*.hh,*.hxx,*.hpp,*.inl set ft=cpp
+  au BufNewFile,BufRead *.cpp,*.cc,*.cxx,*.c++,*.C,*.H,*.hh,*.hxx,*.hpp,*.inl,named.conf set ft=cpp
 else
   au BufNewFile,BufRead *.cpp,*.cc,*.cxx,*.c++,*.hh,*.hxx,*.hpp,*.inl set ft=cpp
 endif
@@ -121,6 +139,26 @@ au BufNewFile,BufRead *.css			set ft=css
 
 " Century Term Command Scripts
 au BufNewFile,BufRead *.cmd,*.con		set ft=cterm
+
+" CHILL
+au BufNewFile,BufReadPost *..ch			set ft=ch
+
+" Changes for WEB and CWEB or CHILL
+au BufNewFile,BufRead *.ch			call FTCheck_change()
+
+" This function checks if one of the first ten lines start with a '@'.  In
+" that case it is probably a change file, otherwise CHILL is assumed.
+fun! FTCheck_change()
+  let lnum = 1
+  while lnum <= 10
+    if getline(lnum)[0] == '@'
+      set ft=change
+      return
+    endif
+    let lnum = lnum + 1
+  endwhile
+  set ft=ch
+endfun
 
 " Clean
 au BufNewFile,BufReadPost *.dcl,*.icl		set ft=clean
@@ -136,6 +174,9 @@ au BufNewFile,BufRead *.cfm,*.cfi		set ft=cf
 
 " Configure scripts
 au BufNewFile,BufRead configure.in		set ft=config
+
+" Communicating Sequential Processes
+au BufNewFile,BufRead *.csp,*.fdr		set ft=csp
 
 " CUPL logic description and simulation
 au BufNewFile,BufRead *.pld			set ft=cupl
@@ -184,13 +225,13 @@ au BufNewFile,BufRead *.mas,*.master		set ft=master
 au BufNewFile,BufRead *.fs,*.ft			set ft=forth
 
 " Fortran
-au BufNewFile,BufRead *.f,*.F,*.for,*.fpp	set ft=fortran
+au BufNewFile,BufRead *.f,*.F,*.for,*.fpp,*.f90,*.f95	set ft=fortran
 
 " Fvwm
-au BufNewFile,BufRead *fvwmrc*
-	\ let use_fvwm_1 = 1 | let use_fvwm_2 = 0 | set ft=fvwm
+au BufNewFile,BufRead *fvwmrc*,*fvwm95*.hook
+	\ let b:fvwm_version = 1 | set ft=fvwm
 au BufNewFile,BufRead *fvwm2rc*
-	\ let use_fvwm_2 = 1 | let use_fvwm_1 = 0 | set ft=fvwm
+	\ let b:fvwm_version = 2 | set ft=fvwm
 
 " GDB command files
 au BufNewFile,BufRead .gdbinit			set ft=gdb
@@ -216,6 +257,9 @@ au BufNewFile,BufRead *.html,*.htm,*.shtml	set ft=html
 
 " HTML with M4
 au BufNewFile,BufRead *.html.m4			set ft=htmlm4
+
+" Hyper Builder
+au BufNewFile,BufRead *.hb			set ft=hb
 
 " Icon
 au BufNewFile,BufRead *.icn			set ft=icon
@@ -244,11 +288,17 @@ au BufNewFile,BufRead *.js,*.javascript		set ft=javascript
 " Java Server Pages
 au BufNewFile,BufRead *.jsp			set ft=jsp
 
+" Java Properties resource file (note: doesn't catch font.properties.pl)
+au BufNewFile,BufRead *.properties,*.properties_??,*.properties_??_??,*.properties_??_??_*		set ft=jproperties
+
 " Jgraph
 au BufNewFile,BufRead *.jgr			set ft=jgraph
 
 " Kimwitu[++]
 au BufNewFile,BufRead *.k			set ft=kwt
+
+" KDE script
+au BufNewFile,BufRead *.ks			set ft=kscript
 
 " Lace (ISE)
 au BufNewFile,BufRead *.ace,*.ACE		set ft=lace
@@ -261,9 +311,9 @@ au BufNewFile,BufRead lilo.conf*		set ft=lilo
 
 " Lisp
 if has("fname_case")
-  au BufNewFile,BufRead *.lsp,*.L		set ft=lisp
+  au BufNewFile,BufRead *.lsp,*.el,*.L		set ft=lisp
 else
-  au BufNewFile,BufRead *.lsp			set ft=lisp
+  au BufNewFile,BufRead *.lsp,*.el		set ft=lisp
 endif
 
 " Lite
@@ -302,6 +352,9 @@ au BufNewFile,BufRead *.mv,*.mpl,*.mws		set ft=maple
 " Matlab
 au BufNewFile,BufRead *.m			set ft=matlab
 
+" Maya Extension Language
+au BufNewFile,BufRead *.mel			set ft=mel
+
 " Metafont
 au BufNewFile,BufRead *.mf			set ft=mf
 
@@ -314,8 +367,8 @@ au BufNewFile,BufRead *.mod			set ft=modsim3
 " Modula 2
 au BufNewFile,BufRead *.m2,*.DEF,*.MOD,*.md,*.mi set ft=modula2
 
-" Modula 3
-au BufNewFile,BufRead *.m3,*.i3			set ft=modula3
+" Modula 3 (.m3, .i3, .mg, .ig)
+au BufNewFile,BufRead *.[mi][3g]		set ft=modula3
 
 " Msql
 au BufNewFile,BufRead *.msql			set ft=msql
@@ -325,6 +378,9 @@ au BufNewFile,BufRead *.rc			set ft=rc
 
 " Mutt setup file
 au BufNewFile,BufRead .muttrc*,Muttrc		set ft=muttrc
+
+" Nastran input/DMAP
+"au BufNewFile,BufRead *.dat			set ft=nastran
 
 " Novell netware batch files
 au BufNewFile,BufRead *.ncf			set ft=ncf
@@ -348,6 +404,9 @@ au BufNewFile,BufRead *.ml,*.mli,*.mll,*.mly	set ft=ocaml
 
 " OPL
 au BufNewFile,BufRead *.[Oo][Pp][Ll]		set ft=opl
+
+" Oracle config file
+au BufNewFile,BufRead *.ora			set ft=ora
 
 " Pascal
 au BufNewFile,BufRead *.p,*.pas			set ft=pascal
@@ -390,7 +449,8 @@ au BufNewFile,BufRead *.ps,*.eps		set ft=postscr
 au BufNewFile,BufRead *.pov,*.inc		set ft=pov
 
 " Printcap and Termcap
-au BufNewFile,BufRead *printcap*,*termcap*	set ft=ptcap
+au BufNewFile,BufRead *printcap			let b:ptcap_type = "print"|set ft=ptcap
+au BufNewFile,BufRead *termcap			let b:ptcap_type = "term"|set ft=ptcap
 
 " PCCTS
 au BufNewFile,BufRead *.g			set ft=pccts
@@ -419,8 +479,14 @@ au BufNewFile,BufRead .reminders*		set ft=remind
 " Rpcgen
 au BufNewFile,BufRead *.x			set ft=rpcgen
 
+" Ruby
+au BufNewFile,BufRead *.rb			set ft=ruby
+
 " S-lang (or shader language!)
 au BufNewFile,BufRead *.sl			set ft=slang
+
+" Samba config
+au BufNewFile,BufRead smb.conf			set ft=samba
 
 " SAS script
 au BufNewFile,BufRead *.sas			set ft=sas
@@ -444,11 +510,28 @@ au BufNewFile,BufRead *.sgm,*.sgml		if getline(1).getline(2).
 au BufNewFile,BufRead *.ent			set ft=sgml
 
 " Shell scripts (sh, ksh, bash, csh); Allow .profile_foo etc.
-au BufNewFile,BufRead /etc/profile,.profile*,.bashrc*,.bash_profile*,.kshrc*,*.sh,*.ksh,*.bash,*.env set ft=sh
-au BufNewFile,BufRead .login*,.cshrc*,.tcshrc*,*.csh,*.tcsh set ft=csh
+au BufNewFile,BufRead .bashrc*,bashrc,bash.bashrc,.bash_profile*,*.bash call SetFileTypeSH("bash")
+au BufNewFile,BufRead .kshrc*,*.ksh call SetFileTypeSH("ksh")
+au BufNewFile,BufRead /etc/profile,.profile*,*.sh,*.env call SetFileTypeSH(getline(1))
+au BufNewFile,BufRead .login*,.cshrc*,csh.cshrc,csh.login,csh.logout,.tcshrc*,*.csh,*.tcsh,.alias set ft=csh
+
+fun SetFileTypeSH(name)
+  if a:name =~ '\<ksh\>'
+    let b:is_kornshell = 1
+    if exists("b:is_bash")
+      unlet b:is_bash
+    endif
+  elseif exists("g:bash_is_sh") || a:name =~ '\<bash\>'
+    let b:is_bash = 1
+    if exists("b:is_kornshell")
+      unlet b:is_kornshell
+    endif
+  endif
+  set ft=sh
+endfun
 
 " Z-Shell script
-au BufNewFile,BufRead .z*,zsh*,zlog*		set ft=zsh
+au BufNewFile,BufRead .zsh*,.zlog*,.zprofile,.zfbfmarks,.zcompdump*,zsh*,zlog*  set ft=zsh
 
 " Scheme
 au BufNewFile,BufRead *.scm			set ft=scheme
@@ -466,6 +549,9 @@ au BufNewFile,BufRead *.score			set ft=slrnsc
 " Smalltalk
 au BufNewFile,BufRead *.st,*.cls		set ft=st
 
+" Stored Procedures
+au BufNewFile,BufRead *.stp			set ft=stp
+
 " SMIL or XML
 au BufNewFile,BufReadPost *.smil
 	\ if getline(1) =~ '<?\s*xml.*?>'|
@@ -476,6 +562,9 @@ au BufNewFile,BufReadPost *.smil
 
 " SMIL or SNMP MIB file
 au BufNewFile,BufRead *.smi		if getline(1) =~ '\<smil\>'|set ft=smil|else|set ft=mib|endif
+
+" Standard ML
+au BufNewFile,BufRead *.sml			set ft=sml
 
 " SNMP MIB files
 au BufNewFile,BufReadPost *.mib			set ft=mib
@@ -506,6 +595,9 @@ au BufNewFile,BufRead tags			set ft=tags
 
 " Tcl
 au BufNewFile,BufRead *.tcl,*.tk,*.itcl,*.itk	set ft=tcl
+
+" TealInfo
+au BufNewFile,BufRead *.tli			set ft=tli
 
 " Telix Salt
 au BufNewFile,BufRead *.slt			set ft=tsalt
@@ -541,8 +633,8 @@ au BufNewFile,BufRead *vimrc*,*.vim,.exrc,_exrc set ft=vim
 " Viminfo file
 au BufNewFile,BufRead .viminfo,_viminfo		set ft=viminfo
 
-" Visual Basic (also uses *.bas)
-au BufNewFile,BufRead *.frm			set ft=vb
+" Visual Basic (also uses *.bas) or FORM
+au BufNewFile,BufRead *.frm			call FTCheck_VB("form")
 
 " Vgrindefs file
 au BufNewFile,BufRead vgrindefs			set ft=vgrindefs
@@ -550,8 +642,17 @@ au BufNewFile,BufRead vgrindefs			set ft=vgrindefs
 " VRML V1.0c
 au BufNewFile,BufRead *.wrl			set ft=vrml
 
+" Webmacro
+au BufNewFile,BufRead *.wm			set ft=webmacro
+
+" Website MetaLanguage
+au BufNewFile,BufRead *.wml			set ft=wml
+
 " Winbatch
 au BufNewFile,BufRead *.wbt			set ft=winbatch
+
+" CVS commit file
+au BufNewFile,BufRead cvs\d\+			set ft=cvs
 
 " CWEB
 au BufNewFile,BufRead *.w			set ft=cweb
@@ -559,9 +660,6 @@ au BufNewFile,BufRead *.w			set ft=cweb
 " WEB (*.web is also used for Winbatch: Guess, based on expecting "%" comment
 " lines in a WEB file).
 au BufNewFile,BufRead *.web			if getline(1)[0].getline(2)[0].getline(3)[0].getline(4)[0].getline(5)[0] =~ "%" | set ft=web | else | set ft=winbatch | endif
-
-" Changes for WEB and CWEB
-au BufNewFile,BufRead *.ch			set ft=change
 
 " X Pixmap (dynamically sets colors, use BufEnter to make it work better)
 au BufEnter *.xpm				if getline(1) =~ "XPM2"|set ft=xpm2|else|set ft=xpm|endif
@@ -571,7 +669,7 @@ au BufEnter *.xpm2				set ft=xpm2
 au BufEnter *.xs				set ft=xs
 
 " X resources file
-au BufNewFile,BufRead .Xdefaults,.Xresources,*/app-defaults/* set ft=xdefaults
+au BufNewFile,BufRead .Xdefaults,.Xresources,Xresources*,*/app-defaults/*,*/Xresources/*,xdm-config set ft=xdefaults
 
 " Xmath
 au BufNewFile,BufRead *.msc,*.msf		set ft=xmath
@@ -600,6 +698,13 @@ endif
 " when there are no matching file name extensions.
 augroup filetype
   au BufNewFile,BufRead,StdinReadPost *		if !did_filetype()|so <sfile>:p:h/scripts.vim|endif
+
+" Extra checks for when no filetype has been detected now
+
+" Printcap and Termcap
+au BufNewFile,BufRead *printcap*		if !did_filetype()|let b:ptcap_type = "print"|set ft=ptcap|endif
+au BufNewFile,BufRead *termcap*			if !did_filetype()|let b:ptcap_type = "term"|set ft=ptcap|endif
+
 augroup END
 
 

@@ -184,7 +184,7 @@
 #define GO_RIGHT	'r'		/* use right scrollbar */
 #define GO_TEAROFF	't'		/* add tear-off menu items */
 #define GO_TOOLBAR	'T'		/* add toolbar */
-#define GO_VERTICAL	'v'		/* vertical toolbar */
+#define GO_VERTICAL	'v'		/* arrange dialog buttons vertically */
 #define GO_ALL		"abfgilmMprtTv"	/* all possible flags for 'go' */
 
 /* flags for 'comments' option */

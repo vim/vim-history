@@ -35,10 +35,11 @@ clean:
 	-rm -rf *.out test.log
 
 .in.out:
+	-rm -f $*.failed
 	$(VIMPROG) -u vimrc.unix -U NONE -s dotest.in $*.in
 	/bin/sh -c "if diff test.out $*.ok; \
 		then mv -f test.out $*.out; \
-		else echo $* FAILED >>test.log; \
+		else echo $* FAILED >>test.log; mv -f test.out $*.failed; \
 		fi"
 	-rm -f Xdotest
 

@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 5.6.  Last change: 1999 Sep 17
+*motion.txt*    For Vim version 5.7a.  Last change: 2000 Jun 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -61,8 +61,8 @@ Which motions are linewise, inclusive or exclusive is mentioned below.  There
 are however, two general exceptions:
 1. If the motion is exclusive and the end of the motion is in column 1, the
    end of the motion is moved to the end of the previous line and the motion
-   becomes inclusive.  Example: "}" ends at the first line after a paragraph,
-   but "V}" will not include that line.
+   becomes inclusive.  Example: "}" moves to the first line after a paragraph,
+   but "d}" will not include that line.
 2. If the motion is exclusive, the end of the motion is in column 1 and the
    start of the motion was at or before the first non-blank in the line, the
    motion becomes linewise.  Example: If a paragraph begins with some blanks
@@ -371,7 +371,8 @@ paragraph macros, specified by the pairs of characters in the 'paragraphs'
 option.  The default is "IPLPPPQPP LIpplpipbp", which corresponds to the
 macros ".IP", ".LP", etc.  (These are nroff macros, so the dot must be in the
 first column).  A section boundary is also a paragraph boundary.  Note that
-this does not include a '{' or '}' in the first column.
+this does not include a '{' or '}' in the first column.  Also note that a
+blank line (only containing white space) is NOT a paragraph boundary.
 
 							*section*
 A section begins after a form-feed (<C-L>) in the first column and at each of
@@ -663,6 +664,7 @@ operator, file-read or put command has been used yet in the current file.
 							*``*
 ``			To the position before latest jump, or where the last
 			"m'" or "m`" command was given (exclusive).
+			Also see |restore-position|.
 
 							*'quote*
 '"			To the first non-blank character of the line where

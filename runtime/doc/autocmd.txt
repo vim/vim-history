@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 5.6.  Last change: 1999 Dec 07
+*autocmd.txt*   For Vim version 5.7a.  Last change: 2000 Apr 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -434,10 +434,24 @@ text.
 							*:filetype* *:filet*
 To enable file type detection, use this command in your vimrc:
 >  :filetype on
-Detail: This command will load the file $VIMRUNTIME/filetype.vim, which
-	defines autocommands for the FileType event.  If the file type is not
-	found by the name, the file $VIMRUNTIME/scripts.vim is used to detect
-	it from the contents of the file.
+Each time a new or existing file is edited, Vim will try to recognize the type
+of the file and set the 'filetype' option.  This will trigger the FileType
+event, which can be used to set the syntax highlighting, set options, etc.
+
+Detail: The ":filetype on" command will load the file
+	$VIMRUNTIME/filetype.vim, which defines autocommands for the
+	BufNewFile and BufRead events.  If the file type is not found by the
+	name, the file $VIMRUNTIME/scripts.vim is used to detect it from the
+	contents of the file.
+
+To add your own file types, see |new-filetype| below.
+
+If the file type is not detected automatically, or it finds the wrong type,
+you can either set the 'filetype' option manually, or add a modeline to your
+file.  Example, for in an IDL file use the command:
+>	set filetype=idl
+or add this |modeline| to the file:
+>	/* vim: set filetype=idl : */
 
 You can use the detected file type to set options and install mappings.  For
 example, to set the 'tabstop' option for C files to 4:
@@ -580,7 +594,7 @@ for all groups.  The group only matters when executing autocommands with
 ":doautocmd" or ":doautoall", or when defining or deleting autocommands.
 
 The group name can contain any characters except white space.  The group name
-"end" is reserved (also in uppercase).
+"end" is reserved (also in uppercase).  The group name is case sensitive.
 
 							*:aug* *:augroup*
 :aug[roup] {name}		Define the autocmd group name for the
@@ -757,7 +771,7 @@ examples:
 > :autocmd BufEnter  .letter	set dict=/usr/lib/dict/words
 > :autocmd BufLeave  .letter	set dict=
 > :autocmd BufRead,BufNewFile   *.c,*.h	set tw=0 cin noic
-> :autocmd BufEnter  *.c,*.h	abbr FOR for(i = 0; i < 3; i++)^M{^M}^[O
+> :autocmd BufEnter  *.c,*.h	abbr FOR for (i = 0; i < 3; ++i)<CR>{<CR>}<Esc>O
 > :autocmd BufLeave  *.c,*.h	unabbr FOR
 
 For makefiles (makefile, Makefile, imakefile, makefile.unix, etc.):

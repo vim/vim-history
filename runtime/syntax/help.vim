@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim help file
 " Maintainer:	Bram Moolenaar (Bram@vim.org)
-" Last Change:	1999 Aug 18
+" Last Change:	2000 Jun 06
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -20,7 +20,7 @@ syn match helpOption		"'[a-z]\{2,\}'"
 syn match helpOption		"'t_..'"
 syn match helpHeader		".*\~$"me=e-1 nextgroup=helpIgnore
 syn match helpIgnore		"." contained
-syn keyword helpNote		note
+syn keyword helpNote		note Note NOTE note: Note: NOTE:
 syn match helpSpecial		"\<N\>"
 syn match helpSpecial		"(N\>"ms=s+1
 syn match helpSpecial		"\[N]"

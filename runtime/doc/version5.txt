@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 5.6.  Last change: 2000 Jan 16
+*version5.txt*  For Vim version 5.7a.  Last change: 2000 Jun 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -104,6 +104,10 @@ VERSION 5.6			|version-5.6|
 Changed					|changed-5.6|
 Added					|added-5.6|
 Fixed					|fixed-5.6|
+
+VERSION 5.7			|version-5.7|
+Added					|added-5.7|
+Fixed					|fixed-5.7|
 
 ==============================================================================
 				 INCOMPATIBLE
@@ -2280,6 +2284,8 @@ When 'insertmode' is set, using CTRL-O to execute a mapping will work like
 When 'mouse' was set already (e.g., in the .vimrc file), don't automatically
 set 'mouse' when the GUI starts.
 
+Removed the 'N', 'I' and 'A' flags from the 'mouse' option.
+
 Renamed "toggle option" to "boolean option".  Some people thought that ":set
 xyz" would toggle 'xyz' on/off each time.
 
@@ -3452,10 +3458,9 @@ compatibility.
 
 New variables:
 "v:warningmsg" and "v:statusmsg" internal variables.  Contain the last given
-warning and status message. |v:warningmsg-variable| |v:statusmsg-variable|
-(Madsen)
+warning and status message. |v:warningmsg| |v:statusmsg| (Madsen)
 "v:count1" variable: like "v:count", but defaults to one when no count is
-used. |v:count1-variable|
+used. |v:count1|
 
 When compiling without expression evaluation, "if 1" can be used around the
 not supported commands to avoid it being executed.  Works like in Vim 4.x.
@@ -6623,5 +6628,756 @@ Problem:    Win32 GUI: Dialogs and tear-off menus can't handle multi-byte
 Solution:   Adjust nCopyAnsiToWideChar() to handle multi-byte characters
 	    correctly.
 Files:	    src/gui_w32.c
+
+==============================================================================
+VERSION 5.7						*version-5.7*
+
+Version 5.7 is a bug-fix version of 5.6.
+
+
+Added							*added-5.7*
+-----
+
+New syntax files:
+stp		Stored Procedures (Jeff Lanzarotta)
+snnsnet, snnspat, snnsres	SNNS (Davide Alberani)
+mel		MEL (Robert Minsk)
+ruby		Ruby (Mirko Nasato)
+tli		TealInfo (Kurt W. Andrews)
+ora		Oracle config file (Sandor Kopanyi)
+abaqus		Abaqus (Carl Osterwisch)
+jproperties	Java Properties (Simon Baldwin)
+apache		Apache config (Allan Kelly)
+csp		CSP (Jan Bredereke)
+samba		Samba config (Rafael Garcia-Suarez)
+kscript		KDE script (Thomas Capricelli)
+hb		Hyper Builder (Alejandro Forero Cuervo)
+fortran		Fortran (rewritten) (Ajit J. Thakkar)
+sml		SML (Fabrizio Zeno Cornelli)
+cvs		CVS commit (Matt Dunford)
+aspperl		ASP Perl (Aaron Hope)
+bc		BC calculator (Vladimir Scholtz)
+
+Included Exuberant ctags 3.5.1. (Darren Hiebert)
+
+"display" and "fold" arguments for syntax items.  For future extension, they
+are ignored now.
+
+strftime() function for the Macintosh.
+
+
+Fixed							*fixed-5.7*
+-----
+
+The 16 bit MS-DOS version is now compiled with Bcc 3.1 instead of 4.0.  The
+executable is smaller.
+
+When a "make test" failed, the output file was lost.  Rename it to
+test99.failed to be able to see what went wrong.
+
+After sourcing bugreport.vim, it's not clear that bugreport.txt has been
+written in the current directory.  Edit bugreport.txt to avoid that.
+
+Adding IME support when using Makefile.w32 didn't work. (Taro Muraoka)
+
+Win32 console: Mouse drags were passed on even when the mouse didn't move.
+
+Perl interface: In Buffers(), type of argument to SvPV() was int, should be
+STRLEN. (Tony Leneis)
+
+Problem with prototype for index() on AIX 4.3.0.  Added check for _AIX43 in
+os_unix.h. (Jake Hamby)
+
+Mappings in mswin.vim could break when some commands are mapped.  Add "nore"
+to most mappings to avoid re-mapping.
+
+modify_fname() made a copy of a file name for ":p" when it already was a full
+path name, which is a bit slow.
+
+Win32 with Borland C++ 5.5: Pass the path to the compiler on to xxd and ctags,
+to avoid depending on $PATH.  Fixed "make clean".
+
+Many fixes to Macintosh specific parts: (mostly by Dany StAmant)
+- Only one Help menu.
+- No more crash when removing a menu item.
+- Support as External Editor for Codewarior (still some little glitches).
+- Popup menu support.
+- Fixed crash when pasting after application switch.
+- Color from rgb.txt properly displayed.
+- 'isprint' default includes all chars above '~'. (Axel Kielhorn)
+- mac_expandpath() was leaking memory.
+- Add digraphs table. (Axel Kielhorn)
+- Multi-byte support: (Kenichi Asai)
+  Switch keyscript when going in/out of Insert mode.
+  Draw multi-byte character correctly.
+  Don't use mblen() but highest bit of char to detect multi-byte char.
+  Display value of multi-byte in statusline (also for other systems).
+
+Fixes for VMS: (Zoltan Arpadffy) (also see patch 5.6.045 below)
+- Added Makefile_vms.mms and vimrc.vms to src/testdir to be able to run the
+  tests.
+- Various fixes.
+- Set 'undolevels' to 1000 by default.
+- Made mch_settitle() equivalent to the one in os_unix.c.
+
+RiscOS: A few prototypes for os_riscos.c were outdated.  Generate prototypes
+automatically.
+
+
+Previously released patches:
+
+Patch 5.6.001
+Problem:    When using "set bs=0 si cin", Inserting "#<BS>" or "}<BS>" which
+	    reduces the indent doesn't delete the "#" or "}". (Lorton)
+Solution:   Adjust ai_col in ins_try_si().
+Files:	    src/edit.c
+
+Patch 5.6.002
+Problem:    When using the vim.vim syntax file, a comment with all uppercase
+	    characters causes a hang.
+Solution:   Adjust pattern for vimCommentTitle (Charles Campbell)
+Files:	    runtime/syntax/vim.vim
+
+Patch 5.6.003
+Problem:    GTK GUI: Loading a user defined toolbar bitmap gives a warning
+	    about the colormap.  Probably because the window has not been
+	    opened yet.
+Solution:   Use gdk_pixmap_colormap_create_from_xpm() to convert the xpm file.
+	    (Keith Radebaugh)
+Files:	    src/gui_gtk.c
+
+Patch 5.6.004 (extra)
+Problem:    Win32 GUI with IME: When setting 'guifont' to "*", the font
+	    requester appears twice.
+Solution:   In gui_mch_init_font() don't call get_logfont() but copy
+	    norm_logfont from fh. (Yasuhiro Matsumoto)
+Files:	    src/gui_w32.c
+
+Patch 5.6.005
+Problem:    When 'winminheight' is zero, CTRL-W - with a big number causes a
+	    crash.  (David Kotchan)
+Solution:   Check for negative window height in win_setheight().
+Files:	    src/window.c
+
+Patch 5.6.006
+Problem:    GTK GUI: Bold font cannot always be used.  Memory is freed too
+	    early in gui_mch_init_font().
+Solution:   Move call to g_free() to after where sdup is used. (Artem Hodyush)
+Files:	    src/gui_gtk_x11.c
+
+Patch 5.6.007 (extra)
+Problem:    Win32 IME: Font is not changed when screen font is changed. And
+	    IME composition window does not trace the cursor.
+Solution:   Initialize IME font.  When cursor is moved, set IME composition
+	    window with ImeSetCompositionWindow().  Add call to
+	    ImmReleaseContext() in several places. (Taro Muraoka)
+Files:	    src/gui.c, src/gui_w32.c, src/proto/gui_w32.pro
+
+Patch 5.6.008 (extra)
+Problem:    Win32: When two files exist with the same name but different case 
+	    (through NFS or Samba), fixing the file name case could cause the
+	    wrong one to be edited.
+Solution:   Prefer a perfect match above a match while ignoring case in
+	    fname_case().  (Flemming Madsen)
+Files:	    src/os_win32.c
+
+Patch 5.6.009 (extra)
+Problem:    Win32 GUI: Garbage in Windows Explorer help line when selecting
+	    "Edit with Vim" popup menu entry.
+Solution:   Only return the help line when called with the GCS_HELPTEXT flag.
+	    (Tianmiao Hu)
+Files:	    GvimExt/gvimext.cpp
+
+Patch 5.6.010
+Problem:    A file name which contains a TAB was not read correctly from the
+	    viminfo file and the ":ls" listing was not aligned properly.
+Solution:   Parse the buffer list lines in the viminfo file from the end
+	    backwards.  Count a Tab for two characters to align the ":ls" list.
+Files:	    src/buffer.c
+
+Patch 5.6.011
+Problem:    When 'columns' is huge (using a tiny font) and 'statusline' is
+	    used, Vim can crash.
+Solution:   Limit maxlen to MAXPATHL in win_redr_custom(). (John Mullin)
+Files:	    src/screen.c
+
+Patch 5.6.012
+Problem:    When using "zsh" for /bin/sh, toolcheck may hang until "exit" is
+	    typed. (Kuratczyk)
+Solution:   Add "-c exit" when checking for the shell version.
+Files:	    src/toolcheck
+
+Patch 5.6.013
+Problem:    Multibyte char in tooltip is broken.
+Solution:   Consider multibyte char in replace_termcodes(). (Taro Muraoka)
+Files:      src/term.c
+
+Patch 5.6.014
+Problem:    When cursor is at the end of line and the character under cursor
+	    is a multibyte character, "yl" doesn't yank 1 multibyte-char.
+	    (Takuhiro Nishioka)
+Solution:   Recognize a multibyte-char at end-of-line correctly in oneright().
+	    (Taro Muraoka)
+	    Also: make "+quickfix" in ":version" output appear alphabetically.
+Files:	    src/edit.c
+
+Patch 5.6.015
+Problem:    New xterm delete key sends <Esc>[3~ by default.
+Solution:   Added <kDel> and <kIns> to make the set of keypad keys complete.
+Files:	    src/edit.c, src/ex_getln.c, src/keymap.h, src/misc1.c,
+	    src/misc2.c, src/normal.c, src/os_unix.c, src/term.c
+
+Patch 5.6.016
+Problem:    When deleting a search string from history from inside a mapping,
+	    another entry is deleted too. (Benji Fisher)
+Solution:   Reset last_maptick when deleting the last entry of the search
+	    history.  Also: Increment maptick when starting a mapping from
+	    typed characters to avoid a just added search string being
+	    overwritten or removed from history.
+Files:	    src/ex_getln.c, src/getchar.c
+
+Patch 5.6.017
+Problem:    ":s/e/\^M/" should replace an "e" with a CTRL-M, not split the
+	    line. (Calder)
+Solution:   Replace the backslash with a CTRL-V internally. (Stephen P. Wall)
+Files:	    src/ex_cmds.c
+
+Patch 5.6.018
+Problem:    ":help [:digit:]" takes a long time to jump to the wrong place.
+Solution:   Insert a backslash to avoid the special meaning of '[]'.
+Files:	    src/ex_cmds.c
+
+Patch 5.6.019
+Problem:    "snd.c", "snd.java", etc. were recognized as "mail" filetype.
+Solution:   Make pattern for mail filetype more strict.
+Files:	    runtime/filetype.vim
+
+Patch 5.6.020 (extra)
+Problem:    The DJGPP version eats processor time (Walter Briscoe).
+Solution:   Call __dpmi_yield() in the busy-wait loop.
+Files:	    src/os_msdos.c
+
+Patch 5.6.021
+Problem:    When 'selection' is "exclusive", a double mouse click in Insert
+	    mode doesn't select last char in line. (Lutz)
+Solution:   Allow leaving the cursor on the NUL past the line in this case.
+Files:	    src/edit.c
+
+Patch 5.6.022
+Problem:    ":e \~<Tab>" expands to ":e ~\$ceelen", which doesn't work.
+Solution:   Re-insert the backslash before the '~'.
+Files:	    src/ex_getln.c
+
+Patch 5.6.023 (extra)
+Problem:    Various warnings for the Ming compiler.
+Solution:   Changes to avoid the warnings. (Bill McCarthy)
+Files:	    src/ex_cmds.c, src/gui_w32.c, src/os_w32exe.c, src/os_win32.c,
+	    src/syntax.c, src/vim.rc
+
+Patch 5.6.024 (extra)
+Problem:    Win32 console: Entering CTRL-_ requires the shift key. (Kotchan)
+Solution:   Specifically catch keycode 0xBD, like the GUI.
+Files:	    src/os_win32.c
+
+Patch 5.6.025
+Problem:    GTK GUI: Starting the GUI could be interrupted by a SIGWINCH.
+	    (Nils Lohner)
+Solution:   Repeat the read() call to get the gui_in_use value when
+	    interrupted by a signal.
+Files:	    src/gui.c
+
+Patch 5.6.026 (extra)
+Problem:    Win32 GUI: Toolbar bitmaps are searched for in
+	    $VIMRUNTIME/bitmaps, while GTK looks in $VIM/bitmaps. (Keith
+	    Radebaugh)
+Solution:   Use $VIM/bitmaps for both, because these are not part of the
+	    distribution but defined by the user.
+Files:	    src/gui_w32.c, runtime/doc/gui.txt
+
+Patch 5.6.027
+Problem:    TCL: Crash when using a Tcl script (reported for Win32).
+Solution:   Call Tcl_FindExecutable() in main(). (Brent Fulgham)
+Files:	    src/main.c
+
+Patch 5.6.028
+Problem:    Xterm patch level 126 sends codes for mouse scroll wheel.
+	    Fully works with xterm patch level 131.
+Solution:   Recognize the codes for button 4 (0x60) and button 5 (0x61).
+Files:	    src/term.c
+
+Patch 5.6.029
+Problem:    GTK GUI: Shortcut keys cannot be used for a dialog. (Johannes
+	    Zellner)
+Solution:   Add support for shortcut keys. (Marcin Dalecki)
+Files:	    src/gui_gtk.c
+
+Patch 5.6.030
+Problem:    When closing a window and 'ea' is set, Vim can crash. (Yasuhiro
+	    Matsumoto)
+Solution:   Set "curbuf" to a valid value in win_close().
+Files:	    src/window.c
+
+Patch 5.6.031
+Problem:    Multi-byte: When a double-byte character ends in CSI, Vim waits
+	    for another character to be typed.
+Solution:   Recognize the CSI as the second byte of a character and don't wait
+	    for another one. (Yasuhiro Matsumoto)
+Files:	    src/getchar.c
+
+Patch 5.6.032
+Problem:    Functions with an argument that is a line number don't all accept
+	    ".", "$", etc. (Ralf Arens)
+Solution:   Add get_art_lnum() and use it for setline(), line2byte() and
+	    synID().
+Files:	    src/eval.c
+
+Patch 5.6.033
+Problem:    Multi-byte: "f " sometimes skips to the second space.  (Sung-Hyun
+	    Nam)
+Solution:   Change logic in searchc() to skip trailing byte of a double-byte
+	    character.
+	    Also: Ask for second byte when searching for double-byte
+	    character. (Park Chong-Dae)
+Files:	    src/search.c
+
+Patch 5.6.034 (extra)
+Problem:    Compiling with Borland C++ 5.5 fails on tolower() and toupper().
+Solution:   Use TO_LOWER() and TO_UPPER() instead.  Also adjust the Makefile
+	    to make using bcc 5.5 easier.
+Files:	    src/edit.c, src/ex_docmd.c, src/misc1.c, src/Makefile.bor
+
+Patch 5.6.035
+Problem:    Listing the"+comments" feature in the ":version" output depended
+	    on the wrong ID. (Stephen P. Wall)
+Solution:   Change "CRYPTV" to "COMMENTS".
+Files:	    src/version.c
+
+Patch 5.6.036
+Problem:    GTK GUI: Copy/paste text doesn't work between gvim and Eterm.
+Solution:   Support TEXT and COMPOUND_TEXT selection targets. (ChiDeok Hwang)
+Files:	    src/gui_gtk_x11.c
+
+Patch 5.6.037
+Problem:    Multi-byte: Can't use "f" command with multi-byte character in GUI.
+Solution:   Enable XIM in Normal mode for the GUI. (Sung-Hyun Nam)
+Files:	    src/gui_gtk_x11.c, src/multbyte.c
+
+Patch 5.6.038
+Problem:    Multi-clicks in GUI are interpreted as a mouse wheel click.  When
+	    'ttymouse' is "xterm" a mouse click is interpreted as a mouse
+	    wheel click.
+Solution:   Don't recognize the mouse wheel in check_termcode() in the GUI.
+	    Use 0x43 for a mouse drag in do_xterm_trace(), not 0x63.
+Files:	    src/term.c, src/os_unix.c
+
+Patch 5.6.039
+Problem:    Motif GUI under KDE: When trying to logout, Vim hangs up the
+	    system. (Hermann Rochholz)
+Solution:   When handling the WM_SAVE_YOURSELF event, set the WM_COMMAND
+	    property of the window to let the session manager know we finished
+	    saving ourselves.
+Files:	    src/gui_x11.c
+
+Patch 5.6.040
+Problem:    When using ":s" command, matching the regexp is done twice.
+Solution:   After copying the matched line, adjust the pointers instead of
+	    finding the match again. (Loic Grenie)  Added vim_regnewptr().
+Files:	    src/ex_cmds.c, src/regexp.c, src/proto/regexp.pro
+
+Patch 5.6.041
+Problem:    GUI: Athena, Motif and GTK don't give more than 10 dialog buttons.
+Solution:   Remove the limit on the number of buttons.
+	    Also support the 'v' flag in 'guioptions'.
+	    For GTK: Center the buttons.
+Files:	    src/gui_athena.c, src/gui_gtk.c, src/gui_motif.c
+
+Patch 5.6.042
+Problem:    When doing "vim -u vimrc" and vimrc contains ":q", the cursor in
+	    the terminal can remain off.
+Solution:   Call cursor_on() in mch_windexit().
+Files:	    src/os_unix.c
+
+Patch 5.6.043 (extra)
+Problem:    Win32 GUI: When selecting guifont with the dialog, 'guifont'
+	    doesn't include the bold or italic attributes.
+Solution:   Append ":i" and/or ":b" to 'guifont' in gui_mch_init_font().
+Files:	    src/gui_w32.c
+
+Patch 5.6.044 (extra)
+Problem:    MS-DOS and Windows: The line that dosinst.exe appends to
+	    autoexec.bat to set PATH is wrong when Vim is in a directory with
+	    an embedded space.
+Solution:   Use double quotes for the value when there is an embedded space.
+Files:	    src/dosinst.c
+
+Patch 5.6.045 (extra) (fixed version)
+Problem:    VMS: Various small problems.
+Solution:   Many small changes. (Zoltan Arpadffy)
+	    File name modifier ":h" keeps the path separator.
+	    File name modifier ":e" also removes version.
+	    Compile with MAX_FEAT by default.
+	    When checking for autocommands ignore version in file name.
+	    Be aware of file names being case insensitive.
+	    Added vt320 builtin termcap.
+	    Be prepared for an empty default_vim_dir.
+Files:	    runtime/gvimrc_example.vim, runtime/vimrc_example.vim,
+	    runtime/doc/os_vms.txt, src/eval.c, src/feature.h, src/fileio.c,
+	    src/gui_motif.c, src/gui_vms_conf.h, src/main.c, src/memline.c,
+	    src/misc1.c, src/option.c, src/os_vms_conf.h, src/os_vms.c,
+	    src/os_vms.h, src/os_vms.mms, src/tag.c, src/term.c, src/version.c
+
+Patch 5.6.046
+Problem:    Systems with backslash in file name: With 'shellslash' set, "vim
+	    */*.c" only uses a slash for the first file name.  (Har'El)
+Solution:   Fix slashes in file name arguments after reading the vimrc file.
+Files:	    src/option.c
+
+Patch 5.6.047
+Problem:    $CPPFLAGS is not passed on to ctags configure.
+Solution:   Add it. (Walter Briscoe)
+Files:	    src/config.mk.in, src/Makefile
+
+Patch 5.6.048
+Problem:    CTRL-R in Command-line mode is documented to insert text as typed,
+	    but inserts text literally.
+Solution:   Make CTRL-R insert text as typed, use CTRL-R CTRL-R to insert
+	    literally.  This is consistent with Insert mode.  But characters
+	    that end Command-line mode are inserted literally.
+Files:	    runtime/doc/index.txt, runtime/doc/cmdline.txt, src/ex_getln.c,
+	    src/ops.c, src/proto/ops.pro
+
+Patch 5.6.049
+Problem:    Documentation for [!] after ":ijump" is wrong way around. (Benji
+	    Fisher)
+Solution:   Fix the documentation.  Also improve the code to check for a match
+	    after a /* */ comment.
+Files:	    runtime/doc/tagsearch.txt, src/search.c
+
+Patch 5.6.050
+Problem:    Replacing is wrong when replacing a single-byte char with
+	    double-byte char or the other way around.
+Solution:   Shift the text after the character when it is replaced.
+	    (Yasuhiro Matsumoto)
+Files:	    src/normal.c, src/misc1.c
+
+Patch 5.6.051
+Problem:    ":tprev" and ":tnext" don't give an error message when trying to
+	    go before the first or beyond the last tag. (Robert Webb)
+Solution:   Added error messages.  Also: Delay a second when a file-read
+	    message is going to overwrite an error message, otherwise it won't
+	    be seen.
+Files:	    src/fileio.c, src/tag.c
+
+Patch 5.6.052
+Problem:    Multi-byte: When an Ex command has a '|' or '"' as a second byte,
+	    it terminates the command.
+Solution:   Skip second byte of multi-byte char when checking for '|' and '"'.
+	    (Asai Kenichi)
+Files:	    src/ex_docmd.c
+
+Patch 5.6.053
+Problem:    CTRL-] doesn't work on a tag that contains a '|'. (Cesar Crusius)
+Solution:   Escape '|', '"' and '\' in tag names when using CTRL-] and also
+	    for command-line completion.
+Files:	    src/ex_getln.c, src/normal.c
+
+Patch 5.6.054
+Problem:    When using ":e" and ":e #" the cursor is put in the first column
+	    when 'startofline' is set. (Cordell)
+Solution:   Use the last known column when 'startofline' is set.
+	    Also, use ECMD_LAST more often to simplify the code.
+Files:	    src/buffer.c, src/ex_cmds.c, src/ex_docmd.c, src/proto/buffer.pro
+
+Patch 5.6.055
+Problem:    When 'statusline' only contains a text without "%" and doesn't fit
+	    in the window, Vim crashes. (Ron Aaron)
+Solution:   Don't use the pointer for the first item if there is no item.
+Files:	    src/screen.c
+
+Patch 5.6.056 (extra)
+Problem:    MS-DOS: F11 and F12 don't work when 'bioskey' is set.
+Solution:   Use enhanced keyboard functions. (Vince Negri)
+	    Detect presence of enhanced keybard and set bioskey_read and
+	    bioskey_ready.
+Files:	    src/os_msdos.c
+
+Patch 5.6.057 (extra)
+Problem:    Win32 GUI: Multi-byte characters are wrong in dialogs and tear-off
+	    menus.
+Solution:   Use system font instead of a fixed font. (Matsumoto, Muraoka)
+Files:	    src/gui_w32.c
+
+Patch 5.6.058
+Problem:    When the 'a' flag is not in 'guioptions', non-Windows systems
+	    copy Visually selected text to the clipboard/selection on a yank
+	    or delete command anyway.  On Windows it isn't done even when the
+	    'a' flag is included.
+Solution:   Respect the 'a' flag in 'guioptions' on all systems.
+Files:	    src/normal.c
+
+Patch 5.6.059 (extra)
+Problem:    When moving the cursor over italic text and the characters spill
+	    over to the cell on the right, that spill-over is deleted.
+	    Noticed in the Win32 GUI, can happen on other systems too.
+Solution:   Redraw italic text starting from a blank, like this is already
+	    done for bold text. (Vince Negri)
+Files:	    src/gui.c, src/gui.h, src/gui_w32.c
+
+Patch 5.6.060
+Problem:    Some bold characters spill over the the cell on the left, that
+	    spill-over can remain sometimes.
+Solution:   Redraw a characters when the next character was bold and needs
+	    redrawing. (Robert Webb)
+Files:	    src/screen.c
+
+Patch 5.6.061
+Problem:    When xterm sends 8-bit controls, recognizing the version response
+	    doesn't work.
+	    When using CSI instead of <Esc>[ for the termcap color codes,
+	    using 16 colors doesn't work. (Neil Bird)
+Solution:   Also accept CSI in place of <Esc>[ for the version string.
+	    Also check for CSI when handling colors 8-15 in term_color().
+	    Use CSI for builtin xterm termcap entries when 'term' contains
+	    "8bit".
+Files:	    runtime/doc/term.txt, src/ex_cmds.c, src/option.c, src/term.c,
+	    src/os_unix.c, src/proto/option.pro, src/proto/term.pro
+
+Patch 5.6.062
+Problem:    The documentation says that setting 'smartindent' doesn't have an
+	    effect when 'cindent' is set, but it does make a difference for
+	    lines starting with "#". (Neil Bird)
+Solution:   Really ignore 'smartindent' when 'cindent' is set.
+Files:	    src/misc1.c, src/ops.c
+
+Patch 5.6.063
+Problem:    Using "I" in Visual-block mode doesn't accept a count. (Johannes
+	    Zellner)
+Solution:   Pass the count on to do_insert() and edit(). (Allan Kelly)
+Files:	    src/normal.c, src/ops.c, src/proto/ops.pro
+
+Patch 5.6.064
+Problem:    MS-DOS and Win32 console: Mouse doesn't work correctly after
+	    including patch 5.6.28. (Vince Negri)
+Solution:   Don't check for mouse scroll wheel when the mouse code contains
+	    the number of clicks.
+Files:	    src/term.c
+
+Patch 5.6.065
+Problem:    After moving the cursor around in Insert mode, typing a space can
+	    still trigger an abbreviation. (Benji Fisher)
+Solution:   Don't check for an abbreviation after moving around in Insert mode.
+Files:	    src/edit.c
+
+Patch 5.6.066
+Problem:    Still a few bold character spill-over remains after patch 60.
+Solution:   Clear character just in front of blanking out rest of the line.
+	    (Robert Webb)
+Files:	    src/screen.c
+
+Patch 5.6.067
+Problem:    When a file name contains a NL, the viminfo file is corrupted.
+Solution:   Use viminfo_writestring() to convert the NL to CTRL-V n.
+	    Also fix the Buffers menu and listing a menu name with a newline.
+Files:	    runtime/menu.vim, src/buffer.c, src/mark.c, src/menu.c
+
+Patch 5.6.068
+Problem:    Compiling the Perl interface doesn't work with Perl 5.6.0.
+	    (Bernhard Rosenkraenzer)
+Solution:   Also check xs_apiversion for the version number when prepending
+	    defines for PL_*.
+Files:	    src/Makefile
+
+Patch 5.6.069
+Problem:    "go" doesn't always end up at the right character when
+	    'fileformat' is "dos". (Bruce DeVisser)
+Solution:   Correct computations in ml_find_line_or_offset().
+Files:	    src/memline.
+
+Patch 5.6.070 (depends on 5.6.068)
+Problem:    Compiling the Perl interface doesn't work with Perl 5.6.0.
+	    (Bernhard Rosenkraenzer)
+Solution:   Simpler check instead of the one from patch 68.
+Files:	    src/Makefile
+
+Patch 5.6.071
+Problem:    "A" in Visual block mode on a Tab positions the cursor one char to
+	    the right. (Michael Haumann)
+Solution:   Correct the column computation in op_insert().
+Files:	    src/ops.c
+
+Patch 5.6.072
+Problem:    When starting Vim with "vim +startinsert", it enters Insert mode
+	    only after typing the first command. (Andrew Pimlott)
+Solution:   Insert a dummy command in the stuff buffer.
+Files:	    src/main.c
+
+Patch 5.6.073 (extra) (depends on 5.6.034)
+Problem:    Win32 GUI: When compiled with Bcc 5.5 menus don't work.
+	    In dosinst.c toupper() and tolower() give an "internal compiler
+	    error" for Bcc 5.5.
+Solution:   Define WINVER to 4 to avoid compiling for Windows 2000. (Dan
+	    Sharp)  Also cleaned up compilation arguments.
+	    Use our own implementation of toupper() in dosinst.c.  Use
+	    mytoupper() instead of tolower().
+Files:	    src/Makefile.bor, src/dosinst.c
+
+Patch 5.6.074 (extra)
+Problem:    Entering CSI directly doesn't always work, because it's recognized
+	    as the start of a special key.  Mostly a problem with multi-byte
+	    in the GUI.
+Solution:   Use K_CSI for a typed CSI character.  Use <CSI> for a normal CSI,
+	    <xCSI> for a CSI typed in the GUI.
+Files:	    runtime/doc/intro.txt, src/getchar.c, src/gui_amiga.c,
+	    src/gui_gtk_x11.c, src/gui_mac.c, src/gui_riscos.c, src/gui_w32.c,
+	    src/keymap.h, src/misc2.c
+
+Patch 5.6.075
+Problem:    When using "I" or "A" in Visual block mode while 'sts' is set may
+	    change spaces to a Tab the inserted text is not correct. (Mike
+	    Steed)  And some other problems when using "A" to append after the
+	    end of the line.
+Solution:   Check for change in spaces/tabs after inserting the text.  Append
+	    spaces to fill the gap between the end-of-line and the right edge
+	    of the block.
+Files:	    src/ops.c
+
+Patch 5.6.076
+Problem:    GTK GUI: Mapping <M-Space> doesn't work.
+Solution:   Don't use the "Alt" modifier twice in key_press_event().
+Files:	    src/gui_gtk_x11.c
+
+Patch 5.6.077
+Problem:    GUI: When interrupting an external program with CTRL-C, gvim might
+	    crash. (Benjamin Korvemaker)
+Solution:   Avoid using a NULL pointer in ui_inchar_undo().
+Files:	    src/ui.c
+
+Patch 5.6.078
+Problem:    Locale doesn't always work on FreeBSD. (David O'Brien)
+Solution:   Link with the "xpg4" library when available.
+Files:	    src/configure.in, src/configure
+
+Patch 5.6.079
+Problem:    Vim could crash when several Tcl interpreters are created and
+	    destroyed.
+Solution:   handle the "exit" command and nested ":tcl" commands better. (Ingo
+	    Wilken)
+Files:	    runtime/doc/if_tcl.txt, src/if_tcl.c
+
+Patch 5.6.080
+Problem:    When jumping to a tag, generating the tags file and jumping to the
+	    same tag again uses the old search pattern. (Sung-Hyun Nam)
+Solution:   Flush cached tag matches when executing an external command.
+Files:	    src/misc2.c, src/proto/tag.pro, src/tag.c
+
+Patch 5.6.081
+Problem:    ":syn include" uses a level for the included file, this confuses
+	    contained items included at the same level.
+Solution:   Use a unique tag for each included file.  Changed sp_syn_inc_lvl
+	    to sp_syn_inc_tag. (Scott Bigham)
+Files:	    src/syntax.c, src/structs.h
+
+Patch 5.6.082
+Problem:    When using cscope, Vim can crash.
+Solution:   Initialize tag_fname in find_tags(). (Anton Blanchard)
+Files:	    src/tag.c
+
+Patch 5.6.083 (extra)
+Problem:    Win32: The visual beep can't be seen. (Eric Roesinger)
+Solution:   Flush the output before waiting with GdiFlush(). (Maurice S. Barnum)
+	    Also: Allow specifying the delay in t_vb for the GUI.
+Files:	    src/gui.c, src/gui_amiga.c, src/gui_gtk_x11.c, src/gui_mac.c,
+	    src/gui_riscos.c, src/gui_w32.c, src/gui_x11.c, src/gui_beos.cc,
+	    src/proto/gui_amiga.pro, src/proto/gui_gtk_x11.pro,
+	    src/proto/gui_mac.pro, src/proto/gui_riscos.pro,
+	    src/proto/gui_w32.pro, src/proto/gui_x11.pro,
+	    src/proto/gui_beos.pro
+
+Patch 5.6.084 (depends on 5.6.074)
+Problem:    GUI: Entering CSI doesn't always work for Athena and Motif.
+Solution:   Handle typed CSI as <xCSI> (forgot this bit in 5.6.074).
+Files:	    src/gui_x11.c
+
+Patch 5.6.085
+Problem:    Multi-byte: Using "r" to replace a double-byte char with a
+	    single-byte char moved the cursor one character. (Matsumoto)
+	    Also, using a count when replacing a single-byte char with a
+	    double-byte char didn't work.
+Solution:   Don't use del_char() to delete the second byte.
+	    Get "ptr" again after calling ins_char().
+Files:	    src/normal.c
+
+Patch 5.6.086 (extra)
+Problem:    Win32: When using libcall() and the returned value is not a valid
+	    pointer, Vim crashes.
+Solution:   Use IsBadStringPtr() to check if the pointer is valid.
+Files:	    src/os_win32.c
+
+Patch 5.6.087
+Problem:    Multi-byte: Commands and messages with multi-byte characters are
+	    displayed wrong.
+Solution:   Detect double-byte characters. (Yasuhiro Matsumoto)
+Files:	    src/ex_getln.c, src/message.c, src/misc2.c, src/screen.c
+
+Patch 5.6.088
+Problem:    Multi-byte with Motif or Athena: The message "XIM requires
+	    fontset" is annoying when Vim was compiled with XIM support but it
+	    is not being used.
+Solution:   Remove that message.
+Files:	    src/multbyte.c
+
+Patch 5.6.089
+Problem:    On non-Unix systems it's possible to overwrite a read-only file
+	    without using "!".
+Solution:   Check if the file permissions allow overwriting before moving the
+	    file to become the backup file.
+Files:	    src/fileio.c
+
+Patch 5.6.090
+Problem:    When editing a file in "/home/dir/home/dir" this was replaced with
+	    "~~".  (Andreas Jellinghaus)
+Solution:   Replace the home directory only once in home_replace().
+Files:	    src/misc1.c
+
+Patch 5.6.091
+Problem:    When editing many "no file" files, can't create swap file, because
+	    .sw[a-p] have all been used.  (Neil Bird)
+Solution:   Also use ".sv[a-z]", ".su[a-z]", etc.
+Files:	    src/memline.c
+
+Patch 5.6.092
+Problem:    FreeBSD: When setting $TERM to a non-valid terminal name, Vim
+	    hangs in tputs().
+Solution:   After tgetent() returns an error code, call it again with the
+	    terminal name "dumb".  This apparently creates an environment in
+	    which tputs() doesn't fail.
+Files:	    src/term.c
+
+Patch 5.6.093 (extra)
+Problem:    Win32 GUI: "ls | gvim -" will show a message box about reading
+	    stdin when Vim exits. (Donohue)
+Solution:   Don't write a message about the file read from stdin until the GUI
+	    has started.
+Files:	    src/fileio.c
+
+Patch 5.6.094
+Problem:    Problem with multi-byte string for ":echo var".
+Solution:   Check for length in msg_outtrans_len_attr(). (Sung-Hyun Nam)
+	    Also make do_echo() aware of multi-byte characters.
+Files:	    src/eval.c, src/message.c
+
+Patch 5.6.095
+Problem:    With an Emacs TAGS file that include another a relative path
+	    doesn't always work.
+Solution:   Use expand_tag_fname() on the name of the included file.
+	    (Utz-Uwe Haus)
+Files:	    src/tag.c
+
+Patch 5.6.096
+Problem:    Unix: When editing many files, startup can be slow. (Paul
+	    Ackersviller)
+Solution:   Halve the number of stat() calls used to add a file to the buffer
+	    list.
+Files:	    src/buffer.c
 
  vim:ts=8:sw=8:tw=78:

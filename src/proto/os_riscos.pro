@@ -1,6 +1,4 @@
-/* Prototypes.
- * Stolen from os_unix_pro.h
- */
+/* os_riscos.c */
 void mch_write __ARGS((char_u *s, int len));
 int mch_inchar __ARGS((char_u *buf, int maxlen, long wtime));
 int mch_char_avail __ARGS((void));
@@ -36,8 +34,9 @@ int mch_expandpath __ARGS((struct growarray *gap, char_u *path, int flags));
 int mch_expand_wildcards __ARGS((int num_pat, char_u **pat, int *num_file, char_u ***file, int flags));
 int mch_has_wildcard __ARGS((char_u *p));
 int mch_remove __ARGS((char_u *file));
-
-char_u *mch_munge_fname(char_u *fname);
-void mch_read_filetype(char_u *file);
-void mch_set_filetype(char_u *file, char_u *type);
-int mch_check_filetype(char_u *fname, char_u *type);
+char_u *mch_munge_fname __ARGS((char_u *fname));
+int ro_buflist_add __ARGS((char_u *old_name));
+int mch_chdir __ARGS((char_u *dir));
+void mch_read_filetype __ARGS((char_u *file));
+void mch_set_filetype __ARGS((char_u *file, char_u *type));
+int mch_check_filetype __ARGS((char_u *fname, char_u *type));

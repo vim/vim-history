@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Visual Basic
 " Maintainer:	Robert M. Cortopassi <cortopar@mindspring.com>
-" Last Change:	January 14, 1999
+" Last Change:	2000 Feb 08
 
 " This was thrown together after seeing numerous requests on the
 " VIM and VIM-DEV mailing lists.  It is by no means complete.
@@ -17,8 +17,8 @@ syn keyword vbStatement AppActivate Base Beep Call Case ChDir ChDrive Const
 syn keyword vbStatement Declare DefBool DefByte DefCur DefDate DefDbl DefDec
 syn keyword vbStatement DefInt DefLng DefObj DefSng DefStr Deftype DefVar
 syn keyword vbStatement DeleteSetting Dim Do Else End Enum Erase Event Exit
-syn keyword vbStatement Explicit FileCopy For ForEach Funtion Get GoSub GoTo
-syn keyword vbStatement If Implements Kill Let LineInput Lock LSet MkDir Name
+syn keyword vbStatement Explicit FileCopy For ForEach Function Get GoSub GoTo
+syn keyword vbStatement If Implements Kill Let LineInput Lock LSet MkDir Name Next
 syn keyword vbStatement OnError On Option Private Property Public Put RaiseEvent
 syn keyword vbStatement Randomize ReDim Rem Reset Resume Return RmDir RSet
 syn keyword vbStatement SavePicture SaveSetting SendKeys SetAttr Static Sub Then

@@ -170,6 +170,7 @@ exitcmd(dummy, interp, objc, objv)
 	return TCL_ERROR;
 }
 
+/* ARGSUSED */
 	static int
 catchcmd(dummy, interp, objc, objv)
 	ClientData	dummy;
@@ -1151,7 +1152,7 @@ tcldoexcommand(interp, objc, objv, objn)
 
 	/* If the ex command created a new Tcl interpreter, remove it */
 	if (tclinfo.interp)
-		tcldelthisinterp();	
+		tcldelthisinterp();
 	memcpy(&tclinfo, &saveinfo, sizeof(tcl_info));
 	tclupdatevars();
 

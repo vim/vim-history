@@ -73,7 +73,7 @@ tagFile TagFile = {
     NULL,		/* file pointer */
     { 0, 0 },		/* numTags */
     { 0, 0, 0 },	/* max */
-    { "", NULL, 0 },	/* etags */
+    { NULL, NULL, 0 },	/* etags */
     NULL		/* vLine */
 };
 
@@ -91,7 +91,7 @@ extern int ftruncate __ARGS((int fd, off_t length));
 #endif
 
 static void writePseudoTag __ARGS((const char *const tagName, const char *const fileName, const char *const pattern));
-static void updateSortedFlag __ARGS((const char *const line, FILE *const fp, const fpos_t *const pStartOfLine));
+static void updateSortedFlag __ARGS((const char *const line, FILE *const fp, fpos_t startOfLine));
 static void addPseudoTags __ARGS((void));
 static long unsigned int updatePseudoTags __ARGS((FILE *const fp));
 static boolean isValidTagAddress __ARGS((const char *const tag));
@@ -170,10 +170,10 @@ static void addPseudoTags()
     }
 }
 
-static void updateSortedFlag( line, fp, pStartOfLine )
+static void updateSortedFlag( line, fp, startOfLine )
     const char *const line;
     FILE *const fp;
-    const fpos_t *const pStartOfLine;
+    fpos_t startOfLine;
 {
     const char *const tab = strchr(line, '\t');
 
@@ -185,7 +185,7 @@ static void updateSortedFlag( line, fp, pStartOfLine )
 	{
 	    fpos_t nextLine;
 
-	    if (fgetpos(fp, &nextLine) == -1 || fsetpos(fp, pStartOfLine) == -1)
+	    if (fgetpos(fp, &nextLine) == -1 || fsetpos(fp, &startOfLine) == -1)
 		error(WARNING, "Failed to update 'sorted' pseudo-tag");
 	    else
 	    {
@@ -239,7 +239,7 @@ static unsigned long updatePseudoTags( fp )
 		tab == '\t')
 	    {
 		if (strcmp(classType, "_SORTED") == 0)
-		    updateSortedFlag(line, fp, &startOfLine);
+		    updateSortedFlag(line, fp, startOfLine);
 	    }
 	    fgetpos(fp, &startOfLine);
 	}
@@ -396,8 +396,6 @@ extern void copyFile( from, to, size )
 
 extern void openTagFile()
 {
-    static char tempName[L_tmpnam];
-
     setDefaultTagFileName();
     TagsToStdout = isDestinationStdout();
 
@@ -407,20 +405,17 @@ extern void openTagFile()
     /*  Open the tags file.
      */
     if (TagsToStdout)
-    {
-	TagFile.name = tmpnam(tempName);
-	TagFile.fp = fopen(TagFile.name, "w");
-    }
+	TagFile.fp = tempFile("w", &TagFile.name);
     else
     {
-	const char* fname;
+	char* fname;
 	boolean fileExists;
 
 	setDefaultTagFileName();
-	fname = Option.tagFileName;
-	fileExists = doesFileExist(fname);
-
+	fname = (char*)eMalloc(strlen(Option.tagFileName) + 1);
+	strcpy(fname, Option.tagFileName);
 	TagFile.name = fname;
+	fileExists = doesFileExist(fname);
 	if (fileExists  &&  ! isTagFile(fname))
 	    error(FATAL,
 	      "\"%s\" doesn't look like a tag file; I refuse to overwrite it.",
@@ -470,14 +465,14 @@ static int replacementTruncate( name, size )
     const char *const name;
     const long size;
 {
-    char tempName[L_tmpnam];
+    char *tempName = NULL;
+    FILE *fp = tempFile("w", &tempName);
+    fclose(fp);
+    copyFile(name, tempName, size);
+    copyFile(tempName, name, WHOLE_FILE);
+    remove(tempName);
+    eFree(tempName);
 
-    if (tmpnam(tempName) != NULL)
-    {
-	copyFile(name, tempName, size);
-	copyFile(tempName, name, WHOLE_FILE);
-	remove(tempName);
-    }
     return 0;
 }
 
@@ -485,7 +480,7 @@ static int replacementTruncate( name, size )
 
 static void sortTagFile()
 {
-    if (TagFile.numTags.added + TagFile.numTags.prev > 0L)
+    if (TagFile.numTags.added > 0L)
     {
 	if (Option.sorted)
 	{
@@ -551,23 +546,30 @@ static void writeEtagsIncludes( fp )
 extern void closeTagFile( resize )
     const boolean resize;
 {
-    long size;
+    long desiredSize, size;
 
     if (Option.etags)
 	writeEtagsIncludes(TagFile.fp);
+    desiredSize = ftell(TagFile.fp);
+    fseek(TagFile.fp, 0L, SEEK_END);
     size = ftell(TagFile.fp);
     fclose(TagFile.fp);
-    if (resize)
-	resizeTagFile(size);
-    sortTagFile();
+    if (resize  &&  desiredSize < size)
+    {
+	DebugStatement(
+	    debugPrintf(DEBUG_STATUS, "shrinking %s from %ld to %ld bytes\n",
+			TagFile.name, size, desiredSize); )
+	resizeTagFile(desiredSize);
+    }
+    if (! Option.etags)
+	sortTagFile();
+    eFree(TagFile.name);
+    TagFile.name = NULL;
 }
 
 extern void beginEtagsFile()
 {
-    tmpnam(TagFile.etags.name);
-    TagFile.etags.fp = fopen(TagFile.etags.name, "w+b");
-    if (TagFile.etags.fp == NULL)
-	error(FATAL | PERROR, "cannot open \"%s\"", TagFile.etags.name);
+    TagFile.etags.fp = tempFile("w+b", &TagFile.etags.name);
     TagFile.etags.byteCount = 0;
 }
 
@@ -584,8 +586,10 @@ extern void endEtagsFile( name )
 	    fputs(line, TagFile.fp);
 	fclose(TagFile.etags.fp);
 	remove(TagFile.etags.name);
+	eFree(TagFile.etags.name);
+	TagFile.etags.fp = NULL;
+	TagFile.etags.name = NULL;
     }
-    TagFile.etags.name[0] = '\0';
 }
 
 /*----------------------------------------------------------------------------
@@ -680,8 +684,8 @@ static void rememberMaxLengths( nameLength, lineLength )
 static int writeXrefEntry( tag )
     const tagEntryInfo *const tag;
 {
-    const char *const line = readSourceLine(TagFile.vLine, &tag->filePosition,
-					    NULL);
+    const char *const line =
+			readSourceLine(TagFile.vLine, tag->filePosition, NULL);
     int length = fprintf(TagFile.fp, "%-20s %-10s %4lu  %-14s ", tag->name,
 			 tag->kindName, tag->lineNumber, tag->sourceFileName);
 
@@ -722,8 +726,8 @@ static int writeEtagsEntry( tag )
     else
     {
 	long seekValue;
-	char *const line = readSourceLine(TagFile.vLine, &tag->filePosition,
-					  &seekValue);
+	char *const line =
+		readSourceLine(TagFile.vLine, tag->filePosition, &seekValue);
 
 	if (tag->truncateLine)
 	    truncateTagLine(line, tag->name, TRUE);
@@ -784,7 +788,7 @@ static int addExtensionFlags( tag )
 static int writePatternEntry( tag )
     const tagEntryInfo *const tag;
 {
-    char *const line = readSourceLine(TagFile.vLine, &tag->filePosition, NULL);
+    char *const line = readSourceLine(TagFile.vLine, tag->filePosition, NULL);
     const int searchChar = Option.backward ? '?' : '/';
     boolean newlineTerminated;
     int length = 0;
