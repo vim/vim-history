@@ -711,28 +711,43 @@ ptr2cells(p)
 }
 
 /*
- * Return the number of characters string 's' will take on the screen,
+ * Return the number of characters string "s" will take on the screen,
  * counting TABs as two characters: "^I".
  */
     int
 vim_strsize(s)
     char_u	*s;
 {
-    int		len = 0;
+    return vim_strnsize(s, (int)MAXCOL);
+}
 
-    while (*s != NUL)
+/*
+ * Return the number of characters string "s[len]" will take on the screen,
+ * counting TABs as two characters: "^I".
+ */
+    int
+vim_strnsize(s, len)
+    char_u	*s;
+    int		len;
+{
+    int		size = 0;
+
+    while (*s != NUL && --len >= 0)
     {
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
 	{
-	    len += ptr2cells(s);
-	    s += (*mb_ptr2len_check)(s);
+	    int	    l = (*mb_ptr2len_check)(s);
+
+	    size += ptr2cells(s);
+	    s += l;
+	    len -= l - 1;
 	}
 	else
 #endif
-	    len += byte2cells(*s++);
+	    size += byte2cells(*s++);
     }
-    return len;
+    return size;
 }
 
 /*

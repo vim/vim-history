@@ -5341,7 +5341,7 @@ win_redr_custom(wp, Ruler)
     {
 	len = (int)(hl[n].start - p);
 	screen_puts_len(p, len, row, col, curattr);
-	col += len;
+	col += vim_strnsize(p, len);
 	p = hl[n].start;
 
 	if (hl[n].userhl == 0)
