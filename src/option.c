@@ -2177,20 +2177,21 @@ static struct vimoption
     {"viminfo",	    "vi",   P_STRING|P_COMMA|P_NODUP|P_SECURE,
 #ifdef FEAT_VIMINFO
 			    (char_u *)&p_viminfo, PV_NONE,
-#else
-			    (char_u *)NULL, PV_NONE,
-#endif
 #if defined(MSDOS) || defined(MSWIN) || defined(OS2)
-			    {(char_u *)"", (char_u *)"'20,\"50,h,rA:,rB:"}
+			    {(char_u *)"", (char_u *)"'20,\"50,s10,h,rA:,rB:"}
 #else
 # ifdef AMIGA
 			    {(char_u *)"",
-				     (char_u *)"'20,\"50,h,rdf0:,rdf1:,rdf2:"}
+				 (char_u *)"'20,\"50,s10,h,rdf0:,rdf1:,rdf2:"}
 # else
-			    {(char_u *)"", (char_u *)"'20,\"50,h"}
+			    {(char_u *)"", (char_u *)"'20,\"50,s10,h"}
 # endif
 #endif
-    },
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}
+#endif
+			    },
     {"virtualedit", "ve",   P_STRING|P_COMMA|P_NODUP|P_VI_DEF|P_VIM,
 #ifdef FEAT_VIRTUALEDIT
 			    (char_u *)&p_ve, PV_NONE,
@@ -4212,8 +4213,8 @@ get_viminfo_parameter(type)
 }
 
 /*
- * Find the parameter represented by the given character (eg ', :, ", or /) in
- * the 'viminfo' option and return a pointer to the string after it.
+ * Find the parameter represented by the given character (eg ''', ':', '"', or
+ * '/') in the 'viminfo' option and return a pointer to the string after it.
  * Return NULL if the parameter is not specified in the string.
  */
     char_u *
@@ -5037,7 +5038,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	for (s = p_viminfo; *s;)
 	{
 	    /* Check it's a valid character */
-	    if (vim_strchr((char_u *)"!\"%'/:@cfhnr", *s) == NULL)
+	    if (vim_strchr((char_u *)"!\"%'/:@cfhnrs", *s) == NULL)
 	    {
 		errmsg = illegal_char(errbuf, *s);
 		break;
