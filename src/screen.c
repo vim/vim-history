@@ -4127,7 +4127,14 @@ screen_line(row, coloff, endcol, clear_width
 
 #ifdef FEAT_MBYTE
     if (clear_next)
-	screen_puts((char_u *)" ", row, col, ScreenAttrs[off_to]);
+    {
+	/* Clear the second half of a double-wide character of which the left
+	 * half was overwritten with a single-wide character. */
+	ScreenLines[off_to] = ' ';
+	if (enc_utf8)
+	    ScreenLinesUC[off_to] = 0;
+	screen_char(off_to, row, col + coloff);
+    }
 #endif
 
     if (clear_width > 0
