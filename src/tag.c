@@ -1206,21 +1206,40 @@ line_read_in:
 		    if (STRNCMP(p + 1, "include", 7) == 0
 					      && incstack_idx < INCSTACK_SIZE)
 		    {
+			/* Save current "fp" and "tag_fname" in the stack. */
 			if ((incstack[incstack_idx].etag_fname =
 					      vim_strsave(tag_fname)) != NULL)
 			{
+			    char_u *fullpath_ebuf;
+
 			    incstack[incstack_idx].fp = fp;
-			    if ((fp = mch_fopen((char *)ebuf, "r")) == NULL)
+			    fp = NULL;
+
+			    /* Figure out "tag_fname" and "fp" to use for
+			     * included file. */
+			    fullpath_ebuf = expand_tag_fname(ebuf,
+							    tag_fname, FALSE);
+			    if (fullpath_ebuf != NULL)
 			    {
+				fp = mch_fopen((char *)fullpath_ebuf, "r");
+				if (fp != NULL)
+				{
+				    if (STRLEN(fullpath_ebuf) > LSIZE)
+					  EMSG2("Tag file path trucated for %s\n", ebuf);
+				    STRNCPY(tag_fname, fullpath_ebuf, LSIZE);
+				    tag_fname[LSIZE] = NUL;
+				    ++incstack_idx;
+				    is_etag = 0; /* we can include anything */
+				}
+				vim_free(fullpath_ebuf);
+			    }
+			    if (fp == NULL)
+			    {
+				/* Can't open the included file, skip it and
+				 * restore old value of "fp". */
 				fp = incstack[incstack_idx].fp;
 				vim_free(incstack[incstack_idx].etag_fname);
 			    }
-			    else
-			    {
-				STRCPY(tag_fname, ebuf);
-				++incstack_idx;
-			    }
-			    is_etag = 0;	/* we can include anything */
 			}
 		    }
 		}
