@@ -3148,6 +3148,7 @@ check_termcode(max_offset, buf, buflen)
     int		mouse_code = 0;	    /* init for GCC */
     int		modifiers;
     int		is_click, is_drag;
+    int		wheel_code = 0;
     int		current_button;
     static int	held_button = MOUSE_RELEASE;
     static int	orig_num_clicks = 1;
@@ -3371,27 +3372,34 @@ check_termcode(max_offset, buf, buflen)
 		slen += num_bytes;
 
 		/*
-		 * Handle mouse events other than using the mouse wheel.
+		 * Handle mouse events.
+		 * Recognize the xterm mouse wheel, but not in the GUI
+		 * (multi-clicks use >= 0x60).
 		 */
-#  ifdef UNIX
-		if (use_xterm_mouse() > 1)
+		if (mouse_code >= MOUSEWHEEL_LOW
+#ifdef USE_GUI
+			&& !gui.in_use
+#endif
+			)
 		{
-		    if ((mouse_code & MOUSE_DRAG_XTERM)
-					       && mouse_code < MOUSEWHEEL_LOW)
+		    /* Keep the mouse_code before it's changed, so that we
+		     * remember that it was a mouse wheel click. */
+		    wheel_code = mouse_code;
+		}
+#  ifdef UNIX
+		else if (use_xterm_mouse() > 1)
+		{
+		    if (mouse_code & MOUSE_DRAG_XTERM)
 			mouse_code |= MOUSE_DRAG;
 		}
 #  endif
 #  ifdef XTERM_CLIP
-		else
+		else if (!(mouse_code & MOUSE_DRAG & ~MOUSE_CLICK_MASK))
 		{
-		    if (!(mouse_code & MOUSE_DRAG & ~MOUSE_CLICK_MASK)
-					       && mouse_code < MOUSEWHEEL_LOW)
-		    {
-			if ((mouse_code & MOUSE_RELEASE) == MOUSE_RELEASE)
-			    stop_xterm_trace();
-			else
-			    start_xterm_trace(mouse_code);
-		    }
+		    if ((mouse_code & MOUSE_RELEASE) == MOUSE_RELEASE)
+			stop_xterm_trace();
+		    else
+			start_xterm_trace(mouse_code);
 		}
 #  endif
 	    }
@@ -3574,7 +3582,7 @@ check_termcode(max_offset, buf, buflen)
 		    is_drag = TRUE;
 		current_button = held_button;
 	    }
-	    else if (mouse_code < MOUSEWHEEL_LOW)
+	    else if (wheel_code == 0)
 	    {
 # if defined(UNIX) && defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
 #  ifdef GPM_MOUSE
@@ -3659,8 +3667,8 @@ check_termcode(max_offset, buf, buflen)
 
 	    /* Work out our pseudo mouse event */
 	    key_name[0] = (int)KS_EXTRA;
-	    if (mouse_code >= MOUSEWHEEL_LOW)
-		key_name[1] = (mouse_code & 1) ? KE_MOUSEUP : KE_MOUSEDOWN;
+	    if (wheel_code != 0)
+		key_name[1] = (wheel_code & 1) ? KE_MOUSEUP : KE_MOUSEDOWN;
 	    else
 		key_name[1] = get_pseudo_mouse_code(current_button,
 							   is_click, is_drag);
