@@ -1144,14 +1144,14 @@ EXTERN garray_T error_ga
 #endif
 
 #ifdef FEAT_NETBEANS_INTG
-char	*netbeansArg INIT(= 0);		/* the -nb[:host:port:passwd] arg */
-int	netbeansCloseFile INIT(= 0);	/* send killed if != 0 */
-int	netbeansFireChanges INIT(= 1);	/* send buffer changes if != 0 */
-int	netbeansForcedQuit INIT(= 0);	/* don't write modified files */
-int	netbeansOpenFile INIT(= 1);	/* send fileOpened if != 0 */
-int	netbeansReadFile INIT(= 1);	/* OK to read from disk if != 0 */
-int	netbeansSuppressNoLines INIT(= 0); /* don't put out "No lines in buffer" */
-int	usingNetbeans INIT(= 0);	/* set if -nb flag is used */
+EXTERN char *netbeansArg INIT(= 0);	/* the -nb[:host:port:passwd] arg */
+EXTERN int netbeansCloseFile INIT(= 0);	/* send killed if != 0 */
+EXTERN int netbeansFireChanges INIT(= 1); /* send buffer changes if != 0 */
+EXTERN int netbeansForcedQuit INIT(= 0);/* don't write modified files */
+EXTERN int netbeansOpenFile INIT(= 1);	/* send fileOpened if != 0 */
+EXTERN int netbeansReadFile INIT(= 1);	/* OK to read from disk if != 0 */
+EXTERN int netbeansSuppressNoLines INIT(= 0); /* skip "No lines in buffer" */
+EXTERN int usingNetbeans INIT(= 0);	/* set if -nb flag is used */
 #endif
 
 /*
