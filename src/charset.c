@@ -928,6 +928,11 @@ win_lbr_chartabsize(wp, s, col, headp)
     colnr_T	col2;
     colnr_T	colmax;
     int		added;
+# ifdef FEAT_MBYTE
+    int		mb_added = 0;
+# else
+#  define mb_added 0
+# endif
     int		numberextra;
     char_u	*ps;
     int		tab_corr = (*s == TAB);
@@ -1002,6 +1007,14 @@ win_lbr_chartabsize(wp, s, col, headp)
 	    }
 	}
     }
+# ifdef FEAT_MBYTE
+    else if (has_mbyte && size == 2 && MB_BYTE2LEN(*s) > 1
+				    && wp->w_p_wrap && in_win_border(wp, col))
+    {
+	++size;		/* Count the ">" in the last column. */
+	mb_added = 1;
+    }
+# endif
 
     /*
      * May have to add something for 'showbreak' string at start of line
@@ -1011,7 +1024,7 @@ win_lbr_chartabsize(wp, s, col, headp)
     if (*p_sbr != NUL && wp->w_p_wrap && col != 0)
     {
 	numberextra = win_col_off(wp);
-	col += numberextra;
+	col += numberextra + mb_added;
 	if (col >= (colnr_T)W_WIDTH(wp))
 	{
 	    col -= W_WIDTH(wp);
@@ -1031,7 +1044,7 @@ win_lbr_chartabsize(wp, s, col, headp)
 	}
     }
     if (headp != NULL)
-	*headp = added;
+	*headp = added + mb_added;
     return size;
 #endif
 }
