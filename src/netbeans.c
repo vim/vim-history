@@ -70,7 +70,7 @@ static pos_T *get_off_or_lnum __ARGS((buf_T *buf, char_u **argp));
 static long get_buf_size __ARGS((buf_T *));
 
 static void netbeans_connect __ARGS((void));
-static void getConnInfo __ARGS((char *file, char **host, char **port, char **password));
+static int getConnInfo __ARGS((char *file, char **host, char **port, char **password));
 
 static void nb_init_graphics __ARGS((void));
 static void coloncmd __ARGS((char *cmd, ...));
@@ -247,16 +247,23 @@ netbeans_connect(void)
     char	*arg = NULL;
 
     if (netbeansArg[3] == '=')
+    {
 	/* "-nb=fname": Read info from specified file. */
-	getConnInfo(netbeansArg + 4, &hostname, &address, &password);
+	if (getConnInfo(netbeansArg + 4, &hostname, &address, &password)
+								      == FAIL)
+	    return;
+    }
     else
     {
 	if (netbeansArg[3] == ':')
 	    /* "-nb:<host>:<addr>:<password>": get info from argument */
 	    arg = netbeansArg + 4;
 	if (arg == NULL && (fname = getenv("__NETBEANS_CONINFO")) != NULL)
+	{
 	    /* "-nb": get info from file specified in environment */
-	    getConnInfo(fname, &hostname, &address, &password);
+	    if (getConnInfo(fname, &hostname, &address, &password) == FAIL)
+		return;
+	}
 	else
 	{
 	    if (arg != NULL)
@@ -326,10 +333,10 @@ netbeans_connect(void)
     server.sin_port = htons(port);
     if ((host = gethostbyname(hostname)) == NULL)
     {
-	if (access(hostname, R_OK) >= 0)
+	if (mch_access(hostname, R_OK) >= 0)
 	{
 	    /* DEBUG: input file */
-	    sd = open(hostname, O_RDONLY);
+	    sd = mch_open(hostname, O_RDONLY, 0);
 	    goto theend;
 	}
 	PERROR("gethostbyname() in netbeans_connect()");
@@ -421,43 +428,64 @@ theend:
 /*
  * Obtain the NetBeans hostname, port address and password from a file.
  * Return the strings in allocated memory.
+ * Return FAIL if the file could not be read, OK otherwise (no matter what it
+ * contains).
  */
-    static void
+    static int
 getConnInfo(char *file, char **host, char **port, char **auth)
 {
-    FILE *fp = mch_fopen(file, "r");
+    FILE *fp;
     char_u buf[BUFSIZ];
     char_u *lp;
     char_u *nl;
+#ifdef UNIX
+    struct stat	st;
 
-    if (fp == NULL)
-	PERROR("E660: Cannot open NetBeans connection info file");
-    else
+    /*
+     * For Unix only accept the file when it's owned by the current user and
+     * not accessible by others.
+     */
+    if (mch_stat(file, &st) == 0
+	    && (st.st_uid != getuid() || (st.st_mode & 0077)))
     {
-	/* Read the file. There should be one of each parameter */
-	while ((lp = (char_u *)fgets((char *)buf, BUFSIZ, fp)) != NULL)
-	{
-	    if ((nl = vim_strchr(lp, '\n')) != NULL)
-		*nl = 0;	    /* strip off the trailing newline */
-
-	    if (STRNCMP(lp, "host=", 5) == 0)
-	    {
-		vim_free(*host);
-		*host = (char *)vim_strsave(&buf[5]);
-	    }
-	    else if (STRNCMP(lp, "port=", 5) == 0)
-	    {
-		vim_free(*port);
-		*port = (char *)vim_strsave(&buf[5]);
-	    }
-	    else if (STRNCMP(lp, "auth=", 5) == 0)
-	    {
-		vim_free(*auth);
-		*auth = (char *)vim_strsave(&buf[5]);
-	    }
-	}
-	fclose(fp);
+	EMSG2(_("E668: Ownership of NetBeans connection file invalid: \"%s\""),
+									file);
+	return FAIL;
     }
+#endif
+
+    fp = mch_fopen(file, "r");
+    if (fp == NULL)
+    {
+	PERROR("E660: Cannot open NetBeans connection info file");
+	return FAIL;
+    }
+
+    /* Read the file. There should be one of each parameter */
+    while ((lp = (char_u *)fgets((char *)buf, BUFSIZ, fp)) != NULL)
+    {
+	if ((nl = vim_strchr(lp, '\n')) != NULL)
+	    *nl = 0;	    /* strip off the trailing newline */
+
+	if (STRNCMP(lp, "host=", 5) == 0)
+	{
+	    vim_free(*host);
+	    *host = (char *)vim_strsave(&buf[5]);
+	}
+	else if (STRNCMP(lp, "port=", 5) == 0)
+	{
+	    vim_free(*port);
+	    *port = (char *)vim_strsave(&buf[5]);
+	}
+	else if (STRNCMP(lp, "auth=", 5) == 0)
+	{
+	    vim_free(*auth);
+	    *auth = (char *)vim_strsave(&buf[5]);
+	}
+    }
+    fclose(fp);
+
+    return OK;
 }
 
 
@@ -578,7 +606,7 @@ save(char_u *buf, int len)
 	    if (file == NULL)
 		outfd = -3;
 	    else
-		outfd = open(file, O_WRONLY|O_CREAT|O_TRUNC, 0666);
+		outfd = mch_open(file, O_WRONLY|O_CREAT|O_TRUNC, 0666);
 	}
 
 	if (outfd >= 0)
