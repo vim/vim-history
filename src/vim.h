@@ -1520,6 +1520,7 @@ typedef struct VimClipboard
 
 # ifdef MSWIN
     int_u	format;		/* Vim's own special clipboard format */
+    int_u	format_raw;	/* Vim's raw text clipboard format */
 # endif
 # ifdef FEAT_GUI_BEOS
 				/* no clipboard at the moment */

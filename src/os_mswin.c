@@ -929,6 +929,8 @@ typedef struct
     int type;		/* MCHAR, MBLOCK or MLINE */
     int txtlen;		/* length of CF_TEXT in bytes */
     int ucslen;		/* length of CF_UNICODETEXT in words */
+    int rawlen;		/* length of clip_star.format_raw, including encoding,
+			   excluding terminating NUL */
 } VimClipType_t;
 
 /*
@@ -1123,15 +1125,19 @@ ucs2_to_enc(short_u *str, int *lenp)
     void
 clip_mch_request_selection(VimClipboard *cbd)
 {
-    VimClipType_t	metadata = { -1, -1, -1 };
+    VimClipType_t	metadata = { -1, -1, -1, -1 };
     HGLOBAL		hMem = NULL;
     char_u		*str = NULL;
 #if defined(FEAT_MBYTE) && defined(WIN3264)
     char_u		*to_free = NULL;
 #endif
+#ifdef FEAT_MBYTE
+    HGLOBAL		rawh = NULL;
+#endif
     char_u		*hMemStr = NULL;
     int			str_size = 0;
     int			maxlen;
+    size_t		n;
 
     /*
      * Don't pass GetActiveWindow() as an argument to OpenClipboard() because
@@ -1151,11 +1157,44 @@ clip_mch_request_selection(VimClipboard *cbd)
 	if ((meta_h = GetClipboardData(cbd->format)) != NULL
 		&& (meta_p = (VimClipType_t *)GlobalLock(meta_h)) != NULL)
 	{
-	    if (GlobalSize(meta_h) >= sizeof(VimClipType_t))
-		memcpy(&metadata, meta_p, sizeof(metadata));
+	    /* The size of "VimClipType_t" changed, "rawlen" was added later.
+	     * Only copy what is available for backwards compatibility. */
+	    n = sizeof(VimClipType_t);
+	    if (GlobalSize(meta_h) < n)
+		n = GlobalSize(meta_h);
+	    memcpy(&metadata, meta_p, n);
 	    GlobalUnlock(meta_h);
 	}
     }
+
+#ifdef FEAT_MBYTE
+    /* Check for Vim's raw clipboard format first.  This is used without
+     * conversion, but only if 'encoding' matches. */
+    if (IsClipboardFormatAvailable(cbd->format_raw)
+				      && metadata.rawlen > (int)STRLEN(p_enc))
+    {
+	/* We have raw data on the clipboard; try to get it. */
+	if ((rawh = GetClipboardData(cbd->format_raw)) != NULL)
+	{
+	    char_u	*rawp;
+
+	    rawp = (char_u *)GlobalLock(rawh);
+	    if (rawp != NULL && STRCMP(p_enc, rawp) == 0)
+	    {
+		n = STRLEN(p_enc) + 1;
+		str = rawp + n;
+		str_size = metadata.rawlen - n;
+	    }
+	    else
+	    {
+		GlobalUnlock(rawh);
+		rawh = NULL;
+	    }
+	}
+    }
+    if (str == NULL)
+    {
+#endif
 
 #if defined(FEAT_MBYTE) && defined(WIN3264)
     /* Try to get the clipboard in Unicode if it's not an empty string. */
@@ -1231,6 +1270,9 @@ clip_mch_request_selection(VimClipboard *cbd)
 #endif
 	}
     }
+#ifdef FEAT_MBYTE
+    }
+#endif
 
     if (str != NULL && *str != NUL)
     {
@@ -1250,8 +1292,12 @@ clip_mch_request_selection(VimClipboard *cbd)
     }
 
     /* unlock the global object */
-    if (hMemStr != NULL)
+    if (hMem != NULL)
 	GlobalUnlock(hMem);
+#ifdef FEAT_MBYTE
+    if (rawh != NULL)
+	GlobalUnlock(rawh);
+#endif
     CloseClipboard();
 #if defined(FEAT_MBYTE) && defined(WIN3264)
     vim_free(to_free);
@@ -1267,6 +1313,7 @@ clip_mch_set_selection(VimClipboard *cbd)
     char_u		*str = NULL;
     VimClipType_t	metadata;
     long_u		txtlen;
+    HGLOBAL		hMemRaw = NULL;
     HGLOBAL		hMem = NULL;
     HGLOBAL		hMemVim = NULL;
 # if defined(FEAT_MBYTE) && defined(WIN3264)
@@ -1284,6 +1331,29 @@ clip_mch_set_selection(VimClipboard *cbd)
 	return;
     metadata.txtlen = (int)txtlen;
     metadata.ucslen = 0;
+    metadata.rawlen = 0;
+
+#ifdef FEAT_MBYTE
+    /* Always set the raw bytes: 'encoding', NUL and the text.  This is used
+     * when copy/paste from/to Vim with the same 'encoding', so that illegal
+     * bytes can also be copied and no conversion is needed. */
+    {
+	LPSTR lpszMemRaw;
+
+	metadata.rawlen = txtlen + STRLEN(p_enc) + 1;
+	hMemRaw = (LPSTR)GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE,
+							 metadata.rawlen + 1);
+	lpszMemRaw = (LPSTR)GlobalLock(hMemRaw);
+	if (lpszMemRaw != NULL)
+	{
+	    STRCPY(lpszMemRaw, p_enc);
+	    memcpy(lpszMemRaw + STRLEN(p_enc) + 1, str, txtlen + 1);
+	    GlobalUnlock(hMemRaw);
+	}
+	else
+	    metadata.rawlen = 0;
+    }
+#endif
 
 # if defined(FEAT_MBYTE) && defined(WIN3264)
     {
@@ -1385,6 +1455,8 @@ clip_mch_set_selection(VimClipboard *cbd)
 
     vim_free(str);
     /* Free any allocations we didn't give to the clipboard: */
+    if (hMemRaw)
+	GlobalFree(hMemRaw);
     if (hMem)
 	GlobalFree(hMem);
 # if defined(FEAT_MBYTE) && defined(WIN3264)
