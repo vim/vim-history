@@ -22,7 +22,7 @@ Test for insert expansion
 
 STARTTEST
 :so small.vim
-:se nocp viminfo+=nviminfo cpt=.,w|$-2,$w!Xtestfile
+:se nocp viminfo+=nviminfo cpt=.,w ff=unix | $-2,$w!Xtestfile | set ff&
 nO#include "Xtestfile"
 ru
 O
