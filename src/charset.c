@@ -274,8 +274,6 @@ buf_init_chartab(buf, global)
     return OK;
 }
 
-#if defined(FEAT_TITLE) || defined(FEAT_STL_OPT) || defined(FEAT_WINDOWS) \
-	|| defined(PROTO)
 /*
  * Translate any special characters in buf[bufsize] in-place.
  * The result is a string with only printable characters, but if there is not
@@ -317,7 +315,6 @@ trans_characters(buf, bufsize)
 	buf += trs_len;
     }
 }
-#endif
 
 #if defined(FEAT_EVAL) || defined(FEAT_TITLE) || defined(PROTO)
 /*
