@@ -80,6 +80,7 @@ static void	nv_clear __ARGS((cmdarg_T *cap));
 static void	nv_ctrlo __ARGS((cmdarg_T *cap));
 static void	nv_hat __ARGS((cmdarg_T *cap));
 static void	nv_Zet __ARGS((cmdarg_T *cap));
+static void	nv_ident __ARGS((cmdarg_T *cap));
 #ifdef FEAT_VISUAL
 static int	get_visual_text __ARGS((cmdarg_T *cap, char_u **pp, int *lenp));
 #endif
@@ -4576,6 +4577,27 @@ nv_Zet(cap)
     }
 }
 
+#if defined(FEAT_WINDOWS) || defined(PROTO)
+/*
+ * Call nv_ident() as if "c1" was used, with "c2" as next character.
+ */
+    void
+do_nv_ident(c1, c2)
+    int		c1;
+    int		c2;
+{
+    oparg_T	oa;
+    cmdarg_T	ca;
+
+    clear_oparg(&oa);
+    vim_memset(&ca, 0, sizeof(ca));
+    ca.oap = &oa;
+    ca.cmdchar = c1;
+    ca.nchar = c2;
+    nv_ident(&ca);
+}
+#endif
+
 /*
  * Handle the commands that use the word under the cursor.
  * [g] CTRL-]	:ta to current identifier
@@ -4584,7 +4606,7 @@ nv_Zet(cap)
  * [g] '#'	? to current identifier or string
  *  g  ']'	:tselect for current identifier
  */
-    void
+    static void
 nv_ident(cap)
     cmdarg_T	*cap;
 {
@@ -6551,7 +6573,7 @@ nv_window(cap)
 {
 #ifdef FEAT_WINDOWS
     if (!checkclearop(cap->oap))
-	do_window(cap->nchar, cap->count0);	/* everything is in window.c */
+	do_window(cap->nchar, cap->count0, NUL); /* everything is in window.c */
 #else
     (void)checkclearop(cap->oap);
 #endif

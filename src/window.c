@@ -80,13 +80,13 @@ static void win_new_height __ARGS((win_T *, int));
  * all CTRL-W window commands are handled here, called from normal_cmd().
  */
     void
-do_window(nchar, Prenum)
+do_window(nchar, Prenum, xchar)
     int		nchar;
     long	Prenum;
+    int		xchar;	    /* extra char from ":wincmd gx" or NUL */
 {
     long	Prenum1;
     win_T	*wp;
-    int		xchar;
 #if defined(FEAT_SEARCHPATH) || defined(FEAT_FIND_ID)
     char_u	*ptr;
 #endif
@@ -94,6 +94,7 @@ do_window(nchar, Prenum)
     int		type = FIND_DEFINE;
     int		len;
 #endif
+    char_u	cbuf[40];
 
     if (Prenum == 0)
 	Prenum1 = 1;
@@ -144,10 +145,10 @@ do_window(nchar, Prenum)
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
-		stuffReadbuff((char_u *)":split #");
+		STRCPY(cbuf, "split #");
 		if (Prenum)
-		    stuffnumReadbuff(Prenum);	/* buffer number */
-		stuffcharReadbuff('\n');
+		    sprintf((char *)cbuf + 7, "%ld", Prenum);
+		do_cmdline_cmd(cbuf);
 		break;
 
 /* open new window */
@@ -157,10 +158,12 @@ do_window(nchar, Prenum)
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
-		stuffcharReadbuff(':');
 		if (Prenum)
-		    stuffnumReadbuff(Prenum);	/* window height */
-		stuffReadbuff((char_u *)"new\n");
+		    sprintf((char *)cbuf, "%ld", Prenum); /* window height */
+		else
+		    cbuf[0] = NUL;
+		STRCAT(cbuf, "new");
+		do_cmdline_cmd(cbuf);
 		break;
 
 /* quit current window */
@@ -169,7 +172,7 @@ do_window(nchar, Prenum)
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
-		stuffReadbuff((char_u *)":quit\n");
+		do_cmdline_cmd((char_u *)"quit");
 		break;
 
 /* close current window */
@@ -178,7 +181,7 @@ do_window(nchar, Prenum)
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
-		stuffReadbuff((char_u *)":close\n");
+		do_cmdline_cmd((char_u *)"close");
 		break;
 
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
@@ -189,7 +192,7 @@ do_window(nchar, Prenum)
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
-		stuffReadbuff((char_u *)":pclose\n");
+		do_cmdline_cmd((char_u *)"pclose");
 		break;
 
 /* cursor to preview window */
@@ -211,7 +214,7 @@ do_window(nchar, Prenum)
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
-		stuffReadbuff((char_u *)":only\n");
+		do_cmdline_cmd((char_u *)"only");
 		break;
 
 /* cursor to next window with wrap around */
@@ -441,7 +444,10 @@ do_window(nchar, Prenum)
 		    postponed_split = Prenum;
 		else
 		    postponed_split = -1;
-		stuffcharReadbuff(Ctrl_RSB);
+
+		/* Execute the command right here, required when
+		 * "wincmd ]" was used in a function. */
+		do_nv_ident(Ctrl_RSB, NUL);
 		break;
 
 #ifdef FEAT_SEARCHPATH
@@ -497,7 +503,8 @@ do_window(nchar, Prenum)
 #endif
 		++no_mapping;
 		++allow_keys;   /* no mapping for xchar, but allow key codes */
-		xchar = safe_vgetc();
+		if (xchar == NUL)
+		    xchar = safe_vgetc();
 #ifdef FEAT_LANGMAP
 		LANGMAP_ADJUST(xchar, TRUE);
 #endif
@@ -529,17 +536,7 @@ do_window(nchar, Prenum)
 
 			/* Execute the command right here, required when
 			 * "wincmd g}" was used in a function. */
-			{
-			    oparg_T	oa;
-			    cmdarg_T	ca;
-
-			    clear_oparg(&oa);
-			    vim_memset(&ca, 0, sizeof(ca));
-			    ca.oap = &oa;
-			    ca.cmdchar = 'g';
-			    ca.nchar = xchar;
-			    nv_ident(&ca);
-			}
+			do_nv_ident('g', xchar);
 			break;
 
 		    default:

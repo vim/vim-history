@@ -6170,6 +6170,8 @@ ex_winsize(eap)
 ex_wincmd(eap)
     exarg_T	*eap;
 {
+    int		xchar = NUL;
+
     if (*eap->arg == 'g' || *eap->arg == Ctrl_G)
     {
 	/* CTRL-W g and CTRL-W CTRL-G  have an extra command character */
@@ -6178,9 +6180,9 @@ ex_wincmd(eap)
 	    EMSG(_(e_invarg));
 	    return;
 	}
-	stuffcharReadbuff(eap->arg[1]);
+	xchar = eap->arg[1];
     }
-    do_window(*eap->arg, eap->addr_count > 0 ? eap->line2 : 0L);
+    do_window(*eap->arg, eap->addr_count > 0 ? eap->line2 : 0L, xchar);
 }
 #endif
 
