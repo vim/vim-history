@@ -5,7 +5,7 @@
 # Use Vim to copy the tutor, it knows the value of $VIMRUNTIME
 TUTORCOPY=/tmp/tutor$$
 export TUTORCOPY
-vim -c ':!cp $VIMRUNTIME/tutor/tutor $TUTORCOPY' -c ':q'
+vim -u NONE -c 'e $VIMRUNTIME/tutor/tutor' -c 'w! $TUTORCOPY' -c 'q'
 
 # Start vim without any .vimrc, set 'nocompatible'
 vim -u NONE -c "set nocp" $TUTORCOPY
