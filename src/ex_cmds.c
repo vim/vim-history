@@ -5003,6 +5003,10 @@ fix_help_buffer()
 			FILE	*fd;
 			char_u	*s;
 			int	fi;
+#ifdef FEAT_MBYTE
+			vimconv_T	vc;
+			char_u		*cp;
+#endif
 
 			/* Find all "doc/ *.txt" files in this directory. */
 			add_pathsep(NameBuff);
@@ -5031,8 +5035,34 @@ fix_help_buffer()
 						*s = NUL;
 					    ++s;
 					}
+#ifdef FEAT_MBYTE
+					/* Assume the help file is latin1 and
+					 * conversion to the current
+					 * 'encoding' may be required. */
+					vc.vc_type = CONV_NONE;
+					convert_setup(&vc,
+						   (char_u *)"latin1", p_enc);
+					if (vc.vc_type == CONV_NONE)
+					    /* No conversion needed. */
+					    cp = IObuff;
+					else
+					{
+					    /* Do the conversion.  If it fails
+					     * use the unconverted text. */
+					    cp = string_convert(&vc, IObuff,
+									NULL);
+					    if (cp == NULL)
+						cp = IObuff;
+					}
+					convert_setup(&vc, NULL, NULL);
+
+					ml_append(lnum, cp, (colnr_T)0, FALSE);
+					if (cp != IObuff)
+					    vim_free(cp);
+#else
 					ml_append(lnum, IObuff, (colnr_T)0,
 								       FALSE);
+#endif
 					++lnum;
 				    }
 				    fclose(fd);
