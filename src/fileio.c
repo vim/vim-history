@@ -2204,6 +2204,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     int		    device = FALSE;	    /* writing to a device */
     struct stat	    st_old;
     int		    prev_got_int = got_int;
+    int		    file_readonly = FALSE;  /* overwritten file is read-only */
+    static char	    *err_readonly = "is read-only (cannot override: \"W\" in 'cpoptions')";
 #if defined(UNIX) || defined(__EMX__XX)	    /*XXX fix me sometime? */
     int		    made_writable = FALSE;  /* 'w' bit has been set */
 #endif
@@ -2540,7 +2542,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	 * Check if the file is really writable (when renaming the file to
 	 * make a backup we won't discover it later).
 	 */
-	if (!forceit && (
+	file_readonly = (
 # ifdef USE_MCH_ACCESS
 #  ifdef UNIX
 		    (perm & 0222) == 0 ||
@@ -2548,11 +2550,15 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		    mch_access((char *)fname, W_OK)
 # else
 		    (fd = mch_open((char *)fname, O_RDWR | O_EXTRA, 0)) < 0
-		    ? TRUE : (close(fd), FALSE)
+						   ? TRUE : (close(fd), FALSE)
 # endif
-		    ))
+		    );
+	if (!forceit && file_readonly)
 	{
-	    errmsg = (char_u *)_("is read-only (use ! to override)");
+	    if (vim_strchr(p_cpo, CPO_FWRITE) != NULL)
+		errmsg = (char_u *)_(err_readonly);
+	    else
+		errmsg = (char_u *)_("is read-only (use ! to override)");
 	    goto fail;
 	}
 
@@ -2895,6 +2901,19 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 
 	    /*
 	     * Make a backup by renaming the original file.
+	     */
+	    /*
+	     * If 'cpoptions' includes the "W" flag, we don't want to
+	     * overwrite a read-only file.  But rename may be possible
+	     * anyway, thus we need an extra check here.
+	     */
+	    if (file_readonly && vim_strchr(p_cpo, CPO_FWRITE) != NULL)
+	    {
+		errmsg = (char_u *)_(err_readonly);
+		goto fail;
+	    }
+
+	    /*
 	     *
 	     * Form the backup file name - change path/fo.o.h to
 	     * path/fo.o.h.bak Try all directories in 'backupdir', first one
