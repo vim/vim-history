@@ -3266,7 +3266,7 @@ win_line(wp, lnum, startrow, endrow)
 			/* We assume a second byte below 32 is illegal.
 			 * Hopefully this is OK for all double-byte encodings!
 			 */
-			if (ptr[1] < 32)
+			if (ptr[1] >= 32)
 			    mb_c = (c << 8) + ptr[1];
 			else
 			{
