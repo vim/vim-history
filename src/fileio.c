@@ -2183,7 +2183,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     int		    backup_copy = FALSE; /* copy the original file? */
     int		    dobackup;
     char_u	    *ffname;
-    char_u	    *wfname;		/* name of file to write to */
+    char_u	    *wfname = NULL;	/* name of file to write to */
     char_u	    *s;
     char_u	    *ptr;
     char_u	    c;
@@ -3016,7 +3016,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	if (got_int)
 	{
 	    errmsg = (char_u *)_(e_interr);
-	    goto fail;
+	    goto restore_backup;
 	}
     }
 
@@ -3030,7 +3030,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	if (mch_has_resource_fork(fname))
 	{
 	    errmsg = (char_u *)_("The resource fork will be lost (use ! to override)");
-	    goto fail;
+	    goto restore_backup;
 	}
 #endif
 
@@ -3119,7 +3119,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		if (wfname == NULL)	/* Can't write without a tempfile! */
 		{
 		    errmsg = (char_u *)_("E214: Can't find temp file for writing");
-		    goto fail;
+		    goto restore_backup;
 		}
 	    }
 #  endif
@@ -3137,7 +3137,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	if (!forceit)
 	{
 	    errmsg = (char_u *)_("E213: Cannot convert (use ! to write without conversion)");
-	    goto fail;
+	    goto restore_backup;
 	}
 	notconverted = TRUE;
     }
@@ -3156,8 +3156,6 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 			: (O_CREAT | O_TRUNC))
 			, 0666)) < 0)
     {
-	struct stat st;
-
 	/*
 	 * A forced write will try to create a new file if the old one is
 	 * still readonly. This may also happen when the directory is
@@ -3196,38 +3194,44 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		}
 	    }
 	}
-	/*
-	 * If we failed to open the file, we don't need a backup. Throw it
-	 * away.  If we moved or removed the original file try to put the
-	 * backup in its place.
-	 */
-	if (backup != NULL && wfname == fname)
-	{
-	    if (backup_copy)
-	    {
-		/*
-		 * There is a small chance that we removed the original, try
-		 * to move the copy in its place.
-		 * This may not work if the vim_rename() fails.
-		 * In that case we leave the copy around.
-		 */
-		/* If file does not exist, put the copy in its place */
-		if (mch_stat((char *)fname, &st) < 0)
-		    vim_rename(backup, fname);
-		/* if original file does exist throw away the copy */
-		if (mch_stat((char *)fname, &st) >= 0)
-		    mch_remove(backup);
-	    }
-	    else
-	    {
-		/* try to put the original file back */
-		vim_rename(backup, fname);
-	    }
-	}
 
-	/* if original file no longer exists give an extra warning */
-	if (!newfile && mch_stat((char *)fname, &st) < 0)
-	    end = 0;
+restore_backup:
+	{
+	    struct stat st;
+
+	    /*
+	     * If we failed to open the file, we don't need a backup. Throw it
+	     * away.  If we moved or removed the original file try to put the
+	     * backup in its place.
+	     */
+	    if (backup != NULL && wfname == fname)
+	    {
+		if (backup_copy)
+		{
+		    /*
+		     * There is a small chance that we removed the original,
+		     * try to move the copy in its place.
+		     * This may not work if the vim_rename() fails.
+		     * In that case we leave the copy around.
+		     */
+		    /* If file does not exist, put the copy in its place */
+		    if (mch_stat((char *)fname, &st) < 0)
+			vim_rename(backup, fname);
+		    /* if original file does exist throw away the copy */
+		    if (mch_stat((char *)fname, &st) >= 0)
+			mch_remove(backup);
+		}
+		else
+		{
+		    /* try to put the original file back */
+		    vim_rename(backup, fname);
+		}
+	    }
+
+	    /* if original file no longer exists give an extra warning */
+	    if (!newfile && mch_stat((char *)fname, &st) < 0)
+		end = 0;
+	}
 
 #ifdef FEAT_MBYTE
 	if (wfname != fname)
