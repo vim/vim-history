@@ -3074,6 +3074,8 @@ im_delete_preedit(void)
     char_u bskey[]  = {CSI, 'k', 'b'};
     char_u delkey[] = {CSI, 'k', 'D'};
 
+    if (State & NORMAL)
+	return;
     for (; im_preedit_cursor > 0; --im_preedit_cursor)
 	add_to_input_buf(bskey, (int)sizeof(bskey));
 
@@ -3086,6 +3088,8 @@ im_correct_cursor(int num_move_back)
 {
     char_u backkey[] = {CSI, 'k', 'l'};
 
+    if (State & NORMAL)
+	return;
 #  ifdef FEAT_RIGHTLEFT
     if ((State & CMDLINE) == 0 && curwin != NULL && curwin->w_p_rl)
 	backkey[2] = 'r';
@@ -3123,6 +3127,7 @@ im_commit_cb(GtkIMContext *context, const gchar *str, gpointer data)
 im_preedit_start_cb(GtkIMContext *context, gpointer data)
 {
     im_is_active = TRUE;
+    gui_update_cursor(TRUE, FALSE);
 }
 /*
  * Callback invoked after end to the preedit.
@@ -3132,6 +3137,7 @@ im_preedit_start_cb(GtkIMContext *context, gpointer data)
 im_preedit_end_cb(GtkIMContext *context, gpointer data)
 {
     im_is_active = FALSE;
+    gui_update_cursor(TRUE, FALSE);
 }
 
 /*
@@ -3458,11 +3464,14 @@ im_synthesize_keypress(unsigned int keyval, unsigned int state)
     event->keyval = keyval;
     event->hardware_keycode = /* needed for XIM */
 	XKeysymToKeycode(GDK_WINDOW_XDISPLAY(event->window), (KeySym)keyval);
+    event->length = 0;
+    event->string = NULL;
 
     gtk_im_context_filter_keypress(xic, event);
 
     /* For consistency, also send the corresponding release event. */
     event->type = GDK_KEY_RELEASE;
+    event->send_event = FALSE;
     gtk_im_context_filter_keypress(xic, event);
 
 #  ifdef HAVE_GTK_MULTIHEAD
@@ -3528,7 +3537,8 @@ xim_reset(void)
     int
 xim_queue_key_press_event(GdkEventKey *event)
 {
-    if (xic != NULL && !p_imdisable && (State & (INSERT | CMDLINE)) != 0)
+    if (xic != NULL && !p_imdisable
+		    && (State & (INSERT | CMDLINE | NORMAL | EXTERNCMD)) != 0)
     {
 	/*
 	 * Filter 'imactivatekey' and map it to CTRL-^.  This way, Vim is
@@ -3835,7 +3845,7 @@ im_set_active(active)
 				NULL);
 	    XSetICValues(pxic, XNPreeditAttributes, preedit_attr, NULL);
 	    xim_preediting = active;
-	    xim_is_active = TRUE;
+	    xim_is_active = active;
 	}
 	XFree(preedit_attr);
     }
