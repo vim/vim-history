@@ -1234,6 +1234,7 @@ save_typeahead(tp)
 
 /*
  * Restore the typeahead to what it was before calling save_typeahead().
+ * The allocated memory is freed, can only be called once!
  */
     void
 restore_typeahead(tp)
@@ -3879,7 +3880,7 @@ check_abbr(c, ptr, col, mincol)
 		is_id = vim_iswordp(mb_prevptr(ptr, p));
 	}
 	clen = 1;
-	while (p > ptr)
+	while (p > ptr + mincol)
 	{
 	    p = mb_prevptr(ptr, p);
 	    if (vim_isspace(*p) || (!vim_abbr && is_id != vim_iswordp(p)))
