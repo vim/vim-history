@@ -633,6 +633,23 @@ mch_chdir(char *path)
     if (*path == NUL)		/* drive name only */
 	return 0;
 
+#ifdef FEAT_MBYTE
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
+    {
+	WCHAR	*p = enc_to_ucs2(path, NULL);
+	int	n;
+
+	if (p != NULL)
+	{
+	    n = _wchdir(p);
+	    vim_free(p);
+	    if (n == 0)
+		return 0;
+	    /* Retry with non-wide function (for Windows 98). */
+	}
+    }
+#endif
+
     return chdir(path);	       /* let the normal chdir() do the rest */
 }
 
