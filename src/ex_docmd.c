@@ -1040,30 +1040,33 @@ do_one_cmd(cmdlinep, sourcing,
     }
 
     /*
-     * If the range is backwards, ask for confirmation and, if given, swap
-     * ea.line1 & ea.line2 so it's forwards again.
-     * When global command is busy, don't ask, will fail below.
+     * Don't complain about the range if it is not used
+     * (could happen if line_count is accidentally set to 0).
      */
-    if (!global_busy && ea.line1 > ea.line2)
+    if (!ea.skip)
     {
-	if (sourcing)
+	/*
+	 * If the range is backwards, ask for confirmation and, if given, swap
+	 * ea.line1 & ea.line2 so it's forwards again.
+	 * When global command is busy, don't ask, will fail below.
+	 */
+	if (!global_busy && ea.line1 > ea.line2)
 	{
-	    errormsg = (char_u *)"Backwards range given";
-	    goto doend;
-	}
-	else if (ask_yesno((char_u *)
+	    if (sourcing)
+	    {
+		errormsg = (char_u *)"Backwards range given";
+		goto doend;
+	    }
+	    else if (ask_yesno((char_u *)
 			   "Backwards range given, OK to swap", FALSE) != 'y')
+		goto doend;
+	    lnum = ea.line1;
+	    ea.line1 = ea.line2;
+	    ea.line2 = lnum;
+	}
+	if ((errormsg = invalid_range(&ea)) != NULL)
 	    goto doend;
-	lnum = ea.line1;
-	ea.line1 = ea.line2;
-	ea.line2 = lnum;
     }
-    /*
-     * don't complain about the range if it is not used
-     * (could happen if line_count is accidently set to 0)
-     */
-    if (!ea.skip && (errormsg = invalid_range(&ea)) != NULL)
-	goto doend;
 
     if ((ea.argt & NOTADR) && ea.addr_count == 0) /* default is 1, not cursor */
 	ea.line2 = 1;
