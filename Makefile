@@ -207,6 +207,9 @@ SRC_ALL =	\
 		src/misc1.c \
 		src/misc2.c \
 		src/move.c \
+		src/nbdebug.c \
+		src/nbdebug.h \
+		src/netbeans.c \
 		src/normal.c \
 		src/ops.c \
 		src/option.c \
@@ -236,6 +239,7 @@ SRC_ALL =	\
 		src/proto/misc2.pro \
 		src/proto/move.pro \
 		src/proto/mbyte.pro \
+		src/proto/netbeans.pro \
 		src/proto/normal.pro \
 		src/proto/ops.pro \
 		src/proto/option.pro \
