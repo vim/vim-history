@@ -2690,7 +2690,15 @@ mch_settmode(tmode)
 	tnew.c_lflag &= ~(ECHO);
 
 # if defined(HAVE_TERMIOS_H)
-    tcsetattr(read_cmd_fd, TCSANOW, &tnew);
+    {
+	int	n = 10;
+
+	/* A signal may cause tcsetattr() to fail (e.g., SIGCONT).  Retry a
+	 * few times. */
+	while (tcsetattr(read_cmd_fd, TCSANOW, &tnew) == -1
+						   && errno == EINTR && n > 0)
+	    --n;
+    }
 # else
     ioctl(read_cmd_fd, TCSETA, &tnew);
 # endif
