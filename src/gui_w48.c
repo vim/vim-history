@@ -288,8 +288,8 @@ static int		dead_key = 0;	/* 0 - no dead key, 1 - dead key pressed */
 
 #ifdef FEAT_BEVAL
 /* balloon-eval WM_NOTIFY_HANDLER */
-void Handle_WM_Notify __ARGS((HWND hwnd, LPNMHDR pnmh));
-void TrackUserActivity __ARGS((UINT uMsg));
+static void Handle_WM_Notify __ARGS((HWND hwnd, LPNMHDR pnmh));
+static void TrackUserActivity __ARGS((UINT uMsg));
 #endif
 
 /*
@@ -2628,8 +2628,7 @@ gui_mch_settitle(
     char_u  *icon)
 {
 #ifdef FEAT_MBYTE
-    if (title != NULL && has_mbyte
-		      && (enc_codepage == 0 || enc_codepage != (int)GetACP()))
+    if (title != NULL && enc_codepage != (int)GetACP())
     {
 	WCHAR	*wbuf;
 
@@ -2715,20 +2714,34 @@ mch_set_mouse_shape(int shape)
  * the \t and \n delimeters with \0.
  * Returns the converted string in allocated memory.
  */
+# ifdef FEAT_MBYTE
+    static WCHAR *
+# else
     static char_u *
+# endif
 convert_filter(char_u *s)
 {
+# ifdef FEAT_MBYTE
+    WCHAR	*res;
+# else
     char_u	*res;
+# endif
     unsigned	s_len = (unsigned)STRLEN(s);
     unsigned	i;
 
+# ifdef FEAT_MBYTE
+    res = (WCHAR *)alloc((s_len + 3) * 2);
+# else
     res = alloc(s_len + 3);
+# endif
     if (res != NULL)
     {
-	STRCPY(res, s);
 	for (i = 0; i < s_len; ++i)
-	    if ((res[i] == '\t') || (res[i] == '\n'))
+	    if (s[i] == '\t' || s[i] == '\n')
 		res[i] = '\0';
+	    else
+		res[i] = s[i];
+	res[s_len] = NUL;
 	/* Add two extra NULs to make sure it's properly terminated. */
 	res[s_len + 1] = NUL;
 	res[s_len + 2] = NUL;
@@ -2755,45 +2768,98 @@ gui_mch_browse(
 	char_u *initdir,
 	char_u *filter)
 {
+#ifdef FEAT_MBYTE
+    /* We always use the wide function.  This means enc_to_ucs2() must work,
+     * otherwise it fails miserably! */
+    OPENFILENAMEW	fileStruct;
+    WCHAR		fileBuf[MAXPATHL];
+    WCHAR		*wp;
+    int			i;
+    WCHAR		*titlep = NULL;
+    WCHAR		*extp = NULL;
+    WCHAR		*initdirp = NULL;
+    WCHAR		*filterp;
+#else
     OPENFILENAME	fileStruct;
-    char_u		fileBuf[MAXPATHL], *p;
-    char_u		dirBuf[MAXPATHL];
+    char_u		fileBuf[MAXPATHL];
+    char_u		*initdirp = NULL;
+    char_u		*filterp;
+#endif
+    char_u		*p;
 
     if (dflt == NULL)
-	fileBuf[0] = '\0';
+	fileBuf[0] = NUL;
     else
     {
+#ifdef FEAT_MBYTE
+	wp = enc_to_ucs2(dflt, NULL);
+	if (wp == NULL)
+	    fileBuf[0] = NUL;
+	else
+	{
+	    for (i = 0; wp[i] != NUL && i < MAXPATHL - 1; ++i)
+		fileBuf[i] = wp[i];
+	    fileBuf[i] = NUL;
+	    vim_free(wp);
+	}
+#else
 	STRNCPY(fileBuf, dflt, MAXPATHL - 1);
 	fileBuf[MAXPATHL - 1] = NUL;
+#endif
     }
 
     /* Convert the filter to Windows format. */
-    filter = convert_filter(filter);
+    filterp = convert_filter(filter);
 
     memset(&fileStruct, 0, sizeof(OPENFILENAME));
-    fileStruct.lStructSize = sizeof(OPENFILENAME);
-    fileStruct.lpstrFilter = filter;
+#ifdef OPENFILENAME_SIZE_VERSION_400
+    /* be compatible with Windows NT 4.0 */
+    /* TODO: what when using OPENFILENAMEW??? */
+    fileStruct.lStructSize = sizeof(OPENFILENAME_SIZE_VERSION_400);
+#else
+    fileStruct.lStructSize = sizeof(fileStruct);
+#endif
+
+#ifdef FEAT_MBYTE
+    if (title != NULL)
+	titlep = enc_to_ucs2(title, NULL);
+    fileStruct.lpstrTitle = titlep;
+#else
+    fileStruct.lpstrTitle = title;
+#endif
+
+#ifdef FEAT_MBYTE
+    if (ext != NULL)
+	extp = enc_to_ucs2(ext, NULL);
+    fileStruct.lpstrDefExt = extp;
+#else
+    fileStruct.lpstrDefExt = ext;
+#endif
+
     fileStruct.lpstrFile = fileBuf;
     fileStruct.nMaxFile = MAXPATHL;
-    fileStruct.lpstrTitle = title;
-    fileStruct.lpstrDefExt = ext;
+    fileStruct.lpstrFilter = filterp;
     fileStruct.hwndOwner = s_hwnd;		/* main Vim window is owner*/
     /* has an initial dir been specified? */
     if (initdir != NULL && *initdir != NUL)
     {
 	/* Must have backslashes here, no matter what 'shellslash' says */
-	STRNCPY(dirBuf, initdir, MAXPATHL - 1);
-	dirBuf[MAXPATHL - 1] = NUL;
-	for (p = dirBuf; *p != NUL; ++p)
-	{
-	    if (*p == '/')
-		*p = '\\';
 #ifdef FEAT_MBYTE
-	    if (has_mbyte)
-		p += (*mb_ptr2len_check)(p) - 1;
-#endif
+	initdirp = enc_to_ucs2(initdir, NULL);
+	if (initdirp != NULL)
+	{
+	    for (wp = initdirp; *wp != NUL; ++wp)
+		if (*wp == '/')
+		    *wp = '\\';
 	}
-	fileStruct.lpstrInitialDir = dirBuf;
+#else
+	initdirp = vim_strsave(initdir);
+	if (initdirp != NULL)
+	    for (p = initdirp; *p != NUL; ++p)
+		if (*p == '/')
+		    *p = '\\';
+#endif
+	fileStruct.lpstrInitialDir = initdirp;
     }
 
     /*
@@ -2811,22 +2877,46 @@ gui_mch_browse(
 #endif
     if (saving)
     {
+#ifdef FEAT_MBYTE
+	if (!GetSaveFileNameW(&fileStruct))
+#else
 	if (!GetSaveFileName(&fileStruct))
+#endif
 	    return NULL;
     }
     else
     {
+#ifdef FEAT_MBYTE
+	if (!GetOpenFileNameW(&fileStruct))
+#else
 	if (!GetOpenFileName(&fileStruct))
+#endif
 	    return NULL;
     }
 
-    vim_free(filter);
+    vim_free(filterp);
+    vim_free(initdirp);
+#ifdef FEAT_MBYTE
+    vim_free(titlep);
+    vim_free(extp);
+#endif
+
+#ifdef FEAT_MBYTE
+    /* Convert from UCS2 to 'encoding'. */
+    p = ucs2_to_enc(fileBuf, NULL);
+    if (p != NULL)		/* when out of memory we get garbage... */
+	STRCPY(fileBuf, p);
+    vim_free(p);
+#endif
+
+    /* Give focus back to main window (when using MDI). */
+    SetFocus(s_hwnd);
 
     /* Shorten the file name if possible */
     mch_dirname(IObuff, IOSIZE);
-    p = shorten_fname(fileBuf, IObuff);
+    p = shorten_fname((char_u *)fileBuf, IObuff);
     if (p == NULL)
-	p = fileBuf;
+	p = (char_u *)fileBuf;
     return vim_strsave(p);
 }
 #endif /* FEAT_BROWSE */
@@ -2844,8 +2934,12 @@ _OnDropFiles(
 # define BUFPATHLEN MAXPATHL
 # define DRAGQVAL 0xFFFF
 #endif
+#ifdef FEAT_MBYTE
+    WCHAR    szFile[BUFPATHLEN];
+#else
     char    szFile[BUFPATHLEN];
-    UINT    cFiles = DragQueryFile(hDrop, DRAGQVAL, szFile, BUFPATHLEN);
+#endif
+    UINT    cFiles = DragQueryFile(hDrop, DRAGQVAL, NULL, 0);
     UINT    i;
     char_u  **fnames;
     POINT   pt;
@@ -2866,8 +2960,13 @@ _OnDropFiles(
     if (fnames != NULL)
 	for (i = 0; i < cFiles; ++i)
 	{
+#ifdef FEAT_MBYTE
+	    DragQueryFileW(hDrop, i, szFile, BUFPATHLEN);
+	    fnames[i] = ucs2_to_enc(szFile, NULL);
+#else
 	    DragQueryFile(hDrop, i, szFile, BUFPATHLEN);
 	    fnames[i] = vim_strsave(szFile);
+#endif
 	}
 
     DragFinish(hDrop);

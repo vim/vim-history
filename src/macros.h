@@ -149,7 +149,9 @@
 # ifndef WIN32
 #   define mch_access(n, p)	access((n), (p))
 # endif
-# define mch_fopen(n, p)	fopen((n), (p))
+# if !(defined(FEAT_MBYTE) && defined(WIN3264))
+#  define mch_fopen(n, p)	fopen((n), (p))
+# endif
 # define mch_fstat(n, p)	fstat((n), (p))
 # define mch_lstat(n, p)	lstat((n), (p))
 # ifdef MSWIN	/* has it's own mch_stat() function */
@@ -177,7 +179,20 @@
  */
 #  define mch_open(n, m, p)	open(vms_fixfilename(n), (m), (p))
 # else
-#  define mch_open(n, m, p)	open((n), (m), (p))
+#  if !(defined(FEAT_MBYTE) && defined(WIN3264))
+#   define mch_open(n, m, p)	open((n), (m), (p))
+#  endif
+# endif
+#endif
+
+/* mch_open_rw(): invoke mch_open() with third argument for user R/W. */
+#if defined(UNIX) || defined(VMS)  /* open in rw------- mode */
+# define mch_open_rw(n, f)	mch_open((n), (f), (mode_t)0600)
+#else
+# if defined(MSDOS) || defined(MSWIN) || defined(OS2)  /* open read/write */
+#  define mch_open_rw(n, f)	mch_open((n), (f), S_IREAD | S_IWRITE)
+# else
+#  define mch_open_rw(n, f)	mch_open((n), (f), 0)
 # endif
 #endif
 
