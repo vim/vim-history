@@ -2470,7 +2470,12 @@ onepage(dir, count)
 	scroll_cursor_top(1, FALSE);
 	if (curwin->w_topline <= old_topline
 				  && old_topline < curbuf->b_ml.ml_line_count)
+	{
 	    curwin->w_topline = old_topline + 1;
+#ifdef FEAT_FOLDING
+	    (void)hasFolding(curwin->w_topline, &curwin->w_topline, NULL);
+#endif
+	}
     }
 
     redraw_later(VALID);
