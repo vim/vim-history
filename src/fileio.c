@@ -2251,10 +2251,11 @@ readfile_charconvert(fname, fenc, fdp)
 check_marks_read()
 {
     if (!curbuf->b_marks_read && get_viminfo_parameter('\'') > 0)
-    {
 	read_viminfo(NULL, FALSE, TRUE, FALSE);
-	curbuf->b_marks_read = TRUE;
-    }
+
+    /* Always set b_marks_read; needed when 'viminfo' is changed to include
+     * the ' parameter after opening a buffer. */
+    curbuf->b_marks_read = TRUE;
 }
 #endif
 
