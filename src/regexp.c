@@ -355,6 +355,7 @@ re_multi_type(c)
 #define SIMPLE		0x2	/* Simple enough to be STAR/PLUS operand. */
 #define SPSTART		0x4	/* Starts with * or +. */
 #define HASNL		0x8	/* Contains some \n. */
+#define HASLOOKBH	0x10	/* Contains "\@<=" or "\@<!". */
 #define WORST		0	/* Worst case. */
 
 /*
@@ -602,6 +603,7 @@ init_class_tab()
 #define RF_NOICASE  2	/* don't ignore case */
 #define RF_HASNL    4	/* can match a NL */
 #define RF_ICOMBINE 8	/* ignore combining characters */
+#define RF_LOOKBH   16	/* uses "\@<=" or "\@<!" */
 
 /*
  * Global work variables for vim_regcomp().
@@ -710,6 +712,17 @@ re_multiline(prog)
     return (prog->regflags & RF_HASNL);
 }
 #endif
+
+/*
+ * Return TRUE if compiled regular expression "prog" looks before the start
+ * position (pattern contains "\@<=" or "\@<!").
+ */
+    int
+re_lookbehind(prog)
+    regprog_T *prog;
+{
+    return (prog->regflags & RF_LOOKBH);
+}
 
 /*
  * Skip past regular expression.
@@ -852,6 +865,8 @@ vim_regcomp(expr, re_flags)
     r->regflags = regflags;
     if (flags & HASNL)
 	r->regflags |= RF_HASNL;
+    if (flags & HASLOOKBH)
+	r->regflags |= RF_LOOKBH;
 #ifdef FEAT_SYN_HL
     /* Remember whether this pattern has any \z specials in it. */
     r->reghasz = re_has_z;
@@ -1030,7 +1045,7 @@ reg(paren, flagp)
      * whole thing can. */
     if (!(flags & HASWIDTH))
 	*flagp &= ~HASWIDTH;
-    *flagp |= flags & (SPSTART | HASNL);
+    *flagp |= flags & (SPSTART | HASNL | HASLOOKBH);
     while (peekchr() == Magic('|'))
     {
 	skipchr();
@@ -1040,7 +1055,7 @@ reg(paren, flagp)
 	regtail(ret, br);	/* BRANCH -> BRANCH. */
 	if (!(flags & HASWIDTH))
 	    *flagp &= ~HASWIDTH;
-	*flagp |= flags & (SPSTART | HASNL);
+	*flagp |= flags & (SPSTART | HASNL | HASLOOKBH);
     }
 
     /* Make a closing node, and hook it on the end. */
@@ -1109,8 +1124,9 @@ regbranch(flagp)
 	if (latest == NULL)
 	    return NULL;
 	/* If one of the branches has width, the whole thing has.  If one of
-	 * the branches anchors at start-of-line, the whole thing does. */
-	*flagp |= flags & (HASWIDTH | SPSTART);
+	 * the branches anchors at start-of-line, the whole thing does.
+	 * If one of the branches uses look-behind, the whole thing does. */
+	*flagp |= flags & (HASWIDTH | SPSTART | HASLOOKBH);
 	/* If one of the branches doesn't match a line-break, the whole thing
 	 * doesn't. */
 	*flagp &= ~HASNL | (flags & HASNL);
@@ -1192,7 +1208,7 @@ regconcat(flagp)
 			    latest = regpiece(&flags);
 			    if (latest == NULL)
 				return NULL;
-			    *flagp |= flags & (HASWIDTH | HASNL);
+			    *flagp |= flags & (HASWIDTH | HASNL | HASLOOKBH);
 			    if (chain == NULL)	/* First piece. */
 				*flagp |= flags & SPSTART;
 			    else
@@ -1248,7 +1264,8 @@ regpiece(flagp)
 						       reg_magic == MAGIC_ALL);
 	/* "\{}" is checked below, it's allowed when there is an upper limit */
     }
-    *flagp = (WORST | SPSTART | (flags & HASNL));	/* default flags */
+    /* default flags */
+    *flagp = (WORST | SPSTART | (flags & (HASNL | HASLOOKBH)));
 
     skipchr();
     switch (op)
@@ -1279,7 +1296,7 @@ regpiece(flagp)
 		regtail(next, regnode(BRANCH)); /* or */
 		regtail(ret, regnode(NOTHING)); /* null. */
 	    }
-	    *flagp = (WORST | HASWIDTH | (flags & HASNL));
+	    *flagp = (WORST | HASWIDTH | (flags & (HASNL | HASLOOKBH)));
 	    break;
 
 	case Magic('@'):
@@ -1302,7 +1319,10 @@ regpiece(flagp)
 						      reg_magic == MAGIC_ALL);
 		/* Look behind must match with behind_pos. */
 		if (lop == BEHIND || lop == NOBEHIND)
+		{
 		    regtail(ret, regnode(BHPOS));
+		    *flagp |= HASLOOKBH;
+		}
 		regtail(ret, regnode(END)); /* operand ends */
 		reginsert(lop, ret);
 		break;
@@ -1342,7 +1362,7 @@ regpiece(flagp)
 		++num_complex_braces;
 	    }
 	    if (minval > 0 && maxval > 0)
-		*flagp = (HASWIDTH | (flags & HASNL));
+		*flagp = (HASWIDTH | (flags & (HASNL | HASLOOKBH)));
 	    break;
     }
     if (re_multi_type(peekchr()) != NOT_MULTI)
@@ -1498,7 +1518,7 @@ regatom(flagp)
 	ret = reg(REG_PAREN, &flags);
 	if (ret == NULL)
 	    return NULL;
-	*flagp |= flags & (HASWIDTH | SPSTART | HASNL);
+	*flagp |= flags & (HASWIDTH | SPSTART | HASNL | HASLOOKBH);
 	break;
 
       case NUL:
@@ -1590,7 +1610,7 @@ regatom(flagp)
 			  ret = reg(REG_ZPAREN, &flags);
 			  if (ret == NULL)
 			      return NULL;
-			  *flagp |= flags & (HASWIDTH | SPSTART | HASNL);
+			  *flagp |= flags & (HASWIDTH|SPSTART|HASNL|HASLOOKBH);
 			  re_has_z = REX_SET;
 			  break;
 
@@ -1632,7 +1652,7 @@ regatom(flagp)
 		    ret = reg(REG_NPAREN, &flags);
 		    if (ret == NULL)
 			return NULL;
-		    *flagp |= flags & (HASWIDTH | SPSTART | HASNL);
+		    *flagp |= flags & (HASWIDTH | SPSTART | HASNL | HASLOOKBH);
 		    break;
 
 		/* Catch \%^ and \%$ regardless of where they appear in the

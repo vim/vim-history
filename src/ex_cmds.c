@@ -4097,11 +4097,19 @@ skip:
 		lastone = ((sub_firstline[matchcol] == NUL && nmatch <= 1)
 			     || got_int || got_quit || !(do_all || do_again));
 		nmatch = -1;
-		/* The check for nmatch_tl is needed for when multi-line
+
+		/*
+		 * Replace the line in the buffer when needed.  This is
+		 * skipped when there are more matches.
+		 * The check for nmatch_tl is needed for when multi-line
 		 * matching must replace the lines before trying to do another
-		 * match, otherwise "\@<=" won't work. */
+		 * match, otherwise "\@<=" won't work.
+		 * When asking the user we like to show the already replaced
+		 * text, but don't do it when "\<@=" or "\<@!" is used, it
+		 * changes what matches.
+		 */
 		if (lastone
-			|| do_ask
+			|| (do_ask && !re_lookbehind(regmatch.regprog))
 			|| nmatch_tl > 0
 			|| (nmatch = vim_regexec_multi(&regmatch, curwin,
 				       curbuf, sub_firstlnum, matchcol)) == 0)
@@ -4110,12 +4118,15 @@ skip:
 		    {
 			/*
 			 * Copy the rest of the line, that didn't match.
-			 * matchcol has to be adjusted, we use the end of the
-			 * line as reference, because the substitute may have
-			 * changed the number of characters.
+			 * "matchcol" has to be adjusted, we use the end of
+			 * the line as reference, because the substitute may
+			 * have changed the number of characters.  Same for
+			 * "prev_matchcol".
 			 */
 			STRCAT(new_start, sub_firstline + copycol);
 			matchcol = (colnr_T)STRLEN(sub_firstline) - matchcol;
+			prev_matchcol = (colnr_T)STRLEN(sub_firstline)
+							      - prev_matchcol;
 
 			if (u_savesub(lnum) != OK)
 			    break;
@@ -4159,6 +4170,8 @@ skip:
 			sub_firstline = new_start;
 			new_start = NULL;
 			matchcol = (colnr_T)STRLEN(sub_firstline) - matchcol;
+			prev_matchcol = (colnr_T)STRLEN(sub_firstline)
+							      - prev_matchcol;
 			copycol = 0;
 		    }
 		    if (nmatch == -1 && !lastone)
