@@ -367,7 +367,7 @@ do_window(nchar, Prenum)
 #ifdef FEAT_GUI
 		need_mouse_correct = TRUE;
 #endif
-		win_equal(NULL, FALSE, 0);
+		win_equal(NULL, FALSE, 'b');
 		break;
 
 /* increase current window height */
