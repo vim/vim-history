@@ -1927,9 +1927,15 @@ screen_line(row, endcol, clear_rest
     char_u	    *screenp_from;
     char_u	    *screenp_to;
     int		    col = 0;
+#if defined(USE_GUI) || defined(UNIX)
     int		    hl;
+#endif
     int		    force = FALSE;	/* force update rest of the line */
-    int		    redraw_this;	/* bool: does character need redraw? */
+    int		    redraw_this		/* bool: does character need redraw? */
+#ifdef USE_GUI
+				= TRUE	/* For GUI when while-loop empty */
+#endif
+				;
     int		    redraw_next;	/* redraw_this for next character */
 #ifdef MULTI_BYTE
     int		    char_bytes;		/* 1 : if normal char */
@@ -2128,6 +2134,9 @@ screen_line(row, endcol, clear_rest
 				   )
     {
 	/* blank out the rest of the line */
+#ifdef USE_GUI
+	int startCol = col;
+#endif
 	while (col < Columns && *screenp_to == ' '
 					      && *(screenp_to + Columns) == 0)
 	{
@@ -2135,7 +2144,28 @@ screen_line(row, endcol, clear_rest
 	    ++col;
 	}
 	if (col < Columns)
+	{
+#ifdef USE_GUI
+	    /*
+	     * In the GUI, clearing the rest of the line may leave pixels
+	     * behind if the first character cleared was bold.  Some bold
+	     * fonts spill over the left.  In this case we redraw the previous
+	     * character too.  If we didn't skip any blanks above, then we
+	     * only redraw if the character wasn't already redrawn anyway.
+	     */
+	    if (gui.in_use && (col > startCol || !redraw_this)
+# ifdef MULTI_BYTE
+		    && !is_dbcs
+# endif
+	       )
+	    {
+		hl = *(screenp_to + Columns);
+		if (hl > HL_ALL || (hl & HL_BOLD))
+		    screen_char(screenp_to - 1, row, col - 1);
+	    }
+#endif
 	    screen_fill(row, row + 1, col, (int)Columns, ' ', ' ', 0);
+	}
     }
 }
 
