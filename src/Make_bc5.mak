@@ -72,7 +72,7 @@
 # POSTSCRIPT	no or yes: set to yes for PostScript printing
 # FEATURES	TINY, SMALL, NORMAL, BIG or HUGE
 #		(BIG for WIN32, SMALL for DOS16)
-# WINVER	0x400 or 0x500: minimum Win32 version to support (0x400)
+# WINVER	0x0400 or 0x0500: minimum Win32 version to support (0x0400)
 # CSCOPE	no or yes: include support for Cscope interface (yes)
 # NETBEANS	no or yes: include support for Netbeans interface (yes if GUI
 #		is yes)
@@ -230,7 +230,7 @@ FEATURES = BIG
 
 ### Set the default $(WINVER) to make it work with Bcc 5.5.
 !ifndef WINVER
-WINVER = 0x400
+WINVER = 0x0400
 !endif
 
 #
