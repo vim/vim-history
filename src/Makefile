@@ -1560,7 +1560,7 @@ installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
 		$(HELPSOURCE)/evim.1 > $(DEST_MAN)/$(EVIMNAME).1
 	chmod $(MANMOD) $(DEST_MAN)/$(EVIMNAME).1
 	@echo generating help tags
-	-@cd $(HELPSOURCE); make tags
+	-@cd $(HELPSOURCE); $(MAKE) tags
 	cd $(HELPSOURCE); $(INSTALL_DATA) *.txt tags $(DEST_HELP)
 	cd $(DEST_HELP); chmod $(HELPMOD) *.txt tags
 	$(INSTALL_DATA)  $(HELPSOURCE)/*.pl $(DEST_HELP)
