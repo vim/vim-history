@@ -694,22 +694,24 @@ mch_get_user_name(s, len)
 }
 
 /*
- * Insert host name is s[len].
+ * Copy host name into s[len].
  */
-
     void
 mch_get_host_name(s, len)
     char_u	*s;
     int		len;
 {
 #if defined(__MRC__) || defined(__SC__) || defined(__APPLE_CC__)
-    s[0] = '\0'; /* TODO: use Gestalt information */
+    STRNCPY(s, "Mac", len); /* TODO: use Gestalt information */
 #else
     struct utsname vutsname;
 
-    uname(&vutsname);
-    STRNCPY(s, vutsname.nodename, len);
+    if (uname(&vutsname) < 0)
+	*s = NUL;
+    else
+	STRNCPY(s, vutsname.nodename, len);
 #endif
+    s[len - 1] = NUL;	/* make sure it's terminated */
 }
 
 /*

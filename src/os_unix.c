@@ -1854,8 +1854,11 @@ mch_get_host_name(s, len)
 {
     struct utsname vutsname;
 
-    uname(&vutsname);
-    STRNCPY(s, vutsname.nodename, len);
+    if (uname(&vutsname) < 0)
+	*s = NUL;
+    else
+	STRNCPY(s, vutsname.nodename, len);
+    s[len - 1] = NUL;	/* make sure it's terminated */
 }
 #else /* HAVE_SYS_UTSNAME_H */
 
@@ -1873,6 +1876,7 @@ mch_get_host_name(s, len)
 # else
     gethostname((char *)s, len);
 # endif
+    s[len - 1] = NUL;	/* make sure it's terminated */
 }
 #endif /* HAVE_SYS_UTSNAME_H */
 

@@ -320,6 +320,7 @@ mch_get_host_name(
     int		len)
 {
     STRNCPY(s, "PC (16 bits Vim)", len);
+    s[len - 1] = NUL;	/* make sure it's terminated */
 }
 
 

@@ -2234,6 +2234,7 @@ mch_get_host_name(
     }
     else
 	STRNCPY(s, "PC (Win32 Vim)", len);
+    s[len - 1] = NUL;	/* make sure it's terminated */
 }
 
 
