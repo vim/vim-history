@@ -184,7 +184,9 @@ static VALUE (*dll_rb_str_new2) (const char*);
 static VALUE *dll_ruby_errinfo;
 static void (*dll_ruby_init) (void);
 static void (*dll_ruby_init_loadpath) (void);
+#if defined(DYNAMIC_RUBY_VER) && DYNAMIC_RUBY_VER >= 18
 static int (*dll_rb_w32_snprintf)(char*, size_t, const char*, ...);
+#endif
 
 static HINSTANCE hinstRuby = 0; /* Instance of ruby.dll */
 
@@ -244,7 +246,9 @@ static struct
     {"ruby_errinfo", (RUBY_PROC*)&dll_ruby_errinfo},
     {"ruby_init", (RUBY_PROC*)&dll_ruby_init},
     {"ruby_init_loadpath", (RUBY_PROC*)&dll_ruby_init_loadpath},
+#if defined(DYNAMIC_RUBY_VER) && DYNAMIC_RUBY_VER >= 18
     {"rb_w32_snprintf", (RUBY_PROC*)&dll_rb_w32_snprintf},
+#endif
     {"", NULL},
 };
 
