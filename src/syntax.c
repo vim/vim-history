@@ -5871,7 +5871,7 @@ init_highlight(both, reset)
      * Try finding the color scheme file.  Used when a color file was loaded
      * and 'background' or 't_Co' is changed.
      */
-    p = get_var_value((char_u *)"colors_name");
+    p = get_var_value((char_u *)"g:colors_name");
     if (p != NULL && load_colors(p) == OK)
 	return;
 #endif
@@ -5903,7 +5903,7 @@ init_highlight(both, reset)
     /*
      * If syntax highlighting is enabled load the highlighting for it.
      */
-    if (get_var_value((char_u *)"syntax_on") != NULL)
+    if (get_var_value((char_u *)"g:syntax_on") != NULL)
 	(void)cmd_runtime((char_u *)"syntax/syncolor.vim", TRUE);
 #endif
 }
