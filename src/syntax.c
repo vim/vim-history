@@ -2791,8 +2791,9 @@ find_endpos(idx, startpos, m_endpos, hl_endpos, flagsp, end_endpos,
 		hl_endpos->col = startpos->col;
 	    limit_pos(hl_endpos, m_endpos);
 
-	    /* now the match ends where the highlighting ends (why?) */
-	    m_endpos->col = hl_endpos->col;
+	    /* now the match ends where the highlighting ends, it is turned
+	     * into the matchgroup for the end */
+	    *m_endpos = *hl_endpos;
 	}
 	else
 	{
