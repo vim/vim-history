@@ -7412,6 +7412,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
     scid_T	save_current_SID;
     void	*save_funccalp;
     char_u	*save_cmdarg;
+    long	save_cmdbang;
 #endif
     static int	filechangeshell_busy = FALSE;
 
@@ -7624,8 +7625,12 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
     {
 #ifdef FEAT_EVAL
 	/* set v:cmdarg (only when there is a matching pattern) */
+	save_cmdbang = get_vim_var_nr(VV_CMDBANG);
 	if (eap != NULL)
+	{
 	    save_cmdarg = set_cmdarg(eap, NULL);
+	    set_vim_var_nr(VV_CMDBANG, (long)eap->forceit);
+	}
 	else
 	    save_cmdarg = NULL;	/* avoid gcc warning */
 #endif
@@ -7640,7 +7645,10 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
 				     DOCMD_NOWAIT|DOCMD_VERBOSE|DOCMD_REPEAT);
 #ifdef FEAT_EVAL
 	if (eap != NULL)
+	{
 	    (void)set_cmdarg(NULL, save_cmdarg);
+	    set_vim_var_nr(VV_CMDBANG, save_cmdbang);
+	}
 #endif
     }
 
