@@ -390,7 +390,7 @@ digr_T	digraphdefault[] =
 	};
 
 #   else
-#    ifdef MACOS
+#    if defined(MACOS) && !defined(FEAT_MBYTE)
 
 	/*
 	 * Macintosh digraphs
@@ -813,6 +813,7 @@ digr_T	digraphdefault[] =
 	{'y', ':', 0xff},
 
 #      ifdef FEAT_MBYTE
+#	define USE_UNICODE_DIGRAPHS
 
 	{'A', '-', 0x0100},
 	{'a', '-', 0x0101},
@@ -2110,6 +2111,39 @@ getexactdigraph(char1, char2, meta)
 	}
     }
 #ifdef FEAT_MBYTE
+# ifdef USE_UNICODE_DIGRAPHS
+    if (retval != 0 && !enc_utf8)
+    {
+	char_u	    buf[6], *to;
+	vimconv_T   vc;
+	int	    utflen;
+
+	/*
+	 * Convert the Unicode digraph to 'encoding'.
+	 */
+	i = utf_char2bytes(retval, buf);
+	if (convert_setup(&vc, (char_u *)"utf-8", p_enc) == OK)
+	{
+	    utflen = i;
+	    to = string_convert(&vc, buf, &i);
+	    if (to != NULL)
+	    {
+		/* Checking for invalid values isn't very easy. Internal
+		 * latin1 conversion will return char 0xbf in case it can't be
+		 * converted */
+		if ((i > 1 && !has_mbyte)
+			|| (vc.vc_type == CONV_TO_LATIN1 && utflen != 1
+							    && to[0] == 0xbf))
+		    /* assume invalid value */
+		    retval = 0;
+		else
+		    retval = (*mb_ptr2char)(to);
+		vim_free(to);
+	    }
+	}
+    }
+# endif
+
     /* Ignore multi-byte characters when not in multi-byte mode. */
     if (!has_mbyte && retval > 0xff)
 	retval = 0;
@@ -2219,12 +2253,25 @@ listdigraphs()
     dp = digraphdefault;
     for (i = 0; dp->char1 != NUL && !got_int; ++i)
     {
+#if defined(USE_UNICODE_DIGRAPHS) && defined(FEAT_MBYTE)
+	digr_T tmp;
+
+	/* May need to convert the result to 'encoding'. */
+	tmp.char1 = dp->char1;
+	tmp.char2 = dp->char2;
+	tmp.result = getexactdigraph(tmp.char1, tmp.char2, FALSE);
+	if (tmp.result != 0 && tmp.result != tmp.char2
+					  && (has_mbyte || tmp.result <= 255))
+	    printdigraph(&tmp);
+#else
+
 	if (getexactdigraph(dp->char1, dp->char2, FALSE) == dp->result
-#ifdef FEAT_MBYTE
+# ifdef FEAT_MBYTE
 		&& (has_mbyte || dp->result <= 255)
-#endif
+# endif
 		)
 	    printdigraph(dp);
+#endif
 	++dp;
 	ui_breakcheck();
     }
