@@ -2161,6 +2161,10 @@ jump_to_mouse(flags, inclusive, which_button)
 #endif
     static int	prev_row = -1;
     static int	prev_col = -1;
+#ifdef FEAT_CMDWIN
+    static int  drag_prev_win = FALSE;	/* dragging status line above
+					   command-line window */
+#endif
 
     win_T	*wp, *old_curwin;
     pos_T	old_cursor;
@@ -2283,18 +2287,25 @@ retnomove:
 	}
 #endif
 #ifdef FEAT_CMDWIN
+	drag_prev_win = FALSE;
 	if (cmdwin_type != 0 && wp != curwin)
 	{
 	    /* A click outside the command-line window: Use modeless
-	     * selection if possible. */
+	     * selection if possible.  Allow dragging the status line of the
+	     * window just above the command-line window. */
+	    if (wp == curwin->w_prev)
+		drag_prev_win = TRUE;
+	    else
+		on_status_line = 0;
+	    on_sep_line = 0;
 # ifdef FEAT_CLIPBOARD
+	    if (drag_prev_win)
+		return IN_STATUS_LINE;
 	    return IN_OTHER_WIN;
 # else
 	    row = 0;
 	    col += wp->w_wincol;
 	    wp = curwin;
-	    on_status_line = 0;
-	    on_sep_line = 0;
 # endif
 	}
 #endif
@@ -2337,9 +2348,20 @@ retnomove:
     else if (on_status_line && which_button == MOUSE_LEFT)
     {
 #ifdef FEAT_WINDOWS
+	wp = curwin;
+# ifdef FEAT_CMDWIN
+	if (cmdwin_type != 0 && drag_prev_win && curwin->w_prev != NULL)
+	    /* Drag the status line of the window above the command-line
+	     * window. */
+	    curwin = curwin->w_prev;
+# endif
 	/* Drag the status line */
 	count = row - curwin->w_winrow - curwin->w_height + 1 - on_status_line;
 	win_drag_status_line(count);
+
+# ifdef FEAT_CMDWIN
+	curwin = wp;
+# endif
 #endif
 	return IN_STATUS_LINE;			/* Cursor didn't move */
     }
