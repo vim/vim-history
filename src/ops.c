@@ -3362,9 +3362,8 @@ end:
 	if (regname == '=')
 	    vim_free(y_array);
     }
-    if ((flags & PUT_CURSEND)
-	    && gchar_cursor() == NUL
-	    && curwin->w_cursor.col
+    if (gchar_cursor() == NUL
+	    && curwin->w_cursor.col > 0
 	    && !(restart_edit || (State & INSERT)))
     {
 	--curwin->w_cursor.col;
