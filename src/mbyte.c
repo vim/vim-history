@@ -579,7 +579,7 @@ codepage_invalid:
     ime_conv.vc_fd = (iconv_t)-1;
     ime_conv_cp.vc_fd = (iconv_t)-1;
 # endif
-    convert_setup(&ime_conv, "ucs-2", p_enc);
+    convert_setup(&ime_conv, (char_u *)"ucs-2", p_enc);
     ime_conv_cp.vc_type = CONV_DBCS_TO_UCS2;
     ime_conv_cp.vc_dbcs = GetACP();
     ime_conv_cp.vc_factor = 2; /* we don't really know anything about the codepage */
