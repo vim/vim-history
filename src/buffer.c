@@ -1636,11 +1636,13 @@ buflist_findpat(pattern, pattern_end, unlisted, diffmode)
     }
 
     /*
-     * Try four ways of matching:
+     * Try four ways of matching a listed buffer:
      * attempt == 0: without '^' or '$' (at any position)
      * attempt == 1: with '^' at start (only at postion 0)
      * attempt == 2: with '$' at end (only match at end)
      * attempt == 3: with '^' at start and '$' at end (only full match)
+     * Repeat this for finding an unlisted buffer if there was no matching
+     * listed buffer.
      */
     else
     {
@@ -1650,26 +1652,26 @@ buflist_findpat(pattern, pattern_end, unlisted, diffmode)
 	patend = pat + STRLEN(pat) - 1;
 	toggledollar = (patend > pat && *patend == '$');
 
-	for (attempt = 0; attempt <= 3; ++attempt)
+	/* First try finding a listed buffer.  If not found and "unlisted"
+	 * is TRUE, try finding an unlisted buffer. */
+	find_listed = TRUE;
+	for (;;)
 	{
-	    /* may add '^' and '$' */
-	    if (toggledollar)
-		*patend = (attempt < 2) ? NUL : '$';	/* add/remove '$' */
-	    p = pat;
-	    if (*p == '^' && !(attempt & 1))		/* add/remove '^' */
-		++p;
-	    prog = vim_regcomp(p, (int)p_magic);
-	    if (prog == NULL)
+	    for (attempt = 0; attempt <= 3; ++attempt)
 	    {
-		vim_free(pat);
-		return -1;
-	    }
+		/* may add '^' and '$' */
+		if (toggledollar)
+		    *patend = (attempt < 2) ? NUL : '$'; /* add/remove '$' */
+		p = pat;
+		if (*p == '^' && !(attempt & 1))	 /* add/remove '^' */
+		    ++p;
+		prog = vim_regcomp(p, (int)p_magic);
+		if (prog == NULL)
+		{
+		    vim_free(pat);
+		    return -1;
+		}
 
-	    /* First try finding a listed buffer, if not found and "unlisted"
-	     * is TRUE, try finding an unlisted buffer. */
-	    find_listed = TRUE;
-	    for (;;)
-	    {
 		for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 		    if (buf->b_p_bl == find_listed
 #ifdef FEAT_DIFF
@@ -1684,15 +1686,19 @@ buflist_findpat(pattern, pattern_end, unlisted, diffmode)
 			}
 			match = buf->b_fnum;	/* remember first match */
 		    }
-		if (!unlisted || !find_listed || match >= 0)
+
+		vim_free(prog);
+		if (match >= 0)			/* found one match */
 		    break;
-		find_listed = FALSE;
 	    }
 
-	    vim_free(prog);
-	    if (match >= 0)			/* found one match */
+	    /* Only search for unlisted buffers if there was no match with
+	     * a listed buffer. */
+	    if (!unlisted || !find_listed || match != -1)
 		break;
+	    find_listed = FALSE;
 	}
+
 	vim_free(pat);
     }
 
