@@ -1527,6 +1527,7 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 #ifndef FEAT_VIRTUALEDIT
 # define getvvcol(w, p, s, c, e) getvcol(w, p, s, c, e)
 # define virtual_active() 0
+# define virtual_op FALSE
 #endif
 
 /*
