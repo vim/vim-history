@@ -40,6 +40,8 @@ long_u mch_avail_mem __ARGS((int special));
 int mch_rename __ARGS((const char *pszOldFile, const char *pszNewFile));
 char *default_shell __ARGS((void));
 int mch_access __ARGS((char *n, int p));
+int mch_open __ARGS((char *name, int flags, int mode));
+FILE *mch_fopen __ARGS((char *name, char *mode));
 int mch_copy_file_attribute __ARGS((char_u *from, char_u *to));
 int myresetstkoflw __ARGS((void));
 /* vim: set ft=c : */
