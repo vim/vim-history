@@ -87,7 +87,7 @@ static void	nv_bck_word __ARGS((CMDARG *cap, int type));
 static void	nv_wordcmd __ARGS((CMDARG *cap, int type));
 static void	adjust_for_sel __ARGS((CMDARG *cap));
 static void	unadjust_for_sel __ARGS((void));
-static void	nv_goto __ARGS((OPARG *oap, long lnum));
+static void	nv_goto __ARGS((CMDARG *cap, linenr_t lnum));
 static void	nv_select __ARGS((CMDARG *cap));
 static void	nv_normal __ARGS((CMDARG *cap));
 static void	nv_esc __ARGS((CMDARG *oap, linenr_t opnum));
@@ -712,8 +712,7 @@ getcount:
  * 3. Cursor motions
  */
     case 'G':
-	nv_goto(oap, ca.count0 == 0 ? (long)curbuf->b_ml.ml_line_count
-				    : ca.count0);
+	nv_goto(&ca, curbuf->b_ml.ml_line_count);
 	break;
 
     case 'H':
@@ -806,7 +805,7 @@ getcount:
     case K_S_HOME:
 	if ((mod_mask & MOD_MASK_CTRL))	    /* CTRL-HOME = goto line 1 */
 	{
-	    nv_goto(oap, 1L);
+	    nv_goto(&ca, (linenr_t)1);
 	    break;
 	}
 	ca.count0 = 1;
@@ -852,7 +851,10 @@ getcount:
     case K_XEND:
     case K_S_END:
 	if ((mod_mask & MOD_MASK_CTRL))	    /* CTRL-END = goto last line */
-	    nv_goto(oap, curbuf->b_ml.ml_line_count);
+	{
+	    nv_goto(&ca, curbuf->b_ml.ml_line_count);
+	    ca.count1 = 1;	/* to end of current line */
+	}
 	/* FALLTHROUGH */
 
     case '$':
@@ -5308,7 +5310,7 @@ nv_g_cmd(cap, searchp)
      * that line number like for "G". -- webb
      */
     case 'g':
-	nv_goto(oap, cap->count0);	/* nv_goto() will change 0 into 1 */
+	nv_goto(cap, (linenr_t)1);
 	break;
 
     /*
@@ -5638,13 +5640,20 @@ unadjust_for_sel()
     }
 }
 
+/*
+ * "G", "gg", CTRL-END, CTRL-HOME.
+ */
     static void
-nv_goto(oap, lnum)
-    OPARG   *oap;
-    long    lnum;
+nv_goto(cap, lnum)
+    CMDARG	*cap;
+    linenr_t	lnum;
 {
-    oap->motion_type = MLINE;
+    cap->oap->motion_type = MLINE;
     setpcmark();
+
+    /* When a count is given, use it instead of the default lnum */
+    if (cap->count0 != 0)
+	lnum = cap->count0;
     if (lnum < 1L)
 	lnum = 1L;
     else if (lnum > curbuf->b_ml.ml_line_count)
