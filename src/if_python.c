@@ -111,6 +111,10 @@ struct PyMethodDef { int a; };
 # if defined(PY_VERSION_HEX) && PY_VERSION_HEX >= 0x02020000
 #  define PyType_IsSubtype dll_PyType_IsSubtype
 # endif
+# if defined(PY_VERSION_HEX) && PY_VERSION_HEX >= 0x02030000
+#  define PyObject_Malloc dll_PyObject_Malloc
+#  define PyObject_Free dll_PyObject_Free
+# endif
 
 /*
  * Pointers for dynamic link
@@ -155,6 +159,10 @@ static PyObject*(*dll__PyObject_Init)(PyObject *, PyTypeObject *);
 static PyObject* dll__Py_NoneStruct;
 # if defined(PY_VERSION_HEX) && PY_VERSION_HEX >= 0x02020000
 static int (*dll_PyType_IsSubtype)(PyTypeObject *, PyTypeObject *);
+# endif
+# if defined(PY_VERSION_HEX) && PY_VERSION_HEX >= 0x02030000
+static void* (*dll_PyObject_Malloc)(size_t);
+static void (*dll_PyObject_Free)(void*);
 # endif
 
 static HINSTANCE hinstPython = 0; /* Instance of python.dll */
@@ -222,6 +230,10 @@ static struct
     {"_Py_NoneStruct", (PYTHON_PROC*)&dll__Py_NoneStruct},
 # if defined(PY_VERSION_HEX) && PY_VERSION_HEX >= 0x02020000
     {"PyType_IsSubtype", (PYTHON_PROC*)&dll_PyType_IsSubtype},
+# endif
+# if defined(PY_VERSION_HEX) && PY_VERSION_HEX >= 0x02030000
+    {"PyObject_Malloc", (PYTHON_PROC*)&dll_PyObject_Malloc},
+    {"PyObject_Free", (PYTHON_PROC*)&dll_PyObject_Free},
 # endif
     {"", NULL},
 };
