@@ -501,6 +501,7 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define INSERT		0x10	/* Insert mode */
 #define LANGMAP		0x20	/* Language mapping, can be combined with
 				   INSERT and CMDLINE */
+#define MAP_ALL_MODES	0x3f	/* all mode bits used for mapping */
 
 #define REPLACE_FLAG	0x40	/* Replace mode flag */
 #define REPLACE		(REPLACE_FLAG + INSERT)

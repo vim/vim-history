@@ -41,6 +41,7 @@ int fix_input_buffer __ARGS((char_u *buf, int len, int script));
 int do_map __ARGS((int maptype, char_u *arg, int mode, int abbrev));
 int get_map_mode __ARGS((char_u **cmdp, int forceit));
 void map_clear __ARGS((char_u *cmdp, char_u *arg, int forceit, int abbr));
+void map_clear_int __ARGS((buf_T *buf, int mode, int local, int abbr));
 int map_to_exists __ARGS((char_u *str, char_u *modechars));
 int map_to_exists_mode __ARGS((char_u *rhs, int mode));
 char_u *set_context_in_map_cmd __ARGS((expand_T *xp, char_u *cmd, char_u *arg, int forceit, int isabbrev, int isunmap, cmdidx_T cmdidx));

@@ -3278,10 +3278,7 @@ map_clear(cmdp, arg, forceit, abbr)
     int		forceit;
     int		abbr;
 {
-    mapblock_T	*mp, **mpp;
     int		mode;
-    int		hash;
-    int		new_hash;
 #ifdef FEAT_LOCALMAP
     int		local;
 
@@ -3293,9 +3290,31 @@ map_clear(cmdp, arg, forceit, abbr)
     }
 #endif
 
-    validate_maphash();
-
     mode = get_map_mode(&cmdp, forceit);
+    map_clear_int(curbuf, mode,
+#ifdef FEAT_LOCALMAP
+	    local,
+#else
+	    FALSE,
+#endif
+	    abbr);
+}
+
+/*
+ * Clear all mappings in "mode".
+ */
+    void
+map_clear_int(buf, mode, local, abbr)
+    buf_T	*buf;	    /* buffer for local mappings */
+    int		mode;	    /* mode in which to delete */
+    int		local;	    /* TRUE for buffer-local mappings */
+    int		abbr;	    /* TRUE for abbreviations */
+{
+    mapblock_T	*mp, **mpp;
+    int		hash;
+    int		new_hash;
+
+    validate_maphash();
 
     for (hash = 0; hash < 256; ++hash)
     {
@@ -3305,7 +3324,7 @@ map_clear(cmdp, arg, forceit, abbr)
 		break;
 #ifdef FEAT_LOCALMAP
 	    if (local)
-		mpp = &curbuf->b_first_abbr;
+		mpp = &buf->b_first_abbr;
 	    else
 #endif
 		mpp = &first_abbr;
@@ -3314,7 +3333,7 @@ map_clear(cmdp, arg, forceit, abbr)
 	{
 #ifdef FEAT_LOCALMAP
 	    if (local)
-		mpp = &curbuf->b_maphash[hash];
+		mpp = &buf->b_maphash[hash];
 	    else
 #endif
 		mpp = &maphash[hash];
@@ -3340,8 +3359,8 @@ map_clear(cmdp, arg, forceit, abbr)
 #ifdef FEAT_LOCALMAP
 		    if (local)
 		    {
-			mp->m_next = curbuf->b_maphash[new_hash];
-			curbuf->b_maphash[new_hash] = mp;
+			mp->m_next = buf->b_maphash[new_hash];
+			buf->b_maphash[new_hash] = mp;
 		    }
 		    else
 #endif
