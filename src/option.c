@@ -284,6 +284,7 @@ struct vimoption
 #define P_FLAGLIST	0x20000L/* list of single-char flags */
 
 #define P_SECURE	0x40000L/* cannot change in modeline or secure mode */
+#define P_GETTEXT	0x80000L/* expand default value with _() */
 
 /*
  * options[] is initialized here.
@@ -530,14 +531,15 @@ static struct vimoption
 			    (char_u *)&p_cb, PV_NONE,
 # ifdef FEAT_XCLIPBOARD
 			    {(char_u *)"autoselect,exclude:cons\\|linux",
-							       (char_u *)0L}},
+							       (char_u *)0L}
 # else
-			    {(char_u *)"", (char_u *)0L}},
+			    {(char_u *)"", (char_u *)0L}
 # endif
 #else
 			    (char_u *)NULL, PV_NONE,
-			    {(char_u *)"", (char_u *)0L}},
+			    {(char_u *)"", (char_u *)0L}
 #endif
+			    },
     {"cmdheight",   "ch",   P_NUM|P_VI_DEF|P_RALL,
 			    (char_u *)&p_ch, PV_NONE,
 			    {(char_u *)1L, (char_u *)0L}},
@@ -1069,10 +1071,11 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 #ifdef __sgi
-			    {(char_u *)TRUE, (char_u *)0L}},
+			    {(char_u *)TRUE, (char_u *)0L}
 #else
-			    {(char_u *)FALSE, (char_u *)0L}},
+			    {(char_u *)FALSE, (char_u *)0L}
 #endif
+			    },
     {"iminsert",    "imi",  P_NUM|P_VI_DEF,
 			    (char_u *)&p_iminsert, PV_IMI,
 #ifdef B_IMODE_IM
@@ -1561,10 +1564,10 @@ static struct vimoption
 			    {(char_u *)NULL, (char_u *)0L}
 #endif
 			    },
-    {"printheader", "pheader",  P_STRING|P_VI_DEF,
+    {"printheader", "pheader",  P_STRING|P_VI_DEF|P_GETTEXT,
 #ifdef FEAT_PRINTER
 			    (char_u *)&p_header, PV_NONE,
-			    {(char_u *)"%<%f%h%m%=Page %N", (char_u *)0L}
+			    {(char_u *)N_("%<%f%h%m%=Page %N"), (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)NULL, (char_u *)0L}
@@ -1651,10 +1654,12 @@ static struct vimoption
     {"scrollopt",   "sbo",  P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
 #ifdef FEAT_SCROLLBIND
 			    (char_u *)&p_sbo, PV_NONE,
+			    {(char_u *)"ver,jump", (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}
 #endif
-			    {(char_u *)"ver,jump", (char_u *)0L}},
+			    },
     {"sections",    "sect", P_STRING|P_VI_DEF,
 			    (char_u *)&p_sections, PV_NONE,
 			    {(char_u *)"SHNHH HUnhsh", (char_u *)0L}},
@@ -1909,10 +1914,11 @@ static struct vimoption
     {"tagbsearch",  "tbs",   P_BOOL|P_VI_DEF,
 			    (char_u *)&p_tbs, PV_NONE,
 #ifdef VMS	/* binary searching doesn't appear to work on VMS */
-			    {(char_u *)0L, (char_u *)0L}},
+			    {(char_u *)0L, (char_u *)0L}
 #else
-			    {(char_u *)TRUE, (char_u *)0L}},
+			    {(char_u *)TRUE, (char_u *)0L}
 #endif
+			    },
     {"taglength",   "tl",   P_NUM|P_VI_DEF,
 			    (char_u *)&p_tl, PV_NONE,
 			    {(char_u *)0L, (char_u *)0L}},
@@ -1991,14 +1997,16 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)85L, (char_u *)0L}},
-    {"titleold",    NULL,   P_STRING|P_VI_DEF,
+    {"titleold",    NULL,   P_STRING|P_VI_DEF|P_GETTEXT,
 #ifdef FEAT_TITLE
 			    (char_u *)&p_titleold, PV_NONE,
+			    {(char_u *)N_("Thanks for flying Vim"),
+							       (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}
 #endif
-			    {(char_u *)N_("Thanks for flying Vim"),
-							       (char_u *)0L}},
+			    },
     {"titlestring", NULL,   P_STRING|P_VI_DEF,
 #ifdef FEAT_TITLE
 			    (char_u *)&p_titlestring, PV_NONE,
@@ -2580,7 +2588,11 @@ set_init_1()
      */
     for (opt_idx = 0; !istermoption(&options[opt_idx]); opt_idx++)
     {
-	p = option_expand(opt_idx, NULL);
+	if ((options[opt_idx].flags & P_GETTEXT)
+					      && options[opt_idx].var != NULL)
+	    p = _(*(char_u **)options[opt_idx].var);
+	else
+	    p = option_expand(opt_idx, NULL);
 	if (p != NULL && (p = vim_strsave(p)) != NULL)
 	{
 	    *(char_u **)options[opt_idx].var = p;
