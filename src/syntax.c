@@ -5523,7 +5523,7 @@ hl_has_settings(idx, check_link)
 {
     return (   HL_TABLE()[idx].sg_term_attr != 0
 	    || HL_TABLE()[idx].sg_cterm_attr != 0
-#ifdef FEAT_GUI
+#ifdef USE_GUI
 	    || HL_TABLE()[idx].sg_gui_attr != 0
 #endif
 	    || (check_link && (HL_TABLE()[idx].sg_set & SG_LINK)));
