@@ -547,8 +547,7 @@ checkCloseRec(gap, lnum, level)
 foldManualAllowed(create)
     int		create;
 {
-    if (foldmethodIsManual(curwin)
-		   || (foldmethodIsMarker(curwin) && *curbuf->b_p_cms != NUL))
+    if (foldmethodIsManual(curwin) || foldmethodIsMarker(curwin))
 	return TRUE;
     if (create)
 	EMSG(_("E350: Cannot create fold with current 'foldmethod'"));
@@ -1696,11 +1695,6 @@ foldCreateMarkers(start, end)
 	EMSG(_(e_modifiable));
 	return;
     }
-    if (*curbuf->b_p_cms == NUL)
-    {
-	EMSG(_("E221: 'commentstring' is empty"));
-	return;
-    }
     parseMarker(curwin);
 
     foldAddMarker(start, curwin->w_p_fmr, foldstartmarkerlen);
@@ -1730,16 +1724,24 @@ foldAddMarker(lnum, marker, markerlen)
     /* Allocate a new line: old-line + 'cms'-start + marker + 'cms'-end */
     line = ml_get(lnum);
     line_len = (int)STRLEN(line);
-    newline = alloc((unsigned)(line_len + markerlen + STRLEN(cms) - 1));
-    if (newline == NULL)
-	return;
 
     if (u_save(lnum - 1, lnum + 1) == OK)
     {
+	newline = alloc((unsigned)(line_len + markerlen + STRLEN(cms) + 1));
+	if (newline == NULL)
+	    return;
 	STRCPY(newline, line);
-	STRCPY(newline + line_len, cms);
-	STRNCPY(newline + line_len + (p - cms), marker, markerlen);
-	STRCPY(newline + line_len + (p - cms) + markerlen, p + 2);
+	if (p == NULL)
+	{
+	    STRNCPY(newline + line_len, marker, markerlen);
+	    newline[line_len + markerlen] = NUL;
+	}
+	else
+	{
+	    STRCPY(newline + line_len, cms);
+	    STRNCPY(newline + line_len + (p - cms), marker, markerlen);
+	    STRCPY(newline + line_len + (p - cms) + markerlen, p + 2);
+	}
 
 	ml_replace(lnum, newline, FALSE);
     }
@@ -3084,7 +3086,7 @@ put_folds_recurse(fd, gap, off)
     return OK;
 }
 
-/* put_folds_recurse() {{{2 */
+/* put_foldopen_recurse() {{{2 */
 /*
  * Write commands to "fd" to open and close manually opened/closed folds.
  * Returns FAIL when writing failed.
