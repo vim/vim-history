@@ -148,9 +148,19 @@ gui_athena_scroll_cb_scroll(w, client_data, call_data)
     {
 	sb_info = sb;
 	if (data < -1)		/* page-width left */
-	    data = -(W_WIDTH(sb->wp) - 5);
+	{
+	    if (sb->size > 8)
+		data = -(sb->size - 5);
+	    else
+		data = -sb->size;
+	}
 	else if (data > 1)	/* page-width right */
-	    data = (W_WIDTH(sb->wp) - 5);
+	{
+	    if (sb->size > 8)
+		data = (sb->size - 5);
+	    else
+		data = sb->size;
+	}
     }
 
     value = sb_info->value + data;
