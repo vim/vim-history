@@ -1237,13 +1237,13 @@ gui_mch_init()
     /* NOTE: These next few lines are an exact duplicate of gui_athena.c's
      * gui_mch_def_colors().  Why?
      */
-    gui.menu_fg_pixel = gui_mch_get_color((char_u *)gui.rsrc_menu_fg_name);
-    gui.menu_bg_pixel = gui_mch_get_color((char_u *)gui.rsrc_menu_bg_name);
-    gui.scroll_fg_pixel = gui_mch_get_color((char_u *)gui.rsrc_scroll_fg_name);
-    gui.scroll_bg_pixel = gui_mch_get_color((char_u *)gui.rsrc_scroll_bg_name);
+    gui.menu_fg_pixel = gui_get_color((char_u *)gui.rsrc_menu_fg_name);
+    gui.menu_bg_pixel = gui_get_color((char_u *)gui.rsrc_menu_bg_name);
+    gui.scroll_fg_pixel = gui_get_color((char_u *)gui.rsrc_scroll_fg_name);
+    gui.scroll_bg_pixel = gui_get_color((char_u *)gui.rsrc_scroll_bg_name);
 #ifdef FEAT_BEVAL
-    gui.tooltip_fg_pixel = gui_mch_get_color((char_u *)gui.rsrc_tooltip_fg_name);
-    gui.tooltip_bg_pixel = gui_mch_get_color((char_u *)gui.rsrc_tooltip_bg_name);
+    gui.tooltip_fg_pixel = gui_get_color((char_u *)gui.rsrc_tooltip_fg_name);
+    gui.tooltip_bg_pixel = gui_get_color((char_u *)gui.rsrc_tooltip_bg_name);
 #endif
 
 #if defined(FEAT_MENU) && defined(FEAT_GUI_ATHENA)
@@ -1416,7 +1416,7 @@ gui_mch_init()
     }
 
     if (gui.color_approx)
-	EMSG(_("Vim: (ec1) Cannot allocate colormap entry, some colors may be incorrect"));
+	EMSG(_("Vim E458: Cannot allocate colormap entry, some colors may be incorrect"));
 
 #ifdef FEAT_SUN_WORKSHOP
     if (usingSunWorkShop)
@@ -2200,7 +2200,6 @@ gui_mch_get_color(reqname)
 	    }
 	}
     }
-    EMSG2(_("E254: Cannot allocate color %s"), reqname);
 
     return (guicolor_T)-1;
 }

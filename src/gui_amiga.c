@@ -1003,14 +1003,11 @@ gui_mch_get_color(char_u *name)
 
     if (color == -1)
     {
-	char **looky = NULL;
+	char *looky = NULL;
 
-	color = strtol((char*)name, looky, 10);
-	if (looky)
-	{
-	    printf("invalid number \n");
-	    color = 1;
-	}
+	color = strtol((char*)name, &looky, 10);
+	if (*looky != NUL)
+	    color = -1;
     }
 
     return color;

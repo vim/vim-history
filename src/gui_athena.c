@@ -1679,13 +1679,13 @@ gui_mch_def_colors()
      * Get the colors ourselves.  Using the automatic conversion doesn't
      * handle looking for approximate colors.
      */
-    gui.menu_fg_pixel = gui_mch_get_color((char_u *)gui.rsrc_menu_fg_name);
-    gui.menu_bg_pixel = gui_mch_get_color((char_u *)gui.rsrc_menu_bg_name);
-    gui.scroll_fg_pixel = gui_mch_get_color((char_u *)gui.rsrc_scroll_fg_name);
-    gui.scroll_bg_pixel = gui_mch_get_color((char_u *)gui.rsrc_scroll_bg_name);
+    gui.menu_fg_pixel = gui_get_color((char_u *)gui.rsrc_menu_fg_name);
+    gui.menu_bg_pixel = gui_get_color((char_u *)gui.rsrc_menu_bg_name);
+    gui.scroll_fg_pixel = gui_get_color((char_u *)gui.rsrc_scroll_fg_name);
+    gui.scroll_bg_pixel = gui_get_color((char_u *)gui.rsrc_scroll_bg_name);
 #ifdef FEAT_BEVAL
-    gui.tooltip_fg_pixel = gui_mch_get_color((char_u *)gui.rsrc_tooltip_fg_name);
-    gui.tooltip_bg_pixel = gui_mch_get_color((char_u *)gui.rsrc_tooltip_bg_name);
+    gui.tooltip_fg_pixel = gui_get_color((char_u *)gui.rsrc_tooltip_fg_name);
+    gui.tooltip_bg_pixel = gui_get_color((char_u *)gui.rsrc_tooltip_bg_name);
 #endif
 }
 
