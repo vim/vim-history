@@ -4522,10 +4522,23 @@ nv_replace(cap)
 #ifdef MULTI_BYTE
 	    if (is_dbcs)
 	    {
+		/* Handle three situations:
+		 * 1. replace double-byte with double-byte: set trailbyte.
+		 * 2. replace single-byte with double-byte: insert trailbyte.
+		 * 3. replace double-byte with single-bute: delete char.
+		 */
 		if (trailbyte != NUL)
-		    ptr[curwin->w_cursor.col++] = trailbyte;
+		{
+		    if (IsLeadByte(prechar))
+			ptr[curwin->w_cursor.col] = trailbyte;
+		    else
+			(void)ins_char(trailbyte);
+		}
 		else if (IsLeadByte(prechar))
-		    (void)del_chars((long)1, TRUE);
+		{
+		    (void)del_char(TRUE);
+		    ++curwin->w_cursor.col;
+		}
 	    }
 #endif
 	}
