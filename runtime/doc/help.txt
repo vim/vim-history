@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.1.  Last change: 2001 Sep 14
+*help.txt*	For Vim version 6.1.  Last change: 2003 Feb 13
 
 			VIM - main help file
 									 k
@@ -181,7 +181,7 @@ Standard plugins	*standard-plugin-list* ~
 |pi_gzip.txt|	Reading and writing compressed files
 |pi_expl.txt|	File explorer
 
-LOCAL ADDITIONS:
+LOCAL ADDITIONS:				*local-additions*
 
 ------------------------------------------------------------------------------
 *bars*		Bars example
