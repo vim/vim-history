@@ -95,6 +95,8 @@ filemess(buf, name, s, attr)
     msg_scroll_save = msg_scroll;
     if (shortmess(SHM_OVERALL))
 	msg_scroll = FALSE;
+    if (!msg_scroll)	/* wait a bit when overwriting an error msg */
+	check_for_delay(FALSE);
     msg_start();
     msg_scroll = msg_scroll_save;
     /* may truncate the message to avoid a hit-return prompt */
