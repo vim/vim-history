@@ -2599,6 +2599,12 @@ get_keystroke()
 		    || n == K_RIGHTRELEASE
 		    || n == K_MOUSEDOWN
 		    || n == K_MOUSEUP
+		    || n == K_X1MOUSE
+		    || n == K_X1DRAG
+		    || n == K_X1RELEASE
+		    || n == K_X2MOUSE
+		    || n == K_X2DRAG
+		    || n == K_X2RELEASE
 # ifdef FEAT_GUI
 		    || n == K_VER_SCROLLBAR
 		    || n == K_HOR_SCROLLBAR

@@ -228,6 +228,13 @@ enum key_extra
     , KE_C_RIGHT	/* control-right */
     , KE_C_HOME		/* control-home */
     , KE_C_END		/* control-end */
+
+    , KE_X1MOUSE	/* X1/X2 mouse-buttons */
+    , KE_X1DRAG
+    , KE_X1RELEASE
+    , KE_X2MOUSE
+    , KE_X2DRAG
+    , KE_X2RELEASE
 };
 
 /*
@@ -251,6 +258,12 @@ enum key_extra
 #define K_C_END		TERMCAP2KEY(KS_EXTRA, KE_C_END)
 #define K_TAB		TERMCAP2KEY(KS_EXTRA, KE_TAB)
 #define K_S_TAB		TERMCAP2KEY(KS_EXTRA, KE_S_TAB)
+
+/* extra set of function keys F1-F4, for vt100 compatible xterm */
+#define K_XF1		TERMCAP2KEY(KS_EXTRA, KE_XF1)
+#define K_XF2		TERMCAP2KEY(KS_EXTRA, KE_XF2)
+#define K_XF3		TERMCAP2KEY(KS_EXTRA, KE_XF3)
+#define K_XF4		TERMCAP2KEY(KS_EXTRA, KE_XF4)
 
 /* extra set of function keys F1-F4, for vt100 compatible xterm */
 #define K_XF1		TERMCAP2KEY(KS_EXTRA, KE_XF1)
@@ -419,6 +432,13 @@ enum key_extra
 #define K_RIGHTMOUSE	TERMCAP2KEY(KS_EXTRA, KE_RIGHTMOUSE)
 #define K_RIGHTDRAG	TERMCAP2KEY(KS_EXTRA, KE_RIGHTDRAG)
 #define K_RIGHTRELEASE	TERMCAP2KEY(KS_EXTRA, KE_RIGHTRELEASE)
+#define K_X1MOUSE       TERMCAP2KEY(KS_EXTRA, KE_X1MOUSE)
+#define K_X1MOUSE       TERMCAP2KEY(KS_EXTRA, KE_X1MOUSE)
+#define K_X1DRAG	TERMCAP2KEY(KS_EXTRA, KE_X1DRAG)
+#define K_X1RELEASE     TERMCAP2KEY(KS_EXTRA, KE_X1RELEASE)
+#define K_X2MOUSE       TERMCAP2KEY(KS_EXTRA, KE_X2MOUSE)
+#define K_X2DRAG	TERMCAP2KEY(KS_EXTRA, KE_X2DRAG)
+#define K_X2RELEASE     TERMCAP2KEY(KS_EXTRA, KE_X2RELEASE)
 
 #define K_IGNORE	TERMCAP2KEY(KS_EXTRA, KE_IGNORE)
 

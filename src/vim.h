@@ -1344,6 +1344,9 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 # define MOUSE_4	0x100	/* scroll wheel down */
 # define MOUSE_5	0x200	/* scroll wheel up */
 
+# define MOUSE_X1	0x300 /* Mouse-button X1 (6th) */
+# define MOUSE_X2	0x400 /* Mouse-button X2 */
+
 /* 0x20 is reserved by xterm */
 # define MOUSE_DRAG_XTERM   0x40
 

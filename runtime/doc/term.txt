@@ -759,6 +759,16 @@ Mouse clicks can be mapped.  The codes for mouse clicks are:
  <RightMouse>	 right pressed		    extend selection
  <RightDrag>	 right moved while pressed  extend selection
  <RightRelease>  right released		    set selection end
+ <X1Mouse>	 X1 button pressed	    -			*X1Mouse*
+ <X1Drag>	 X1 moved while pressed	    -			*X1Drag*
+ <X1Release>	 X1 button release	    -			*X1Release*
+ <X2Mouse>	 X2 button pressed	    -			*X2Mouse*
+ <X2Drag>	 X2 moved while pressed     -			*X2Drag*
+ <X2Release>	 X2 button release	    -			*X2Release*
+
+The X1 and X2 buttons refer to the extra buttons found on some mice.  The
+'Microsoft Explorer' mouse has these buttons available to the right thumb.
+Currently X1 and X2 only work on Win32 environments.
 
 Examples: >
 	:noremap <MiddleMouse> <LeftMouse><MiddleMouse>
@@ -769,6 +779,11 @@ would be done at the cursor position). >
 Immediately yank the selection, when using Visual mode.
 
 Note the use of ":noremap" instead of "map" to avoid a recursive mapping.
+>
+	:map <X1Mouse> <C-O>
+	:map <X2Mouse> <C-I>
+Map the X1 and X2 buttons to go forward and backwards in the jump list, see
+|CTRL-O| and |CTRL-I|.
 
 						*mouse-swap-buttons*
 To swap the meaning of the left and right mouse buttons: >

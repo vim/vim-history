@@ -802,7 +802,9 @@ wait_return(redraw)
 				    && mouse_row != Rows - 1
 				    && (c == K_LEFTMOUSE
 					|| c == K_MIDDLEMOUSE
-					|| c == K_RIGHTMOUSE))
+					|| c == K_RIGHTMOUSE
+					|| c == K_X1MOUSE
+					|| c == K_X2MOUSE))
 #endif
 				);
 	ui_breakcheck();
@@ -810,7 +812,7 @@ wait_return(redraw)
 	/*
 	 * Avoid that the mouse-up event causes visual mode to start.
 	 */
-	if (c == K_LEFTMOUSE || c == K_MIDDLEMOUSE || c == K_RIGHTMOUSE)
+	if (c == K_LEFTMOUSE || c == K_MIDDLEMOUSE || c == K_RIGHTMOUSE || c== K_X1MOUSE || c == K_X2MOUSE)
 	    (void)jump_to_mouse(MOUSE_SETPOS, NULL, 0);
 	else
 #endif

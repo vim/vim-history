@@ -1870,6 +1870,12 @@ static struct key_name_entry
     {K_RIGHTRELEASE,	(char_u *)"RightRelease"},
     {K_MOUSEDOWN,	(char_u *)"MouseDown"},
     {K_MOUSEUP,		(char_u *)"MouseUp"},
+    {K_X1MOUSE,		(char_u *)"X1Mouse"},
+    {K_X1DRAG,		(char_u *)"X1Drag"},
+    {K_X1RELEASE,		(char_u *)"X1Release"},
+    {K_X2MOUSE,		(char_u *)"X2Mouse"},
+    {K_X2DRAG,		(char_u *)"X2Drag"},
+    {K_X2RELEASE,		(char_u *)"X2Release"},
     {K_ZERO,		(char_u *)"Nul"},
 #ifdef FEAT_EVAL
     {K_SNR,		(char_u *)"SNR"},
@@ -1904,6 +1910,12 @@ static struct mousetable
     {(int)KE_RIGHTMOUSE,	MOUSE_RIGHT,	TRUE,	FALSE},
     {(int)KE_RIGHTDRAG,		MOUSE_RIGHT,	FALSE,	TRUE},
     {(int)KE_RIGHTRELEASE,	MOUSE_RIGHT,	FALSE,	FALSE},
+    {(int)KE_X1MOUSE,		MOUSE_X1,	TRUE,	FALSE},
+    {(int)KE_X1DRAG,		MOUSE_X1,	FALSE,	TRUE},
+    {(int)KE_X1RELEASE,		MOUSE_X1,	FALSE,	FALSE},
+    {(int)KE_X2MOUSE,		MOUSE_X2,	TRUE,	FALSE},
+    {(int)KE_X2DRAG,		MOUSE_X2,	FALSE,	TRUE},
+    {(int)KE_X2RELEASE,		MOUSE_X2,	FALSE,	FALSE},
     /* DRAG without CLICK */
     {(int)KE_IGNORE,		MOUSE_RELEASE,	FALSE,	TRUE},
     /* RELEASE without CLICK */
