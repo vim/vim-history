@@ -3462,7 +3462,7 @@ showmap(mp, local)
 {
     int len = 1;
 
-    if (msg_didout)
+    if (msg_didout || msg_silent != 0)
 	msg_putchar('\n');
     if ((mp->m_mode & (INSERT + CMDLINE)) == INSERT + CMDLINE)
 	msg_putchar('!');			/* :map! */

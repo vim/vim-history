@@ -468,6 +468,7 @@ emsg(s)
 	 */
 	if (emsg_silent != 0)
 	{
+	    msg_start();
 	    redir_write(s, -1);
 	    return TRUE;
 	}
@@ -2477,6 +2478,9 @@ redir_write(str, maxlen)
 		++cur_col;
 	    ++s;
 	}
+
+	if (msg_silent != 0)	/* should update msg_col */
+	    msg_col = cur_col;
     }
 }
 
@@ -2522,7 +2526,7 @@ msg_advance(col)
 {
     if (msg_silent != 0)	/* nothing to advance to */
     {
-	msg_putchar(' ');	/* insert something for redirection */
+	msg_col = col;		/* for redirection, may fill it up later */
 	return;
     }
     if (col >= Columns)		/* not enough room */
