@@ -3106,7 +3106,8 @@ get_literal()
 	{
 	    if (hexmode)
 	    {
-		if (!vim_isdigit(nc) && !isxdigit(nc))
+		/* Careful: isxdigit() on Win32 can handle only 0-255 */
+		if (nc < 0 || nc > 255 || (!vim_isdigit(nc) && !isxdigit(nc)))
 		    break;
 		nc = TO_LOWER(nc);
 		if (nc >= 'a')
