@@ -716,7 +716,9 @@ main(int argc, char **argv)
 	exe = get_choice(exe_choices, TABLE_SIZE(exe_choices));
 	switch (exe)
 	{
-	    case 1: append_autoexec("set PATH=%%PATH%%;%s\n", vimdir);
+	    case 1: /* Must use double quotes for when the vimdir or %PATH%
+		     * contains a space. */
+		    append_autoexec("set PATH=\"%%PATH%%;%s\"\n", vimdir);
 		    need_vimvar = 0;
 		    break;
 
@@ -742,6 +744,9 @@ main(int argc, char **argv)
 	else
 	{
 	    vimrc[vimdirend - 1] = NUL;
+	    /* Don't use double quotes for the value here, also when vimrc
+	     * contains a space.  The quotes would be included in the value
+	     * for MSDOS. */
 	    append_autoexec("set VIM=%s\n", vimrc);
 	}
     }
