@@ -1752,24 +1752,23 @@ vgetorpeek(advance)
 		     */
 		    mp = NULL;
 		    max_mlen = 0;
+		    c1 = typebuf.tb_buf[typebuf.tb_off];
 		    if (no_mapping == 0 && maphash_valid
 			    && (typebuf.tb_maplen == 0
 				|| (p_remap
 				    && typebuf.tb_noremap[typebuf.tb_off]
 								  != RM_NONE))
 			    && !(p_paste && (State & (INSERT + CMDLINE)))
-			    && !(State == HITRETURN
-				&& (typebuf.tb_buf[typebuf.tb_off] == CR
-				    || typebuf.tb_buf[typebuf.tb_off] == ' '))
+			    && !(State == HITRETURN && (c1 == CR || c1 == ' '))
 			    && State != ASKMORE
 			    && State != CONFIRM
 #ifdef FEAT_INS_EXPAND
-			    && !(ctrl_x_mode && vim_is_ctrl_x_key(
-					      typebuf.tb_buf[typebuf.tb_off]))
+			    && !((ctrl_x_mode != 0 && vim_is_ctrl_x_key(c1))
+				    || ((continue_status & CONT_LOCAL)
+					&& (c1 == Ctrl_N || c1 == Ctrl_P)))
 #endif
 			    )
 		    {
-			c1 = typebuf.tb_buf[typebuf.tb_off];
 #ifdef FEAT_LANGMAP
 			if (c1 == K_SPECIAL)
 			    nolmaplen = 2;
