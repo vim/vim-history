@@ -121,12 +121,13 @@ static void ins_redraw __ARGS((void));
 static void ins_ctrl_v __ARGS((void));
 static void undisplay_dollar __ARGS((void));
 static void insert_special __ARGS((int, int, int));
+static void check_auto_format __ARGS((int));
 #ifdef FEAT_COMMENTS
 static int  cmplen __ARGS((char_u *s1, char_u *s2));
 #endif
 static void redo_literal __ARGS((int c));
 static void start_arrow __ARGS((pos_T *end_insert_pos));
-static void stop_insert __ARGS((pos_T *end_insert_pos));
+static void stop_insert __ARGS((pos_T *end_insert_pos, int esc));
 static int  echeck_abbr __ARGS((int));
 static void replace_push_off __ARGS((int c));
 static int  replace_pop __ARGS((void));
@@ -195,10 +196,10 @@ static int	can_cindent;		/* may do cindenting on this line */
 static int	old_indent = 0;		/* for ^^D command in insert mode */
 
 #ifdef FEAT_RIGHTLEFT
-int	    revins_on;			/* reverse insert mode on */
-int	    revins_chars;		/* how much to skip after edit */
-int	    revins_legal;		/* was the last char 'legal'? */
-int	    revins_scol;		/* start column of revins session */
+int		revins_on;		/* reverse insert mode on */
+int		revins_chars;		/* how much to skip after edit */
+int		revins_legal;		/* was the last char 'legal'? */
+int		revins_scol;		/* start column of revins session */
 #endif
 
 #if defined(FEAT_MBYTE) && defined(MACOS_CLASSIC)
@@ -208,6 +209,9 @@ static short	previous_script = smRoman;
 static int	ins_need_undo;		/* call u_save() before inserting a
 					   char.  Set when edit() is called.
 					   after that arrow_used is used. */
+
+static int	did_add_space = FALSE;	/* auto_format() added an extra space
+					   under the cursor */
 
 /*
  * edit(): Start inserting text.
@@ -866,7 +870,7 @@ doESCkey:
 	/* insert the contents of a register */
 	case Ctrl_R:
 	    ins_reg();
-	    auto_format();
+	    auto_format(FALSE);
 	    inserted_space = FALSE;
 	    break;
 
@@ -961,7 +965,7 @@ doESCkey:
 	    }
 # endif
 	    ins_shift(c, lastc);
-	    auto_format();
+	    auto_format(FALSE);
 	    inserted_space = FALSE;
 	    break;
 
@@ -969,26 +973,26 @@ doESCkey:
 	case K_DEL:
 	case K_KDEL:
 	    ins_del();
-	    auto_format();
+	    auto_format(FALSE);
 	    break;
 
 	/* delete character before the cursor */
 	case K_BS:
 	case Ctrl_H:
 	    did_backspace = ins_bs(c, BACKSPACE_CHAR, &inserted_space);
-	    auto_format();
+	    auto_format(FALSE);
 	    break;
 
 	/* delete word before the cursor */
 	case Ctrl_W:
 	    did_backspace = ins_bs(c, BACKSPACE_WORD, &inserted_space);
-	    auto_format();
+	    auto_format(FALSE);
 	    break;
 
 	/* delete all inserted text in current line */
 	case Ctrl_U:
 	    did_backspace = ins_bs(c, BACKSPACE_LINE, &inserted_space);
-	    auto_format();
+	    auto_format(FALSE);
 	    inserted_space = FALSE;
 	    break;
 
@@ -1111,7 +1115,7 @@ doESCkey:
 	    inserted_space = FALSE;
 	    if (ins_tab())
 		goto normalchar;	/* insert TAB as a normal char */
-	    auto_format();
+	    auto_format(FALSE);
 	    break;
 
 	case K_KENTER:
@@ -1138,7 +1142,7 @@ doESCkey:
 #endif
 	    if (ins_eol(c) && !p_im)
 		goto doESCkey;	    /* out of memory */
-	    auto_format();
+	    auto_format(FALSE);
 	    inserted_space = FALSE;
 	    break;
 
@@ -1252,7 +1256,7 @@ docomplete:
 		    revins_legal++;
 #endif
 		    c = Ctrl_V;	/* pretend CTRL-V is last character */
-		    auto_format();
+		    auto_format(FALSE);
 		}
 	    }
 	    break;
@@ -1299,7 +1303,7 @@ normalchar:
 #endif
 	    }
 
-	    auto_format();
+	    auto_format(FALSE);
 
 #ifdef FEAT_FOLDING
 	    /* When inserting a character the cursor line must never be in a
@@ -2489,7 +2493,7 @@ ins_compl_prep(c)
 		curwin->w_cursor.col++;
 	    }
 
-	    auto_format();
+	    auto_format(FALSE);
 
 	    ins_compl_free();
 	    started_completion = FALSE;
@@ -4346,12 +4350,14 @@ insertchar(c, flags, second_indent)
  * saved here.
  */
     void
-auto_format()
+auto_format(trailblank)
+    int		trailblank;	/* when TRUE also format with trailing blank */
 {
     pos_T	pos;
     colnr_T	len;
     char_u	*old, *pold;
     char_u	*new, *pnew;
+    int		wasatend;
 
     if (!has_format_option(FO_AUTO))
 	return;
@@ -4359,12 +4365,16 @@ auto_format()
     pos = curwin->w_cursor;
     old = ml_get_curline();
 
+    /* may remove added space */
+    check_auto_format(FALSE);
+
     /* Don't format in Insert mode when the cursor is on a trailing blank, the
      * user might insert normal text next.  Also skip formatting when "1" is
      * in 'formatoptions' and there is a single character before the cursor.
      * Otherwise the line would be broken and when typing another non-white
      * next they are not joined back together. */
-    if (*old != NUL && pos.col == STRLEN(old))
+    wasatend = (pos.col == STRLEN(old));
+    if (*old != NUL && !trailblank && wasatend)
     {
 	dec_cursor();
 	if (!WHITECHAR(gchar_cursor())
@@ -4426,7 +4436,31 @@ auto_format()
 	len = (colnr_T)STRLEN(pnew);
 	if ((pold - old) + len >= pos.col)
 	{
-	    curwin->w_cursor.col = pos.col - (pold - old) + (pnew - new);
+	    if (pos.col <= (colnr_T)(pold - old))
+		curwin->w_cursor.col = (pnew - new);
+	    else
+		curwin->w_cursor.col = pos.col - (pold - old) + (pnew - new);
+
+	    /* Insert mode: If the cursor is now after the end of the line
+	     * while it previously wasn't, the line was broken.  Because of
+	     * the rule above we need to add a space when 'w' is in
+	     * 'formatoptions' to keep a paragraph formatted. */
+	    if (!wasatend && has_format_option(FO_WHITE_PAR))
+	    {
+		len = STRLEN(new);
+		if (curwin->w_cursor.col == len)
+		{
+		    pnew = vim_strnsave(new, len + 2);
+		    pnew[len] = ' ';
+		    pnew[len + 1] = NUL;
+		    ml_replace(curwin->w_cursor.lnum, pnew, FALSE);
+		    /* remove the space later */
+		    did_add_space = TRUE;
+		}
+		else
+		    /* may remove added space */
+		    check_auto_format(FALSE);
+	    }
 	    break;
 	}
 	/* Cursor wraps to next line */
@@ -4435,6 +4469,40 @@ auto_format()
     }
     check_cursor();
     vim_free(old);
+}
+
+/*
+ * When an extra space was added to continue a paragraph for auto-formatting,
+ * delete it now.  The space must be under the cursor, just after the insert
+ * position.
+ */
+    static void
+check_auto_format(end_insert)
+    int		end_insert;	    /* TRUE when ending Insert mode */
+{
+    int		c = ' ';
+
+    if (did_add_space)
+    {
+	if (!WHITECHAR(gchar_cursor()))
+	    /* Somehow the space was removed already. */
+	    did_add_space = FALSE;
+	else
+	{
+	    if (!end_insert)
+	    {
+		inc_cursor();
+		c = gchar_cursor();
+		dec_cursor();
+	    }
+	    if (c != NUL)
+	    {
+		/* The space is no longer at the end of the line, delete it. */
+		del_char(FALSE);
+		did_add_space = FALSE;
+	    }
+	}
+    }
 }
 
 #ifdef FEAT_COMMENTS
@@ -4536,8 +4604,8 @@ start_arrow(end_insert_pos)
     if (!arrow_used)	    /* something has been inserted */
     {
 	AppendToRedobuff(ESC_STR);
+	stop_insert(end_insert_pos, FALSE);
 	arrow_used = TRUE;	/* this means we stopped the current insert */
-	stop_insert(end_insert_pos);
     }
 }
 
@@ -4587,8 +4655,9 @@ stop_arrow()
  * do a few things to stop inserting
  */
     static void
-stop_insert(end_insert_pos)
+stop_insert(end_insert_pos, esc)
     pos_T    *end_insert_pos;	/* where insert ended */
+    int	    esc;		/* called by ins_esc() */
 {
     int	    cc;
 
@@ -4602,34 +4671,45 @@ stop_insert(end_insert_pos)
     last_insert = get_inserted();
     last_insert_skip = new_insert_skip;
 
-    /*
-     * If we just did an auto-indent, remove the white space from the end of
-     * the line, and put the cursor back.
-     */
-    if (did_ai && !arrow_used)
+    if (!arrow_used)
     {
-	if (gchar_cursor() == NUL && curwin->w_cursor.col > 0)
-	    --curwin->w_cursor.col;
-	while (cc = gchar_cursor(), vim_iswhite(cc))
-	    (void)del_char(TRUE);
-	if (cc != NUL)
-	    ++curwin->w_cursor.col;	/* put cursor back on the NUL */
+	/* Auto-format now.  It may seem strange to do this when stopping an
+	 * insertion (or moving the cursor), but it's required when appending
+	 * a line and having it end in a space.  But only do it when something
+	 * was actually inserted, otherwise undo won't work. */
+	if (!ins_need_undo)
+	    auto_format(TRUE);
+
+	/* If a space was inserted for auto-formatting, remove it now. */
+	check_auto_format(TRUE);
+
+	/* If we just did an auto-indent, remove the white space from the end
+	 * of the line, and put the cursor back.  */
+	if (did_ai && esc)
+	{
+	    if (gchar_cursor() == NUL && curwin->w_cursor.col > 0)
+		--curwin->w_cursor.col;
+	    while (cc = gchar_cursor(), vim_iswhite(cc))
+		(void)del_char(TRUE);
+	    if (cc != NUL)
+		++curwin->w_cursor.col;	/* put cursor back on the NUL */
 
 #ifdef FEAT_VISUAL
-	/* <C-S-Right> may have started Visual mode, adjust the position for
-	 * deleted characters. */
-	if (VIsual_active && VIsual.lnum == curwin->w_cursor.lnum)
-	{
-	    cc = STRLEN(ml_get_curline());
-	    if (VIsual.col > (colnr_T)cc)
+	    /* <C-S-Right> may have started Visual mode, adjust the position for
+	     * deleted characters. */
+	    if (VIsual_active && VIsual.lnum == curwin->w_cursor.lnum)
 	    {
-		VIsual.col = cc;
+		cc = STRLEN(ml_get_curline());
+		if (VIsual.col > (colnr_T)cc)
+		{
+		    VIsual.col = cc;
 # ifdef FEAT_VIRTUALEDIT
-		VIsual.coladd = 0;
+		    VIsual.coladd = 0;
 # endif
+		}
 	    }
-	}
 #endif
+	}
     }
     did_ai = FALSE;
 #ifdef FEAT_SMARTINDENT
@@ -5988,7 +6068,7 @@ ins_esc(count, cmdchar)
 	    disabled_redraw = TRUE;
 	    return FALSE;	/* repeat the insert */
 	}
-	stop_insert(&curwin->w_cursor);
+	stop_insert(&curwin->w_cursor, TRUE);
 	undisplay_dollar();
     }
 
