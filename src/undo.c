@@ -298,7 +298,8 @@ u_savecommon(top, bot, newbot)
 			    for (p = curbuf->b_u_newhead->uh_entry;
 						     p != uep; p = p->ue_next)
 			    {
-				p->ue_bot -= uep->ue_bot - newbot;
+				if (p->ue_bot != 0)
+				    p->ue_bot -= uep->ue_bot - newbot;
 				p->ue_top -= uep->ue_bot - newbot;
 			    }
 			}
