@@ -453,6 +453,7 @@ gui_mch_add_menu_item(vimmenu_T *menu, int idx)
     {
 	/* Separator: Just add it */
 	menu->id = gtk_menu_item_new();
+	gtk_widget_set_sensitive(menu->id, FALSE);
 	gtk_widget_show(menu->id);
 	gtk_menu_insert(GTK_MENU(parent->submenu_id), menu->id, idx);
 

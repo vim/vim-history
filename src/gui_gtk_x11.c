@@ -3571,6 +3571,9 @@ gui_mch_menu_grey(vimmenu_T *menu, int grey)
     if (menu->id == 0)
 	return;
 
+    if (menu_is_separator(menu->name))
+	grey = 1;
+
     gui_mch_menu_hidden(menu, FALSE);
     /* Be clever about bitfields versus true booleans here! */
     if (!GTK_WIDGET_SENSITIVE(menu->id) == !grey)
