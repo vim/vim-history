@@ -706,7 +706,11 @@
 # if defined(FEAT_GUI_MSWIN)
 #  define FEAT_GUI_DIALOG
 # else
-#  if ((defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF)) && defined(HAVE_X11_XPM_H)) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON) || defined(FEAT_GUI_MAC)
+#  if ((defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF)) \
+		&& defined(HAVE_X11_XPM_H)) \
+	|| defined(FEAT_GUI_GTK) \
+	|| defined(FEAT_GUI_PHOTON) \
+	|| (defined(TARGET_API_MAC_CARBON) && TARGET_API_MAC_CARBON)
 #   define FEAT_CON_DIALOG
 #   define FEAT_GUI_DIALOG
 #  else

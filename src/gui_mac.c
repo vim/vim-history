@@ -2060,12 +2060,20 @@ gui_mac_doKeyEvent(EventRecord *theEvent)
     /* Do not want SHIFT-A or CTRL-A with modifier */
     if (!IS_SPECIAL(key_char))
     {
+#if 1
+    /* Clear modifiers when only one modifier is set */
+	if( (modifiers == MOD_MASK_SHIFT) ||
+	    (modifiers == MOD_MASK_CTRL)  ||
+	    (modifiers == MOD_MASK_ALT))
+	    modifiers = 0;
+#else
 	if( modifiers & MOD_MASK_CTRL)
 	    modifiers = modifiers & ~MOD_MASK_CTRL;
 	if( modifiers & MOD_MASK_ALT)
 	    modifiers = modifiers & ~MOD_MASK_ALT;
 	if( modifiers & MOD_MASK_SHIFT)
 	    modifiers = modifiers & ~MOD_MASK_SHIFT;
+#endif
     }
 	if( modifiers )
 	{
@@ -5328,3 +5336,37 @@ char_u *FullPathFromFSSpec_save (FSSpec file)
 #endif
 }
 
+#if defined(USE_IM_CONTROL) || defined(PROTO)
+/*
+ * Input Method Control functions.
+ */
+
+/*
+ * Notify cursor position to IM.
+ */
+    void
+im_set_position(int row, int col)
+{
+    /* TODO: Implement me! */
+}
+
+/*
+ * Set IM status on ("active" is TRUE) or off ("active" is FALSE).
+ */
+    void
+im_set_active(int active)
+{
+    KeyScript(active ? smKeySysScript : smKeyRoman);
+}
+
+/*
+ * Get IM status.  When IM is on, return not 0.  Else return 0.
+ */
+    int
+im_get_status()
+{
+    SInt32 script = GetScriptManagerVariable(smKeyScript);
+    return (script != smRoman
+	    && script == GetScriptManagerVariable(smSysScript)) ? 1 : 0;
+}
+#endif /* defined(USE_IM_CONTROL) || defined(PROTO) */

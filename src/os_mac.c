@@ -1081,14 +1081,20 @@ mch_isdir(name)
      */
     struct stat statb;
 
+#if defined(TARGET_API_MAC_CARBON) && TARGET_API_MAC_CARBON
     /* For some reason the name is sometimes empty,
      * (such as for a not yet named file). An empty
      * filename is interpreted by the MacOS version
      * of stat (at least under Codewarrior) as the
      * current directory.
      */
+    /* AK 20020413
+     * This is required for Carbon but breaks the
+     * explorer plugin in Classic
+     */
     if (name[0] == NULL)
 	return FALSE;
+#endif
 
     if (stat((char *)name, &statb))
 	return FALSE;
