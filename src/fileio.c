@@ -2519,7 +2519,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    msg_scroll = msg_save;
 	    if (did_cmd)
 	    {
-		if (!exiting && overwriting)
+		if (overwriting)
 		{
 		    /* Assume the buffer was written, update the timestamp. */
 		    ml_timestamp(buf);
@@ -3793,7 +3793,7 @@ restore_backup:
      * If written to the current file, update the timestamp of the swap file
      * and reset the BF_WRITE_MASK flags. Also sets buf->b_mtime.
      */
-    if (!exiting && overwriting)
+    if (overwriting)
     {
 	ml_timestamp(buf);
 	buf->b_flags &= ~BF_WRITE_MASK;
