@@ -5868,6 +5868,15 @@ ins_esc(count, cmdchar)
 	    --curwin->w_cursor.col;
     }
 
+#ifdef USE_IM_CONTROL
+    /* Disable IM to allow typing English directly for Normal mode commands.
+     * When ":lmap" is enabled don't change 'iminsert' (IM can be enabled as
+     * well). */
+    if (!(State & LANGMAP))
+	im_save_status(&curbuf->b_p_iminsert);
+    im_set_active(FALSE);
+#endif
+
     State = NORMAL;
     /* need to position cursor again (e.g. when on a TAB ) */
     changed_cline_bef_curs();
@@ -5877,15 +5886,6 @@ ins_esc(count, cmdchar)
 #endif
 #ifdef CURSOR_SHAPE
     ui_cursor_shape();		/* may show different cursor shape */
-#endif
-
-#ifdef USE_IM_CONTROL
-    /* Disable IM to allow typing English directly for Normal mode commands.
-     * When ":lmap" is enabled don't change 'iminsert' (IM can be enabled as
-     * well). */
-    if (!(State & LANGMAP))
-	im_save_status(&curbuf->b_p_iminsert);
-    im_set_active(FALSE);
 #endif
 
     /*
