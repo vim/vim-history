@@ -116,8 +116,8 @@
 #		make installmacros	only installs the Vim macros
 #		make installtutor	only installs the Vim tutor
 #		make installtools	only installs xxd
-#	If you install Vim not to install for real but to prepare a package or
-#	RPM, set DESTDIR to the root of the tree.
+#	If you install Vim, not to install for real but to prepare a package
+#	or RPM, set DESTDIR to the root of the tree.
 #
 # 6. Use Vim until a new version comes out.  {{{1
 #
@@ -188,6 +188,7 @@
 #SunOS 4.1.3_U1 (sun4c) gcc	     +X11 +GUI Athena	5.0w (J) Darren Hiebert
 #SUPER-UX 6.2 (NEC SX-4) cc	     +X11R6 Motif,Athena4.6b (P) Lennart Schultz
 #Unisys 6035	      cc	     +X11 Motif		5.3  (8) Glauber Ribeiro
+#ESIX V4.2            cc             +X11               6.0  (a) Reinhard Wobst
 # }}}
 
 # (*)  Remarks: {{{
@@ -232,6 +233,7 @@
 # (X)  Need to use the .include "auto/config.mk" line below
 # (Y)  See line with c89 below
 # (Z)  See lines with cc or c89 below
+# (a)  See line with EXTRA_LIBS below.
 # }}}
 
 
@@ -285,6 +287,9 @@ CClink = $(CC)
 #CONF_ARGS = --exec-prefix=/usr
 #CONF_ARGS = --with-vim-name=vim6 --with-ex-name=ex6 --with-view-name=view6
 #CONF_ARGS = --with-global-runtime=/etc/vim
+
+# Use this one if you distribute a modified version of Vim.
+#CONF_ARGS = --with-modified-by="John Doe"
 
 # GUI - For creating Vim with GUI (gvim) (B)
 # Uncomment this line when you don't want to get the GUI version, although you
@@ -470,9 +475,11 @@ LINT_OPTIONS = -beprxzF
 ### (2) HP-UX with a non-ANSI cc, use the c89 ANSI compiler
 ###	The first probably works on all systems
 ###	The second should work a bit better on newer systems
+###	The third should work a bit better on HPUX 11.11
 ###	Information provided by: Richard Allen <ra@rhi.hi.is>
 #CC = c89 -D_HPUX_SOURCE
 #CC = c89 -O +Onolimit +ESlit -D_HPUX_SOURCE
+#CC = c89 -O +Onolimit +ESlit +e -D_HPUX_SOURCE
 
 ### (2) For HP-UX: Enable the use of a different set of digraphs.  Use this
 ###	when the default (ISO) digraphs look completely wrong.
@@ -684,6 +691,9 @@ LINT_OPTIONS = -beprxzF
 ###	 one.  After changing this, you need to do "make reconfig".
 #CONF_TERM_LIB = --with-tlib=termlib
 
+### (a)  ESIX V4.2 (Reinhard Wobst)
+#EXTRA_LIBS = -lnsl -lsocket -lgen -lXIM -lXmu -lXext
+
 ### If you want to use ncurses library instead of the automatically found one
 ### after changing this, you need to do "make reconfig".
 #CONF_TERM_LIB = --with-tlib=ncurses
@@ -771,7 +781,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60
+VIMRTDIR = /vim61a
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -1322,7 +1332,7 @@ tools: $(TOOLS)
 # auto/config.h isn't updated.  The dependency on auto/config.mk should make
 # sure configure is run when it's needed.
 #
-config auto/config.mk: auto/configure config.mk.in
+config auto/config.mk: auto/configure config.mk.in config.h.in
 	GUI_INC_LOC="$(GUI_INC_LOC)" GUI_LIB_LOC="$(GUI_LIB_LOC)" \
 		CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" \
 		LDFLAGS="$(LDFLAGS)" $(CONF_SHELL) srcdir="$(srcdir)" \
@@ -1601,6 +1611,7 @@ installmacros: $(MACROSOURCE) $(DEST_VIM) $(DEST_RT) $(DEST_MACRO)
 	$(INSTALL_DATA_R) $(MACROSOURCE)/* $(DEST_MACRO)
 	chmod $(DIRMOD) `find $(DEST_MACRO) -type d -print`
 	chmod $(FILEMOD) `find $(DEST_MACRO) -type f -print`
+	chmod $(SCRIPTMOD) $(DEST_MACRO)/less.sh
 
 # install the tutor files
 installtutor: $(TUTORSOURCE) $(DEST_VIM) $(DEST_RT) $(DEST_TUTOR)
@@ -1844,8 +1855,9 @@ shadow:	runtime pixmaps
 	cd $(SHADOWDIR)/auto; ln -s ../../auto/configure .
 	cd $(SHADOWDIR); rm -f auto/link.sed
 	cp Makefile configure $(SHADOWDIR)
-	cp -f config.mk.dist $(SHADOWDIR)/auto/config.mk
-	cp -f config.mk.dist $(SHADOWDIR)
+	rm -f $(SHADOWDIR)/auto/config.mk $(SHADOWDIR)/config.mk.dist
+	cp config.mk.dist $(SHADOWDIR)/auto/config.mk
+	cp config.mk.dist $(SHADOWDIR)
 	mkdir $(SHADOWDIR)/xxd
 	cd $(SHADOWDIR)/xxd; ln -s ../../xxd/*.[ch] ../../xxd/Make* .
 	mkdir $(SHADOWDIR)/testdir
@@ -1871,9 +1883,9 @@ menu: ./vim ../runtime/makemenu.vim
 # Start configure from scratch
 scrub scratch:
 	-rm -f auto/config.status auto/config.cache config.log auto/config.log
-	-rm -f auto/config.h auto/link.log auto/link.sed
+	-rm -f auto/config.h auto/link.log auto/link.sed auto/config.mk
 	touch auto/config.h
-	cp -f config.mk.dist auto/config.mk
+	cp config.mk.dist auto/config.mk
 
 distclean: clean scratch
 	-rm -f tags

@@ -1,10 +1,10 @@
-*usr_90.txt*	For Vim version 6.0.  Last change: 2001 Sep 09
+*usr_90.txt*	For Vim version 6.1a.  Last change: 2001 Oct 23
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
 				Installing Vim
 
-
+								*install*
 Before you can use Vim you have to install it.  Depending on your system it's
 simple or easy.  This chapter gives a few hints and also explains how
 upgrading to a new version is done.
@@ -390,13 +390,12 @@ By default RedHat installs a minimal version of Vim.  Check your RPM packages
 for something named "Vim-enhanced-version.rpm" and install that.
 
 
-Q: How Do I Turn Syntax Coloring On?
+Q: How Do I Turn Syntax Coloring On?  How do I make plugins work?
 
-Use the following command: >
+Use the example vimrc script.  You can find an explanation on how to use it
+here: |not-compatible|.
 
-	:syntax enable
-
-See chapter 6 for information: |usr_06.txt|.
+See chapter 6 for information about syntax highlighting: |usr_06.txt|.
 
 
 Q: What Is a Good vimrc File to Use?

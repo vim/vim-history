@@ -812,8 +812,8 @@ first_submatch(rp)
  */
     int
 do_search(oap, dirc, str, count, options)
-    oparg_T	    *oap;
-    int		    dirc;
+    oparg_T	    *oap;	/* can be NULL */
+    int		    dirc;	/* '/' or '?' */
     char_u	   *str;
     long	    count;
     int		    options;

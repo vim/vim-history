@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	Scheme (R5RS)
-" Maintainer:	Dirk van Deun <dvandeun@poboxes.com>
+" Maintainer:	Dirk van Deun <dirk@igwe.vub.ac.be>
 " Last Change:	April 30, 1998
 
 " This script incorrectly recognizes some junk input as numerals:

@@ -1,7 +1,8 @@
 " Vim syntax file
 " Language:	Maple V (based on release 4)
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	October 16, 1998
+" Last Change:	Dec 10, 2001
+" Latest:	http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
 "
 " Because there are a lot of packages, and because of the potential for namespace
 " clashes, this version of <maple.vim> needs the user to select which, if any,

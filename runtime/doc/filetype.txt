@@ -1,4 +1,4 @@
-*filetype.txt*  For Vim version 6.0.  Last change: 2001 Sep 18
+*filetype.txt*  For Vim version 6.1a.  Last change: 2001 Sep 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -136,8 +136,11 @@ A. If your file type can be detected by the file name.
    2. Create a file that contains autocommands to detect the file type.
       Example: >
 	" my filetype file
+	if exists("did_load_filetypes")
+	  finish
+	endif
 	augroup filetypedetect
-	  au! BufRead,BufNewFile *.mine	setfiletype mine
+	  au! BufRead,BufNewFile *.mine		setfiletype mine
 	  au! BufRead,BufNewFile *.xyz		setfiletype drawing
 	augroup END
 <     Write this file as "filetype.vim" in your user runtime directory.  For

@@ -109,7 +109,7 @@ AC_ARG_WITH(global-runtime, [  --with-global-runtime=DIR    global runtime direc
 	AC_MSG_RESULT(no))
 
 AC_MSG_CHECKING(--with-modified-by argument)
-AC_ARG_WITH(modified-by, [  --with-modified-by=NAME       name of who modified a rlease version],
+AC_ARG_WITH(modified-by, [  --with-modified-by=NAME       name of who modified a release version],
 	AC_MSG_RESULT($withval); AC_DEFINE_UNQUOTED(MODIFIED_BY, "$withval"),
 	AC_MSG_RESULT(no))
 

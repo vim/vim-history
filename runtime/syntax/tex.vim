@@ -1,8 +1,9 @@
 " Vim syntax file
 " Language:    TeX
 " Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: September 11, 2001
-" Version:     6.0-9
+" Last Change: Dec 11, 2001
+" Version:     6.0-15
+" Latest:	http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
 "
 " Notes:
 "
@@ -56,18 +57,22 @@ endif
 syn cluster texCmdGroup	contains=texCmdBody,texComment,texDefParm,texDelimiter,texDocType,texInput,texLength,texLigature,texMathDelim,texMathError,texMathOper,texNewCmd,texNewEnv,texRefZone,texSection,texSectionMarker,texSectionName,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle
 syn cluster texEnvGroup	contains=texMatcher,texMathDelim,texSpecialChar,texStatement
 syn cluster texMatchGroup	contains=@texMathZones,texAccent,texBadMath,texComment,texDefCmd,texDelimiter,texDocType,texInput,texLength,texLigature,texMatcher,texNewCmd,texNewEnv,texOnlyMath,texParen,texRefZone,texSection,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle,texZone,texInputFile
-syn cluster texMathDelimGroup	contains=texMathDelimBad,texMathDelimKey,texMathDelimSet1,texMathDelimSet2
-syn cluster texMathMatchGroup contains=@texMathZones,texComment,texDefCmd,texDelimiter,texDocType,texInput,texLength,texLigature,texMathDelim,texMathError,texMathMatcher,texMathOper,texNewCmd,texNewEnv,texRefZone,texSection,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle,texZone
-syn cluster texMathZoneGroup	contains=texComment,texDelimiter,texLength,texMathDelim,texMathError,texMathMatcher,texMathOper,texRefZone,texSpecialChar,texStatement,texTypeSize,texTypeStyle
-syn cluster texMathZones	contains=texMathZoneA,texMathZoneB,texMathZoneC,texMathZoneD,texMathZoneE,texMathZoneF,texMathZoneG,texMathZoneH,texMathZoneI,texMathZoneJ,texMathZoneK,texMathZoneL,texMathZoneM,texMathZoneN,texMathZoneO,texMathZoneP,texMathZoneQ,texMathZoneR,texMathZoneS,texMathZoneT,texMathZoneU,texMathZoneV,texMathZoneW
+if !exists("tex_no_math")
+ syn cluster texMathDelimGroup contains=texMathDelimBad,texMathDelimKey,texMathDelimSet1,texMathDelimSet2
+ syn cluster texMathMatchGroup contains=@texMathZones,texComment,texDefCmd,texDelimiter,texDocType,texInput,texLength,texLigature,texMathDelim,texMathError,texMathMatcher,texMathOper,texNewCmd,texNewEnv,texRefZone,texSection,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle,texZone
+ syn cluster texMathZoneGroup	 contains=texComment,texDelimiter,texLength,texMathDelim,texMathError,texMathMatcher,texMathOper,texRefZone,texSpecialChar,texStatement,texTypeSize,texTypeStyle
+ syn cluster texMathZones	 contains=texMathZoneA,texMathZoneB,texMathZoneC,texMathZoneD,texMathZoneE,texMathZoneF,texMathZoneG,texMathZoneH,texMathZoneI,texMathZoneJ,texMathZoneK,texMathZoneL,texMathZoneM,texMathZoneN,texMathZoneO,texMathZoneP,texMathZoneQ,texMathZoneR,texMathZoneS,texMathZoneT,texMathZoneU,texMathZoneV,texMathZoneW,texMathZoneX
+endif
 
 " Try to flag {} and () mismatches
-syn region texMatcher	matchgroup=Delimiter start="{" skip="\\\\\|\\[{}]"	end="}"	contains=@texMatchGroup,texError
-syn region texMatcher	matchgroup=Delimiter start="\["		end="]"	contains=@texMatchGroup,texError
+syn region texMatcher	matchgroup=Delimiter start="{" skip="\\\\\|\\[{}]"	end="}"	contains=@texMatchGroup,texError fold
+syn region texMatcher	matchgroup=Delimiter start="\["		end="]"	contains=@texMatchGroup,texError fold
 syn region texParen	start="("				end=")"	contains=@texMatchGroup
 syn match  texError	"[}\])]"
-syn match  texMathError	"}"	contained
-syn region texMathMatcher	matchgroup=Delimiter start="{"  skip="\\\\\|\\}"  end="}" end="%stopzone\>" contained contains=@texMathMatchGroup
+if !exists("tex_no_math")
+ syn match  texMathError	"}"	contained
+ syn region texMathMatcher	matchgroup=Delimiter start="{"  skip="\\\\\|\\}"  end="}" end="%stopzone\>" contained contains=@texMathMatchGroup fold
+endif
 
 " TeX/LaTeX keywords
 " Instead of trying to be All Knowing, I just match \..alphameric..
@@ -97,7 +102,7 @@ syn match texAccent	+\\['=t'.c^ud"vb~Hr]{\a}+
 syn match texLigature	"\\\([ijolL]\|ae\|oe\|ss\|AA\|AE\|OE\)$"
 
 " \begin{}/\end{} section markers
-syn match  texSectionMarker	"\\begin\>\|\\end\>" nextgroup=texSectionName
+syn match  texSectionMarker	"\\begin\>\|\\end\>" nextgroup=texSectionName fold
 syn region texSectionName	matchgroup=Delimiter start="{" end="}" contained
 
 " \documentclass, \documentstyle, \usepackage
@@ -174,48 +179,53 @@ syn match texSection	"\\\(title\|author\|part\|chapter\|paragraph\|subparagraph\
 syn match texSection	"\\begin\s*{\s*abstract\s*}\|\\end\s*{\s*abstract\s*}"
 
 " Bad Math (mismatched)
-syn match texBadMath	"\\end\s*{\s*\(split\|align\|gather\|alignat\|flalign\|multline\)\s*}"
-syn match texBadMath	"\\end\s*{\s*\(equation\|eqnarray\|displaymath\)\*\=\s*}"
-syn match texBadMath	"\\[\])]"
+if !exists("tex_no_math")
+ syn match texBadMath	"\\end\s*{\s*\(split\|align\|gather\|alignat\|flalign\|multline\)\s*}"
+ syn match texBadMath	"\\end\s*{\s*\(equation\|eqnarray\|displaymath\)\*\=\s*}"
+ syn match texBadMath	"\\[\])]"
+endif
 
 " Math Zones
-syn region texMathZoneA	start="\\begin\s*{\s*align\*\s*}"	end="\\end\s*{\s*align\*\s*}"		keepend contains=@texMathZoneGroup
-syn region texMathZoneB	start="\\begin\s*{\s*alignat\*\s*}"	end="\\end\s*{\s*alignat\*\s*}"	keepend contains=@texMathZoneGroup
-syn region texMathZoneC	start="\\begin\s*{\s*alignat\s*}"	end="\\end\s*{\s*alignat\s*}"		keepend contains=@texMathZoneGroup
-syn region texMathZoneD	start="\\begin\s*{\s*align\s*}"	end="\\end\s*{\s*align\s*}"		keepend contains=@texMathZoneGroup
-syn region texMathZoneE	start="\\begin\s*{\s*eqnarray\*\s*}"	end="\\end\s*{\s*eqnarray\*\s*}"	keepend contains=@texMathZoneGroup
-syn region texMathZoneF	start="\\begin\s*{\s*eqnarray\s*}"	end="\\end\s*{\s*eqnarray\s*}"	keepend contains=@texMathZoneGroup
-syn region texMathZoneG	start="\\begin\s*{\s*equation\*\s*}"	end="\\end\s*{\s*equation\*\s*}"	keepend contains=@texMathZoneGroup
-syn region texMathZoneH	start="\\begin\s*{\s*equation\s*}"	end="\\end\s*{\s*equation\s*}"	keepend contains=@texMathZoneGroup
-syn region texMathZoneI	start="\\begin\s*{\s*flalign\*\s*}"	end="\\end\s*{\s*flalign\*\s*}"	keepend contains=@texMathZoneGroup
-syn region texMathZoneJ	start="\\begin\s*{\s*flalign\s*}"	end="\\end\s*{\s*flalign\s*}"		keepend contains=@texMathZoneGroup
-syn region texMathZoneK	start="\\begin\s*{\s*gather\*\s*}"	end="\\end\s*{\s*gather\*\s*}"	keepend contains=@texMathZoneGroup
-syn region texMathZoneL	start="\\begin\s*{\s*gather\s*}"	end="\\end\s*{\s*gather\s*}"		keepend contains=@texMathZoneGroup
-syn region texMathZoneM	start="\\begin\s*{\s*math\*\s*}"	end="\\end\s*{\s*math\*\s*}"		keepend contains=@texMathZoneGroup
-syn region texMathZoneN	start="\\begin\s*{\s*math\s*}"	end="\\end\s*{\s*math\s*}"		keepend contains=@texMathZoneGroup
-syn region texMathZoneO	start="\\begin\s*{\s*multline\s*}"	end="\\end\s*{\s*multline\s*}"	keepend contains=@texMathZoneGroup
-syn region texMathZoneP	start="\\begin\s*{\s*split\s*}"	end="\\end\s*{\s*split\s*}"		keepend contains=@texMathZoneGroup
-syn region texMathZoneQ	start="\\begin\s*{\s*displaymath\*\s*}"	end="\\end\s*{\s*displaymath\*\s*}"	keepend contains=@texMathZoneGroup
-syn region texMathZoneR	start="\\begin\s*{\s*displaymath\s*}"	end="\\end\s*{\s*displaymath\s*}"	keepend contains=@texMathZoneGroup
-syn region texMathZoneS	start="\\begin\s*{\s*multline\*\s*}"	end="\\end\s*{\s*multline\*\s*}"	keepend contains=@texMathZoneGroup
-
-syn region texMathZoneT	matchgroup=Delimiter start="\\("  matchgroup=Delimiter end="\\)\|%stopzone\>"	keepend contains=@texMathZoneGroup
-syn region texMathZoneU	matchgroup=Delimiter start="\\\[" matchgroup=Delimiter end="\\]\|%stopzone\>"	keepend contains=@texMathZoneGroup
-syn region texMathZoneV	matchgroup=Delimiter start="\$"   skip="\\\\\|\\\$" matchgroup=Delimiter end="\$" end="%stopzone\>" contains=@texMathZoneGroup
-syn region texMathZoneW	matchgroup=Delimiter start="\$\$" matchgroup=Delimiter end="\$\$" end="%stopzone\>"	keepend contains=@texMathZoneGroup
-
-syn match texMathOper	"[_^=]" contained
-
-" \left..something.. and \right..something.. support
-syn match   texMathDelimBad	contained	"."
-syn match   texMathDelim		"\\\(left\|right\)\>"	nextgroup=texMathDelimSet1,texMathDelimSet2,texMathDelimBad
-syn match   texMathDelim		"\\\(left\|right\)arrow\>"
-syn match   texMathDelim		"\\lefteqn\>"
-syn match   texMathDelimSet2	contained	"\\"	nextgroup=texMathDelimKey,texMathDelimBad
-syn match   texMathDelimSet1	contained	"[<>()[\]|/.]\|\\[{}|]"
-syn keyword texMathDelimKey   contained	Downarrow	backslash	lceil	rceil	uparrow
-syn keyword texMathDelimKey   contained	Uparrow	downarrow	lfloor	rfloor	updownarrow
-syn keyword texMathDelimKey   contained	Updownarrow	langle	rangle
+if !exists("tex_no_math")
+ syn region texMathZoneA	start="\\begin\s*{\s*align\*\s*}"	end="\\end\s*{\s*align\*\s*}"		keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneB	start="\\begin\s*{\s*alignat\*\s*}"	end="\\end\s*{\s*alignat\*\s*}"	keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneC	start="\\begin\s*{\s*alignat\s*}"	end="\\end\s*{\s*alignat\s*}"		keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneD	start="\\begin\s*{\s*align\s*}"	end="\\end\s*{\s*align\s*}"		keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneE	start="\\begin\s*{\s*eqnarray\*\s*}"	end="\\end\s*{\s*eqnarray\*\s*}"	keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneF	start="\\begin\s*{\s*eqnarray\s*}"	end="\\end\s*{\s*eqnarray\s*}"	keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneG	start="\\begin\s*{\s*equation\*\s*}"	end="\\end\s*{\s*equation\*\s*}"	keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneH	start="\\begin\s*{\s*equation\s*}"	end="\\end\s*{\s*equation\s*}"	keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneI	start="\\begin\s*{\s*flalign\*\s*}"	end="\\end\s*{\s*flalign\*\s*}"	keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneJ	start="\\begin\s*{\s*flalign\s*}"	end="\\end\s*{\s*flalign\s*}"		keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneK	start="\\begin\s*{\s*gather\*\s*}"	end="\\end\s*{\s*gather\*\s*}"	keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneL	start="\\begin\s*{\s*gather\s*}"	end="\\end\s*{\s*gather\s*}"		keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneM	start="\\begin\s*{\s*math\*\s*}"	end="\\end\s*{\s*math\*\s*}"		keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneN	start="\\begin\s*{\s*math\s*}"	end="\\end\s*{\s*math\s*}"		keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneO	start="\\begin\s*{\s*multline\s*}"	end="\\end\s*{\s*multline\s*}"	keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneP	start="\\begin\s*{\s*split\s*}"	end="\\end\s*{\s*split\s*}"		keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneQ	start="\\begin\s*{\s*displaymath\*\s*}"	end="\\end\s*{\s*displaymath\*\s*}"	keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneR	start="\\begin\s*{\s*displaymath\s*}"	end="\\end\s*{\s*displaymath\s*}"	keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneS	start="\\begin\s*{\s*multline\*\s*}"	end="\\end\s*{\s*multline\*\s*}"	keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneT	matchgroup=Delimiter start="\\("  matchgroup=Delimiter end="\\)\|%stopzone\>"	keepend fold	contains=@texMathZoneGroup
+ syn region texMathZoneU	matchgroup=Delimiter start="\\\[" matchgroup=Delimiter end="\\]\|%stopzone\>"	keepend fold	contains=@texMathZoneGroup
+ 
+ syn region texMathZoneV	matchgroup=Delimiter start="\$"   skip="\\\\\|\\\$" matchgroup=Delimiter end="\$" end="%stopzone\>"	contains=@texMathZoneGroup
+ syn region texMathZoneW	matchgroup=Delimiter start="\$\$" matchgroup=Delimiter end="\$\$" end="%stopzone\>"	keepend	contains=@texMathZoneGroup
+ syn region texMathZoneX	matchgroup=texStatement start="\\ensuremath\s*{" matchgroup=texStatement end="}" end="%stopzone\>"	contains=@texMathZoneGroup
+ 
+ syn match texMathOper	"[_^=]" contained
+ 
+ " \left..something.. and \right..something.. support
+ syn match   texMathDelimBad	contained	"\S"
+ syn match   texMathDelim		"\\\(left\|right\)\>"	skipwhite nextgroup=texMathDelimSet1,texMathDelimSet2,texMathDelimBad
+ syn match   texMathDelim		"\\\(left\|right\)arrow\>"
+ syn match   texMathDelim		"\\lefteqn\>"
+ syn match   texMathDelimSet2	contained	"\\"	nextgroup=texMathDelimKey,texMathDelimBad
+ syn match   texMathDelimSet1	contained	"[<>()[\]|/.]\|\\[{}|]"
+ syn keyword texMathDelimKey   contained	Downarrow	backslash	lceil	rceil	uparrow
+ syn keyword texMathDelimKey   contained	Uparrow	downarrow	lfloor	rfloor	updownarrow
+ syn keyword texMathDelimKey   contained	Updownarrow	langle	rangle
+endif
 
 " special TeX characters  ( \$ \& \% \# \{ \} \_ \S \P )
 syn match texSpecialChar	"\\[$&%#{}_]"
@@ -225,7 +235,9 @@ else
   syn match texSpecialChar	"\\[SP@]\A"me=e-1
 endif
 syn match texSpecialChar	"\\\\"
-syn match texOnlyMath	"[_^]"
+if !exists("tex_no_math")
+ syn match texOnlyMath	"[_^]"
+endif
 syn match texSpecialChar	"\^\^[0-9a-f]\{2}\|\^\^\S"
 
 " Comments:    Normal TeX LaTeX     :   %....
@@ -244,7 +256,7 @@ endif
 " separate lines used for verb` and verb# so that the end conditions
 " will appropriately terminate.  Ideally vim would let me save a
 " character from the start pattern and re-use it in the end-pattern.
-syn region texZone	start="\\begin{verbatim}"		end="\\end{verbatim}\|%stopzone\>"
+syn region texZone	start="\\begin{verbatim}"		end="\\end{verbatim}\|%stopzone\>" fold
 if version < 600
  syn region texZone	start="\\verb`"		end="`\|%stopzone\>"
  syn region texZone	start="\\verb#"		end="#\|%stopzone\>"
@@ -294,63 +306,67 @@ syn match texString	"\(``\|''\|,,\)"
 syn sync maxlines=200
 syn sync minlines=50
 
-syn sync match texSyncMathZoneA	grouphere texMathZoneA	"\\begin\s*{\s*align\*\s*}"
-syn sync match texSyncMathZoneB	grouphere texMathZoneB	"\\begin\s*{\s*alignat\*\s*}"
-syn sync match texSyncMathZoneC	grouphere texMathZoneC	"\\begin\s*{\s*alignat\s*}"
-syn sync match texSyncMathZoneD	grouphere texMathZoneD	"\\begin\s*{\s*align\s*}"
-syn sync match texSyncMathZoneE	grouphere texMathZoneE	"\\begin\s*{\s*eqnarray\*\s*}"
-syn sync match texSyncMathZoneF	grouphere texMathZoneF	"\\begin\s*{\s*eqnarray\s*}"
-syn sync match texSyncMathZoneG	grouphere texMathZoneG	"\\begin\s*{\s*equation\*\s*}"
-syn sync match texSyncMathZoneH	grouphere texMathZoneH	"\\begin\s*{\s*equation\s*}"
-syn sync match texSyncMathZoneI	grouphere texMathZoneI	"\\begin\s*{\s*flalign\*\s*}"
-syn sync match texSyncMathZoneJ	grouphere texMathZoneJ	"\\begin\s*{\s*flalign\s*}"
-syn sync match texSyncMathZoneK	grouphere texMathZoneK	"\\begin\s*{\s*gather\*\s*}"
-syn sync match texSyncMathZoneL	grouphere texMathZoneL	"\\begin\s*{\s*gather\s*}"
-syn sync match texSyncMathZoneM	grouphere texMathZoneM	"\\begin\s*{\s*math\*\s*}"
-syn sync match texSyncMathZoneN	grouphere texMathZoneN	"\\begin\s*{\s*math\s*}"
-syn sync match texSyncMathZoneO	grouphere texMathZoneO	"\\begin\s*{\s*multline\s*}"
-syn sync match texSyncMathZoneP	grouphere texMathZoneP	"\\begin\s*{\s*split\s*}"
-syn sync match texSyncMathZoneQ	grouphere texMathZoneQ	"\\begin\s*{\s*displaymath\*\s*}"
-syn sync match texSyncMathZoneR	grouphere texMathZoneR	"\\begin\s*{\s*displaymath\s*}"
-syn sync match texSyncMathZoneS	grouphere texMathZoneS	"\\begin\s*{\s*multline\*\s*}"
-syn sync match texSyncMathZoneT	grouphere texMathZoneT	"\\("
-syn sync match texSyncMathZoneU	grouphere texMathZoneU	"\\\["
-
-syn sync match texSyncMathZoneA	groupthere NONE	"\\end\s*{\s*align\*\s*}"
-syn sync match texSyncMathZoneB	groupthere NONE	"\\end\s*{\s*alignat\*\s*}"
-syn sync match texSyncMathZoneC	groupthere NONE	"\\end\s*{\s*alignat\s*}"
-syn sync match texSyncMathZoneD	groupthere NONE	"\\end\s*{\s*align\s*}"
-syn sync match texSyncMathZoneE	groupthere NONE	"\\end\s*{\s*eqnarray\*\s*}"
-syn sync match texSyncMathZoneF	groupthere NONE	"\\end\s*{\s*eqnarray\s*}"
-syn sync match texSyncMathZoneG	groupthere NONE	"\\end\s*{\s*equation\*\s*}"
-syn sync match texSyncMathZoneH	groupthere NONE	"\\end\s*{\s*equation\s*}"
-syn sync match texSyncMathZoneI	groupthere NONE	"\\end\s*{\s*flalign\*\s*}"
-syn sync match texSyncMathZoneJ	groupthere NONE	"\\end\s*{\s*flalign\s*}"
-syn sync match texSyncMathZoneK	groupthere NONE	"\\end\s*{\s*gather\*\s*}"
-syn sync match texSyncMathZoneL	groupthere NONE	"\\end\s*{\s*gather\s*}"
-syn sync match texSyncMathZoneM	groupthere NONE	"\\end\s*{\s*math\*\s*}"
-syn sync match texSyncMathZoneN	groupthere NONE	"\\end\s*{\s*math\s*}"
-syn sync match texSyncMathZoneO	groupthere NONE	"\\end\s*{\s*multline\s*}"
-syn sync match texSyncMathZoneP	groupthere NONE	"\\end\s*{\s*split\s*}"
-syn sync match texSyncMathZoneQ	groupthere NONE	"\\end\s*{\s*displaymath\*\s*}"
-syn sync match texSyncMathZoneR	groupthere NONE	"\\end\s*{\s*displaymath\s*}"
-syn sync match texSyncMathZoneS	groupthere NONE	"\\end\s*{\s*multline\*\s*}"
-syn sync match texSyncMathZoneT	groupthere NONE	"\\)"
-syn sync match texSyncMathZoneU	groupthere NONE	"\\\]"
+if !exists("tex_no_math")
+ syn sync match texSyncMathZoneA	grouphere texMathZoneA	"\\begin\s*{\s*align\*\s*}"
+ syn sync match texSyncMathZoneB	grouphere texMathZoneB	"\\begin\s*{\s*alignat\*\s*}"
+ syn sync match texSyncMathZoneC	grouphere texMathZoneC	"\\begin\s*{\s*alignat\s*}"
+ syn sync match texSyncMathZoneD	grouphere texMathZoneD	"\\begin\s*{\s*align\s*}"
+ syn sync match texSyncMathZoneE	grouphere texMathZoneE	"\\begin\s*{\s*eqnarray\*\s*}"
+ syn sync match texSyncMathZoneF	grouphere texMathZoneF	"\\begin\s*{\s*eqnarray\s*}"
+ syn sync match texSyncMathZoneG	grouphere texMathZoneG	"\\begin\s*{\s*equation\*\s*}"
+ syn sync match texSyncMathZoneH	grouphere texMathZoneH	"\\begin\s*{\s*equation\s*}"
+ syn sync match texSyncMathZoneI	grouphere texMathZoneI	"\\begin\s*{\s*flalign\*\s*}"
+ syn sync match texSyncMathZoneJ	grouphere texMathZoneJ	"\\begin\s*{\s*flalign\s*}"
+ syn sync match texSyncMathZoneK	grouphere texMathZoneK	"\\begin\s*{\s*gather\*\s*}"
+ syn sync match texSyncMathZoneL	grouphere texMathZoneL	"\\begin\s*{\s*gather\s*}"
+ syn sync match texSyncMathZoneM	grouphere texMathZoneM	"\\begin\s*{\s*math\*\s*}"
+ syn sync match texSyncMathZoneN	grouphere texMathZoneN	"\\begin\s*{\s*math\s*}"
+ syn sync match texSyncMathZoneO	grouphere texMathZoneO	"\\begin\s*{\s*multline\s*}"
+ syn sync match texSyncMathZoneP	grouphere texMathZoneP	"\\begin\s*{\s*split\s*}"
+ syn sync match texSyncMathZoneQ	grouphere texMathZoneQ	"\\begin\s*{\s*displaymath\*\s*}"
+ syn sync match texSyncMathZoneR	grouphere texMathZoneR	"\\begin\s*{\s*displaymath\s*}"
+ syn sync match texSyncMathZoneS	grouphere texMathZoneS	"\\begin\s*{\s*multline\*\s*}"
+ syn sync match texSyncMathZoneT	grouphere texMathZoneT	"\\("
+ syn sync match texSyncMathZoneU	grouphere texMathZoneU	"\\\["
+ 
+ syn sync match texSyncMathZoneA	groupthere NONE	"\\end\s*{\s*align\*\s*}"
+ syn sync match texSyncMathZoneB	groupthere NONE	"\\end\s*{\s*alignat\*\s*}"
+ syn sync match texSyncMathZoneC	groupthere NONE	"\\end\s*{\s*alignat\s*}"
+ syn sync match texSyncMathZoneD	groupthere NONE	"\\end\s*{\s*align\s*}"
+ syn sync match texSyncMathZoneE	groupthere NONE	"\\end\s*{\s*eqnarray\*\s*}"
+ syn sync match texSyncMathZoneF	groupthere NONE	"\\end\s*{\s*eqnarray\s*}"
+ syn sync match texSyncMathZoneG	groupthere NONE	"\\end\s*{\s*equation\*\s*}"
+ syn sync match texSyncMathZoneH	groupthere NONE	"\\end\s*{\s*equation\s*}"
+ syn sync match texSyncMathZoneI	groupthere NONE	"\\end\s*{\s*flalign\*\s*}"
+ syn sync match texSyncMathZoneJ	groupthere NONE	"\\end\s*{\s*flalign\s*}"
+ syn sync match texSyncMathZoneK	groupthere NONE	"\\end\s*{\s*gather\*\s*}"
+ syn sync match texSyncMathZoneL	groupthere NONE	"\\end\s*{\s*gather\s*}"
+ syn sync match texSyncMathZoneM	groupthere NONE	"\\end\s*{\s*math\*\s*}"
+ syn sync match texSyncMathZoneN	groupthere NONE	"\\end\s*{\s*math\s*}"
+ syn sync match texSyncMathZoneO	groupthere NONE	"\\end\s*{\s*multline\s*}"
+ syn sync match texSyncMathZoneP	groupthere NONE	"\\end\s*{\s*split\s*}"
+ syn sync match texSyncMathZoneQ	groupthere NONE	"\\end\s*{\s*displaymath\*\s*}"
+ syn sync match texSyncMathZoneR	groupthere NONE	"\\end\s*{\s*displaymath\s*}"
+ syn sync match texSyncMathZoneS	groupthere NONE	"\\end\s*{\s*multline\*\s*}"
+ syn sync match texSyncMathZoneT	groupthere NONE	"\\)"
+ syn sync match texSyncMathZoneU	groupthere NONE	"\\\]"
+endif
 syn sync match texSyncStop		groupthere NONE	"%stopzone\>"
 
 " The $..$ and $$..$$ make for impossible sync patterns
 " (one can't tell if a "$$" starts or stops a math zone by itself)
 " The following grouptheres coupled with minlines above
 " help improve the odds of good syncing.
-syn sync match texSyncMathZoneS	groupthere NONE	"\\end{abstract}"
-syn sync match texSyncMathZoneS	groupthere NONE	"\\end{center}"
-syn sync match texSyncMathZoneS	groupthere NONE	"\\end{description}"
-syn sync match texSyncMathZoneS	groupthere NONE	"\\end{enumerate}"
-syn sync match texSyncMathZoneS	groupthere NONE	"\\end{itemize}"
-syn sync match texSyncMathZoneS	groupthere NONE	"\\end{table}"
-syn sync match texSyncMathZoneS	groupthere NONE	"\\end{tabular}"
-syn sync match texSyncMathZoneS	groupthere NONE	"\\\(sub\)*section\>"
+if !exists("tex_no_math")
+ syn sync match texSyncMathZoneS	groupthere NONE	"\\end{abstract}"
+ syn sync match texSyncMathZoneS	groupthere NONE	"\\end{center}"
+ syn sync match texSyncMathZoneS	groupthere NONE	"\\end{description}"
+ syn sync match texSyncMathZoneS	groupthere NONE	"\\end{enumerate}"
+ syn sync match texSyncMathZoneS	groupthere NONE	"\\end{itemize}"
+ syn sync match texSyncMathZoneS	groupthere NONE	"\\end{table}"
+ syn sync match texSyncMathZoneS	groupthere NONE	"\\end{tabular}"
+ syn sync match texSyncMathZoneS	groupthere NONE	"\\\(sub\)*section\>"
+endif
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
@@ -365,13 +381,15 @@ if version >= 508 || !exists("did_tex_syntax_inits")
 
   " TeX highlighting groups which should share similar highlighting
   if !exists("tex_no_error")
+   if !exists("tex_no_math")
     HiLink texBadMath	texError
     HiLink texMathDelimBad	texError
     HiLink texMathError	texError
     if b:extfname != "sty" && b:extfname != "cls" && b:extfname != "clo" && b:extfname != "dtx" && b:extfname != "ltx"
       HiLink texOnlyMath	texError
     endif
-    HiLink texError	Error
+   endif
+   HiLink texError	Error
   endif
 
   HiLink texDefCmd	texDef
@@ -381,33 +399,36 @@ if version >= 508 || !exists("did_tex_syntax_inits")
   HiLink texInputFileOpt	texCmdArgs
   HiLink texInputCurlies	texDelimiter
   HiLink texLigature	texSpecialChar
-  HiLink texMathDelimSet1	texMathDelim
-  HiLink texMathDelimSet2	texMathDelim
-  HiLink texMathDelimKey	texMathDelim
-  HiLink texMathMatcher	texMath
-  HiLink texMathZoneA	texMath
-  HiLink texMathZoneB	texMath
-  HiLink texMathZoneC	texMath
-  HiLink texMathZoneD	texMath
-  HiLink texMathZoneE	texMath
-  HiLink texMathZoneF	texMath
-  HiLink texMathZoneG	texMath
-  HiLink texMathZoneH	texMath
-  HiLink texMathZoneI	texMath
-  HiLink texMathZoneJ	texMath
-  HiLink texMathZoneK	texMath
-  HiLink texMathZoneL	texMath
-  HiLink texMathZoneM	texMath
-  HiLink texMathZoneN	texMath
-  HiLink texMathZoneO	texMath
-  HiLink texMathZoneP	texMath
-  HiLink texMathZoneQ	texMath
-  HiLink texMathZoneR	texMath
-  HiLink texMathZoneS	texMath
-  HiLink texMathZoneT	texMath
-  HiLink texMathZoneU	texMath
-  HiLink texMathZoneV	texMath
-  HiLink texMathZoneW	texMath
+  if !exists("tex_no_math")
+   HiLink texMathDelimSet1	texMathDelim
+   HiLink texMathDelimSet2	texMathDelim
+   HiLink texMathDelimKey	texMathDelim
+   HiLink texMathMatcher	texMath
+   HiLink texMathZoneA	texMath
+   HiLink texMathZoneB	texMath
+   HiLink texMathZoneC	texMath
+   HiLink texMathZoneD	texMath
+   HiLink texMathZoneE	texMath
+   HiLink texMathZoneF	texMath
+   HiLink texMathZoneG	texMath
+   HiLink texMathZoneH	texMath
+   HiLink texMathZoneI	texMath
+   HiLink texMathZoneJ	texMath
+   HiLink texMathZoneK	texMath
+   HiLink texMathZoneL	texMath
+   HiLink texMathZoneM	texMath
+   HiLink texMathZoneN	texMath
+   HiLink texMathZoneO	texMath
+   HiLink texMathZoneP	texMath
+   HiLink texMathZoneQ	texMath
+   HiLink texMathZoneR	texMath
+   HiLink texMathZoneS	texMath
+   HiLink texMathZoneT	texMath
+   HiLink texMathZoneU	texMath
+   HiLink texMathZoneV	texMath
+   HiLink texMathZoneW	texMath
+   HiLink texMathZoneX	texMath
+  endif
   HiLink texSectionMarker	texCmdName
   HiLink texSectionName	texSection
   HiLink texSpaceCode	texStatement

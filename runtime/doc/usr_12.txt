@@ -1,4 +1,4 @@
-*usr_12.txt*	For Vim version 6.0.  Last change: 2001 Sep 03
+*usr_12.txt*	For Vim version 6.1a.  Last change: 2001 Oct 23
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -12,10 +12,11 @@ commands introduced in the previous chapters and a few more.
 |12.1|	Replace a word
 |12.2|	Change "Last, First" to "First Last"
 |12.3|	Sort a list
-|12.4|	Count words
-|12.5|	Find a man page
-|12.6|	Trim blanks
-|12.7|	Find where a word is used
+|12.4|	Reverse line order
+|12.5|	Count words
+|12.6|	Find a man page
+|12.7|	Trim blanks
+|12.8|	Find where a word is used
 
      Next chapter: |usr_20.txt|  Typing command-line commands quickly
  Previous chapter: |usr_11.txt|  Recovering from a crash
@@ -174,7 +175,32 @@ keep the backslash in the last line, if you make sure an empty line comes
 after it.  That way you don't have this problem again.
 
 ==============================================================================
-*12.4*	Count words
+*12.4*	Reverse line order
+
+The |:global| command can be combined with the |:move| command to move all the
+lines before the first line, resulting in a reversed file.  The command is: >
+
+	:global/^/m 0
+
+Abbreviated: >
+
+	:g/^/m 0
+
+The "^" regular expression matches the beginning of the line (even if the line
+is blank).  The |:move| command moves the matching line to after the mythical
+zeroeth line, so the current matching line becomes the first line of the file.
+As the |:global| command is not confused by the changing line numbering,
+|:global| proceeds to match all remaining lines of the file and puts each as
+the first.
+
+This also works on a range of lines.  First move to above the first line and
+mark it with "mt".  Then move the cursor to the last line in the range and
+type: >
+
+	:'t+1,.g/^/m 't
+
+==============================================================================
+*12.5*	Count words
 
 Sometimes you have to write a text with a maximum number of words.  Vim can
 count the words for you.
@@ -203,7 +229,7 @@ want to count words in.  Then type g CTRL-G.  The result:
 For other ways to count words, lines and other items, see |count-items|.
 
 ==============================================================================
-*12.5*	Find a man page
+*12.6*	Find a man page
 
 While editing a shell script or C program, you are using a command or function
 that you want to find the man page for (this is on Unix).  Let's first use a
@@ -253,7 +279,7 @@ Move the cursor to somewhere on "strstr" and type "\K".  A window will open
 to display the man page for strstr().
 
 ==============================================================================
-*12.6*	Trim blanks
+*12.7*	Trim blanks
 
 Some people find spaces and tabs at the end of a line useless, wasteful, and
 ugly.  To remove whitespace at the end of every line, execute the following
@@ -281,7 +307,7 @@ does change.  Type "n" to find the next match.  Repeat this until no more
 matches can be found.
 
 ==============================================================================
-*12.7*	Find where a word is used
+*12.8*	Find where a word is used
 
 If you are a UNIX user, you can use a combination of Vim and the grep command
 to edit all the files that contain a given word.  This is extremely useful if

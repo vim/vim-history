@@ -1,7 +1,7 @@
 " netrw.vim: (global plugin) Handles file transfer across a network
-" Last Change:	September 14, 2001
+" Last Change:	Jan 4, 2002
 " Maintainer:	Charles E. Campbell, Jr. PhD   <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-" Version:	2.15
+" Version:	2.20
 
 " Credits:
 "  Vim editor   by Bram Moolenaar (Thanks, Bram!)
@@ -64,21 +64,28 @@
 "	:call NetUserPass("uid","password")	-- sets global uid and password
 
 " Variables:
-"	b:netrw_lastfile : last file Network-read/written retained on
-"			   a per-buffer basis (supports bare :Nw )
-"	b:netrw_line	 : during Nw/NetWrite, holds current line   number
-"	b:netrw_col	 : during Nw/NetWrite, holds current column number
-"			   b:netrw_line and b:netrw_col are used to restore
-"			   the cursor position on writes
-"
-"	g:netrw_uid	 : (ftp) user id,      retained on a per-session basis
-"	g:netrw_passwd	 : (ftp) password,     retained on a per-session basis
-"	g:netrw_ftp	 : if it doesn't exist, use default ftp (uid password)
-"			 =0 : use default ftp (uid password)
-"			 =1 : use alternate ftp method
+"	b:netrw_lastfile last file Network-read/written retained on
+"			 a per-buffer basis            (supports plain :Nw )
+"	b:netrw_line     during Nw/NetWrite, holds current line   number
+"	b:netrw_col      during Nw/NetWrite, holds current column number
+"			 b:netrw_line and b:netrw_col are used to
+"			 restore the cursor position on writes
+"	g:netrw_ftp      if it doesn't exist, use default ftp
+"			 =0 use default ftp                   (uid password)
+"			 =1 use alternate ftp method     (user uid password)
+"	g:netrw_ftpmode  ="binary"                                 (default)
+"			 ="ascii"                           (or your choice)
+"	g:netrw_uid      (ftp) user-id,      retained on a per-session basis
+"	g:netrw_passwd   (ftp) password,     retained on a per-session basis
+"	g:netrw_win95ftp =0 use unix-style ftp even if win95/win98/winME
+"			 =1 use default method to do ftp
+"	g:netrw_cygwin   =1 assume scp under windows is from cygwin
+"			                                (default if windows)
+"			 =0 assume scp under windows accepts
+"			    windows-style paths          (default otherwise)
 
 "  But be doers of the word, and not only hearers, deluding your own selves
-"  (James1:22 RSV)
+"  (James 1:22 RSV)
 " =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 " Exit quickly when already loaded or when 'compatible' is set.
@@ -88,6 +95,21 @@ endif
 let loaded_netrw = 1
 let s:save_cpo = &cpo
 set cpo&vim
+
+" Default values for global netrw variables
+if !exists("g:netrw_ftpmode")
+ let g:netrw_ftpmode    = "binary"
+endif
+if !exists("g:netrw_win95ftp")
+ let g:netrw_win95ftp= 1
+endif
+if !exists("g:netrw_cygwin")
+ if has("win32")
+  let g:netrw_cygwin= 1
+ else
+  let g:netrw_cygwin= 0
+ endif
+endif
 
 " Vimrc Support:
 " Auto-detection for ftp://*, rcp://*, scp://*, and http://*
@@ -116,11 +138,10 @@ function! s:NetRead(...)
 "	Decho "DBG: NetRead(a:1<".a:1.">) {"
 
  " save options
- call <SID>NetOptionSave()
+ call s:NetOptionSave()
 
- " get temporary file
- let tmpfile = tempname()
-"	Decho "DBG: tmpfile<".tmpfile.">"
+ " get name of a temporary file
+ let tmpfile= tempname()
 
  " Special Exception: if a file is named "0r", then
  "		      "0r" will be used to read the
@@ -183,27 +204,36 @@ function! s:NetRead(...)
 
   " fix up windows urls
   if has("win32")
-"	Decho "DBG: fixing up windows url"
    let choice = substitute(choice,'\\','/','ge')
+"	Decho "DBG: fixing up windows url to <".choice.">"
   endif
 
   " Determine method of read (ftp, rcp, etc)
   call s:NetMethod(choice)
 
+  " ============
   " Perform Read
+  " ============
+
+  ".........................................
+  " rcp:  Method #1
   if  b:netrw_method == 1 " read with rcp
 "	Decho "DBG:read via rcp (method #1)"
    exe "!rcp " . g:netrw_machine . ":" . b:netrw_fname . " " . tmpfile
    let result = s:NetGetFile(readcmd, tmpfile)
    let b:netrw_lastfile = choice
 
+  ".........................................
+  " ftp + <.netrc>:  Method #2
   elseif b:netrw_method  == 2		" read with ftp + <.netrc>
 "	Decho "DBG: read via ftp+.netrc (method #2)\n"
-   exe "norm! mzoascii\<cr>get ".b:netrw_fname." ".tmpfile."\<esc>"
+   exe "norm! mzo.".g:netrw_ftpmode."\<cr>get ".b:netrw_fname." ".tmpfile."\<esc>"
    exe "'z+1,.!ftp -i " . g:netrw_machine
    let result = s:NetGetFile(readcmd, tmpfile)
    let b:netrw_lastfile = choice
 
+  ".........................................
+  " ftp + machine,id,passwd,filename:  Method #3
   elseif b:netrw_method == 3		" read with ftp + machine, id, passwd, and fname
 "	Decho "DBG: read via ftp+mipf (method #3)"
 
@@ -211,18 +241,18 @@ function! s:NetRead(...)
    if exists("g:netrw_ftp")
     if g:netrw_ftp == 1
 "	Decho 'DBG: g:netrw_ftp is 1'
-     exe "norm! mzoopen ".g:netrw_machine." ".g:netrw_port."\<cr>".g:netrw_uid."\<cr>".g:netrw_passwd."\<cr>ascii\<cr>get ".b:netrw_fname." ".tmpfile."\<esc>"
+     exe "norm! mzoopen ".g:netrw_machine." ".g:netrw_port."\<cr>".g:netrw_uid."\<cr>".g:netrw_passwd."\<cr>".g:netrw_ftpmode."\<cr>get ".b:netrw_fname." ".tmpfile."\<esc>"
     else	" same as default where g:netrw_ftp doesn't exist
 "	Decho 'DBG: g:netrw_ftp is 0'
-     exe "norm! mzoopen ".g:netrw_machine." ".g:netrw_port."\<cr>user ".g:netrw_uid." ".g:netrw_passwd."\<cr>ascii\<cr>get ".b:netrw_fname." ".tmpfile."\<esc>"
+     exe "norm! mzoopen ".g:netrw_machine." ".g:netrw_port."\<cr>user ".g:netrw_uid." ".g:netrw_passwd."\<cr>".g:netrw_ftpmode."\<cr>get ".b:netrw_fname." ".tmpfile."\<esc>"
     endif
    else
 "	Decho 'DBG: g:netrw_ftp does not exist'
-"	Decho "DBG: norm! mzoopen ".g:netrw_machine." ".g:netrw_port."\<cr>user ".g:netrw_uid." ".g:netrw_passwd."\<cr>ascii\<cr>get ".b:netrw_fname." ".tmpfile."\<esc>"
-    exe "norm! mzoopen ".g:netrw_machine." ".g:netrw_port."\<cr>user ".g:netrw_uid." ".g:netrw_passwd."\<cr>ascii\<cr>get ".b:netrw_fname." ".tmpfile."\<esc>"
+"	Decho "DBG: norm! mzoopen ".g:netrw_machine." ".g:netrw_port."\<cr>user ".g:netrw_uid." ".g:netrw_passwd."\<cr>".g:netrw_ftpmode."\<cr>get ".b:netrw_fname." ".tmpfile."\<esc>"
+    exe "norm! mzoopen ".g:netrw_machine." ".g:netrw_port."\<cr>user ".g:netrw_uid." ".g:netrw_passwd."\<cr>".g:netrw_ftpmode."\<cr>get ".b:netrw_fname." ".tmpfile."\<esc>"
    endif
 
-   if has("win95")
+   if has("win95") && g:netrw_win95ftp
 "	Decho 'DBG: win95 ftp'
     exe "norm! o\<esc>my'zj"
     exe ".,'y-1!ftp -i -n"
@@ -245,9 +275,16 @@ function! s:NetRead(...)
    " save choice/id/password for future use
    let b:netrw_lastfile = choice
 
+  ".........................................
+  " scp: Method #4
   elseif     b:netrw_method  == 4	" read with scp
 "	Decho "DBG: read via scp (method #4)"
-   exe "!scp " . g:netrw_machine . ":" . b:netrw_fname . " " . tmpfile
+   if g:netrw_cygwin == 1
+    let cygtmpfile=substitute(tmpfile,'^\(\a\):','//\1/','e')
+    exe "!scp " . g:netrw_machine . ":" . b:netrw_fname . " " . cygtmpfile
+   else
+    exe "!scp " . g:netrw_machine . ":" . b:netrw_fname . " " . tmpfile
+   endif
    let result = s:NetGetFile(readcmd, tmpfile)
    let b:netrw_lastfile = choice
 
@@ -267,6 +304,7 @@ function! s:NetRead(...)
    redraw!
    let b:netrw_lastfile = choice
 
+  ".........................................
   else " Complain
    echo "***warning*** unable to comply with your request<" . choice . ">"
   endif
@@ -291,22 +329,27 @@ endfunction
 " Takes care of deleting the last line when the buffer was emtpy.
 " Deletes the file "fname".
 function! s:NetGetFile(readcmd, fname)
+
  " User-provided (ie. optiona) fix-it-up command
   if exists("*NetReadFixup")
    call NetReadFixup(a:fname)
   endif
-"	Decho "DBG: NetGetFile readcmd<".a:readcmd."> fname<".a:fname.">"
  let dodel = 0
  if line("$") == 1 && getline(1) == ""
   let dodel = 1
  endif
+"	Decho "DBG: NetGetFile readcmd<".a:readcmd."> cmdarg<".v:cmdarg."> fname<".a:fname."> dodel=".dodel." readable=".filereadable(a:fname)
+
+ " get the file
  exe a:readcmd . v:cmdarg . " " . a:fname
+
+ " Delete last line when 0r used to read file and last line is empty
  if a:readcmd[0] == '0' && dodel && getline("$") == ""
   $d
   1
  endif
- return delete(a:fname)
-endfun
+ return
+endfunction
 
 " ------------------------------------------------------------------------
 
@@ -318,8 +361,7 @@ function! s:NetWrite(...) range
  call s:NetOptionSave()
 
  " Get Temporary Filename
- let tmpfile = tempname()
- let tmpFTPfile = tempname()
+ let tmpfile= tempname()
 
  if a:0 == 0
   let ichoice = 0
@@ -380,26 +422,35 @@ function! s:NetWrite(...) range
   " Determine method of read (ftp, rcp, etc)
   call s:NetMethod(choice)
 
+  " =============
   " Perform Write
+  " =============
+
+  ".........................................
+  " rcp: Method #1
   if  b:netrw_method == 1	" write with rcp
    exe "!rcp " . tmpfile . " " . g:netrw_machine . ":" . b:netrw_fname
    let b:netrw_lastfile = choice
 
+  ".........................................
+  " ftp + <.netrc>: Method #2
   elseif b:netrw_method == 2	" write with ftp + <.netrc>
-   exe "norm! mzoascii\<cr>put ".tmpfile." ".b:netrw_fname."\<esc>"
+   exe "norm! mzo".g:netrw_ftpmode."\<cr>put ".tmpfile." ".b:netrw_fname."\<esc>"
    exe "'z+1,.!ftp -i " . g:netrw_machine
    norm! 'z
    let b:netrw_lastfile = choice
 
+  ".........................................
+  " ftp + machine, id, passwd, filename: Method #3
   elseif b:netrw_method == 3	" write with ftp + machine, id, passwd, and fname
    if exists("g:netrw_ftp")
     if g:netrw_ftp == 1
-     exe "norm! mzoopen ".g:netrw_machine." ".g:netrw_port."\<cr>".g:netrw_uid."\<cr>".g:netrw_passwd."\<cr>ascii\<cr>put ".tmpfile." ".b:netrw_fname."\<esc>"
+     exe "norm! mzoopen ".g:netrw_machine." ".g:netrw_port."\<cr>".g:netrw_uid."\<cr>".g:netrw_passwd."\<cr>".g:netrw_ftpmode."\<cr>put ".tmpfile." ".b:netrw_fname."\<esc>"
     else
-     exe "norm! mzoopen ".g:netrw_machine." ".g:netrw_port."\<cr>"."user ".g:netrw_uid." ".g:netrw_passwd."\<cr>ascii\<cr>put ".tmpfile." ".b:netrw_fname."\<esc>"
+     exe "norm! mzoopen ".g:netrw_machine." ".g:netrw_port."\<cr>"."user ".g:netrw_uid." ".g:netrw_passwd."\<cr>".g:netrw_ftpmode."\<cr>put ".tmpfile." ".b:netrw_fname."\<esc>"
     endif
    else
-    exe "norm! mzoopen ".g:netrw_machine." ".g:netrw_port."\<cr>"."user ".g:netrw_uid." ".g:netrw_passwd."\<cr>ascii\<cr>put ".tmpfile." ".b:netrw_fname."\<esc>"
+    exe "norm! mzoopen ".g:netrw_machine." ".g:netrw_port."\<cr>"."user ".g:netrw_uid." ".g:netrw_passwd."\<cr>".g:netrw_ftpmode."\<cr>put ".tmpfile." ".b:netrw_fname."\<esc>"
    endif
 
    if has("win32")
@@ -413,8 +464,15 @@ function! s:NetWrite(...) range
    let b:netrw_lastfile = choice
    let g:netrw_uid     = g:netrw_uid
 
+  ".........................................
+  " scp: Method #4
   elseif     b:netrw_method == 4	" write with scp
-   exe "!scp " . tmpfile . " " . g:netrw_machine . ":" . b:netrw_fname
+   if g:netrw_cygwin == 1
+    let cygtmpfile=substitute(tmpfile,'^\(\a\):','//\1/','e')
+    exe "!scp " . cygtmpfile . " " . g:netrw_machine . ":" . b:netrw_fname
+   else
+    exe "!scp " . tmpfile . " " . g:netrw_machine . ":" . b:netrw_fname
+   endif
    let b:netrw_lastfile = choice
 
   else " Complain
@@ -551,7 +609,7 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
  elseif match(a:choice,mf) == 0
 "	Decho "DBG: NetMethod: (ftp) host file"
   if exists("g:netrw_uid") && exists("g:netrw_passwd")
-   let b:netrw_method  = 3;
+   let b:netrw_method  = 3
    let g:netrw_machine = substitute(a:choice,mf,'\1',"")
    let b:netrw_fname   = substitute(a:choice,mf,'\2',"")
 
@@ -570,8 +628,12 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
 " call Decho("DBG: NetMethod: b:netrw_method <".b:netrw_method.">")
 " call Decho("DBG: NetMethod: g:netrw_machine<".g:netrw_machine.">")
 " call Decho("DBG: NetMethod: g:netrw_port   <".g:netrw_port.">")
-" call Decho("DBG: NetMethod: g:netrw_uid    <".g:netrw_uid.">")
-" call Decho("DBG: NetMethod: g:netrw_passwd <".g:netrw_passwd.">")
+" if exists("g:netrw_uid")		"DBG
+"  call Decho("DBG: NetMethod: g:netrw_uid    <".g:netrw_uid.">")
+" endif					"DBG
+" if exists("g:netrw_passwd")		"DBG
+"  call Decho("DBG: NetMethod: g:netrw_passwd <".g:netrw_passwd.">")
+" endif					"DBG
 " call Decho("DBG: NetMethod: b:netrw_fname  <".b:netrw_fname.">")
 " call Decho("DBG: NetMethod return }")
 endfunction
@@ -612,15 +674,15 @@ endfunction
 " ------------------------------------------------------------------------
 
 " NetOptionSave: save options and set to "standard" form
-function s:NetOptionSave()
+function!s:NetOptionSave()
 "	Decho "DBG: NetOptionSave()"
  " Get Temporary Filename
- let b:aikeep = &ai
- let b:cinkeep = &cin
- let b:cinokeep = &cino
- let b:comkeep = &com
- let b:cpokeep = &cpo
- let b:twkeep = &tw
+ let b:aikeep	= &ai
+ let b:cinkeep	= &cin
+ let b:cinokeep	= &cino
+ let b:comkeep	= &com
+ let b:cpokeep	= &cpo
+ let b:twkeep	= &tw
  set cino =
  set com  =
  set cpo -=aA
@@ -636,14 +698,14 @@ endfunction
 " ------------------------------------------------------------------------
 
 " NetOptionRestore: restore options
-function s:NetOptionRestore()
+function! s:NetOptionRestore()
 "	Decho "DBG: NetOptionRestore()"
- let &ai   = b:aikeep
- let &cin  = b:cinkeep
- let &cino = b:cinokeep
- let &com  = b:comkeep
- let &cpo  = b:cpokeep
- let &tw   = b:twkeep
+ let &ai	= b:aikeep
+ let &cin	= b:cinkeep
+ let &cino	= b:cinokeep
+ let &com	= b:comkeep
+ let &cpo	= b:cpokeep
+ let &tw	= b:twkeep
  if exists("b:dirkeep")
   let &swf= b:swfkeep
   unlet b:swfkeep
@@ -657,6 +719,7 @@ function s:NetOptionRestore()
 endfunction
 
 " ------------------------------------------------------------------------
+
 
 " Restore
 let &cpo= s:save_cpo

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Sep 21
+" Last change:	2002 Feb 24
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -68,10 +68,16 @@ au BufNewFile,BufRead *.abl			setf abel
 au BufNewFile,BufRead *.wrm			setf acedb
 
 " Ada (83, 9X, 95)
-au BufNewFile,BufRead *.adb,*.ads		setf ada
+au BufNewFile,BufRead *.adb,*.ads,*.ada		setf ada
 
 " AHDL
 au BufNewFile,BufRead *.tdf			setf ahdl
+
+" AMPL
+au BufNewFile,BufRead *.run			setf ampl
+
+" Ant
+au BufNewFile,BufRead build.xml			setf ant
 
 " Apache style config file
 au BufNewFile,BufRead proftpd.conf*		setf apachestyle
@@ -166,7 +172,7 @@ au BufNewFile,BufRead *.bas			call <SID>FTVB("basic")
 " Check if one of the first five lines contains "VB_Name".  In that case it is
 " probably a Visual Basic file.  Otherwise it's assumed to be "alt" filetype.
 fun! <SID>FTVB(alt)
-  if getline(1).getline(2).getline(3).getline(4).getline(5) =~? 'VB_Name'
+  if getline(1).getline(2).getline(3).getline(4).getline(5) =~? 'VB_Name\|Begin VB\.Form'
     setf vb
   else
     exe "setf " . a:alt
@@ -440,6 +446,7 @@ au BufNewFile,BufRead .gtkrc,gtkrc		setf gtkrc
 " Haskell
 au BufNewFile,BufRead *.hs			setf haskell
 au BufNewFile,BufRead *.lhs			setf lhaskell
+au BufNewFile,BufRead *.chs			setf chaskell
 
 " Hercules
 au BufNewFile,BufRead *.vc,*.ev,*.rs,*.sum,*.errsum	setf hercules
@@ -531,14 +538,17 @@ au BufNewFile,BufRead *.lex,*.l			setf lex
 " LFTP
 au BufNewFile,BufRead lftp.conf,.lftprc,*lftp/rc	setf lftp
 
+" Lifelines
+au BufNewFile,BufRead *.ll			setf lifelines
+
 " Lilo: Linux loader
 au BufNewFile,BufRead lilo.conf*		setf lilo
 
 " Lisp (*.el = ELisp, *.cl = Common Lisp, *.jl = librep Lisp)
 if has("fname_case")
-  au BufNewFile,BufRead *.lsp,*.lisp,*.el,*.cl,*.jl,*.L,.emacs	setf lisp
+  au BufNewFile,BufRead *.lsp,*.lisp,*.el,*.cl,*.jl,*.L,.emacs,.sawfishrc setf lisp
 else
-  au BufNewFile,BufRead *.lsp,*.lisp,*.el,*.cl,*.jl,.emacs	setf lisp
+  au BufNewFile,BufRead *.lsp,*.lisp,*.el,*.cl,*.jl,.emacs,.sawfishrc setf lisp
 endif
 
 " Lite
@@ -553,7 +563,7 @@ au BufNewFile,BufRead *.lou,*.lout		setf lout
 " Lua
 au BufNewFile,BufRead *.lua			setf lua
 
-" Lynx style file
+" Lynx style file (or LotusScript!)
 au BufNewFile,BufRead *.lss			setf lss
 
 " M4
@@ -627,6 +637,9 @@ au BufNewFile,BufRead *.m2,*.DEF,*.MOD,*.md,*.mi setf modula2
 " Modula 3 (.m3, .i3, .mg, .ig)
 au BufNewFile,BufRead *.[mi][3g]		setf modula3
 
+" MOO
+au BufNewFile,BufRead *.moo			setf moo
+
 " Moterola S record
 au BufNewFile,BufRead *.s19,*.s28,*.s37		setf srec
 
@@ -637,10 +650,10 @@ au BufNewFile,BufRead *.msql			setf msql
 au BufNewFile,BufRead *.rc			setf rc
 
 " Mush
-au BufNewFile,BufRead .mush			setf mush
+au BufNewFile,BufRead *.mush			setf mush
 
 " Mutt setup file
-au BufNewFile,BufRead .muttrc*,Muttrc		setf muttrc
+au BufNewFile,BufRead .muttrc*,~/.mutt/muttrc*,Muttrc	setf muttrc
 
 " Nastran input/DMAP
 "au BufNewFile,BufRead *.dat			setf nastran
@@ -671,6 +684,9 @@ endfun
 
 " Not Quite C
 au BufNewFile,BufRead *.nqc			setf nqc
+
+" NSIS
+au BufNewFile,BufRead *.nsi			setf nsis
 
 " OCAML
 au BufNewFile,BufRead *.ml,*.mli,*.mll,*.mly	setf ocaml
@@ -746,6 +762,9 @@ au BufNewFile,BufRead main.cf			setf pfmain
 " PostScript
 au BufNewFile,BufRead *.ps,*.eps		setf postscr
 
+" PostScript Printer Description
+au BufNewFile,BufRead *.ppd			setf ppd
+
 " Povray
 au BufNewFile,BufRead *.pov			setf pov
 
@@ -758,14 +777,21 @@ au BufNewFile,BufRead *.inc			call FTCheck_inc()
 fun! FTCheck_inc()
   if exists("g:filetype_inc")
     exe "setf " . g:filetype_inc
-  elseif getline(1).getline(2).getline(3) =~ "<?"
-    setf php
   else
-    call FTCheck_asmsyntax()
-    if exists("b:asmsyntax")
-      exe "setf " . b:asmsyntax
+    lines = getline(1).getline(2).getline(3)
+    if lines =~? "perlscript"
+      setf aspperl
+    elseif lines =~ "<%"
+      setf aspvbs
+    elseif lines =~ "<?"
+      setf php
     else
-      setf pov
+      call FTCheck_asmsyntax()
+      if exists("b:asmsyntax")
+	exe "setf " . b:asmsyntax
+      else
+	setf pov
+      endif
     endif
   endif
 endfun
@@ -892,6 +918,9 @@ au BufNewFile,BufRead *.r
 " Remind
 au BufNewFile,BufRead .reminders*		setf remind
 
+" RPL/2
+au BufNewFile,BufRead *.rpl			setf rpl
+
 " Robots.txt
 au BufNewFile,BufRead robots.txt		setf robots
 
@@ -902,7 +931,7 @@ au BufNewFile,BufRead *.x			setf rpcgen
 au BufNewFile,BufRead *.rtf			setf rtf
 
 " Ruby
-au BufNewFile,BufRead *.rb			setf ruby
+au BufNewFile,BufRead *.rb,*.rbw		setf ruby
 
 " S-lang (or shader language!)
 au BufNewFile,BufRead *.sl			setf slang
@@ -915,6 +944,9 @@ au BufNewFile,BufRead *.sas			setf sas
 
 " Sather
 au BufNewFile,BufRead *.sa			setf sather
+
+" Scilab
+au BufNewFile,BufRead *.sci			setf scilab
 
 " SDL
 au BufNewFile,BufRead *.sdl,*.pr		setf sdl
@@ -946,7 +978,8 @@ au BufNewFile,BufRead *.decl,*.dcl,*.dec
 au BufNewFile,BufRead sgml.catalog*,catalog	setf catalog
 
 " Shell scripts (sh, ksh, bash, bash2, csh); Allow .profile_foo etc.
-au BufNewFile,BufRead .bashrc*,bashrc,bash.bashrc,.bash_profile*,*.bash call SetFileTypeSH("bash")
+" Gentoo ebuilds are actually bash scripts
+au BufNewFile,BufRead .bashrc*,bashrc,bash.bashrc,.bash_profile*,*.bash,*.ebuild call SetFileTypeSH("bash")
 au BufNewFile,BufRead .kshrc*,*.ksh call SetFileTypeSH("ksh")
 au BufNewFile,BufRead /etc/profile,.profile*,*.sh,*.env call SetFileTypeSH(getline(1))
 au BufNewFile,BufRead .login*,.cshrc*,csh.cshrc,csh.login,csh.logout,.tcshrc*,*.csh,*.tcsh,.alias setf csh
@@ -1048,6 +1081,9 @@ au BufNewFile,BufRead squid.conf		setf squid
 " SQL (all but the first one for Oracle Designer)
 au BufNewFile,BufRead *.sql,*.tyb,*.typ,*.tyc,*.pkb,*.pks	setf sql
 
+" SQLJ
+au BufNewFile,BufRead *.sqlj			setf sqlj
+
 " SQR
 au BufNewFile,BufRead *.sqr,*.sqi		setf sqr
 
@@ -1148,6 +1184,9 @@ au BufNewFile,BufRead *.wml			setf wml
 " Winbatch
 au BufNewFile,BufRead *.wbt			setf winbatch
 
+" WvDial
+au BufNewFile,BufRead wvdial.conf		setf wvdial
+
 " CVS commit file
 au BufNewFile,BufRead cvs\d\+			setf cvs
 
@@ -1172,8 +1211,11 @@ au BufEnter *.xpm
 	\ endif
 au BufEnter *.xpm2				setf xpm2
 
+" XFree86 config
+au BufNewFile,BufRead XF86Config		setf xf86conf
+
 " XS Perl extension interface language
-au BufEnter *.xs				setf xs
+au BufNewFile,BufRead *.xs			setf xs
 
 " X resources file
 au BufNewFile,BufRead .Xdefaults,.Xresources,xdm-config,*.ad setf xdefaults
@@ -1192,6 +1234,9 @@ au BufNewFile,BufRead *.xml
 	\ else |
 	\   setf xml |
 	\ endif
+
+" Xslt
+au BufNewFile,BufRead *.xsl			setf xslt
 
 " Yacc
 au BufNewFile,BufRead *.y			setf yacc
@@ -1271,6 +1316,12 @@ au BufNewFile,BufRead *vimrc*			setf vim
 
 " X resources file
 au BufNewFile,BufRead Xresources*,*/app-defaults/*,*/Xresources/* setf xdefaults
+
+" XFree86 config
+au BufNewFile,BufRead XF86Config*		setf xf86conf
+
+" X11 xmodmap
+au BufNewFile,BufRead *xmodmap*			setf xmodmap
 
 " Z-Shell script
 au BufNewFile,BufRead zsh*,zlog*		setf zsh

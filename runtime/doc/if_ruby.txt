@@ -1,4 +1,4 @@
-*if_ruby.txt*   For Vim version 6.0.  Last change: 2001 Sep 03
+*if_ruby.txt*   For Vim version 6.1a.  Last change: 2001 Oct 25
 
 
 		  VIM REFERENCE MANUAL    by Shugo Maeda
@@ -36,6 +36,9 @@ For MS-Windows you might find a Ruby library here:
 			like for the |:append| and |:insert| commands. This
 			form of the |:ruby| command is mainly useful for
 			including ruby code in vim scripts.
+			Note: This command doesn't work when the Ruby feature
+			wasn't compiled in.  To avoid errors, see
+			|script-here|.
 
 Example Vim script: >
 

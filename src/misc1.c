@@ -2795,7 +2795,8 @@ init_homedir()
 
 	homedrive = mch_getenv((char_u *)"HOMEDRIVE");
 	homepath = mch_getenv((char_u *)"HOMEPATH");
-	if (homedrive != NULL && homepath != NULL)
+	if (homedrive != NULL && homepath != NULL
+			   && STRLEN(homedrive) + STRLEN(homepath) < MAXPATHL)
 	{
 	    sprintf((char *)NameBuff, "%s%s", homedrive, homepath);
 	    if (NameBuff[0] != NUL)
@@ -3658,6 +3659,10 @@ getnextcomp(fname)
     return fname;
 }
 
+#if defined(FEAT_MODIFY_FNAME) || defined(FEAT_EVAL) \
+	|| defined(FEAT_SESSION) || defined(MSWIN) \
+	|| (defined(FEAT_GUI_GTK) && defined(FEAT_WINDOWS)) \
+	|| defined(FEAT_SUN_WORKSHOP) || defined(PROTO)
 /*
  * Get a pointer to one character past the head of a path name.
  * Unix: after "/"; DOS: after "c:\"; Amiga: after "disk:/"; Mac: no head.
@@ -3691,6 +3696,7 @@ get_past_head(path)
 
     return retval;
 }
+#endif
 
 /*
  * return TRUE if 'c' is a path separator.

@@ -57,7 +57,7 @@ syn keyword pilrcType NAME NOCOLORTABLE NOCOMPRESS NOFRAME NONEDITABLE
 syn keyword pilrcType NONUSABLE NOSAVEBEHIND NUMBER NUMBERFORMAT NUMERIC
 syn keyword pilrcType PAGESIZE
 syn keyword pilrcType RIGHTALIGN RIGHTANCHOR ROWS
-syn keyword pilrcType SAVEBEHIND SCREEN SELECTEDBITMAPID SINGLELINE
+syn keyword pilrcType SAVEBEHIND SEPARATOR SCREEN SELECTEDBITMAPID SINGLELINE
 syn keyword pilrcType THUMBID TIMEFORMAT TRANSPARENT TRANSPARENTINDEX
 syn keyword pilrcType UNDERLINED USABLE
 syn keyword pilrcType VALUE VERTICAL VISIBLEITEMS
@@ -82,6 +82,7 @@ syn match pilrcNumber "\<\d\+\>"
 
 " Comment
 syn region pilrcComment start="/\*" end="\*/"
+syn region pilrcComment start="//" end="$"
 
 " Constants
 syn keyword pilrcConstant AUTO AUTOID BOTTOM CENTER PREVBOTTOM PREVHEIGHT

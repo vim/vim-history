@@ -3216,7 +3216,9 @@ clip_mch_request_selection(VimClipboard *cbd)
 		    default:
 		    case 'L':	type = MLINE;	break;
 		    case 'C':	type = MCHAR;	break;
+#ifdef FEAT_VISUAL
 		    case 'B':	type = MBLOCK;	break;
+#endif
 		}
 	    }
 	    else
@@ -3286,7 +3288,9 @@ clip_mch_set_selection(VimClipboard *cbd)
 	    default:
 	    case MLINE:    vtype = 'L';    break;
 	    case MCHAR:    vtype = 'C';    break;
+#ifdef FEAT_VISUAL
 	    case MBLOCK:   vtype = 'B';    break;
+#endif
 	}
 	m->AddData(vimselectiontype, B_MIME_TYPE, (void *)&vtype, 1);
 

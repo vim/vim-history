@@ -1,7 +1,8 @@
 " Menu Translations:	Czech for MS-Windows
 " Maintainer:		Jiri Brezina <brz@centrum.cz>
 " Based on:		ISO-8859-2 menus by Jiri Pavlovsky's <pavlovsk@ff.cuni.cz>
-" Last Change:		2001 Sep 04
+" Last Change:		2001 Oct 22
+" Version cz menu	vim6.0-cz1.5
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -14,7 +15,7 @@ scriptencoding cp1250
 " Help menu
 menutrans &Help 		&Nápovìda
 menutrans &Overview<Tab><F1>	&Pøehled<Tab><F1>
-menutrans &User Manual 		&Uživatelský Manuál
+menutrans &User\ Manual		&Uživatelský\ Manuál
 menutrans &How-to\ links	&Tipy
 menutrans &GUI 			&Grafické\ rozhraní
 menutrans &Credits		Po&dìkování
@@ -31,8 +32,8 @@ menutrans &New<Tab>:enew		&Nový<Tab>:enew
 menutrans &Close<Tab>:close		&Zavøít<Tab>:close
 menutrans &Save<Tab>:w			&Uložit<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	Uložit\ &jako\.\.\.<Tab>:sav
-menutrans Split\ &Diff\ with\.\.\.	Rozdìl\ okno\ -Diff...
-menutrans Split\ Patched\ &By\.\.\.	Rozdìl\ okno\ -Patch...
+menutrans Split\ &Diff\ with\.\.\.	Rozdìlit\ okno\ -Diff...
+menutrans Split\ Patched\ &By\.\.\.	Rozdìlit\ okno\ -Patch...
 menutrans &Print			&Tisk
 menutrans Sa&ve-Exit<Tab>:wqa		U&ložit-Konec<Tab>:wqa
 menutrans E&xit<Tab>:qa			&Konec<Tab>:qa
@@ -53,67 +54,67 @@ menutrans &Find\.\.\.			&Hledat\.\.\.
 menutrans Find\ and\ Rep&lace\.\.\.	&Nahradit\.\.\.
 menutrans Options\.\.\.			Volby\.\.\.
 menutrans Settings\ &Window 		Nastavení\ okna
-menutrans &Global\ Settings 		&Globální\ Nastavení
-menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!		Pøehoï\ Zvýraznìní\ Syntaxe<Tab>:set\ hls!
-menutrans Toggle\ &Ignore-case<Tab>:set\ ic! 			Pøehoï\ Ignoruj\ Verzálky<Tab>:set\ ic!
-menutrans Toggle\ &Showmatch<Tab>:set\ sm! 			Pøehoï\ Ukaž\ Nalezené\ Výskyty<Tab>:set\ sm!
-menutrans &Context\ lines 		Zobraz\ Kontextové\ Øádky
-menutrans &Virtual\ Edit 		Virtuální\ Editace
+menutrans &Global\ Settings 		&Globální\ nastavení
+menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!		Pøehodit\ nalezení\ vzoru<Tab>:set\ hls!
+menutrans Toggle\ &Ignore-case<Tab>:set\ ic! 			Pøehodit\ ignorování\ VERZÁLEK<Tab>:set\ ic!
+menutrans Toggle\ &Showmatch<Tab>:set\ sm! 			Pøehodit\ &Showmatch\ \{\(\[\])\}<Tab>:set\ sm!
+menutrans &Context\ lines 		Zobrazit\ kontextové\ øádky
+menutrans &Virtual\ Edit 		Virtuální\ editace
 menutrans Never 			Nikdy
 menutrans Block\ Selection 		Výbìr\ Bloku
 menutrans Insert\ mode 			Insert\ Mód
 menutrans Block\ and\ Insert 		Blok\ a\ Insert
 menutrans Always 			Vždycky
-menutrans Toggle\ Insert\ &Mode<Tab>:set\ im! 			Pøehoï\ Insert\ Mód<Tab>:set\ im!
-menutrans Search\ &Path\.\.\. 		Nastav\ Cestu\ k\ Prohledávání\.\.\.
+menutrans Toggle\ Insert\ &Mode<Tab>:set\ im! 			Pøehodit\ Insert\ Mód<Tab>:set\ im!
+menutrans Search\ &Path\.\.\. 		Nastavit\ cestu\ k\ prohledávání\.\.\.
 menutrans Ta&g\ Files\.\.\. 		Ta&g\ Soubory\.\.\.
-menutrans Toggle\ &Toolbar 		Pøehoï\ &Toolbar
-menutrans Toggle\ &Bottom\ Scrollbar 	Pøehoï\ Dolní\ Rolovací\ Lištu  
-menutrans Toggle\ &Left\ Scrollbar 	Pøehoï\ Levou\ Rolovací\ Lištu
-menutrans Toggle\ &Right\ Scrollbar 	Pøehoï\ Pravou\ Rolovací\ Lištu
-menutrans F&ile\ Settings 		Nastavení\ Souboru
-menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu! 		Pøehoï\ Èíslování\ Øádkù<Tab>:set\ nu!
-menutrans Toggle\ &List\ Mode<Tab>:set\ list! 			Pøehoï\ &List\ Mode<Tab>:set\ list!
-menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap! 			Pøehoï\ Zalamování\ Øádkù<Tab>:set\ wrap!
-menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr! 		Pøehoï\ Zlom\ ve\ Slovì<Tab>:set\ lbr!
-menutrans Toggle\ &expand-tab<Tab>:set\ et! 			Pøehoï\ &expand-tab<Tab>:set\ et!
-menutrans Toggle\ &auto-indent<Tab>:set\ ai! 			Pøehoï\ &auto-odsazení<Tab>:set\ ai!
-menutrans Toggle\ &C-indenting<Tab>:set\ cin! 			Pøehoï\ &C-odsazení<Tab>:set\ cin!
-menutrans &Shiftwidth 			Nastav\ Šíøku\ Odsazení
-menutrans Te&xt\ Width\.\.\. 		Šíøka\ Textu\.\.\.
-menutrans &File\ Format\.\.\. 		&Formát\ Souboru\.\.\.
-menutrans C&olor\ Scheme 		Barevné\ Schéma
-menutrans &Keymap 			&Klávesová\ Mapa
+menutrans Toggle\ &Toolbar 		Pøehodit\ &Toolbar
+menutrans Toggle\ &Bottom\ Scrollbar 	Pøehodit\ Dolní\ rolovací\ lištu  
+menutrans Toggle\ &Left\ Scrollbar 	Pøehodit\ Levou\ rolovací\ lištu
+menutrans Toggle\ &Right\ Scrollbar 	Pøehodit\ Pravou\ rolovací\ lištu
+menutrans F&ile\ Settings 		Nastavení\ souboru
+menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu! 		Pøehodit\ èíslování\ øádkù<Tab>:set\ nu!
+menutrans Toggle\ &List\ Mode<Tab>:set\ list! 			Pøehodit\ &List\ Mode<Tab>:set\ list!
+menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap! 			Pøehodit\ zalamování\ øádkù<Tab>:set\ wrap!
+menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr! 		Pøehodit\ zlom\ ve\ slovì<Tab>:set\ lbr!
+menutrans Toggle\ &expand-tab<Tab>:set\ et! 			Pøehodit\ &expand-tab<Tab>:set\ et!
+menutrans Toggle\ &auto-indent<Tab>:set\ ai! 			Pøehodit\ &auto-indent<Tab>:set\ ai!
+menutrans Toggle\ &C-indenting<Tab>:set\ cin! 			Pøehodit\ &C-indenting<Tab>:set\ cin!
+menutrans &Shiftwidth 			Nastavit\ šíøku\ odsazení
+menutrans Te&xt\ Width\.\.\. 		Šíøka\ textu\.\.\.
+menutrans &File\ Format\.\.\. 		&Formát\ souboru\.\.\.
+menutrans C&olor\ Scheme 		Barevné\ schéma
+menutrans &Keymap 			&Klávesová\ mapa
 
 " Programming menu
 menutrans &Tools			&Nástroje
 menutrans &Jump\ to\ this\ tag<Tab>g^]	&Skoèit\ na\ znaèku<Tab>g^]
 menutrans Jump\ &back<Tab>^T		Skoèit\ &zpìt<Tab>^T
-menutrans Build\ &Tags\ File		&Vytvoøit\ soubor\ tagùi
+menutrans Build\ &Tags\ File		&Vytvoøit\ soubor\ tagù
 
 menutrans &Folding 			&Foldy
 menutrans &Enable/Disable\ folds<Tab>zi &Ano/Ne
-menutrans &View\ Cursor\ Line<Tab>zv 	&Zobraz\ Cursor\ Line<Tab>zv
-menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx 		Zobr&az\ pouze\ Cursor\ Line\ <Tab>zMzx
-menutrans C&lose\ more\ folds<Tab>zm 	Vyjmi\ jednu\ úroveò\ foldù<Tab>zm
-menutrans &Close\ all\ folds<Tab>zM 	&Zavøi\ Všechny\ foldy<Tab>zM
-menutrans O&pen\ more\ folds<Tab>zr 	Pøidej\ jednu\ úroveò\ foldù<Tab>zr
-menutrans &Open\ all\ folds<Tab>zR 	&Otevøi\ Všechny\ foldy<Tab>zR
-menutrans Fold\ Met&hod 		Me&toda\ Skládání
+menutrans &View\ Cursor\ Line<Tab>zv 	&Zobrazit\ øádek\ kurzoru<Tab>zv
+menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx 		Zobr&azit\ pouze\ øádek\ kurzoru\ <Tab>zMzx
+menutrans C&lose\ more\ folds<Tab>zm 	Vyjmout\ jednu\ úroveò\ foldù<Tab>zm
+menutrans &Close\ all\ folds<Tab>zM 	&Zavøít\ všechny\ foldy<Tab>zM
+menutrans O&pen\ more\ folds<Tab>zr 	Pøidat\ jednu\ úroveò\ foldù<Tab>zr
+menutrans &Open\ all\ folds<Tab>zR 	&Otevøít\ všechny\ foldy<Tab>zR
+menutrans Fold\ Met&hod 		Me&toda\ skládání
 menutrans M&anual 			&Ruènì
-menutrans I&ndent 			&Odsazením
+menutrans I&ndent 			&Odsazení
 menutrans E&xpression 			&Výraz
-menutrans S&yntax 			&Zvýraznìním
-menutrans &Diff 			&Diff-em
-menutrans Ma&rker 			Zá&ložka
-menutrans Create\ &Fold<Tab>zf 		Vytvoø\ &Fold<Tab>zf
-menutrans &Delete\ Fold<Tab>zd 		Vymaž\ fold<Tab>zd 
-menutrans &Delete\ &All\ Folds<Tab>zD 	V&ymaž\ Všechny\ foldy<Tab>zD
-menutrans Fold\ column\ &width 		Šíø&ka\ Foldu
+menutrans S&yntax 			&Syntax
+menutrans &Diff 			&Diff
+menutrans Ma&rker 			Ma&rker
+menutrans Create\ &Fold<Tab>zf 		Vytvoøit\ &Fold<Tab>zf
+menutrans &Delete\ Fold<Tab>zd 		Vymazat\ fold<Tab>zd 
+menutrans Delete\ &All\ Folds<Tab>zD 	V&ymazat\ všechny\ foldy<Tab>zD
+menutrans Fold\ column\ &width 		Šíø&ka\ foldu
 
-menutrans &Update 			&Obnov
-menutrans &Get\ Block 			&Sejmi\ Blok
-menutrans &Put\ Block 			&Vlož\ Blok
+menutrans &Update 			&Obnovit
+menutrans &Get\ Block 			&Sejmout\ Blok
+menutrans &Put\ Block 			&Vložit\ Blok
 menutrans &Make<Tab>:make		&Make<Tab>:make
 menutrans &List\ Errors<Tab>:cl		Výpis\ &chyb<Tab>:cl
 menutrans L&ist\ Messages<Tab>:cl!	Výp&is\ zpráv<Tab>:cl!
@@ -122,9 +123,11 @@ menutrans &Previous\ Error<Tab>:cp	&Pøedchozí\ chyba<Tab>:cp
 menutrans &Older\ List<Tab>:cold	Sta&rší\ seznam<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	N&ovìjší\ seznam<Tab>:cnew
 menutrans Error\ &Window		Chybové\ o&kno
-menutrans &Update<Tab>:cwin 		&Obnov<Tab>:cwin
-menutrans &Open<Tab>:copen 		&Otevøi<Tab>:copen
-menutrans &Close<Tab>:cclose 		&Zavøi<Tab>:cclose
+menutrans &Update<Tab>:cwin 		&Obnovit<Tab>:cwin
+menutrans &Open<Tab>:copen 		&Otevøít<Tab>:copen
+menutrans &Close<Tab>:cclose 		&Zavøít<Tab>:cclose
+menutrans &Set\ Compiler		Nastavit\ kompilátor
+
 menutrans &Convert\ to\ HEX<Tab>:%!xxd 	&Pøevést\ do\ šestnáctkového\ formátu<Tab>:%!xxd
 menutrans Conve&rt\ back<Tab>:%!xxd\ -r Pøevést\ &Zpìt<Tab>:%!xxd\ -r
 

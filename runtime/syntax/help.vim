@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim help file
 " Maintainer:	Bram Moolenaar (Bram@vim.org)
-" Last Change:	2001 Jul 24
+" Last Change:	2002 Jan 19
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -39,8 +39,8 @@ syn match helpSpecial		"\[N]"
 syn match helpSpecial		"N  N"he=s+1
 syn match helpSpecial		"Nth"me=e-2
 syn match helpSpecial		"N-1"me=e-2
-syn match helpSpecial		"{[-a-zA-Z0-9'":%#=[\]<>.]\+}"
-syn match helpSpecial		"\s\[[-a-zA-Z0-9_]\{2,}]"ms=s+1
+syn match helpSpecial		"{[-a-zA-Z0-9'":%#=[\]<>.,]\+}"
+syn match helpSpecial		"\s\[[-a-z^A-Z0-9_]\{2,}]"ms=s+1
 syn match helpSpecial		"<[-a-zA-Z0-9_]\+>"
 syn match helpSpecial		"<[SCM]-.>"
 syn match helpNormal		"<---*>"
@@ -76,20 +76,20 @@ if version >= 508 || !exists("did_help_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  hi link helpExampleStart	helpIgnore
-  hi link helpIgnore		Ignore
-  hi link helpHyperTextJump	Subtitle
-  hi link helpHyperTextEntry	String
-  hi link helpHeadline		Statement
-  hi link helpHeader		PreProc
-  hi link helpSectionDelim	PreProc
-  hi link helpVim		Identifier
-  hi link helpExample		Comment
-  hi link helpOption		Type
-  hi link helpNotVi		Special
-  hi link helpSpecial		Special
-  hi link helpNote		Todo
-  hi link Subtitle		Identifier
+  HiLink helpExampleStart	helpIgnore
+  HiLink helpIgnore		Ignore
+  HiLink helpHyperTextJump	Subtitle
+  HiLink helpHyperTextEntry	String
+  HiLink helpHeadline		Statement
+  HiLink helpHeader		PreProc
+  HiLink helpSectionDelim	PreProc
+  HiLink helpVim		Identifier
+  HiLink helpExample		Comment
+  HiLink helpOption		Type
+  HiLink helpNotVi		Special
+  HiLink helpSpecial		Special
+  HiLink helpNote		Todo
+  HiLink Subtitle		Identifier
 
   delcommand HiLink
 endif

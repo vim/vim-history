@@ -340,12 +340,12 @@ u_savecommon(top, bot, newbot)
 
     uep->ue_size = size;
     uep->ue_top = top;
-    if (newbot)
+    if (newbot != 0)
 	uep->ue_bot = newbot;
-	/*
-	 * Use 0 for ue_bot if bot is below last line.
-	 * Otherwise we have to compute ue_bot later.
-	 */
+    /*
+     * Use 0 for ue_bot if bot is below last line.
+     * Otherwise we have to compute ue_bot later.
+     */
     else if (bot > curbuf->b_ml.ml_line_count)
 	uep->ue_bot = 0;
     else

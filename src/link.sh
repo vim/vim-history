@@ -5,7 +5,7 @@
 # libraries when they exist, but this doesn't mean they are needed for Vim.
 #
 #      Author: Bram Moolenaar
-# Last change: 2001 Jul 13
+# Last change: 2002 Feb 21
 #
 # Warning: This fails miserably if the linker doesn't return an error code!
 #

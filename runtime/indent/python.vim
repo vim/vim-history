@@ -1,7 +1,7 @@
 " Python indent file
 " Language:	Python
 " Maintainer:	David Bustos <bustos@caltech.edu>
-" Last Change:	July 22, 2001
+" Last Change:	November 11, 2001
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -26,11 +26,14 @@ function GetPythonIndent(lnum)
     return -1
   endif
 
-  " Search backwards for the frist non-empty line.
+  " Search backwards for the frist non-empty, non-comment line.
   let plnum = prevnonblank(v:lnum - 1)
+  while getline(plnum) =~ '^\s*#'
+    let plnum = prevnonblank(plnum - 1)
+  endwhile
 
   if plnum == 0
-    " This is the first non-empty line, use zero indent.
+    " This is the first non-empty line.  Use zero indent.
     return 0
   endif
 
@@ -52,14 +55,14 @@ function GetPythonIndent(lnum)
   " If the current line begins with a header keyword, dedent
   elseif getline(a:lnum) =~ '^\s*\(elif\|else\|except\|finaly\)\>'
 
-    " Unless the previous line was a one-liner
-    if getline(plnum) =~ '^\s*\(for\|if\|try\)\>'
-      return indent(plnum)
-    endif
-
-    " Or the user has already dedented
+    " Unless the user has already dedented
     if indent(a:lnum) <= indent(plnum) - &sw
       return -1
+    endif
+
+    " Or if the previous line was a one-liner
+    if getline(plnum) =~ '^\s*\(for\|if\|try\)\>'
+      return indent(plnum)
     endif
 
     return indent(plnum) - &sw

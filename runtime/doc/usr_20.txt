@@ -1,4 +1,4 @@
-*usr_20.txt*	For Vim version 6.0.  Last change: 2001 Sep 09
+*usr_20.txt*	For Vim version 6.1a.  Last change: 2001 Sep 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 

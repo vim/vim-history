@@ -1,8 +1,8 @@
 " Vim syntax file
 "    Language: Structured Query Report Writer (SQR)
-"  Maintainer: Jeff Lanzarotta (frizbeefanatic@yahoo.com)
+"  Maintainer: Jeff Lanzarotta (jefflanzarotta@yahoo.com)
 "         URL: http://lanzarotta.tripod.com/vim/syntax/sqr.vim.zip
-" Last Change: April 30, 2001
+" Last Change: October 15, 2001
 
 " For version 5.x, clear all syntax items.
 " For version 6.x, quit when a syntax file was already loaded.

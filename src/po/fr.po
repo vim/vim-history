@@ -1966,9 +1966,9 @@ msgid "Find & Replace (use '\\\\' to find  a '\\')"
 msgstr "Chercher et remplacer (utilisez '\\\\' pour trouver un '\\')"
 
 #: gui_x11.c:1307
-msgid "Vim: (ec1) Cannot allocate colormap entry, some colors may be incorrect"
+msgid "Vim E458: Cannot allocate colormap entry, some colors may be incorrect"
 msgstr ""
-"Vim : (ec1) impossible d'allouer une entrée dans la palette de couleur, des "
+"Vim E458: impossible d'allouer une entrée dans la palette de couleur, des "
 "couleurs peuvent être incorrectes"
 
 #: gui_x11.c:1798

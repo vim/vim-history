@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	SGML
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
-" Last Change:	Sam, 03 Mär 2001 23:13:12 +0100
+" Last Change:	Tue, 06 Nov 2001 10:03:51 +0100
 " Filenames:	*.sgml,*.sgm
 " URL:		http://www.zellner.org/vim/syntax/sgml.vim
 " $Id$
@@ -23,17 +23,27 @@ syn case match
 syn match sgmlError "[<&]"
 
 
-" strings (inside tags) aka VALUES
+" unicode numbers:
+" provide different highlithing for unicode characters
+" inside strings and in plain text (character data).
 "
 " EXAMPLE:
 "
-" <tag foo.attribute = "value">
-"                      ^^^^^^^
-syn region  sgmlString contained start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=sgmlEntity display
-syn region  sgmlString contained start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=sgmlEntity display
+" \u4e88
+"
+syn match   sgmlUnicodeNumberAttr    +\\u\x\{4}+ contained contains=sgmlUnicodeSpecifierAttr
+syn match   sgmlUnicodeSpecifierAttr +\\u+ contained
+syn match   sgmlUnicodeNumberData    +\\u\x\{4}+ contained contains=sgmlUnicodeSpecifierData
+syn match   sgmlUnicodeSpecifierData +\\u+ contained
+
+
+" strings inside character data or comments
+"
+syn region  sgmlString contained start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=sgmlEntity,sgmlUnicodeNumberAttr display
+syn region  sgmlString contained start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=sgmlEntity,sgmlUnicodeNumberAttr display
 
 " punctuation (within attributes) e.g. <tag sgml:foo.attribute ...>
-"                                              ^   ^
+"                                               ^   ^
 syn match   sgmlAttribPunct +[:.]+ contained display
 
 
@@ -57,6 +67,56 @@ syn match   sgmlAttrib
     \ display
 
 
+" UNQUOTED value (not including the '=' -- sgmlEqual)
+"
+" PROVIDES: @sgmlValueHook
+"
+" EXAMPLE:
+"
+" <tag foo.attribute = value>
+"                      ^^^^^
+"
+syn match   sgmlValue
+    \ +[^"' =/!?<>][^ =/!?<>]*+
+    \ contained
+    \ contains=sgmlEntity,sgmlUnicodeNumberAttr,@sgmlValueHook
+    \ display
+
+
+" QUOTED value (not including the '=' -- sgmlEqual)
+"
+" PROVIDES: @sgmlValueHook
+"
+" EXAMPLE:
+"
+" <tag foo.attribute = "value">
+"                      ^^^^^^^
+" <tag foo.attribute = 'value'>
+"                      ^^^^^^^
+"
+syn region  sgmlValue contained start=+"+ skip=+\\\\\|\\"+ end=+"+
+	    \ contains=sgmlEntity,sgmlUnicodeNumberAttr,@sgmlValueHook
+syn region  sgmlValue contained start=+'+ skip=+\\\\\|\\'+ end=+'+
+	    \ contains=sgmlEntity,sgmlUnicodeNumberAttr,@sgmlValueHook
+
+
+" value, everything after (and including) the '='
+" no highlighting!
+"
+" EXAMPLE:
+"
+" <tag foo.attribute = "value">
+"                    ^^^^^^^^^
+" <tag foo.attribute = value>
+"                    ^^^^^^^
+"
+syn match   sgmlEqualValue
+    \ +=\s*[^ =/!?<>]\++
+    \ contained
+    \ contains=sgmlEqual,sgmlString,sgmlValue
+    \ display
+
+
 " start tag
 " use matchgroup=sgmlTag to skip over the leading '<'
 " see also sgmlEmptyTag below.
@@ -67,7 +127,7 @@ syn region   sgmlTag
     \ matchgroup=sgmlTag start=+<[^ /!?"']\@=+
     \ matchgroup=sgmlTag end=+>+
     \ contained
-    \ contains=sgmlError,sgmlAttrib,sgmlEqual,sgmlString,@sgmlTagHook
+    \ contains=sgmlError,sgmlAttrib,sgmlEqualValue,@sgmlTagHook
 
 
 " tag content for empty tags. This is the same as sgmlTag
@@ -80,7 +140,7 @@ syn region   sgmlEmptyTag
     \ matchgroup=sgmlTag start=+<[^ /!?"']\@=+
     \ matchgroup=sgmlEndTag end=+/>+
     \ contained
-    \ contains=sgmlError,sgmlAttrib,sgmlEqual,sgmlString,@sgmlTagHook
+    \ contains=sgmlError,sgmlAttrib,sgmlEqualValue,@sgmlTagHook
 
 
 " end tag
@@ -107,7 +167,7 @@ syn region   sgmlAbbrTag
     \ matchgroup=sgmlTag start=+<[^ /!?"']\@=+
     \ matchgroup=sgmlTag end=+/+
     \ contained
-    \ contains=sgmlError,sgmlAttrib,sgmlEqual,sgmlString,@sgmlTagHook
+    \ contains=sgmlError,sgmlAttrib,sgmlEqualValue,@sgmlTagHook
 
 
 " SGML specific
@@ -128,7 +188,7 @@ syn match   sgmlAbbrEndTag +/+
 "
 syn match   sgmlAbbrRegion
     \ +<[^/!?>"']\+/\_[^/]\+/+
-    \ contains=sgmlAbbrTag,sgmlAbbrEndTag,sgmlCdata,sgmlComment,sgmlEntity,@sgmlRegionHook
+    \ contains=sgmlAbbrTag,sgmlAbbrEndTag,sgmlCdata,sgmlComment,sgmlEntity,sgmlUnicodeNumberData,@sgmlRegionHook
 
 " [-- END OF SGML SPECIFIC --]
 
@@ -153,11 +213,11 @@ syn match   sgmlAbbrRegion
 " compared to xmlRegion:
 "   - removed folding
 "   - added a single '/'in the start pattern
-"
+" 
 syn region   sgmlRegion
     \ start=+<\z([^ /!?>"']\+\)\(\(\_[^/>]*[^/!?]>\)\|>\)+
     \ end=+</\z1>+
-    \ contains=sgmlTag,sgmlEndTag,sgmlCdata,@sgmlRegionCluster,sgmlComment,sgmlEntity,@sgmlRegionHook
+    \ contains=sgmlTag,sgmlEndTag,sgmlCdata,@sgmlRegionCluster,sgmlComment,sgmlEntity,sgmlUnicodeNumberData,@sgmlRegionHook
     \ keepend
     \ extend
 
@@ -187,7 +247,7 @@ syn match   sgmlEntityPunct  contained "[&.;]"
 " The real comments (this implements the comments as defined by sgml,
 " but not all sgml pages actually conform to it. Errors are flagged.
 syn region  sgmlComment                start=+<!+        end=+>+ contains=sgmlCommentPart,sgmlString,sgmlCommentError,sgmlTodo
-syn keyword sgmlTodo         contained TODO FIXME XXX
+syn keyword sgmlTodo         contained TODO FIXME XXX display
 syn match   sgmlCommentError contained "[^><!]"
 syn region  sgmlCommentPart  contained start=+--+        end=+--+
 
@@ -211,7 +271,7 @@ syn match    sgmlCdataEnd   +]]>+          contained
 
 " Processing instructions
 " This allows "?>" inside strings -- good idea?
-syn region  sgmlProcessing matchgroup=sgmlProcessingDelim start="<?" end="?>" contains=sgmlAttrib,sgmlEqual,sgmlString
+syn region  sgmlProcessing matchgroup=sgmlProcessingDelim start="<?" end="?>" contains=sgmlAttrib,sgmlEqualValue
 
 
 " DTD -- we use dtd.vim here
@@ -235,35 +295,40 @@ syn sync minlines=100
 
 
 " The default highlighting.
-hi def link sgmlTodo                      Todo
-hi def link sgmlTag                       Function
-hi def link sgmlEndTag                    Identifier
+hi def link sgmlTodo			Todo
+hi def link sgmlTag			Function
+hi def link sgmlEndTag			Identifier
 " SGML specifig
-hi def link sgmlAbbrEndTag                Identifier
-hi def link sgmlEmptyTag                  Function
-hi def link sgmlEntity                    Statement
-hi def link sgmlEntityPunct               Type
+hi def link sgmlAbbrEndTag		Identifier
+hi def link sgmlEmptyTag		Function
+hi def link sgmlEntity			Statement
+hi def link sgmlEntityPunct		Type
 
-hi def link sgmlAttribPunct               Comment
-hi def link sgmlAttrib                    Type
+hi def link sgmlAttribPunct		Comment
+hi def link sgmlAttrib			Type
 
-hi def link sgmlString                    String
-hi def link sgmlComment                   Comment
-hi def link sgmlCommentPart               Comment
-hi def link sgmlCommentError              Error
-hi def link sgmlError                     Error
+hi def link sgmlValue			String
+hi def link sgmlString			String
+hi def link sgmlComment			Comment
+hi def link sgmlCommentPart		Comment
+hi def link sgmlCommentError		Error
+hi def link sgmlError			Error
 
-hi def link sgmlProcessingDelim           Comment
-hi def link sgmlProcessing                Type
+hi def link sgmlProcessingDelim		Comment
+hi def link sgmlProcessing		Type
 
-hi def link sgmlCdata                     String
-hi def link sgmlCdataCdata                Statement
-hi def link sgmlCdataStart                Type
-hi def link sgmlCdataEnd                  Type
+hi def link sgmlCdata			String
+hi def link sgmlCdataCdata		Statement
+hi def link sgmlCdataStart		Type
+hi def link sgmlCdataEnd		Type
 
-hi def link sgmlDocTypeDecl               Function
-hi def link sgmlDocTypeKeyword            Statement
-hi def link sgmlInlineDTD                 Function
+hi def link sgmlDocTypeDecl		Function
+hi def link sgmlDocTypeKeyword		Statement
+hi def link sgmlInlineDTD		Function
+hi def link sgmlUnicodeNumberAttr	Number
+hi def link sgmlUnicodeSpecifierAttr	SpecialChar
+hi def link sgmlUnicodeNumberData	Number
+hi def link sgmlUnicodeSpecifierData	SpecialChar
 
 let b:current_syntax = "sgml"
 

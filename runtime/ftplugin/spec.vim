@@ -1,7 +1,7 @@
 " Plugin to update the %changelog section of RPM spec files
 " Filename: spec.vim
 " Maintainer: Gustavo Niemeyer <niemeyer@conectiva.com>
-" Last Change: Thu, 03 May 2001 14:52:48 -0300
+" Last Change: Fri, 12 Oct 2001 01:37:08 -0300
 
 if exists("b:did_ftplugin")
 	finish
@@ -123,4 +123,13 @@ if !exists("*s:SpecChangelog")
 		endif
 	endfunction
 endif
+
+" The following lines, along with the macros/matchit.vim plugin,
+" make it easy to navigate the different sections of a spec file
+" with the % key (thanks to Max Ischenko).
+
+let b:match_ignorecase = 0
+let b:match_words =
+  \ '^Name:^%description:^%clean:^%setup:^%build:^%install:^%files:' .
+  \ '^%package:^%preun:^%postun:^%changelog'
 

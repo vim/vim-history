@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 6.0.  Last change: 2001 Sep 25
+*tips.txt*      For Vim version 6.1a.  Last change: 2001 Dec 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -208,7 +208,7 @@ number of substitutions is the number of items.  Examples: >
 	:set report=0
 	:%s/./&/g		characters
 	:%s/\i\+/&/g		words
-	:%s/^//g		lines
+	:%s/^			lines
 	:%s/the/&/g		"the" anywhere
 	:%s/\<the\>/&/g		"the" as a word
 

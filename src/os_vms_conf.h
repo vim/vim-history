@@ -184,8 +184,8 @@
 #endif
 
 /* GUI support defines */
-#ifdef FEAT_GUI_MOTIF   
+#ifdef FEAT_GUI_MOTIF
 #define HAVE_X11
 #define USE_FONTSET
-#undef  X_LOCALE 
+#undef  X_LOCALE
 #endif

@@ -29,6 +29,10 @@
 # include <proto/dos.h>		/* for Lock() and UnLock() */
 #endif
 
+#ifdef __TANDEM
+# include <limits.h>		/* for SSIZE_MAX */
+#endif
+
 #define BUFSIZE		8192	/* size of normal write buffer */
 #define SMBUFSIZE	256	/* size of emergency write buffer */
 
@@ -949,7 +953,11 @@ retry:
 	    if (!skip_read)
 	    {
 #if SIZEOF_INT > 2
+# ifdef __TANDEM
+		size = SSIZE_MAX;		    /* use max I/O size, 52K */
+# else
 		size = 0x10000L;		    /* use buffer >= 64K */
+# endif
 #else
 		size = 0x7ff0L - linerest;	    /* limit buffer to 32K */
 #endif
@@ -2665,7 +2673,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		else
 		{
 		    chown((char *)IObuff, st_old.st_uid, st_old.st_gid);
-		    (void)mch_setperm((char *)IObuff, perm);
+		    (void)mch_setperm(IObuff, perm);
 		    if (mch_stat((char *)IObuff, &st) < 0
 			    || st.st_uid != st_old.st_uid
 			    || st.st_gid != st_old.st_gid

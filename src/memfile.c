@@ -615,8 +615,10 @@ mf_sync(mfp, flags)
 	}
 	else
 # endif
-# ifdef __OPENNT
-	    fflush(NULL);	/* OpenNT is strictly POSIX (Benzinger) */
+	    /* OpenNT is strictly POSIX (Benzinger) */
+	    /* Tandem/Himalaya NSK-OSS doesn't have sync() */
+# if defined(__OPENNT) || defined(__TANDEM)
+	    fflush(NULL);
 # else
 	    sync();
 # endif

@@ -1,4 +1,4 @@
-*os_qnx.txt*    For Vim version 6.0.  Last change: 2001 Sep 17
+*os_qnx.txt*    For Vim version 6.1a.  Last change: 2001 Sep 17
 
 
 		  VIM REFERENCE MANUAL    by Julian Kinraid
@@ -37,10 +37,10 @@ are compiled in, which they are normally.
 The options that affect mouse support are |'mouse'| and |'ttymouse'|.  When
 using the mouse, only simple left and right mouse clicking/dragging is
 supported.  If you hold down shift, ctrl, or alt while using the mouse, pterm
-will handle the mouse itself.  It will make a selection, separate form what
+will handle the mouse itself.  It will make a selection, separate from what
 vim's doing.
 
-When the mouse is in use, you can press Alt+RightMouse to open the pterm menu.
+When the mouse is in use, you can press Alt-RightMouse to open the pterm menu.
 To turn the mouse off in vim, set the mouse option to nothing, set mouse=
 
 

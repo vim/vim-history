@@ -1711,7 +1711,7 @@ ex_source(eap)
     {
 	char_u *fname = NULL;
 
-	fname = do_browse(FALSE, (char_u *)_("Run Macro"), eap->arg,
+	fname = do_browse(FALSE, (char_u *)_("Source Vim script"), eap->arg,
 				      NULL, NULL, BROWSE_FILTER_MACROS, NULL);
 	if (fname != NULL)
 	{

@@ -1,4 +1,4 @@
-*usr_04.txt*	For Vim version 6.0.  Last change: 2001 Sep 03
+*usr_04.txt*	For Vim version 6.1a.  Last change: 2002 Jan 07
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -390,9 +390,9 @@ the clipboard in section |09.3| and here: |clipboard|.
 ==============================================================================
 *04.8*	Text objects
 
-If you are halfway a word and want to delete that word, you need to move back
-to its start before you can do "dw".  There is a simpler way to do this:
-"daw".
+If the cursor is in the middle of a word and want to delete that word, you
+need to move back to its start before you can do "dw".  There is a simpler way
+to do this: "daw".
 
 	this is some example text. ~
 		       daw
@@ -400,7 +400,7 @@ to its start before you can do "dw".  There is a simpler way to do this:
 	this is some text. ~
 
 The "d" of "daw" is the delete operator.  "aw" is a text object.  Hint: "aw"
-stands for "a word".  Thus "daw" is "delete a word".
+stands for "A Word".  Thus "daw" is "Delete A Word".
 
 Using text objects is the third way to make changes in Vim.  We already had
 operator-motion and Visual mode.  Now we add operator-text object.

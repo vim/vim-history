@@ -1,4 +1,4 @@
-*os_risc.txt*   For Vim version 6.0.  Last change: 2001 Sep 04
+*os_risc.txt*   For Vim version 6.1a.  Last change: 2001 Sep 27
 
 
 		  VIM REFERENCE MANUAL    by Thomas Leonard
@@ -87,7 +87,7 @@ To use Vim from the command-line use the `*vi' command (or '*ex' for
 Type `*vi -h' for a list of options.
 
 Running the command-line version of Vim in a large high-color mode may cause
-the scrolling to be very slow. Either change to a mode with less colors or
+the scrolling to be very slow. Either change to a mode with fewer colors or
 use the GUI version.
 
 Also, holding down Ctrl will slow it down even more, and Ctrl-Shift will

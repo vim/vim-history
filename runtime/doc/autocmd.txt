@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0.  Last change: 2001 Sep 03
+*autocmd.txt*   For Vim version 6.1a.  Last change: 2002 Feb 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -177,10 +177,10 @@ BufReadCmd			Before starting to edit a new buffer.  Should
 				read the file into the buffer. |Cmd-event|
 							*BufFilePre*
 BufFilePre			Before changing the name of the current buffer
-				with the ":file" command.
+				with the ":file" or ":saveas" command.
 							*BufFilePost*
 BufFilePost			After changing the name of the current buffer
-				with the ":file" command.
+				with the ":file" or ":saveas" command.
 							*FileReadPre*
 FileReadPre			Before reading a file with a ":read" command.
 							*FileReadPost*
@@ -410,6 +410,9 @@ WinEnter			After entering another window.  Not done for
 				If the window is for another buffer, Vim
 				executes the BufEnter autocommands after the
 				WinEnter autocommands.
+				Note: When using ":split fname" the WinEnter
+				event is triggered after the split but before
+				the file "fname" is loaded.
 							*WinLeave*
 WinLeave			Before leaving a window.  If the window to be
 				entered next is for a different buffer, Vim
@@ -450,10 +453,12 @@ VimLeavePre			Before exiting Vim, just before writing the
 				happens to be the current buffer when exiting.
 				Mostly useful with a "*" pattern. >
 	:autocmd VimLeavePre * call CleanupStuff()
-<							*VimLeave*
+<				To detect an abnormal exit use |v:dying|.
+							*VimLeave*
 VimLeave			Before exiting Vim, just after writing the
 				.viminfo file.  Executed only once, like
 				VimLeavePre.
+				To detect an abnormal exit use |v:dying|.
 							*EncodingChanged*
 EncodingChanged			Fires off when the 'encoding' option is
 				changed.  Useful to set up fonts, for example.

@@ -1,4 +1,4 @@
-*debugger.txt*  For Vim version 6.0.  Last change: 2001 Sep 03
+*debugger.txt*  For Vim version 6.1a.  Last change: 2001 Dec 22
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -98,7 +98,7 @@ balloon.
 The 'ballooneval' option needs to be set to switch it on.
 
 Balloon evaluation is only available when compiled with the |+balloon_eval|
-feature.
+and |+sun_workshop| features.
 
 The Balloon evaluation functions are also used to show a tooltip for the
 toolbar.  The 'ballooneval' option does not need to be set for this.  But the

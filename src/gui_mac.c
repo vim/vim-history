@@ -1882,7 +1882,7 @@ gui_mac_doActivateEvent(event)
 
     whichWindow = (WindowPtr) event->message;
     if ((event->modifiers) & activeFlag)
-    	/* Activate */
+	/* Activate */
 	gui_focus_change(TRUE);
     else
     {
@@ -1920,10 +1920,10 @@ gui_mac_doSuspendEvent(event)
      * get an activate/desactivate event
      */
     if (event->message & 1)
-    	/* Resume */
+	/* Resume */
 	gui_focus_change(TRUE);
     else
-    	/* Suspend */
+	/* Suspend */
 	gui_focus_change(FALSE);
 }
 

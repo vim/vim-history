@@ -1,6 +1,6 @@
 " Menu Translations:	Korean
 " Maintainer:		Nam SungHyun <namsh@kldp.org>
-" Last Change:		2001 Sep 02
+" Last Change:		2001 Nov 01
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -13,18 +13,19 @@ scriptencoding euc-kr
 " Help menu
 menutrans &Help			도움말(&H)
 menutrans &Overview<Tab><F1>	개관(&O)<Tab><F1>
-menutrans &How-to\ links	하우투\ 색인(&H)
+menutrans &How-to\ links	어찌하나\ 목록(&H)
 menutrans &GUI			구이(&G)
-menutrans &Credits		고마운\ 분들(&C)
-menutrans Co&pying		저작권(&p)
 menutrans &Find\.\.\.		찾기(&F)\.\.\.
+menutrans &Credits		고마운\ 분(&C)
+menutrans Co&pying		저작권(&p)
+menutrans O&rphans		고아(&r)
 menutrans &Version		버전(&V)
 menutrans &About		이\ 프로그램은(&A)
 
 " File menu
 menutrans &File				파일(&F)
 menutrans &Open\.\.\.<Tab>:e		열기(&O)\.\.\.<Tab>:e
-menutrans Sp&lit-Open\.\.\.<Tab>:sp	분할해서\ 열기(&l)\.\.\.<Tab>:sp
+menutrans Sp&lit-Open\.\.\.<Tab>:sp	나눠서\ 열기(&l)\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		새로운(&N)<Tab>:enew
 menutrans &Close<Tab>:close		닫기(&C)<Tab>:close
 menutrans &Save<Tab>:w			저장(&S)<Tab>:w
@@ -32,23 +33,23 @@ menutrans Save\ &As\.\.\.<Tab>:sav	다른\ 이름으로\ 저장(&A)\.\.\.<Tab>:sav
 "menutrans Split\ &Diff\ with\.\.\.	Split\ &Diff\ with\.\.\.
 "menutrans Split\ Patched\ &By\.\.\.	Split\ Patched\ &By\.\.\.
 menutrans &Print			인쇄(&P)
-menutrans Sa&ve-Exit<Tab>:wqa		저장하고\ 종료(&v)<Tab>:wqa
-menutrans E&xit<Tab>:qa			종료(&x)<Tab>:qa
+menutrans Sa&ve-Exit<Tab>:wqa		저장하고\ 끝내기(&v)<Tab>:wqa
+menutrans E&xit<Tab>:qa			끝내기(&x)<Tab>:qa
 
 " Edit menu
 menutrans &Edit				편집(&E)
 menutrans &Undo<Tab>u			취소(&U)<Tab>u
-menutrans &Redo<Tab>^R			재실행(&R)<Tab>^R
-menutrans Rep&eat<Tab>\.		반복(&e)<Tab>\.
+menutrans &Redo<Tab>^R			다시 실행(&R)<Tab>^R
+menutrans Rep&eat<Tab>\.		되풀이(&e)<Tab>\.
 menutrans Cu&t<Tab>"+x			자르기(&t)<Tab>"+x
 menutrans &Copy<Tab>"+y			복사(&C)<Tab>"+y
 menutrans &Paste<Tab>"+P		붙이기(&P)<Tab>"+P
 menutrans Put\ &Before<Tab>[p		앞에\ 붙이기(&B)<Tab>[p
 menutrans Put\ &After<Tab>]p		뒤에\ 붙이기(&A)<Tab>]p
-menutrans &Delete<Tab>x			삭제(&D)<Tab>x
-menutrans &Select\ all<Tab>ggVG		모두\ 선택(&S)<Tab>ggVG
+menutrans &Delete<Tab>x			지우기(&D)<Tab>x
+menutrans &Select\ all<Tab>ggVG		모두\ 고르기(&S)<Tab>ggVG
 menutrans &Find\.\.\.			찾기(&F)\.\.\.
-menutrans Find\ and\ Rep&lace\.\.\.	찾아\ 바꾸기(&l)\.\.\.
+menutrans Find\ and\ Rep&lace\.\.\.	찾아서\ 바꾸기(&l)\.\.\.
 menutrans Settings\ &Window		설정\ 창(&W)
 
 " Edit/Global Settings
@@ -56,16 +57,17 @@ menutrans &Global\ Settings		전역\ 설정(&G)
 menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls! 패턴\ 하이라이트\ 토글(&H)<Tab>:set\ hls!
 menutrans Toggle\ &Ignore-case<Tab>:set\ ic! 대소문자\ 구분\ 토글(&I)<Tab>:set\ ic!
 menutrans Toggle\ &Showmatch<Tab>:set\ sm! Showmatch\ 토글(&S)<Tab>:set\ sm!
-menutrans &Context\ lines		콘텍스트\ 라인(&C)
+menutrans &Context\ lines		콘텍스트\ 줄(&C)
 menutrans &Virtual\ Edit		가상\ 편집(&V)
-menutrans Never				사용않함
-menutrans Block\ Selection		블럭\ 선택
+menutrans Never				사용 안 함
+menutrans Block\ Selection		블럭\ 고르기
 menutrans Insert\ mode			삽입\ 모드
 menutrans Block\ and\ Insert		블럭과\ 삽입
 menutrans Always			항상\ 사용
 menutrans Toggle\ Insert\ &Mode<Tab>:set\ im! 삽입\ 모드\ 토글(&M)<Tab>:set\ im!
+menutrans Toggle\ Vi\ C&ompatible<Tab>:set\ cp! Vi\ 호환\ 토글(&o)<Tab>:set\ cp!
 menutrans Search\ &Path\.\.\.		찾기\ 경로(&P)\.\.\.
-menutrans Ta&g\ Files\.\.\.		태그\ 파일(&g)\.\.\.
+menutrans Ta&g\ Files\.\.\.		꼬리표\ 파일(&g)\.\.\.
 
 " GUI options
 menutrans Toggle\ &Toolbar		도구막대\ 토글(&T)
@@ -77,54 +79,54 @@ menutrans Toggle\ &Right\ Scrollbar	오른쪽\ 스크롤바\ 토글(&R)
 menutrans F&ile\ Settings		파일\ 설정(&i)
 
 " Boolean options
-menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu! 라인\ 번호붙이기\ 토글(&N)<Tab>:set\ nu!
+menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu! 줄\ 번호붙이기\ 토글(&N)<Tab>:set\ nu!
 menutrans Toggle\ &List\ Mode<Tab>:set\ list! 목록\ 모드\ 토글(&L)<Tab>:set\ list!
-menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap! 라인\ Wrap\ 토글(&W)<Tab>:set\ wrap!
-menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr! 단어에서\ Wrap\ 토글(&r)<Tab>:set\ lbr!
+menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap! 줄\ Wrap\ 토글(&W)<Tab>:set\ wrap!
+menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!  낱말에서\ Wrap\ 토글(&r)<Tab>:set\ lbr!
 menutrans Toggle\ &expand-tab<Tab>:set\ et! 탭\ 확장\ 토글(&e)<Tab>:set\ et!
 menutrans Toggle\ &auto-indent<Tab>:set\ ai! 자동인덴트\ 토글(&a)<Tab>:set\ ai!
 menutrans Toggle\ &C-indenting<Tab>:set\ cin! C-인덴팅\ 토글(&C)<Tab>:set\ cin!
 
 " other options
-menutrans &Shiftwidth			쉬프트너비(&S)
+menutrans &Shiftwidth			쉬프트 너비(&S)
 menutrans Soft\ &Tabstop		소프트\ 탭스톱(&T)
 menutrans Te&xt\ Width\.\.\.		텍스트\ 너비(&x)\.\.\.
 menutrans &File\ Format\.\.\.		파일\ 형식(&F)\.\.\.
 menutrans C&olor\ Scheme		컬러\ 스킴(&o)
 menutrans &Keymap			키맵(&K)
 
-menutrans Select\ Fo&nt\.\.\.		글꼴\ 선택(&F)\.\.\.
+menutrans Select\ Fo&nt\.\.\.		글꼴\ 고르기(&F)\.\.\.
 
 " Programming menu
 menutrans &Tools			도구(&T)
-menutrans &Jump\ to\ this\ tag<Tab>g^]	이\ 태그로\ 점프(&J)<Tab>g^]
-menutrans Jump\ &back<Tab>^T		뒤로\ 점프(&b)<Tab>^T
-menutrans Build\ &Tags\ File		태그\ 파일\ 생성(&T)
+menutrans &Jump\ to\ this\ tag<Tab>g^]	이\ 꼬리표로\ 가기(&J)<Tab>g^]
+menutrans Jump\ &back<Tab>^T		뒤로\ 가기(&b)<Tab>^T
+menutrans Build\ &Tags\ File		꼬리표\ 파일\ 만들기(&T)
 
 " Tools.Fold Menu
-menutrans &Folding			폴딩(&F)
+menutrans &Folding			접기(&F)
 " open close folds
-menutrans &Enable/Disable\ folds<Tab>zi	폴드\ 사용\ 토글(&E)<Tab>zi
-menutrans &View\ Cursor\ Line<Tab>zv	커서\ 라인\ 보기(&V)<Tab>zv
-menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx 커서\ 라인만\ 보기(&w)<Tab>zMzx
-menutrans C&lose\ more\ folds<Tab>zm	더많은\ 폴드\ 닫기(&l)<Tab>zm
-menutrans &Close\ all\ folds<Tab>zM	모든\ 폴드\ 닫기(&C)<Tab>zM
-menutrans O&pen\ more\ folds<Tab>zr	더많은\ 폴드\ 열기(&p)<Tab>zr
-menutrans &Open\ all\ folds<Tab>zR	모든\ 폴드\ 열기(&O)<Tab>zR
+menutrans &Enable/Disable\ folds<Tab>zi	접는\ 기능\ 사용\ 토글(&E)<Tab>zi
+menutrans &View\ Cursor\ Line<Tab>zv	커서\ 줄\ 보기(&V)<Tab>zv
+menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx 커서\ 줄만\ 보기(&w)<Tab>zMzx
+menutrans C&lose\ more\ folds<Tab>zm	더\ 많은\ 접기\ 닫기(&l)<Tab>zm
+menutrans &Close\ all\ folds<Tab>zM	접힌\ 부분\ 모두\ 접기(&C)<Tab>zM
+menutrans O&pen\ more\ folds<Tab>zr	더 많은\ 접기\ 열기(&p)<Tab>zr
+menutrans &Open\ all\ folds<Tab>zR	접힌\ 부분\ 모두\ 펴기(&O)<Tab>zR
 " fold method
-menutrans Fold\ Met&hod			폴드\ 방법(&h)
+menutrans Fold\ Met&hod			접는\ 방법(&h)
 menutrans M&anual			수동(&a)
-menutrans I&ndent			인덴트(&n)
+menutrans I&ndent			들여쓰기(&n)
 menutrans E&xpression			표현식(&x)
 menutrans S&yntax			신택스(&y)
 "menutrans &Diff				&Diff
-menutrans Ma&rker			마크(&r)
+menutrans Ma&rker			꼬리표(&r)
 " create and delete folds
-menutrans Create\ &Fold<Tab>zf		폴드\ 생성(&F)<Tab>zf
-menutrans &Delete\ Fold<Tab>zd		폴드\ 삭제(&D)<Tab>zd
-menutrans Delete\ &All\ Folds<Tab>zD	모든\ 폴드\ 삭제(&A)<Tab>zD
+menutrans Create\ &Fold<Tab>zf		새로 접기(&F)<Tab>zf
+menutrans &Delete\ Fold<Tab>zd		완전히 펴기(&D)<Tab>zd
+menutrans Delete\ &All\ Folds<Tab>zD	모두\ 펴기(&A)<Tab>zD
 " moving around in folds
-menutrans Fold\ column\ &width		폴드\ 열\ 너비(&w)
+menutrans Fold\ column\ &width		접을\ 칸\ 너비(&w)
 
 "menutrans &Diff				&Diff
 menutrans &Update			갱신(&U)
@@ -146,8 +148,8 @@ menutrans Conve&rt\ back<Tab>:%!xxd\ -r	원래대로\ 변환(&r)<Tab>:%!xxd\ -r
 
 " Names for buffer menu.
 menutrans &Buffers			버퍼(&B)
-menutrans &Refresh\ menu		메뉴\ 다시그리기(&R)
-menutrans &Delete			삭제(&D)
+menutrans &Refresh\ menu		차림표\ 다시그리기(&R)
+menutrans &Delete			지우기(&D)
 menutrans &Alternate			교체(&A)
 menutrans &Next				다음(&N)
 menutrans &Previous			이전(&P)
@@ -155,10 +157,10 @@ menutrans &Previous			이전(&P)
 " Window menu
 menutrans &Window			창(&W)
 menutrans &New<Tab>^Wn			새\ 창(&N)<Tab>^Wn
-menutrans S&plit<Tab>^Ws		분할(&p)<Tab>^Ws
-menutrans Sp&lit\ To\ #<Tab>^W^^	#으로\ 분할(&l)<Tab>^W^^
-menutrans Split\ &Vertically<Tab>^Wv	수직\ 분할(&V)<Tab>^Wv
-menutrans Split\ File\ E&xplorer	파일\ 익스플로러\ 분할
+menutrans S&plit<Tab>^Ws		나누기(&p)<Tab>^Ws
+menutrans Sp&lit\ To\ #<Tab>^W^^	#으로\ 나누기(&l)<Tab>^W^^
+menutrans Split\ &Vertically<Tab>^Wv	세로로\ 나누기(&V)<Tab>^Wv
+menutrans Split\ File\ E&xplorer	파일\ 익스플로러\ 나누기 
 
 menutrans &Close<Tab>^Wc		닫기(&C)<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	다른\ 창\ 닫기(&O)<Tab>^Wo
@@ -182,12 +184,12 @@ menutrans &Undo			취소(&U)
 menutrans Cu&t			자르기(&t)
 menutrans &Copy			복사(&C)
 menutrans &Paste		붙이기(&P)
-menutrans &Delete		삭제(&D)
-menutrans Select\ Blockwise	사각형\ 선택
-menutrans Select\ &Word		단어\ 선택(&W)
-menutrans Select\ &Line		라인\ 선택(&L)
-menutrans Select\ &Block	구획\ 선택(&B)
-menutrans Select\ &All		모두\ 선택(&A)
+menutrans &Delete		지우기(&D)
+menutrans Select\ Blockwise	사각형\ 고르기
+menutrans Select\ &Word		낱말\ 고르기(&W)
+menutrans Select\ &Line		줄\ 고르기(&L)
+menutrans Select\ &Block	구획\ 고르기(&B)
+menutrans Select\ &All		모두\ 고르기(&A)
 
 " The GUI toolbar
 if has("toolbar")
@@ -200,7 +202,7 @@ if has("toolbar")
     tmenu ToolBar.SaveAll	모두 저장
     tmenu ToolBar.Print		인쇄
     tmenu ToolBar.Undo		취소
-    tmenu ToolBar.Redo		재실행
+    tmenu ToolBar.Redo		다시 실행
     tmenu ToolBar.Cut		자르기
     tmenu ToolBar.Copy		복사
     tmenu ToolBar.Paste		붙이기
@@ -213,8 +215,8 @@ if has("toolbar")
     tmenu ToolBar.RunScript	스크립트 실행
     tmenu ToolBar.Make		Make
     tmenu ToolBar.Shell		쉘
-    tmenu ToolBar.RunCtags	태그 생성
-    tmenu ToolBar.TagJump	태그 점프
+    tmenu ToolBar.RunCtags	꼬리표 만들기 
+    tmenu ToolBar.TagJump	꼬리표로 가기
     tmenu ToolBar.Help		도움말
     tmenu ToolBar.FindHelp	도움말 찾기...
   endfun

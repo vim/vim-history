@@ -1,10 +1,12 @@
 " Vim Ada plugin file
 " Language:	Ada
 " Maintainer:	Neil Bird <neil@fnxweb.com>
-" Last Change:	2001 September 18
+" Last Change:	2001 November 6
 " Version:	$Id$
-
+" Look for the latest version at http://vim.sourceforge.net/
+"
 " Perform Ada specific completion & tagging.
+"
 "
 " Provides mapping overrides for tag jumping that figure out the current
 " Ada object and tag jump to that, not the 'simple' vim word.
@@ -26,6 +28,10 @@ let s:cpoptions = &cpoptions
 set cpo-=C
 
 
+" Ada comments
+setlocal comments+=O:-- 
+
+
 " Make local tag mappings for this buffer (if not already set)
 if mapcheck('<C-]>','n') == ''
   nnoremap <unique> <buffer> <C-]>    :call JumpToTag_ada('')<cr>
@@ -42,6 +48,9 @@ if mapcheck('<C-P>','i') == ''
 endif
 if mapcheck('<C-X><C-]>','i') == ''
   inoremap <unique> <buffer> <C-X><C-]> <C-R>=<SID>AdaCompletion("\<lt>C-X>\<lt>C-]>")<cr>
+endif
+if mapcheck('<bs>','i') == ''
+  inoremap <silent> <unique> <buffer> <bs> <C-R>=<SID>AdaInsertBackspace()<cr>
 endif
 
 
@@ -188,7 +197,7 @@ function! JumpToTag_ada(word,...)
 endfunction
 
 
-" word completion (^N/^R/^X^]) - force '.' inclusion
+" Word completion (^N/^R/^X^]) - force '.' inclusion
 function! s:AdaCompletion(cmd)
   set iskeyword+=46
   return a:cmd . "\<C-R>=<SNR>" . s:id . "_AdaCompletionEnd()\<CR>"
@@ -197,6 +206,18 @@ function! s:AdaCompletionEnd()
   set iskeyword-=46
   return ''
 endfunction
+
+
+" Backspace at end of line after auto-inserted commentstring '-- ' wipes it
+function! s:AdaInsertBackspace()
+  let line = getline('.')
+  if col('.') > strlen(line) && match(line,'-- $') != -1 && match(&comments,'--') != -1
+    return "\<bs>\<bs>\<bs>"
+  else
+    return "\<bs>"
+  endif
+endfunction
+
 
 " Reset cpoptions
 let &cpoptions = s:cpoptions

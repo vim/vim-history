@@ -2536,20 +2536,20 @@ fileinfo(fullname, shorthelp, dont_truncate)
     else if (p_ru)
     {
 	/* Current line and column are already on the screen -- webb */
-	sprintf((char *)buffer + STRLEN(buffer),
-		(curbuf->b_ml.ml_line_count == 1
-			 ?  _("1 line --%d%%--") : _("%ld lines --%d%%--")),
-		(long)curbuf->b_ml.ml_line_count,
-		n);
+	if (curbuf->b_ml.ml_line_count == 1)
+	    sprintf((char *)buffer + STRLEN(buffer), _("1 line --%d%%--"), n);
+	else
+	    sprintf((char *)buffer + STRLEN(buffer), _("%ld lines --%d%%--"),
+					 (long)curbuf->b_ml.ml_line_count, n);
     }
 #endif
     else
     {
 	sprintf((char *)buffer + STRLEN(buffer),
-	    _("line %ld of %ld --%d%%-- col "),
-	    (long)curwin->w_cursor.lnum,
-	    (long)curbuf->b_ml.ml_line_count,
-	    n);
+		_("line %ld of %ld --%d%%-- col "),
+		(long)curwin->w_cursor.lnum,
+		(long)curbuf->b_ml.ml_line_count,
+		n);
 	validate_virtcol();
 	col_print(buffer + STRLEN(buffer),
 		   (int)curwin->w_cursor.col + 1, (int)curwin->w_virtcol + 1);
@@ -3068,7 +3068,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    {
 		if (*skipdigits(str) == NUL)
 		{
-		    num = atoi((char *) str);
+		    num = atoi((char *)str);
 		    vim_free(str);
 		    str = NULL;
 		    itemisflag = FALSE;

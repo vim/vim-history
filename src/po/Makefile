@@ -53,7 +53,7 @@ uninstall:
 	  rm -f $(LOCALEDIR)/$$lang/LC_MESSAGES/$(PACKAGE).mo; \
 	done
 
-converted: ja.sjis.mo cs.cp1250.mo zh_CN.cp936.mo
+converted: ja.sjis.mo cs.cp1250.mo sk.cp1250.mo zh_CN.cp936.mo
 
 # Convert ja.po to create ja.sjis.po.  Requires doubling backslashes in the
 # second byte.  Don't depend on sjiscorr, it should only be compiled when
@@ -69,6 +69,11 @@ sjiscorr: sjiscorr.c
 cs.cp1250.po: cs.po
 	iconv -f iso-8859-2 -t cp1250 cs.po | \
 		sed -e 's/charset=ISO-8859-2/charset=cp1250/' -e 's/# Original translations/# Generated from cs.po, DO NOT EDIT/' > cs.cp1250.po
+
+# Convert sk.po to create sk.cp1250.po.
+sk.cp1250.po: sk.po
+	iconv -f iso-8859-2 -t cp1250 sk.po | \
+		sed -e 's/charset=ISO-8859-2/charset=cp1250/' -e 's/# Original translations/# Generated from sk.po, DO NOT EDIT/' > sk.cp1250.po
 
 # Convert zh_CN.po to create zh_CN.cp936.po.
 # set 'charset' to gbk to avoid that msfmt generates a warning

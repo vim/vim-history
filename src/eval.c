@@ -6968,7 +6968,7 @@ clear_var(varp)
 
 /*
  * Get the number value of a variable.
- * If it is a String variable, use vim_str2nr().
+ * If it is a String variable, uses vim_str2nr().
  */
     static long
 get_var_number(varp)
@@ -7139,7 +7139,7 @@ find_var_ga(name, varname)
 }
 
 /*
- * Get the string value of a global variable.
+ * Get the string value of a (global/local) variable.
  * Returns NULL when it doesn't exit.
  */
     char_u *

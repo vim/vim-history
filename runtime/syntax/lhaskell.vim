@@ -1,7 +1,9 @@
 " Vim syntax file
 " Language:	Haskell with literate comments
 " Maintainer:	John Williams <jrw@pobox.com>
-" Last Change:	2001 Oct 23
+" Last Change:	2001 November 1
+"
+" 2001 November 1: Changed commands for sourcing haskell.vim
 
 " Enable literate comments
 let b:hs_literate_comments=1

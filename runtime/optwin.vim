@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Sep 29
+" Last Change:	2001 Dec 13
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -823,7 +823,7 @@ call append("$", "backup\tkeep a backup after overwriting a file")
 call <SID>BinOptionG("bk", &bk)
 call append("$", "backupskip\tpatterns that specify for which files a backup is not made")
 call append("$", " \tset bsk=" . &bsk)
-call append("$", "backupcopy\twether to make the backup as a copy or rename the existing file")
+call append("$", "backupcopy\twhether to make the backup as a copy or rename the existing file")
 call append("$", " \tset bkc=" . &bkc)
 call append("$", "backupdir\tlist of directories to put backup files in")
 call <SID>OptionG("bdir", &bdir)

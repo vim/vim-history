@@ -2,13 +2,13 @@
 " Language:	Ada (95)
 " Maintainer:	David A. Wheeler <dwheeler@dwheeler.com>
 " URL: http://www.dwheeler.com/vim
-" Last Change:	2001 May 10
+" Last Change:	2001-11-02
 
 " Former Maintainer:	Simon Bradley <simon.bradley@pitechnology.com>
 "			(was <sib93@aber.ac.uk>)
-" The formal spec of Ada95 (ARM) is the "Ada95 Reference Manual";
-" a copy is available at "http://www.adahome.com/rm95/". For more Ada95 info,
-" see http://www.gnuada.org and http://www.adapower.com.
+" Other contributors: Preben Randhol.
+" The formal spec of Ada95 (ARM) is the "Ada95 Reference Manual".
+" For more Ada95 info, see http://www.gnuada.org and http://www.adapower.com.
 
 " This vim syntax file works on vim 5.6, 5.7, 5.8 and 6.x.
 " It implements Bram Moolenaar's April 25, 2001 recommendations to make
@@ -140,8 +140,9 @@ if exists("ada_space_errors")
   endif
 endif
 
-" Unless special ("end loop", "end if", etc.), "end" is an ordinary keyword.
-syn match adaKeyword		"\<end\>"
+" Unless special ("end loop", "end if", etc.), "end" marks the end of a
+" begin, package, task etc. Assiging it to adaEnd.
+syn match adaEnd		"\<end\>"
 
 syn keyword adaPreproc		pragma
 
@@ -152,8 +153,15 @@ syn keyword adaStatement	accept delay goto raise requeue return
 syn keyword adaStatement	terminate
 syn match adaStatement	"\<abort\>"
 
-" 'record' usually starts a structure, but "with null record;" does not.
+" Handle Ada's record keywords.
+" 'record' usually starts a structure, but "with null record;" does not,
+" and 'end record;' ends a structure.  The ordering here is critical -
+" 'record;' matches a "with null record", so make it a keyword (this can
+" match when the 'with' or 'null' is on a previous line).
+" We see the "end" in "end record" before the word record, so we match that
+" pattern as adaStructure (and it won't match the "record;" pattern).
 syn match adaStructure	"\<record\>"
+syn match adaStructure	"\<end\s\+record\>"
 syn match adaKeyword	"\<record;"me=e-1
 
 syn keyword adaStorageClass	abstract access aliased array at constant delta
@@ -260,10 +268,15 @@ if version >= 508 || !exists("did_ada_syn_inits")
   HiLink adaError	Error
   HiLink adaSpaceError	Error
   HiLink adaBuiltinType Type
+
   if exists("ada_begin_preproc")
+   " This is the old default display:
    HiLink adaBegin	PreProc
+   HiLink adaEnd	PreProc
   else
+   " This is the new default display:
    HiLink adaBegin	Keyword
+   HiLink adaEnd	Keyword
   endif
 
   delcommand HiLink

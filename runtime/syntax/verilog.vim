@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Verilog
-" Maintainer:	Mun Johl <mun_johl@agilent.com>
-" Last Update:  Tue Aug  7 12:47:15 PDT 2001
+" Maintainer:	Mun Johl <mun_johl@sierralogic.com>
+" Last Update:  Fri Feb 15 10:22:27 PST 2002
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

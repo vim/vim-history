@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	Debian Changelog
 " Maintainer:	Michael Piefel <piefel@informatik.hu-berlin.de>
-" Last Change:	18 August 2001
+" Last Change:	31 October 2001
 
 if exists("g:did_changelog_ftplugin")
   finish
@@ -53,6 +53,19 @@ function <SID>WarnIfNotUnfinalised()
 	return 1
     endif
     return 0
+endfunction
+
+function <SID>Finalised()
+    let savelinenum = line(".")
+    normal 1G
+    call search("^ -- ")
+    if match(getline("."), " -- [[:alpha:]][[:alnum:].]")!=-1
+	let returnvalue = 1
+    else
+	let returnvalue = 0
+    endif
+    execute savelinenum
+    return returnvalue
 endfunction
 
 " These functions implement the menus
@@ -114,7 +127,7 @@ function Urgency(urg)
     call setline(1, substitute(getline(1), "urgency=.*$", "urgency=" . a:urg, ""))
 endfunction
 
-function Unfinalise()
+function <SID>UnfinaliseMenu()
     " This means the entry shall be changed
     amenu disable Changelog.New\ Version
     amenu enable Changelog.Add\ Entry
@@ -123,12 +136,16 @@ function Unfinalise()
     amenu enable Changelog.Set\ Urgency
     amenu disable Changelog.Unfinalise
     amenu enable Changelog.Finalise
+endfunction
+
+function Unfinalise()
+    call <SID>UnfinaliseMenu()
     normal 1G
     call search("^ -- ")
     call setline(".", " -- ")
 endfunction
 
-function Finalise()
+function <SID>FinaliseMenu()
     " This means the entry should not be changed anymore
     amenu enable Changelog.New\ Version
     amenu disable Changelog.Add\ Entry
@@ -137,6 +154,10 @@ function Finalise()
     amenu disable Changelog.Set\ Urgency
     amenu enable Changelog.Unfinalise
     amenu disable Changelog.Finalise
+endfunction
+
+function Finalise()
+    call <SID>FinaliseMenu()
     normal 1G
     call search("^ -- ")
     call setline(".", " -- " . <SID>FullName() . " <" . <SID>Email() . ">  " . <SID>Date())
@@ -165,15 +186,12 @@ function <SID>MakeMenu()
     menu Changelog.-sep-				<nul>
     amenu Changelog.U&nfinalise				:call Unfinalise()<CR>
     amenu Changelog.&Finalise				:call Finalise()<CR>
-    amenu Changelog.Finalise+Save			<nul>
 
-    " Start off with a finalised entry
-    amenu disable Changelog.Add\ Entry
-    amenu disable Changelog.Close\ Bug
-    amenu disable Changelog.Set\ Distribution
-    amenu disable Changelog.Set\ Urgency
-    amenu disable Changelog.Finalise
-    amenu disable Changelog.Finalise+Save
+    if <SID>Finalised()
+	call <SID>FinaliseMenu()
+    else
+	call <SID>UnfinaliseMenu()
+    endif
 endfunction
 
 augroup changelogMenu

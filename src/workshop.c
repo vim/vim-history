@@ -1415,7 +1415,7 @@ addUniqueMnemonic(
     found = NULL;
     for (p = label; *p != NUL; p++)
 	if (strchr(mnemonics, *p) == 0)
-	    if (found == NULL || (isupper(*p) && islower(*found)))
+	    if (found == NULL || (isupper((int)*p) && islower((int)*found)))
 		found = p;
 
     if (found != NULL)

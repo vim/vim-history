@@ -23,10 +23,10 @@ set 68kLibs ""
 set ppcSources "syntax.c"
 set ppcOpts "-powerpc"
 set ppcCOpts ""
-set ppcLOpts ""
+set ppcLOpts "{SharedLibraries}AppearanceLib"
 set ppcLibs "{SharedLibraries}ContextualMenu"
 #
-set carbonSources ""
+set carbonSources "syntax.c"
 set carbonOpts "-carbon"
 set carbonCOpts "-d TARGET_API_MAC_CARBON"
 set carbonLOpts ""
@@ -89,4 +89,3 @@ for vTarget in {vimTargets}
       echo "Makefile for {vApp} successfully created"
    end
 end
-

@@ -1281,6 +1281,7 @@ utfc_ptr2len_check(p)
     }
 }
 
+# if defined(FEAT_GUI_W32) || defined(PROTO)
 /*
  * Return the number of bytes the UTF-8 encoding of the character at "p[size]"
  * takes.  This includes following composing characters.
@@ -1318,6 +1319,7 @@ utfc_ptr2len_check_len(p, size)
     }
     return len;
 }
+# endif
 
 /*
  * Return the number of bytes the UTF-8 encoding of character "c" takes.
@@ -3963,7 +3965,11 @@ convert_setup(vcp, from, to)
     {
 	vcp->vc_type = CONV_DBCS;
 	vcp->vc_factor = 2;	/* up to twice as long */
+#ifdef CP_UTF8
 	vcp->vc_dbcs = CP_UTF8;
+#else
+	vcp->vc_dbcs = 65001;	/* magic number from winnls.h */
+#endif
     }
 #endif
 # ifdef USE_ICONV

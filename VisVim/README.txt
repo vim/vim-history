@@ -210,8 +210,17 @@ Troubleshooting
                  list box.
    Explanation:  M$ just didn't put a 'delete' button in the dialog box.
                  Unfortunately there is no DEL key accellerator as well...
-   Workaround:   You can't kill it, but you can knock it out.
-                 Uncheck the check box in from of 'Vim Developer Studio Add-in'.
+   Workaround:   You can't kill it, but you can knock it out:
+		 1. Uncheck the check box in front of 'Vim Developer Studio
+		    Add-in'.
+		 2. Close Visual Studio.
+		 3. Delete VisVim.dll or move it somewhere it can't be found.
+		 4. Run Visual Studio.
+		 5. Tools -> Cursomize ->Add-ins and Macro-Files.
+		 6. A message appears:
+		    ".../VisVim.dll" "This add-in no longer exists.  It will
+		    no longer be displayed."
+		 That's it!
 
 
 Change history

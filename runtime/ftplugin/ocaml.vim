@@ -3,9 +3,10 @@
 " Maintainers:  Mike Leary    <leary@nwlink.com>
 "               Markus Mottl  <markus@oefai.at>
 " URL:          http://www.ai.univie.ac.at/~markus/vim/ftplugin/ocaml.vim
-" Last Change:  2001 Sep 17 - added cpo-flag
-"               2001 Sep 16 - fixed 'no_mail_maps'-bug (MM)
-"               2001 Sep 02 - initial release  (MM)
+" Last Change:  2001 Nov 08 - changed 'assert false'-mapping to abbreviation
+"               2001 Nov 01 - added local bindings for inserting
+"                             type holes using 'assert false' (MM)
+"               2001 Oct 02 - insert spaces in line comments (MM)
 
 " Only do these settings when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -37,8 +38,12 @@ if !exists("no_plugin_maps") && !exists("no_ocaml_maps")
     vmap <buffer> <LocalLeader>C <Plug>BUncomOff
   endif
 
-  nnoremap <buffer> <Plug>LUncomOn mz0i(*<ESC>$A*)<ESC>`z
-  nnoremap <buffer> <Plug>LUncomOff <ESC>:s/^(\*\(.*\)\*)/\1/<CR>
+  nnoremap <buffer> <Plug>LUncomOn mz0i(* <ESC>$A *)<ESC>`z
+  nnoremap <buffer> <Plug>LUncomOff <ESC>:s/^(\* \(.*\) \*)/\1/<CR>
   vnoremap <buffer> <Plug>BUncomOn <ESC>:'<,'><CR>`<O<ESC>0i(*<ESC>`>o<ESC>0i*)<ESC>`<
   vnoremap <buffer> <Plug>BUncomOff <ESC>:'<,'><CR>`<dd`>dd`<
+
+  if !hasmapto('<Plug>Abbrev')
+    iabbrev <buffer> ASS (assert false)
+  endif
 endif

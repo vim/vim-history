@@ -836,10 +836,10 @@ wait_return(redraw)
 #endif
     msg_check();
 
+#if defined(UNIX) || defined(VMS)
     /*
      * When switching screens, we need to output an extra newline on exit.
      */
-#if defined(UNIX) || defined(VMS)
     if (swapping_screen() && !termcap_active)
 	newline_on_exit = TRUE;
 #endif

@@ -3303,6 +3303,7 @@ map_clear(cmdp, arg, forceit, abbr)
 /*
  * Clear all mappings in "mode".
  */
+/*ARGSUSED*/
     void
 map_clear_int(buf, mode, local, abbr)
     buf_T	*buf;	    /* buffer for local mappings */

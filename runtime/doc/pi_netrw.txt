@@ -1,11 +1,12 @@
-*pi_netrw.txt*  For Vim version 6.0.  Last change: 2001 Sep 17
+*pi_netrw.txt*  For Vim version 6.1a.  Last change: 2002 Feb 24
 
 
 		  VIM REFERENCE MANUAL    by Charles E. Campbell, Jr.
 
-*http* *scp* *rcp*
+*ftp* *http* *scp* *rcp* *Nread* *Nwrite* *netrw* *netrw.vim* *network*
 
-Network-Oriented File Transfers with Vim	*netrw* *netrw.vim* *network*
+Network-Oriented File Transfers with Vim
+
 1. Network-Oriented File Transfer			|netrw-xfer|
 2. Activation						|netrw-activate|
 3. Ex Commands						|netrw-ex|
@@ -18,7 +19,6 @@ can avoid loading this plugin by setting the "loaded_netrw" variable: >
 	:let loaded_netrw = 1
 
 {Vi does not have any of this}
-
 
 ==============================================================================
 1. Network-Oriented File Transfer			*netrw-xfer*
@@ -182,7 +182,7 @@ albeit temporarily.
 
 	g:netrw_method		Index indicating rcp/ftp+.netrc/ftp
 	g:netrw_machine		Holds machine name parsed from input
-	g:netrw_fname       	Holds filename being accessed
+	g:netrw_fname		Holds filename being accessed
 
 
 ==============================================================================
@@ -196,9 +196,10 @@ albeit temporarily.
 				=1		userid set by "userid"
 
     NetReadFixup    function	=doesn't exist	no change
-				=exists		Allows user to have ftp-read
-						files automatically
+				=exists		Allows user to have files
+						read via ftp automatically
 						transformed however they wish
+						by NetReadFixup()
 <
 
 These options both help with certain ftp's that give trouble otherwise.  In
@@ -207,7 +208,7 @@ troubles, a bit of discussion follows on how netrw does ftp reads.
 
 Netrw typically builds up four lines of the following form:
 >
-    mark-z
+    (mark-z)
     open machine port
     user userid
     password
@@ -226,7 +227,8 @@ userid, then put "let netrw_ftp=1" in your <.vimrc>.
 If your ftp for whatever reason generates unwanted lines (such as AUTH
 messages) you may write a NetReadFixup(tmpfile) function:
 >
-    function! NetReadFixup(tmpfile) endfunction
+    function! NetReadFixup(tmpfile)
+    endfunction
 >
 This function will be called if it exists and thus allows you to customize
 your reading process.

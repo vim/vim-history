@@ -1,4 +1,4 @@
-*usr_44.txt*	For Vim version 6.0.  Last change: 2001 Sep 03
+*usr_44.txt*	For Vim version 6.1a.  Last change: 2001 Dec 22
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -437,7 +437,7 @@ the end of the line.  To avoid making the xPreProc continue on the next line,
 like xLineContinue does, use "excludenl" like this: >
 
 	:syntax region xPreProc start=/^#/ end=/$/
-		\ contains==xLineContinue,xPreProcEnd
+		\ contains=xLineContinue,xPreProcEnd
 	:syntax match xPreProcEnd excludenl /end$/ contained
 	:syntax match xLineContinue "\\$" contained
 

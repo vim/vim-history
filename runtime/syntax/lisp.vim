@@ -1,10 +1,18 @@
 " Vim syntax file
 " Language:    Lisp
 " Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: September 17, 2001
-" Version:     1.09
+" Last Change: Dec 10, 2001
+" Version:     1.11
+" Latest:      http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
+"
 "  Thanks to F Xavier Noria for a list of 978 Common Lisp symbols
 "  taken from the HyperSpec
+"
+"  Options:
+"    lisp_instring : if it exists, then "(...") strings are highlighted
+"                    as if the contents were lisp.  Useful for AutoLisp.
+"                    Put    let lisp_instring=1   into your <.vimrc> if
+"                    you want this option.
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -21,22 +29,26 @@ else
 endif
 
 " Clusters
-syn cluster	lispAtomCluster	contains=lispAtomBarSymbol,lispAtomList,lispAtomNmbr0,lispComment,lispString,lispDecl,lispFunc,lispLeadWhite
-syn cluster	lispListCluster	contains=lispAtom,lispAtomBarSymbol,lispAtomMark,lispBQList,lispBarSymbol,lispComment,lispConcat,lispDecl,lispFunc,lispKey,lispList,lispNumber,lispSpecial,lispString,lispSymbol,lispVar,lispLeadWhite
+syn cluster	lispAtomCluster	contains=lispAtomBarSymbol,lispAtomList,lispAtomNmbr0,lispComment,lispDecl,lispFunc,lispLeadWhite
+syn cluster	lispListCluster	contains=lispAtom,lispAtomBarSymbol,lispAtomMark,lispBQList,lispBarSymbol,lispComment,lispConcat,lispDecl,lispFunc,lispKey,lispList,lispNumber,lispSpecial,lispSymbol,lispVar,lispLeadWhite
 
 " Lists
 syn match	lispSymbol	contained	![^()'`,"; \t]\+!
 syn match	lispBarSymbol	contained	!|..\{-}|!
-syn region	lispList	matchgroup=Delimiter start="(" skip="|.\{-}|"	matchgroup=Delimiter end=")" contains=@lispListCluster
-syn region	lispBQList	matchgroup=PreProc   start="`("	skip="|.\{-}|"	matchgroup=PreProc   end=")" contains=@lispListCluster
-
+if exists("lisp_instring")
+ syn region	lispList	matchgroup=Delimiter start="(" skip="|.\{-}|"	matchgroup=Delimiter end=")" contains=@lispListCluster,lispString,lispInString,lispInStringString
+ syn region	lispBQList	matchgroup=PreProc   start="`("	skip="|.\{-}|"	matchgroup=PreProc   end=")" contains=@lispListCluster,lispString,lispInString,lispInStringString
+else
+ syn region	lispList	matchgroup=Delimiter start="(" skip="|.\{-}|"	matchgroup=Delimiter end=")" contains=@lispListCluster,lispString
+ syn region	lispBQList	matchgroup=PreProc   start="`("	skip="|.\{-}|"	matchgroup=PreProc   end=")" contains=@lispListCluster,lispString
+endif
 " Atoms
 syn match	lispAtomMark	"'"
 syn match	lispAtom	"'("me=e-1	contains=lispAtomMark	nextgroup=lispAtomList
 syn match	lispAtom	"'[^ \t()]\+"	contains=lispAtomMark
 syn match	lispAtomBarSymbol	!'|..\{-}|!	contains=lispAtomMark
 syn region	lispAtom	start=+'"+	skip=+\\"+ end=+"+
-syn region	lispAtomList	contained	matchgroup=Special start="("	skip="|.\{-}|" matchgroup=Special end=")"	contains=@lispAtomCluster
+syn region	lispAtomList	contained	matchgroup=Special start="("	skip="|.\{-}|" matchgroup=Special end=")"	contains=@lispAtomCluster,lispString
 syn match	lispAtomNmbr	contained	"\<\d\+"
 syn match	lispLeadWhite	contained	"^\s\+"
 
@@ -408,7 +420,11 @@ syn keyword lispVar	*features*	*print-miser-width*	*terminal-io*
 syn keyword lispVar	*gensym-counter*	*print-miser-width*	*trace-output*
 
 " Strings
-syn region	lispString	start=+"+	skip=+\\\\\|\\"+ end=+"+
+syn region	lispString	start=+"+ skip=+\\\\\|\\"+ end=+"+
+if exists("lisp_instring")
+ syn region	lispInString	keepend matchgroup=Delimiter start=+"(+rs=s+1 skip=+|.\{-}|+ matchgroup=Delimiter end=+)"+ contains=@lispListCluster,lispInStringString
+ syn region	lispInStringString	start=+\\"+ skip=+\\\\+ end=+\\"+ contained
+endif
 
 " Shared with Xlisp, Declarations, Macros, Functions
 syn keyword lispDecl	defmacro	do-all-symbols	labels
@@ -434,7 +450,7 @@ syn match lispParenError	")"
 
 " Comments
 syn cluster lispCommentGroup	contains=lispTodo
-syn match lispComment	";.*$"	contains=@lispCommentGroup
+syn match   lispComment	";.*$"	contains=@lispCommentGroup
 syn case ignore
 syn keyword lispTodo	contained	combak	combak:	todo	todo:
 syn case match
@@ -455,6 +471,7 @@ if version >= 508 || !exists("did_lisp_syntax_inits")
 
   HiLink lispAtomNmbr	lispNumber
   HiLink lispAtomMark	lispMark
+  HiLink lispInStringString	lispString
 
   HiLink lispAtom	Identifier
   HiLink lispAtomBarSymbol	Special

@@ -1,6 +1,7 @@
 " Language:    tags
 " Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: January 28, 1999
+" Last Change: Dec 10, 2001
+" Latest:      http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

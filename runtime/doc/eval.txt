@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0.  Last change: 2002 Feb 22
+*eval.txt*      For Vim version 6.1a.  Last change: 2002 Feb 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -356,10 +356,17 @@ for that.
 
 option						*expr-option* *E112* *E113*
 ------
-&option			option value
+&option			option value, local value if possible
+&g:option		global option value
+&l:option		local option value
 
-Any option name can be used here.  See |options|.  This sets the buffer-local
-or window-local value if there is one.
+Examples: >
+	echo "tabstop is " . &tabstop
+	if &insertmode
+
+Any option name can be used here.  See |options|.  When using the local value
+and there is no buffer-local or window-local value, the global value is used
+anyway.
 
 
 register						*expr-register*
@@ -436,7 +443,8 @@ specified by what is prepended::
 A variable name that is preceded with "b:" is local to the current buffer.
 Thus you can have several "b:foo" variables, one for each buffer.
 This kind of variable is deleted when the buffer is unloaded.  If you want to
-keep it, avoid that the buffer is unloaded by setting the 'hidden' option.
+keep it, ensure that the buffer is not unloaded (e.g., by setting the 'hidden'
+option).
 
 One local buffer variable is predefined:
 					*b:changedtick-variable* *changetick*
@@ -545,6 +553,58 @@ v:charconvert_to
 		The name of the character encoding of a file after conversion.
 		Only valid while evaluating the 'charconvert' option.
 
+					*v:cmdarg* *cmdarg-variable*
+v:cmdarg	This variable is used for two purposes:
+		1. The extra arguments given to a file read/write command.
+		   Currently these are "++enc=" and "++ff=".  This variable is
+		   set before an autocommand event for a file read/write
+		   command is triggered.  There is a leading space to make it
+		   possible to append this variable directly after the
+		   read/write command.  Note: The "+cmd" argument isn't
+		   included here, because it will be executed anyway.
+		2. When printing a PostScript file with ":hardcopy" this is
+		   the argument for the ":hardcopy" command.  This can be used
+		   in 'printexpr'.
+
+					*v:count* *count-variable*
+v:count		The count given for the last Normal mode command.  Can be used
+		to get the count before a mapping.  Read-only.  Example: >
+	:map _x :<C-U>echo "the count is " . v:count<CR>
+<		Note: The <C-U> is required to remove the line range that you
+		get when typing ':' after a count.
+		"count" also works, for backwards compatibility.
+
+					*v:count1* *count1-variable*
+v:count1	Just like "v:count", but defaults to one when no count is
+		used.
+
+						*v:ctype* *ctype-variable*
+v:ctype		The current locale setting for characters of the runtime
+		environment.  This allows Vim scripts to be aware of the
+		current locale encoding.  Technical: it's the value of
+		LC_CTYPE.
+		This variable can not be set directly, use the |:language|
+		command.
+		Normally it's equal to 'encoding', but not always...
+		See |multi-lang|.
+
+					*v:dying* *dying-variable*
+v:dying		Normally zero.  When a deadly signal is caught it's set to
+		one.  When multiple signals are caught the number increases.
+		Can be used in an autocommand to check if Vim didn't
+		terminate normally. {only works on Unix}
+		Example: >
+	:au VimLeave * if v:dying | echo "\nAAAAaaaarrrggghhhh!!!\n" | endif
+<
+					*v:errmsg* *errmsg-variable*
+v:errmsg	Last given error message.  It's allowed to set this variable.
+		Example: >
+	:let v:errmsg = ""
+	:silent! next
+	:if v:errmsg != ""
+	:  ... handle error
+<		"errmsg" also works, for backwards compatibility.
+
 					*v:fname_in* *fname_in-variable*
 v:fname_in	The name of the input file.  Only valid while evaluating:
 			option		used for ~
@@ -573,47 +633,6 @@ v:fname_new	The name of the new version of the file.  Only valid while
 v:fname_diff	The name of the diff (patch) file.  Only valid while
 		evaluating 'patchexpr'.
 
-					*v:cmdarg* *cmdarg-variable*
-v:cmdarg	This variable is used for two purposes:
-		1. The extra arguments given to a file read/write command.
-		   Currently these are "++enc=" and "++ff=".  This variable is
-		   set before an autocommand event for a file read/write
-		   command is triggered.  There is a leading space to make it
-		   possible to append this variable directly after the
-		   read/write command.  Note: The "+cmd" argument isn't
-		   included here, because it will be executed anyway.
-		2. When printing a PostScript file with ":hardcopy" this is
-		   the argument for the ":hardcopy" command.  This can be used
-		   in 'printexpr'.
-
-					*v:count* *count-variable*
-v:count		The count given for the last Normal mode command.  Can be used
-		to get the count before a mapping.  Read-only.  Example: >
-	:map _x :<C-U>echo "the count is " . v:count<CR>
-<		Note: The <C-U> is required to remove the line range that you
-		get when typing ':' after a count.
-		"count" also works, for backwards compatibility.
-
-					*v:count1* *count1-variable*
-v:count1	Just like "v:count", but defaults to one when no count is
-		used.
-
-					*v:prevcount* *prevcount-variable*
-v:prevcount	The count given for the last but one Normal mode command.
-		This is the v:count value of the previous command.  Useful if
-		you want to cancel Visual mode and then use the count. >
-			:vmap % <Esc>:call MyFilter(v:prevcount)<CR>
-<		Read-only.
-
-					*v:errmsg* *errmsg-variable*
-v:errmsg	Last given error message.  It's allowed to set this variable.
-		Example: >
-	:let v:errmsg = ""
-	:silent! next
-	:if v:errmsg != ""
-	:  ... handle error
-<		"errmsg" also works, for backwards compatibility.
-
 					*v:folddashes* *folddashes-variable*
 v:folddashes	Used for 'foldtext': dashes representing foldlevel of a closed
 		fold.
@@ -630,12 +649,6 @@ v:foldend	Used for 'foldtext': last line of closed fold.
 					*v:foldstart* *foldstart-variable*
 v:foldstart	Used for 'foldtext': first line of closed fold.
 		Read-only. |fold-foldtext|
-
-					*v:progname* *progname-variable*
-v:progname	Contains the name (with path removed) with which vim was
-		invoked.  Allows you to do special initialisations for "view",
-		"evim" etc., or any other name you might symlink to vim.
-		Read-only.
 
 						*v:lang* *lang-variable*
 v:lang		The current locale setting for messages of the runtime
@@ -654,20 +667,23 @@ v:lc_time	The current locale setting for time messages of the runtime
 		This variable can not be set directly, use the |:language|
 		command.  See |multi-lang|.
 
-						*v:ctype* *ctype-variable*
-v:ctype		The current locale setting for characters of the runtime
-		environment.  This allows Vim scripts to be aware of the
-		current locale encoding.  Technical: it's the value of
-		LC_CTYPE.
-		This variable can not be set directly, use the |:language|
-		command.
-		Normally it's equal to 'encoding', but not always...
-		See |multi-lang|.
-
 						*v:lnum* *lnum-variable*
 v:lnum		Line number for the 'foldexpr' and 'indentexpr' expressions.
 		Only valid while one of these expressions is being evaluated.
 		Read-only. |fold-expr| 'indentexpr'
+
+					*v:prevcount* *prevcount-variable*
+v:prevcount	The count given for the last but one Normal mode command.
+		This is the v:count value of the previous command.  Useful if
+		you want to cancel Visual mode and then use the count. >
+			:vmap % <Esc>:call MyFilter(v:prevcount)<CR>
+<		Read-only.
+
+					*v:progname* *progname-variable*
+v:progname	Contains the name (with path removed) with which vim was
+		invoked.  Allows you to do special initialisations for "view",
+		"evim" etc., or any other name you might symlink to vim.
+		Read-only.
 
 					*v:servername* *servername-variable*
 v:servername	The resulting registered |x11-clientserver| name if any.
@@ -756,8 +772,10 @@ executable( {expr})		Number	1 if executable {expr} exists
 exists( {var})			Number	TRUE if {var} exists
 expand( {expr})			String	expand special keywords in {expr}
 filereadable( {file})		Number	TRUE if {file} is a readable file
+filewritable( {file})		Number	TRUE if {file} is a writable file
 fnamemodify( {fname}, {mods})	String	modify file name
-foldclosed( {lnum})		Number  >0 if fold at {lnum} is closed
+foldclosed( {lnum})		Number  first line of fold at {lnum} if closed
+foldclosedend( {lnum})		Number  last line of fold at {lnum} if closed
 foldlevel( {lnum})		Number	fold level at {lnum}
 foldtext( )			String  line displayed for closed fold
 foreground( )			Number	bring the Vim window to the foreground
@@ -782,6 +800,7 @@ histnr( {history})		Number	highest index of a history
 hlexists( {name})		Number	TRUE if highlight group {name} exists
 hlID( {name})			Number	syntax ID of highlight group {name}
 hostname()			String	name of the machine vim is running on
+iconv( {expr}, {from}, {to})	String  convert encoding of {expr}
 indent( {lnum})			Number  indent of line {lnum}
 input( {prompt} [, {text}])	String	get input from the user
 inputdialog( {prompt} [, {text}]) String  like input() but in a GUI dialog
@@ -922,8 +941,14 @@ bufname({expr})						*bufname()*
 		If {expr} is a String, it is used as a regexp pattern to match
 		with the buffer names.  This is always done like 'magic' is
 		set and 'cpoptions' is empty.  When there is more than one
-		match an empty string is returned.  "" or "%" can be used for
-		the current buffer, "#" for the alternate buffer.
+		match an empty string is returned.
+		"" or "%" can be used for the current buffer, "#" for the
+		alternate buffer.
+		A full match is preferred, otherwise a match at the start, end
+		or middle of the buffer name is accepted.
+		Listed buffers are found first.  If there is a single match
+		with a listed buffer, that one is returned.  Next unlisted
+		buffers are searched for.
 		If the {expr} is a String, but you want to use it as a buffer
 		number, force it to be a Number by adding zero to it: >
 			:echo bufname("3" + 0)
@@ -1149,7 +1174,8 @@ executable({expr})					*executable()*
 exists({expr})	The result is a Number, which is non-zero if {var} is defined,
 		zero otherwise.  The {expr} argument is a string, which
 		contains one of these:
-			&option-name	Vim option
+			&option-name	Vim option (only checks if it exists,
+					not if it really works)
 			$ENVNAME	environment variable (could also be
 					done by comparing with an empty
 					string)
@@ -1255,15 +1281,6 @@ expand({expr} [, {flag}])				*expand()*
 
 		See |glob()| for finding existing files.  See |system()| for
 		getting the raw output of an external command.
-
-expandpath({expr}, {pathlist})				*expandpath()*
-		Find all matches for {expr} in each element of {pathlist}.
-		Each match is followed by a <NL>.  Example: >
-			let list = expandpath("colors/*.vim", &runtimepath)
-<		This gets a list of the color scheme files in 'runtimepath'.
-		{pathlist} must be a comma separated list of paths.
-		When there are no matches an empty string is returned.
-
 
 filereadable({file})					*filereadable()*
 		The result is a Number, which is TRUE when a file with the
@@ -1463,6 +1480,8 @@ globpath({path}, {expr})				*globpath()*
 		glob().  A path separator is inserted when needed.
 		If the expansion fails for one of the directories, there is no
 		error message.
+		The 'wildignore' option applies: Names matching one of the
+		patterns in 'wildignore' will be skipped.
 
 							*has()*
 has({feature})	The result is a Number, which is 1 if the feature {feature} is
@@ -1733,7 +1752,7 @@ line({expr})	The result is a Number, which is the line number of the file
 <							*last-position-jump*
 		This autocommand jumps to the last known position in a file
 		just after opening it, if the '" mark is set: >
-	:au BufReadPost * if line("'\"") | exe "normal '\"" | endif
+	:au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal g'\"" | endif
 <
 line2byte({lnum})					*line2byte()*
 		Return the byte count from the start of the buffer for line
@@ -2077,7 +2096,7 @@ searchpair({start}, {middle}, {end} [, {flags} [, {skip}]])
 	     \ 'synIDattr(synID(line("."), col("."), 0), "name") =~? "string"')
 <
 server2client( {clientid}, {string})			*server2client()*
-		Send a reply string to {clientid}. The most recent {clientid}
+		Send a reply string to {clientid}.  The most recent {clientid}
 		that sent a string can be retrieved with expand("<client>").
 		{only available when compiled with the |+clientserver| feature}
 		Note:
@@ -2085,15 +2104,16 @@ server2client( {clientid}, {string})			*server2client()*
 		received. Ie. before returning from the received command and
 		before calling any commands that waits for input.
 		See also |clientserver|.
-		Examples: >
-		:echo server2client(expand("<client>"), "HELLO")
+		Example: >
+			:echo server2client(expand("<client>"), "HELLO")
 <
-serverlist()					*serverlist()* *E240*
-		Return a list of available server names. One per line.
+serverlist()					*serverlist()*
+		Return a list of available server names, one per line.
+		When there are no servers an empty string is returned.
 		See also |clientserver|.
 		{only available when compiled with the |+clientserver| feature}
-		Examples: >
-		:echo serverlist()
+		Example: >
+			:echo serverlist()
 <
 setbufvar({expr}, {varname}, {val})			*setbufvar()*
 		Set option or local variable {varname} in buffer {expr} to
@@ -2272,16 +2292,20 @@ synIDtrans({synID})					*synIDtrans()*
 
 							*system()*
 system({expr})	Get the output of the shell command {expr}.  Note: newlines
-		in {expr} may cause the command to fail.  This is not to be
-		used for interactive commands.
-		The result is a String.  To make the result more
-		system-independent, the shell output is filtered to replace
-		<CR> with <NL> for Macintosh, and <CR><NL> with <NL> for
-		DOS-like systems.
-		'shellredir' is used to capture the output of the command.
-		Depending on 'shell', you might be able to capture stdout with
-		">" and stdout plus stderr with ">&" (csh) or use "2>" to
-		capture stderr (sh).
+		in {expr} may cause the command to fail.  The characters in
+		'shellquote' and 'shellxquote' may also cause trouble.
+		This is not to be used for interactive commands.
+		The result is a String.
+		To make the result more system-independent, the shell output
+		is filtered to replace <CR> with <NL> for Macintosh, and
+		<CR><NL> with <NL> for DOS-like systems.
+		The command executed is build using several options:
+
+		'shell' 'shellcmdflag' 'shellxquote' {expr} 'shellredir' {tmp} 'shellxquote'
+		({tmp} is an automatically generated file name).
+		For Unix and OS/2 braces are put around {expr} to allow for
+		concatenated commands.
+
 		The resulting error code can be found in |v:shell_error|.
 		This function will fail in |restricted-mode|.
 
@@ -2319,6 +2343,8 @@ virtcol({expr})						*virtcol()*
 		position, the returned Number will be the column at the end of
 		the <Tab>.  For example, for a <Tab> in column 1, with 'ts'
 		set to 8, it returns 8;
+		When Virtual editing is active in the current mode, a position
+		beyond the end of the line can be returned. |'virtualedit'|
 		The accepted positions are:
 		    .	    the cursor position
 		    $	    the end of the cursor line (the result is the
@@ -2591,7 +2617,7 @@ instead of "s:" when the mapping is expanded outside of the script.
 :fu[nction][!] {name}([arguments]) [range] [abort]
 			Define a new function by the name {name}.  The name
 			must be made of alphanumeric characters and '_', and
-			must start with a capital.
+			must start with a capital or "s:" (see above).
 						*function-argument* *a:var*
 			An argument can be defined by giving its name.  In the
 			function this can then be used as "a:name" ("a:" for
@@ -2627,7 +2653,8 @@ instead of "s:" when the mapping is expanded outside of the script.
 			will not be changed by the function.
 
 					*:endf* *:endfunction* *E126* *E193*
-:endf[unction]		The end of a function definition.
+:endf[unction]		The end of a function definition.  Must be on a line
+			by its own, without other commands.
 
 					*:delf* *:delfunction* *E130* *E131*
 :delf[unction] {name}	Delete function {name}.
@@ -2827,7 +2854,7 @@ This would call the function "my_func_whizz(parameter)"
 :let {var-name}	..	List the value of variable {var-name}.  Several
 			variable names may be given.
 
-:let			Liset the values of all variables.
+:let			List the values of all variables.
 
 							*:unlet* *:unl* *E108*
 :unl[et][!] {var-name} ...
@@ -2852,7 +2879,17 @@ This would call the function "my_func_whizz(parameter)"
 				:if version >= 500
 				:  version-5-specific-commands
 				:endif
+<			Sometimes an older Vim has a problem a new command.
+			For example, ":silent" is recognized as a
+			":substitute" command.  In that case ":execute" can
+			avoid problems: >
+				:if version >= 600
+				:  execute "silent 1,$delete"
+				:endif
 <
+			NOTE: The ":append" and ":insert" commands don't work
+			properly in between ":if" and ":endif".
+
 							*:else* *:el*
 :el[se]			Execute the commands until the next matching ":else"
 			or ":endif" if they previously were not being
@@ -2884,6 +2921,7 @@ This would call the function "my_func_whizz(parameter)"
 			terminating <EOL>.  Also see |:comment|.
 			Use "\n" to start a new line.  Use "\r" to move the
 			cursor to the first column.
+			Uses the highlighting set by the |:echohl| command.
 			Cannot be followed by a comment.
 			Example: >
 		:echo "the value of 'shell' is" &shell
@@ -2897,6 +2935,7 @@ This would call the function "my_func_whizz(parameter)"
 							*:echon*
 :echon {expr1} ..	Echoes each {expr1}, without anything added.  Also see
 			|:comment|.
+			Uses the highlighting set by the |:echohl| command.
 			Cannot be followed by a comment.
 			Example: >
 				:echon "the value of 'shell' is " &shell
@@ -2918,7 +2957,8 @@ This would call the function "my_func_whizz(parameter)"
 
 							*:echoh* *:echohl*
 :echoh[l] {name}	Use the highlight group {name} for the following
-			":echo[n]" commands.  Example: >
+			|:echo|, |:echon| and |:echomsg| commands.  Also used
+			for the |input()| prompt.  Example: >
 		:echohl WarningMsg | echo "Don't panic!" | echohl None
 <			Don't forget to set the group back to "None",
 			otherwise all following echo's will be highlighted.
@@ -2927,17 +2967,22 @@ This would call the function "my_func_whizz(parameter)"
 :echom[sg] {expr1} ..	Echo the expression(s) as a true message, saving the
 			message in the |message-history|.
 			Spaces are placed between the arguments as with the
-			:echo command.
+			|:echo| command.
+			Uses the highlighting set by the |:echohl| command.
 			Example: >
 		:echomsg "It's a Zizzer Zazzer Zuzz, as you can plainly see."
 <
 							*:echoe* *:echoerr*
 :echoe[rr] {expr1} ..	Echo the expression(s) as an error message, saving the
-			message in the |message-history|.
+			message in the |message-history|.  When used in a
+			script or function the line number will be added.
 			Spaces are placed between the arguments as with the
 			:echo command.
 			Example: >
 		:echoerr "This script just failed!"
+<			If you just want a highlighted message use |:echohl|.
+			And to get a beep: >
+		:exe "normal \<Esc>"
 <
 							*:exe* *:execute*
 :exe[cute] {expr1} ..	Executes the string that results from the evaluation

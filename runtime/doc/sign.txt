@@ -1,4 +1,4 @@
-*sign.txt*      For Vim version 6.0.  Last change: 2001 Sep 17
+*sign.txt*      For Vim version 6.1a.  Last change: 2002 Feb 24
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -114,7 +114,7 @@ PLACING SIGNS						*:sign-place* *E158*
 
 :sign place {id} name={name} file={fname}
 		Change the placed sign {id} in file {fname} to use the defined
-		sign {name}.  
+		sign {name}.
 		This can be used to change the displayed sign without moving
 		it (e.g., when the debugger has stopped at a breakpoint).
 

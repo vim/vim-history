@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	SPECMAN E-LANGUAGE
-" Maintainer:	Or Freund <or@mobilian.com ;omf@gmx.co.uk>
-" Last Update: Wed Sep 5 2001
+" Maintainer:	Or Freund <or@mobilian.com ;omf@gmx.co.uk; OrMeir@yahoo.com>
+" Last Update: Wed Oct 24 2001
 
 "---------------------------------------------------------
 "| If anyone found an error or fix the parenthesis part  |
@@ -85,7 +85,7 @@ syn match   specmanOperator    "*="
 
 syn match   specmanComment     "//.*"  contains=specmanTodo
 syn match   specmanComment     "--.*"
-syn region  specmanComment     start="'>"hs=s+2 end="<'"he=e-2
+syn region  specmanComment     start="^'>"hs=s+2 end="^<'"he=e-2
 
 syn match   specmanHDL         "'[`.a-zA-Z0-9_@\[\]]\+\>'"
 
@@ -166,7 +166,7 @@ if version >= 508 || !exists("did_specman_syn_inits")
 	HiLink	specmanFSM		Label
 	HiLink	specmanSpecial		Special
 	HiLink	specmanType		Type
-	HiLink	specmanTemporal		StorageClass
+	HiLink	specmanTemporal		Type
 	HiLink	specmanFile		Include
 	HiLink	specmanPreCondit	Include
 	HiLink	specmanDefine		Typedef

@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.0.  Last change: 2001 Sep 18
+*message.txt*   For Vim version 6.1a.  Last change: 2002 Feb 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -114,7 +114,7 @@ is an endless loop.  Probably a |:execute| or |:source| command is involved.
 The color name {name} is unknown.  See |gui-colors| for a list of colors that
 are available on most systems.
 
-							*ec1*  >
+							*E458*  >
   Cannot allocate colormap entry for "xxxx"
   Cannot allocate colormap entry, some colors may be incorrect
 
@@ -238,6 +238,13 @@ This occurs when Vim is trying to rename a file, but a simple change of file
 name doesn't work.  Then the file will be copied, but somehow this failed.
 The result may be that both the original file and the destination file exist
 and the destination file may be incomplete.
+
+>
+  Vim: Error reading input, exiting...
+
+This occurs when Vim cannot read typed characters while input is required.
+Vim got stuck, the only thing it can do is exit.  This can happen when both
+stdin and stderr are redirected and executing a script that doesn't exit Vim.
 
 							*E47*  >
   Error while reading errorfile

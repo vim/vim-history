@@ -1,6 +1,6 @@
 " Vim tutor support file
 " Author: Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:	2001 Aug 11
+" Last Change:	2001 Dec 13
 
 " This small source file is used for detecting if a translation of the
 " tutor file exist, i.e., a tutor.xx file, where xx is the language.
@@ -27,6 +27,18 @@ if s:ext =~? '\.ja'
     let s:ext = s:ext . ".sjis"
   endif
 endif
+
+" The Chinese tutor is available in two encodings, guess which one to use
+" This segment is from the above lines and modified by 
+" Mendel L Chan <beos@turbolinux.com.cn> for Chinese vim tutorial
+if s:ext =~? '\.zh'
+  if &enc =~ "euc"
+    let s:ext = s:ext . ".euc"
+  else
+    let s:ext = s:ext . ".big5"
+  endif
+endif
+
 if s:ext =~? '\.en'
   let s:ext = ""
 endif

@@ -78,7 +78,9 @@ clip_mch_request_selection( VimClipboard *cbd )
 		default: /* fallthrough to line type */
 		case 'L': type = MLINE; break;
 		case 'C': type = MCHAR; break;
+#ifdef FEAT_VISUAL
 		case 'B': type = MBLOCK; break;
+#endif
 	    }
 	    is_type_set = TRUE;
 	}
@@ -140,8 +142,10 @@ clip_mch_set_selection( VimClipboard *cbd )
 	    {
 		default: /* fallthrough to MLINE */
 		case MLINE:	*vim_clip = 'L'; break;
-		case MBLOCK:	*vim_clip = 'B'; break;
 		case MCHAR:	*vim_clip = 'C'; break;
+#ifdef FEAT_VISUAL
+		case MBLOCK:	*vim_clip = 'B'; break;
+#endif
 	    }
 
 	    STRNCPY( text_clip, str, len );

@@ -3899,8 +3899,8 @@ do_sub(eap)
 		 */
 		for (p1 = new_end; *p1; ++p1)
 		{
-		    if (p1[0] == '\\' && p1[1] != NUL)
-			STRCPY(p1, p1 + 1);	    /* remove backslash */
+		    if (p1[0] == '\\' && p1[1] != NUL)  /* remove backslash */
+			mch_memmove(p1, p1 + 1, STRLEN(p1));
 		    else if (*p1 == CR)
 		    {
 			if (u_inssub(lnum) == OK)   /* prepare for undo */

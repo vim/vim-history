@@ -772,7 +772,9 @@ clip_mch_request_selection(VimClipboard *cbd)
 		    default:
 		    case 'L':	type = MLINE;	break;
 		    case 'C':	type = MCHAR;	break;
+#ifdef FEAT_VISUAL
 		    case 'B':	type = MBLOCK;	break;
+#endif
 		}
 	}
 	/* Otherwise, check for the normal text format */
@@ -864,7 +866,9 @@ clip_mch_set_selection(VimClipboard *cbd)
 	    default:
 	    case MLINE:	    *lpszMemVim++ = 'L';    break;
 	    case MCHAR:	    *lpszMemVim++ = 'C';    break;
+#ifdef FEAT_VISUAL
 	    case MBLOCK:    *lpszMemVim++ = 'B';    break;
+#endif
 	}
 
 	STRNCPY(lpszMem, str, cch);
@@ -2477,8 +2481,8 @@ get_logfont(
 	return 1;
 
     if (STRCMP(name, "*") == 0)
-#if defined(FEAT_GUI_W32)
     {
+#if defined(FEAT_GUI_W32)
 	CHOOSEFONT	cf;
 	/* if name is "*", bring up std font dialog: */
 	memset(&cf, 0, sizeof(cf));
@@ -2491,10 +2495,10 @@ get_logfont(
 	cf.nFontType = 0 ; //REGULAR_FONTTYPE;
 	if (ChooseFont(&cf))
 	    goto theend;
-    }
 #else
 	return 0;
 #endif
+    }
 
     /*
      * Split name up, it could be <name>:h<height>:w<width> etc.
@@ -2597,10 +2601,13 @@ get_logfont(
 theend:
 #endif
     /* ron: init lastlf */
-    vim_free(lastlf);
-    lastlf = (LOGFONT *)alloc(sizeof(LOGFONT));
-    if (lastlf != NULL)
-	mch_memmove(lastlf, lf, sizeof(LOGFONT));
+    if (printer_dc == NULL)
+    {
+	vim_free(lastlf);
+	lastlf = (LOGFONT *)alloc(sizeof(LOGFONT));
+	if (lastlf != NULL)
+	    mch_memmove(lastlf, lf, sizeof(LOGFONT));
+    }
 
     return 1;
 }

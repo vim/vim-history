@@ -1232,7 +1232,7 @@ do_pending_operator(cap, old_col, gui_yank)
     static colnr_T  redo_VIsual_col;	    /* number of cols or end column */
     static long	    redo_VIsual_count;	    /* count for Visual operator */
 # ifdef FEAT_VIRTUALEDIT
-    int		include_line_break = FALSE;
+    int		    include_line_break = FALSE;
 # endif
 #endif
 
@@ -1817,9 +1817,7 @@ do_pending_operator(cap, old_col, gui_yank)
 #endif
 #ifdef FEAT_VISUALEXTRA
 	    if (empty_region_error)
-#endif
 		vim_beep();
-#ifdef FEAT_VISUALEXTRA
 	    else
 	    {
 		/* This is a new edit command, not a restart.  Need to
@@ -1827,11 +1825,14 @@ do_pending_operator(cap, old_col, gui_yank)
 		 * Visual mode.  But do this only once. */
 		restart_edit_save = restart_edit;
 		restart_edit = 0;
-		op_insert(oap, cap->count1);/* handles insert & append
-					     * will call edit() */
+
+		op_insert(oap, cap->count1);
+
 		if (restart_edit == 0)
 		    restart_edit = restart_edit_save;
 	    }
+#else
+	    vim_beep();
 #endif
 	    break;
 
@@ -6379,10 +6380,6 @@ nv_visual(cap)
 	finish_op = FALSE;	/* operator doesn't finish now but later */
 	return;
     }
-
-    /* Don't do anything when an operator is pending. */
-    if (checkclearop(cap->oap))
-	return;
 
     VIsual_select = cap->arg;
     if (VIsual_active)	    /* change Visual mode */

@@ -20,7 +20,7 @@
 # ifdef FEAT_GUI_X11
 #  include "gui_x11.pro"
 # endif
-#  include "os_unixx.h"
+# include "os_unixx.h"
 #endif
 
 static int sniffemacs_pid;
@@ -810,7 +810,6 @@ HandleSniffRequest(buffer)
 	{
 	    char *file = argv[0];
 	    int position = atoi(argv[1]);
-	    int writable = atoi(argv[2]);
 
 	    buf = vi_find_buffer(file);
 	    setpcmark();      /* insert current pos in jump list [mark.c]*/

@@ -759,7 +759,7 @@
 /* #define DEBUG */
 
 /*
- * STARTUPTIME		Timme the startup process.  Writes a "vimstartup" file
+ * STARTUPTIME		Time the startup process.  Writes a "vimstartup" file
  *			with timestamps.
  */
 /* #define STARTUPTIME "vimstartup" */

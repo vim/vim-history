@@ -1,13 +1,17 @@
-" Vim indent file
-" Language:	Verilog HDL
+" Language:     Verilog HDL
 " Maintainer:	Chih-Tsun Huang <cthuang@larc.ee.nthu.edu.tw>
-" Last Change:	Wed Aug  1 21:08:17 CST 2001
-" URL:		http://larc.ee.nthu.edu.tw/~cthuang/vim/indent/verilog.vim
+" Last Change:	Wed Oct 31 16:13:11 CST 2001
+" URL:          http://larc.ee.nthu.edu.tw/~cthuang/vim/indent/verilog.vim
+"
+" Credits:
+"   Suggestions for improvement, bug reports by
+"     Leo Butlero <lbutler@brocade.com>
 "
 " Buffer Variables:
 "     b:verilog_indent_modules : indenting after the declaration
-"				 of module blocks
+"                                of module blocks
 "     b:verilog_indent_width   : indenting width
+"     b:verilog_indent_verbose : verbose to each indenting
 "
 
 " Only load this indent file when no other was loaded.
@@ -56,66 +60,110 @@ function GetVerilogIndent()
   let ind  = indent(lnum)
   let ind2 = indent(lnum - 1)
   let offset_comment1 = 1
+  " Define the condition of an open statement
+  "   Exclude the match of //, /* or */
+  let vlog_openstat = '\(\<or\>\|\([*/]\)\@<![*(,{><+-/%^&|!=?:]\([*/]\)\@!\)'
+  " Define the condition when the statement ends with a one-line comment
+  let vlog_comment = '\(//.*\|/\*.*\*/\s*\)'
+  if exists('b:verilog_indent_verbose')
+    let vverb_str = 'INDENT VERBOSE:'
+    let vverb = 1
+  else
+    let vverb = 0
+  endif
 
   " Indent accoding to last line
   " End of multiple-line comment
-  if last_line =~ '\*/\s*$'
+  if last_line =~ '\*/\s*$' && last_line !~ '/\*.\{-}\*/'
     let ind = ind - offset_comment1
+    if vverb
+      echo vverb_str "De-indent after a multiple-line comment."
+    endif
 
   " Indent after if/else/for/case/always/initial/specify/fork blocks
-  elseif last_line =~ '\<\(if\|else\)\>' ||
+  elseif last_line =~ '`\@<!\<\(if\|else\)\>' ||
     \ last_line =~ '^\s*\<\(for\|case\%[[zx]]\)\>' ||
     \ last_line =~ '^\s*\<\(always\|initial\)\>' ||
     \ last_line =~ '^\s*\<\(specify\|fork\)\>'
-    if last_line !~ '\(;\|\<end\>\)\s*$'
+    if last_line !~ '\(;\|\<end\>\)\s*' . vlog_comment . '*$' ||
+      \ last_line =~ '\(//\|/\*\).*\(;\|\<end\>\)\s*' . vlog_comment . '*$'
       let ind = ind + offset
+      if vverb | echo vverb_str "Indent after a block statement." | endif
     endif
   " Indent after function/task blocks
   elseif last_line =~ '^\s*\<\(function\|task\)\>'
-    if last_line !~ '\<end\>\s*$'
+    if last_line !~ '\<end\>\s*' . vlog_comment . '*$' ||
+      \ last_line =~ '\(//\|/\*\).*\(;\|\<end\>\)\s*' . vlog_comment . '*$'
       let ind = ind + offset
-    endif
-
-  " Indent after each condition in case block
-  elseif last_line =~
-    \ '^\s*\(default\|[a-zA-Z0-9_]\+\|[0-9]\+.[dDhHbBoO][0-9a-fA-F_xXzZ?]\+\)\s*[,:]'
-    if last_line !~ '\(;\|\<end\>\|,\)\s*$'
-      let ind = ind + offset
+      if vverb
+        echo vverb_str "Indent after function/task block statement."
+      endif
     endif
 
   " Indent after module/function/task/specify/fork blocks
   elseif last_line =~ '^\s*\<module\>'
     let ind = ind + indent_modules
-    if last_line =~ '[(,]\s*$'
+    if vverb && indent_modules
+      echo vverb_str "Indent after module statement."
+    endif
+    if last_line =~ '[(,]\s*' . vlog_comment . '*$' &&
+      \ last_line !~ '\(//\|/\*\).*[(,]\s*' . vlog_comment . '*$'
       let ind = ind + offset
+      if vverb
+        echo vverb_str "Indent after a multiple-line module statement."
+      endif
     endif
 
   " Indent after a 'begin' statement
-  elseif last_line =~ '\(\<begin\>\)\(\s*:\s*\w\+\)*$'
+  elseif last_line =~ '\(\<begin\>\)\(\s*:\s*\w\+\)*' . vlog_comment . '*$' &&
+    \ last_line !~ '\(//\|/\*\).*\(\<begin\>\)' &&
+    \ ( last_line2 !~ vlog_openstat . '\s*' . vlog_comment . '*$' ||
+    \ last_line2 =~ '^\s*[^=!]\+\s*:\s*' . vlog_comment . '*$' )
     let ind = ind + offset
+    if vverb | echo vverb_str "Indent after begin statement." | endif
 
   " De-indent for the end of one-line block
-  elseif last_line !~ '\<begin\>' &&
-    \ last_line2 =~ '^\s*\<\(if\|else\|for\|always\|initial\)\>' &&
-    \ last_line2 !~ '\(\<or\>\|[*(,{><+-/%^&|!=?:]\)\s*$' &&
-    \ last_line2 !~ '\<begin\>'
+  elseif ( last_line !~ '\<begin\>' ||
+    \ last_line =~ '\(//\|/\*\).*\<begin\>' ) &&
+    \ last_line2 =~ '\<\(`\@<!if\|`\@<!else\|for\|always\|initial\)\>.*' .
+      \ vlog_comment . '*$' &&
+    \ last_line2 !~
+      \ '\(//\|/\*\).*\<\(`\@<!if\|`\@<!else\|for\|always\|initial\)\>' &&
+    \ last_line2 !~ vlog_openstat . '\s*' . vlog_comment . '*$' &&
+    \ ( last_line2 !~ '\<begin\>' ||
+    \ last_line2 =~ '\(//\|/\*\).*\<begin\>' )
     let ind = ind - offset
+    if vverb
+      echo vverb_str "De-indent after the end of one-line statement."
+    endif
 
-  " Multiple-line statement
-  " Open statement
-  elseif last_line =~ '[*(,{><+-/%^&|!=?:]\s*$' &&
-    \ last_line2 !~ '[*(,{><+-/%^&|!=?:]\s*$'
-    let ind = ind + offset
-  " Close statement
-  elseif last_line =~ '\();\|;\|)\)\s*$' &&
-    \ last_line !~ '^\s*\();\|;\|)\)\s*$' &&
-    \ last_line2 =~ '\(\<or\>\|[*(,{><+-/%^&|!=?:]\)\s*$' &&
-    \ last_line2 !~ '\(//\|\*/\)\s*$'
-    let ind = ind - offset
+    " Multiple-line statement (including case statement)
+    " Open statement
+    "   Ident the first open line
+    elseif  last_line =~ vlog_openstat . '\s*' . vlog_comment . '*$' &&
+      \ last_line !~ '\(//\|/\*\).*' . vlog_openstat . '\s*$' &&
+      \ last_line2 !~ vlog_openstat . '\s*' . vlog_comment . '*$'
+      let ind = ind + offset
+      if vverb | echo vverb_str "Indent after an open statement." | endif
+
+    " Close statement
+    "   De-indent for an optional close parenthesis and a semicolon, and only
+    "   if there exists precedent non-whitespace char
+    elseif last_line =~ ')*\s*;\s*' . vlog_comment . '*$' &&
+      \ last_line !~ '^\s*)*\s*;\s*' . vlog_comment . '*$' &&
+      \ last_line !~ '\(//\|/\*\).*\S)*\s*;\s*' . vlog_comment . '*$' &&
+      \ ( last_line2 =~ vlog_openstat . '\s*' . vlog_comment . '*$' &&
+      \ last_line2 !~ ';\s*//.*$') &&
+      \ last_line2 !~ '^\s*' . vlog_comment . '$'
+      let ind = ind - offset
+      if vverb | echo vverb_str "De-indent after a close statement." | endif
 
   " `ifdef and `else
   elseif last_line =~ '^\s*`\<\(ifdef\|else\)\>'
     let ind = ind + offset
+    if vverb
+      echo vverb_str "Indent after a `ifdef or `else statement."
+    endif
 
   endif
 
@@ -126,23 +174,41 @@ function GetVerilogIndent()
   if curr_line =~ '^\s*\<\(join\|end\|endcase\)\>' ||
     \ curr_line =~ '^\s*\<\(endfunction\|endtask\|endspecify\)\>'
     let ind = ind - offset
+    if vverb | echo vverb_str "De-indent the end of a block." | endif
   elseif curr_line =~ '^\s*\<endmodule\>'
     let ind = ind - indent_modules
+    if vverb && indent_modules
+      echo vverb_str "De-indent the end of a module."
+    endif
+
   " De-indent on a stand-alone 'begin'
   elseif curr_line =~ '^\s*\<begin\>'
-    if last_line =~ '\<\(if\|else\|for\|case\%[[zx]]\|always\|initial\)\>' ||
-      \ last_line =~
-      \ '^\s*\(default\|[a-zA-Z0-9_]\+\|[0-9]\+.[dDhHbBoO][0-9a-fA-F_xXzZ?]\+\)\s*:'
+    if last_line !~ '^\s*\<\(function\|task\|specify\|module\)\>' &&
+      \ last_line !~ '^\s*\()*\s*;\|)\+\)\s*' . vlog_comment . '*$' &&
+      \ ( last_line =~
+        \ '\<\(`\@<!if\|`\@<!else\|for\|case\%[[zx]]\|always\|initial\)\>' ||
+      \ last_line =~ ')\s*' . vlog_comment . '*$' ||
+      \ last_line =~ vlog_openstat . '\s*' . vlog_comment . '*$' )
       let ind = ind - offset
+      if vverb
+        echo vverb_str "De-indent a stand alone begin statement."
+      endif
     endif
 
   " De-indent after the end of multiple-line statement
-  elseif curr_line =~ '^\s*)' && last_line !~ ')\s*$'
+  elseif curr_line =~ '^\s*)' &&
+    \ ( last_line =~ vlog_openstat . '\s*' . vlog_comment . '*$' ||
+    \ last_line !~ vlog_openstat . '\s*' . vlog_comment . '*$' &&
+    \ last_line2 =~ vlog_openstat . '\s*' . vlog_comment . '*$' )
     let ind = ind - offset
+    if vverb
+      echo vverb_str "De-indent the end of a multiple statement."
+    endif
 
   " De-indent `else and `endif
   elseif curr_line =~ '^\s*`\<\(else\|endif\)\>'
     let ind = ind - offset
+    if vverb | echo vverb_str "De-indent `else and `endif statement." | endif
 
   endif
 
