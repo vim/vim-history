@@ -4676,11 +4676,9 @@ win_redr_status(wp)
 	if (buf_spname(wp->w_buffer) != NULL)
 	    STRCPY(NameBuff, buf_spname(wp->w_buffer));
 	else
-	{
 	    home_replace(wp->w_buffer, wp->w_buffer->b_fname, NameBuff,
 							      MAXPATHL, TRUE);
-	    trans_characters(NameBuff, MAXPATHL);
-	}
+	trans_characters(NameBuff, MAXPATHL);
 	p = NameBuff;
 	len = (int)STRLEN(p);
 
@@ -4948,7 +4946,7 @@ win_redr_custom(wp, Ruler)
 
     for (p = buf + len; p < buf + maxlen; p++)
 	*p = fillchar;
-    buf[maxlen] = 0;
+    buf[maxlen] = NUL;
 
     curattr = attr;
     p = buf;
