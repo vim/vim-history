@@ -21,6 +21,7 @@ GuiFont gui_mch_get_font __ARGS((char_u *name, int report_error));
 void gui_mch_set_font __ARGS((GuiFont font));
 void gui_mch_set_fontset __ARGS((GuiFontset fontset));
 void gui_mch_free_font __ARGS((GuiFont font));
+void gui_mch_free_fontset __ARGS((GuiFontset fontset));
 guicolor_t gui_mch_get_color __ARGS((char_u *name));
 void gui_mch_set_fg_color __ARGS((guicolor_t color));
 void gui_mch_set_bg_color __ARGS((guicolor_t color));

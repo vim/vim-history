@@ -22,7 +22,7 @@ void gui_mch_set_scrollbar_thumb __ARGS((scrollbar_t *sb, long val, long size, l
 void gui_mch_set_scrollbar_pos __ARGS((scrollbar_t *sb, int x, int y, int w, int h));
 void gui_mch_create_scrollbar __ARGS((scrollbar_t *sb, int orient));
 void gui_mch_destroy_scrollbar __ARGS((scrollbar_t *sb));
-int gui_mch_init_font __ARGS((char_u *font_name));
+int gui_mch_init_font __ARGS((char_u *font_name, int fontset));
 GuiFont gui_mch_get_font __ARGS((char_u *name, int giveErrorIfMissing));
 void gui_mch_set_font __ARGS((GuiFont font));
 void gui_mch_free_font __ARGS((GuiFont font));

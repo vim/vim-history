@@ -1,4 +1,5 @@
 /* regexp.c */
+int re_multiline __ARGS((regprog_t *prog));
 char_u *skip_regexp __ARGS((char_u *p, int dirc, int magic));
 regprog_t *vim_regcomp __ARGS((char_u *expr, int magic));
 int vim_regcomp_had_eol __ARGS((void));

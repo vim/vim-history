@@ -70,6 +70,7 @@ int vim_fexists __ARGS((char_u *fname));
 void line_breakcheck __ARGS((void));
 int expand_wildcards __ARGS((int num_pat, char_u **pat, int *num_file, char_u ***file, int flags));
 int match_suffix __ARGS((char_u *fname));
+int gen_expand_wildcards __ARGS((int num_pat, char_u **pat, int *num_file, char_u ***file, int flags));
 void addfile __ARGS((garray_t *gap, char_u *f, int flags));
 char_u *get_cmd_output __ARGS((char_u *cmd, int flags));
 void FreeWild __ARGS((int num, char_u **file));
