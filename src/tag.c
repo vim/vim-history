@@ -86,6 +86,8 @@ static int find_extra __ARGS((char_u **pp));
 static char_u *bottommsg = (char_u *)"at bottom of tag stack";
 static char_u *topmsg = (char_u *)"at top of tag stack";
 
+static char_u	*tagmatchname = NULL;	/* name of last used tag */
+
 /*
  * We use ftello() here, if available.  It returns off_t instead of long,
  * which helps if long is 32 bit and off_t is 64 bit.
@@ -153,7 +155,6 @@ do_tag(tag, type, count, forceit, verbose)
     static int		max_num_matches = 0;  /* limit used for match search */
     static char_u	**matches = NULL;
     static int		flags;
-    static char_u	*matchname = NULL;
 
     if (type == DT_HELP)
     {
@@ -353,15 +354,15 @@ do_tag(tag, type, count, forceit, verbose)
 	    name = tag;
 	else
 	    name = tagstack[tagstackidx].tagname;
-	other_name = (matchname == NULL || STRCMP(matchname, name) != 0);
+	other_name = (tagmatchname == NULL || STRCMP(tagmatchname, name) != 0);
 	if (new_tag
 		|| (cur_match >= num_matches && max_num_matches != MAXCOL)
 		|| other_name)
 	{
 	    if (other_name)
 	    {
-		vim_free(matchname);
-		matchname = vim_strsave(name);
+		vim_free(tagmatchname);
+		tagmatchname = vim_strsave(name);
 	    }
 
 	    if (type == DT_SELECT || type == DT_JUMP)
@@ -743,6 +744,16 @@ end_do_tag:
 #else
     return FALSE;
 #endif
+}
+
+/*
+ * Free cached tags.
+ */
+    void
+tag_freematch()
+{
+    vim_free(tagmatchname);
+    tagmatchname = NULL;
 }
 
     static void

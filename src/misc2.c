@@ -1991,6 +1991,8 @@ call_shell(cmd, opt)
 #ifdef USE_GUI
     ++hold_gui_events;
 #endif
+    /* The external command may update a tags file, clear cached tags. */
+    tag_freematch();
 
     if (cmd == NULL || *p_sxq == NUL)
 	retval = mch_call_shell(cmd, opt);
