@@ -2317,9 +2317,15 @@ changed_common(lnum, col, lnume, xtra)
 
 	    /* The change may cause lines above or below the change to become
 	     * included in a fold.  Set lnum/lnume to the first/last line that
-	     * might be displayed differently. */
-	    hasFoldingWin(wp, lnum, &lnum, NULL, FALSE, NULL);
-	    hasFoldingWin(wp, lnume, NULL, &lnume, FALSE, NULL);
+	     * might be displayed differently.
+	     * Set w_cline_folded here as an efficient way to update it when
+	     * inserting lines just above a closed fold. */
+	    i = hasFoldingWin(wp, lnum, &lnum, NULL, FALSE, NULL);
+	    if (wp->w_cursor.lnum == lnum)
+		wp->w_cline_folded = i;
+	    i = hasFoldingWin(wp, lnume, NULL, &lnume, FALSE, NULL);
+	    if (wp->w_cursor.lnum == lnume)
+		wp->w_cline_folded = i;
 
 	    /* If the changed line is in a range of previously folded lines,
 	     * compare with the first line in that range. */
