@@ -948,6 +948,9 @@ gui_update_cursor(force, clear_selection)
 	}
 	else
 	{
+#ifdef FEAT_MBYTE
+	    int	    col_off = FALSE;
+#endif
 	    /*
 	     * First draw the partial cursor, then overwrite with the text
 	     * character, using a transparent background.
@@ -963,12 +966,27 @@ gui_update_cursor(force, clear_selection)
 		cur_height = (gui.char_height * shape_table[idx].percentage
 								  + 99) / 100;
 		cur_width = gui.char_width;
-#ifdef FEAT_MBYTE
-		if ((*mb_off2cells)(LineOffset[gui.row] + gui.col) > 1)
-		    cur_width += gui.char_width;
-#endif
 	    }
+#ifdef FEAT_MBYTE
+	    if (has_mbyte && (*mb_off2cells)(LineOffset[gui.row] + gui.col) > 1)
+	    {
+		/* Double wide character. */
+		if (shape_table[idx].shape != SHAPE_VER)
+		    cur_width += gui.char_width;
+		else if (!(State & CMDLINE) && curwin->w_p_rl)
+		{
+		    /* gui.col points to the left halve of the character but
+		     * the vertical line needs to be on the right halve. */
+		    col_off = TRUE;
+		    ++gui.col;
+		}
+	    }
+#endif
 	    gui_mch_draw_part_cursor(cur_width, cur_height, cbg);
+#ifdef FEAT_MBYTE
+	    if (col_off)
+		--gui.col;
+#endif
 
 #ifndef FEAT_GUI_MSWIN	    /* doesn't seem to work for MSWindows */
 	    gui.highlight_mask = ScreenAttrs[LineOffset[gui.row] + gui.col];

@@ -1359,6 +1359,9 @@ ins_ctrl_v()
  * Used while handling CTRL-K, CTRL-V, etc. in Insert mode.
  */
 static int  pc_char;
+#define PC_CHAR_UNSET	0	/* pc_char was not set */
+#define PC_CHAR_RIGHT	1	/* right halve of double-wide char */
+#define PC_CHAR_LEFT	2	/* left halve of double-wide char */
 static int  pc_attr;
 static int  pc_row;
 static int  pc_col;
@@ -1379,13 +1382,43 @@ edit_putchar(c, highlight)
 	else
 	    attr = 0;
 	pc_row = W_WINROW(curwin) + curwin->w_wrow;
-	pc_col = W_WINCOL(curwin) + (
-#ifdef FEAT_RIGHTLEFT
-		curwin->w_p_rl ? (int)W_WIDTH(curwin) - 1 - curwin->w_wcol :
+	pc_col = W_WINCOL(curwin);
+#if defined(FEAT_RIGHTLEFT) || defined(FEAT_MBYTE)
+	pc_char = PC_CHAR_UNSET;
 #endif
-							 curwin->w_wcol);
+#ifdef FEAT_RIGHTLEFT
+	if (curwin->w_p_rl)
+	{
+	    pc_col += W_WIDTH(curwin) - 1 - curwin->w_wcol;
+# ifdef FEAT_MBYTE
+	    if (has_mbyte)
+	    {
+		int fix_col = mb_fix_col(pc_col, pc_row);
+
+		if (fix_col != pc_col)
+		{
+		    screen_putchar(' ', pc_row, fix_col, attr);
+		    --curwin->w_wcol;
+		    pc_char = PC_CHAR_RIGHT;
+		}
+	    }
+# endif
+	}
+	else
+#endif
+	{
+	    pc_col += curwin->w_wcol;
+#ifdef FEAT_MBYTE
+	    if (mb_lefthalve(pc_row, pc_col))
+		pc_char = PC_CHAR_LEFT;
+#endif
+	}
+
 	/* save the character to be able to put it back */
-	pc_char = screen_getchar(pc_row, pc_col, &pc_attr);
+#if defined(FEAT_RIGHTLEFT) || defined(FEAT_MBYTE)
+	if (pc_char == PC_CHAR_UNSET)
+#endif
+	    pc_char = screen_getchar(pc_row, pc_col, &pc_attr);
 	screen_putchar(c, pc_row, pc_col, attr);
     }
 }
@@ -1396,8 +1429,17 @@ edit_putchar(c, highlight)
     void
 edit_unputchar()
 {
-    if (pc_row >= msg_scrolled)
-	screen_putchar(pc_char, pc_row - msg_scrolled, pc_col, pc_attr);
+    if (pc_char != PC_CHAR_UNSET && pc_row >= msg_scrolled)
+    {
+#if defined(FEAT_MBYTE)
+	if (pc_char == PC_CHAR_RIGHT)
+	    ++curwin->w_wcol;
+	if (pc_char == PC_CHAR_RIGHT || pc_char == PC_CHAR_LEFT)
+	    redrawWinline(curwin->w_cursor.lnum, FALSE);
+	else
+#endif
+	    screen_putchar(pc_char, pc_row - msg_scrolled, pc_col, pc_attr);
+    }
 }
 
 /*
@@ -5658,6 +5700,7 @@ ins_reg()
     /*
      * If we are going to wait for a character, show a '"'.
      */
+    pc_char = PC_CHAR_UNSET;
     if (redrawing() && !char_avail())
     {
 	/* may need to redraw when no more chars available now */
@@ -7104,6 +7147,7 @@ ins_digraph()
     int	    c;
     int	    cc;
 
+    pc_char = PC_CHAR_UNSET;
     if (redrawing() && !char_avail())
     {
 	/* may need to redraw when no more chars available now */
@@ -7142,7 +7186,13 @@ ins_digraph()
 	    ins_redraw();
 
 	    if (char2cells(c) == 1)
+	    {
+		/* first remove the '?', otherwise it's restored when typing
+		 * an ESC next */
+		edit_unputchar();
+		ins_redraw();
 		edit_putchar(c, TRUE);
+	    }
 #ifdef FEAT_CMDL_INFO
 	    add_to_showcmd_c(c);
 #endif
