@@ -6551,13 +6551,43 @@ ins_mousescroll(up)
     int		up;
 {
     pos_T	tpos;
+# if defined(FEAT_GUI) && defined(FEAT_WINDOWS)
+    win_T	*old_curwin;
+# endif
 
-    undisplay_dollar();
     tpos = curwin->w_cursor;
-    if (mod_mask & MOD_MASK_SHIFT)
+
+# if defined(FEAT_GUI) && defined(FEAT_WINDOWS)
+    old_curwin = curwin;
+
+    /* Currently the mouse coordinates are only known in the GUI. */
+    if (gui.in_use && mouse_row >= 0 && mouse_col >= 0)
+    {
+	int row, col;
+
+	row = mouse_row;
+	col = mouse_col;
+
+	/* find the window at the pointer coordinates */
+	curwin = mouse_find_win(&row, &col);
+	curbuf = curwin->w_buffer;
+    }
+    if (curwin == old_curwin)
+# endif
+	undisplay_dollar();
+
+    if (mod_mask & (MOD_MASK_SHIFT | MOD_MASK_CTRL))
 	scroll_redraw(up, (long)(curwin->w_botline - curwin->w_topline));
     else
 	scroll_redraw(up, 3L);
+
+# if defined(FEAT_GUI) && defined(FEAT_WINDOWS)
+    curwin->w_redr_status = TRUE;
+
+    curwin = old_curwin;
+    curbuf = curwin->w_buffer;
+# endif
+
     if (!equal(curwin->w_cursor, tpos))
     {
 	start_arrow(&tpos);

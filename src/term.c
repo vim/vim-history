@@ -3658,7 +3658,7 @@ check_termcode(max_offset, buf, buflen)
 #endif
 #ifdef FEAT_MOUSE
 # if !defined(UNIX) || defined(FEAT_MOUSE_XTERM) || defined(FEAT_GUI)
-    char_u	bytes[3];
+    char_u	bytes[4];
     int		num_bytes;
 # endif
     int		mouse_code = 0;	    /* init for GCC */
@@ -3903,6 +3903,27 @@ check_termcode(max_offset, buf, buflen)
 	/* We only get here when we have a complete termcode match */
 
 #ifdef FEAT_MOUSE
+# ifdef FEAT_GUI
+	/*
+	 * Only in the GUI: Fetch the pointer coordinates of the scroll event
+	 * so that we know which window to scroll later.
+	 */
+	if (gui.in_use
+		&& key_name[0] == (int)KS_EXTRA
+		&& (key_name[1] == (int)KE_X1MOUSE
+		    || key_name[1] == (int)KE_X2MOUSE
+		    || key_name[1] == (int)KE_MOUSEDOWN
+		    || key_name[1] == (int)KE_MOUSEUP))
+	{
+	    num_bytes = get_bytes_from_buf(tp + slen, bytes, 4);
+	    if (num_bytes == -1)	/* not enough coordinates */
+		return -1;
+	    mouse_col = 128 * (bytes[0] - ' ' - 1) + bytes[1] - ' ' - 1;
+	    mouse_row = 128 * (bytes[2] - ' ' - 1) + bytes[3] - ' ' - 1;
+	    slen += num_bytes;
+	}
+	else
+# endif
 	/*
 	 * If it is a mouse click, get the coordinates.
 	 */
