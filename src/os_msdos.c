@@ -115,10 +115,32 @@ int		S_iBufferRow;
 int		S_iBufferColumn;
 
     static void
+myflush(void)
+{
+    if (S_linebufferpos != S_linebuffer)
+    {
+	_dosmemputw(S_linebuffer, (S_linebufferpos - S_linebuffer),
+		S_ulScreenBase
+		      + S_iBufferRow * (Columns << 1) + (S_iBufferColumn << 1));
+	S_linebufferpos = S_linebuffer;
+    }
+}
+
+    static void
 mygotoxy(int x, int y)
 {
     S_iCurrentRow = y - 1;
     S_iCurrentColumn = x - 1;
+}
+
+/*
+ * Set the system cursor to our cursor position.
+ */
+    static void
+set_sys_cursor(void)
+{
+    myflush();
+    gotoxy(S_iCurrentColumn + 1, S_iCurrentRow + 1);
 }
 
     static void
@@ -220,18 +242,6 @@ myscroll(void)
 
     _dosmemputw(S_blankbuffer, (S_iRight - S_iLeft) + 1, S_ulScreenBase
 			 + (S_iBottom - 1) * (Columns << 1) + iColumn);
-}
-
-    static void
-myflush(void)
-{
-    if (S_linebufferpos != S_linebuffer)
-    {
-	_dosmemputw(S_linebuffer, (S_linebufferpos - S_linebuffer),
-		S_ulScreenBase
-		      + S_iBufferRow * (Columns << 1) + (S_iBufferColumn << 1));
-	S_linebufferpos = S_linebuffer;
-    }
 }
 
     static int
@@ -1007,8 +1017,7 @@ mch_inchar(
 	show_mouse(TRUE);
 #endif
 #ifdef DJGPP
-    myflush();
-    gotoxy(S_iCurrentColumn + 1, S_iCurrentRow + 1);
+    set_sys_cursor();
 #endif
     if (time >= 0)
     {
@@ -1895,9 +1904,7 @@ mch_exit(int r)
     stoptermcap();
     set_interrupts(FALSE);	    /* restore interrupts */
 #ifdef DJGPP
-    /* Let the system know where our cursor is. */
-    myflush();
-    gotoxy(S_iCurrentColumn + 1, S_iCurrentRow + 1);
+    set_sys_cursor();
 #endif
     /* Somehow outputting CR-NL causes the original colors to be restored */
     out_char('\r');
@@ -2102,6 +2109,9 @@ mch_call_shell(
 #endif
 
     out_flush();
+#ifdef DJGPP
+    set_sys_cursor();
+#endif
 
     if (options & SHELL_COOKED)
 	settmode(TMODE_COOK);	/* set to normal mode */
