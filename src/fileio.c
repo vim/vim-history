@@ -1857,9 +1857,9 @@ nobackup:
 	start = end + 1;
 
 #ifdef CRYPTV
-    if (*curbuf->b_p_key)
+    if (*buf->b_p_key)
     {
-	crypt_init_keys(curbuf->b_p_key);
+	crypt_init_keys(buf->b_p_key);
 	encrypted = TRUE;
 	/* Write magic number, so that Vim knows that this file is encrypted
 	 * when reading it again */
