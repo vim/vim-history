@@ -609,9 +609,18 @@ get_stack_limit()
        )
     {
 	if (stack_grows_downwards)
+	{
 	    stack_limit = (char *)((long)&i - ((long)rlp.rlim_cur / 16L * 15L));
+	    if (stack_limit >= (char *)&i)
+		/* overflow, set to 1/16 of current stack position */
+		stack_limit = (char *)((long)&i / 16L);
+	}
 	else
+	{
 	    stack_limit = (char *)((long)&i + ((long)rlp.rlim_cur / 16L * 15L));
+	    if (stack_limit <= (char *)&i)
+		stack_limit = NULL;	/* overflow */
+	}
     }
 }
 
