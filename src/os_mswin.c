@@ -460,7 +460,11 @@ vim_stat(const char *name, struct stat *stp)
 	{
 	    n = _wstat(wp, (struct _stat *)stp);
 	    vim_free(wp);
-	    return n;
+	    if (n >= 0)
+		return n;
+	    /* Retry with non-wide function (for Windows 98). Can't use
+	     * GetLastError() here and it's unclear what errno gets set to if
+	     * the _wstat() fails for missing wide functions. */
 	}
     }
 #endif

@@ -4366,7 +4366,8 @@ mch_access(char *n, int p)
 		    vim_free(wn);
 		    wn = NULL;
 		}
-		(void)FindClose(hFile);
+		else
+		    (void)FindClose(hFile);
 	    }
 	    if (wn == NULL)
 #endif
@@ -4469,7 +4470,11 @@ mch_open(char *name, int flags, int mode)
 	{
 	    f = _wopen(wn, flags, mode);
 	    vim_free(wn);
-	    return f;
+	    if (f >= 0)
+		return f;
+	    /* Retry with non-wide function (for Windows 98). Can't use
+	     * GetLastError() here and it's unclear what errno gets set to if
+	     * the _wopen() fails for missing wide functions. */
 	}
     }
 
@@ -4483,19 +4488,21 @@ mch_open(char *name, int flags, int mode)
 mch_fopen(char *name, char *mode)
 {
     WCHAR	*wn, *wm;
-    FILE	*f;
+    FILE	*f = NULL;
 
     if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
     {
 	wn = enc_to_ucs2(name, NULL);
 	wm = enc_to_ucs2(mode, NULL);
 	if (wn != NULL && wm != NULL)
-	{
 	    f = _wfopen(wn, wm);
-	    return f;
-	}
 	vim_free(wn);
 	vim_free(wm);
+	if (f != NULL)
+	    return f;
+	/* Retry with non-wide function (for Windows 98). Can't use
+	 * GetLastError() here and it's unclear what errno gets set to if
+	 * the _wfopen() fails for missing wide functions. */
     }
 
     return fopen(name, mode);
