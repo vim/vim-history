@@ -8468,6 +8468,8 @@ ses_put_fname(fd, name, flagp)
 #ifdef BACKSLASH_IN_FILENAME
 		&& c != '\\'
 #endif
+		|| c == '#'
+		|| c == '%'
 		)
 	{
 	    /* escape a special character with a backslash */
