@@ -4890,6 +4890,11 @@ get_c_indent()
 			    amount = get_indent_lnum(curwin->w_cursor.lnum - 1);
 			    break;
 			}
+			/* If the start comment string doesn't match with the
+			 * start of the comment, skip this entry. XXX */
+			else if (STRNCMP(ml_get(trypos->lnum) + trypos->col,
+					     lead_start, lead_start_len) != 0)
+			    continue;
 		    }
 		    if (start_off != 0)
 			amount += start_off;
