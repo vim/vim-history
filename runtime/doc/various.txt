@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.2.  Last change: 2003 May 11
+*various.txt*   For Vim version 6.2.  Last change: 2004 Jan 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -24,12 +24,19 @@ CTRL-L			Clear and redraw the screen (later).
 			or function.  Also when halfway a mapping and
 			'lazyredraw' is set.
 
+						*:redraws* *:redrawstatus*
+:redraws[tatus][!]	Redraw the status line of the current window.  When !
+			is included all status lines are redrawn.
+			Useful to update the status line(s) when 'statusline'
+			includes an item that doesn't cause automatic
+			updating.
+
 							*N<Del>*
 <Del>			When entering a number: Remove the last digit.
 			Note: if you like to use <BS> for this, add this
-			mapping to your .vimrc:
+			mapping to your .vimrc: >
 				:map CTRL-V <BS>   CTRL-V <Del>
-			See |:fixdel| if your <Del> key does not do what you
+<			See |:fixdel| if your <Del> key does not do what you
 			want.
 
 :as[cii]	or					*ga* *:as* *:ascii*
