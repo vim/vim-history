@@ -714,14 +714,16 @@ selection_received_event(GtkWidget * widget, GtkSelectionData * data)
 
 	count = gdk_text_property_to_text_list(data->type, data->format,
 					     data->data, data->length, &list);
-	len = 0;
-	for (i = 0; i < count; i++)
-	    g_string_append(str, list[i]);
+	if (count > 0)
+	{
+	    for (i = 0; i < count; i++)
+		g_string_append(str, list[i]);
+	    gdk_free_text_list(list);
+	}
 
 	p = (char_u *)str->str;
 	len = str->len;
 	g_string_free(str, FALSE);
-	gdk_free_text_list(list);
 	free_p = TRUE;
     }
     else
