@@ -2107,8 +2107,6 @@ gui_mch_init_font(char_u * font_name)
 		++i;
 	    }
 
-	g_free(sdup);
-
 	if (i == 14)
 	{
 	    char *bold_name = NULL;
@@ -2125,6 +2123,7 @@ gui_mch_init_font(char_u * font_name)
 		vim_free(bold_name);
 		vim_free(ital_name);
 		vim_free(italbold_name);
+		g_free(sdup);
 		return FAIL;
 	    }
 
@@ -2182,6 +2181,8 @@ gui_mch_init_font(char_u * font_name)
 	    vim_free(ital_name);
 	    vim_free(italbold_name);
 	}
+
+	g_free(sdup);
     }
 
     /* Synchronize the fonts used in user input dialogs, since otherwise
