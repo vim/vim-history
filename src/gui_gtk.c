@@ -266,36 +266,47 @@ lookup_menu_iconfile(char_u *iconfile, char_u *dest)
 }
 
     static GtkWidget *
+load_menu_iconfile(char_u *name, GtkIconSize icon_size)
+{
+    GtkWidget	    *image = NULL;
+    GtkIconSet	    *icon_set;
+    GtkIconSource   *icon_source;
+
+    /*
+     * Rather than loading the icon directly into a GtkImage, create
+     * a new GtkIconSet and put it in there.  This way we can easily
+     * scale the toolbar icons on the fly when needed.
+     */
+    icon_set = gtk_icon_set_new();
+    icon_source = gtk_icon_source_new();
+
+    gtk_icon_source_set_filename(icon_source, (const char *)name);
+    gtk_icon_set_add_source(icon_set, icon_source);
+
+    image = gtk_image_new_from_icon_set(icon_set, icon_size);
+
+    gtk_icon_source_free(icon_source);
+    gtk_icon_set_unref(icon_set);
+
+    return image;
+}
+
+    static GtkWidget *
 create_menu_icon(vimmenu_T *menu, GtkIconSize icon_size)
 {
-    GtkWidget *image = NULL;
+    GtkWidget	*image = NULL;
+    char_u	buf[MAXPATHL];
 
-    if (menu->iconfile != NULL)
-    {
-	char_u buf[MAXPATHL];
+    /* First use a specified "icon=" argument. */
+    if (menu->iconfile != NULL && lookup_menu_iconfile(menu->iconfile, buf))
+	image = load_menu_iconfile(buf, icon_size);
 
-	if (lookup_menu_iconfile(menu->iconfile, buf))
-	{
-	    GtkIconSet	    *icon_set;
-	    GtkIconSource   *icon_source;
-	    /*
-	     * Rather than loading the icon directly into a GtkImage, create
-	     * a new GtkIconSet and put it in there.  This way we can easily
-	     * scale the toolbar icons on the fly when needed.
-	     */
-	    icon_set = gtk_icon_set_new();
-	    icon_source = gtk_icon_source_new();
+    /* If not found and not builtin specified try using the menu name. */
+    if (image == NULL && !menu->icon_builtin
+				     && lookup_menu_iconfile(menu->name, buf))
+	image = load_menu_iconfile(buf, icon_size);
 
-	    gtk_icon_source_set_filename(icon_source, (const char *)buf);
-	    gtk_icon_set_add_source(icon_set, icon_source);
-
-	    image = gtk_image_new_from_icon_set(icon_set, icon_size);
-
-	    gtk_icon_source_free(icon_source);
-	    gtk_icon_set_unref(icon_set);
-	}
-    }
-
+    /* Still not found?  Then use a builtin icon, a blank one as fallback. */
     if (image == NULL)
     {
 	const char  *stock_id;
