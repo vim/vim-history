@@ -401,6 +401,7 @@ static void	ex_folddo __ARGS((exarg_T *eap));
 #ifndef FEAT_EVAL
 # define ex_debug		ex_ni
 # define ex_breakadd		ex_ni
+# define ex_debuggreedy		ex_ni
 # define ex_breakdel		ex_ni
 # define ex_breaklist		ex_ni
 #endif
