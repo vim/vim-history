@@ -2733,6 +2733,7 @@ home_replace(buf, src, dst, dstlen, one)
 		 */
 		if (!vim_ispathsep(src[0]) && --dstlen > 0)
 		    *dst++ = '/';
+		break;
 	    }
 	    if (p == homedir_env)
 		break;
