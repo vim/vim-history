@@ -2966,7 +2966,7 @@ gui_mch_tearoff(
     int		col, spaceWidth, len;
     int		columnWidths[2];
     char_u	*label, *text;
-    int		acLen;
+    int		acLen = 0;
     int		nameLen;
     int		padding0, padding1, padding2 = 0;
     int		sepPadding=0;
@@ -3262,7 +3262,7 @@ gui_mch_tearoff(
     /*
      * Reassert ourselves as the active window.  This is so that after creating
      * a tearoff, the user doesn't have to click with the mouse just to start
-     * typing agin!
+     * typing again!
      */
     (void)SetActiveWindow(s_hwnd);
 
