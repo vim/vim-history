@@ -8031,7 +8031,7 @@ makeopens(fd, dirnow)
     }
 
     /* Go to the first window. */
-    if (put_line(fd, IF_EB("normal \027t", "normal " CTRL_W_STR "t")) == FAIL)
+    if (put_line(fd, "wincmd t") == FAIL)
 	return FAIL;
 
     /*
@@ -8064,8 +8064,7 @@ makeopens(fd, dirnow)
 				(long)wp->w_width, Columns / 2, Columns) < 0
 						      || put_eol(fd) == FAIL))
 		    return FAIL;
-		if (put_line(fd, IF_EB("normal \027w",
-					 "  normal " CTRL_W_STR "w")) == FAIL)
+		if (put_line(fd, "wincmd w") == FAIL)
 		    return FAIL;
 
 	    }
@@ -8073,8 +8072,7 @@ makeopens(fd, dirnow)
 	else
 	{
 	    /* Just equalise window sizes */
-	    if (put_line(fd, IF_EB("normal \027=", "normal " CTRL_W_STR "="))
-								      == FAIL)
+	    if (put_line(fd, "wincmd =") == FAIL)
 		return FAIL;
 	}
     }
@@ -8088,16 +8086,14 @@ makeopens(fd, dirnow)
 	    continue;
 	if (put_view(fd, wp, TRUE, &ssop_flags) == FAIL)
 	    return FAIL;
-	if (nr > 1 && put_line(fd, IF_EB("normal \027w",
-					   "normal " CTRL_W_STR "w")) == FAIL)
+	if (nr > 1 && put_line(fd, "wincmd w") == FAIL)
 	    return FAIL;
     }
 
     /*
      * Restore cursor to the current window if it's not the first one.
      */
-    if (cnr > 1 && (fprintf(fd, IF_EB("normal %d\027w",
-					 "normal %d" CTRL_W_STR "w"), cnr) < 0
+    if (cnr > 1 && (fprintf(fd, "%dwincmd w", cnr) < 0
 						      || put_eol(fd) == FAIL))
 	return FAIL;
 
@@ -8142,8 +8138,7 @@ ses_win_rec(fd, fr)
 	    {
 		/* Make window as big as possible so that we have lots of room
 		 * to split. */
-		if (put_line(fd, IF_EB("normal \027_\027|",
-			     "normal " CTRL_W_STR "_" CTRL_W_STR "|")) == FAIL
+		if (put_line(fd, "wincmd _ | wincmd |") == FAIL
 			|| put_line(fd, fr->fr_layout == FR_COL
 						? "split" : "vsplit") == FAIL)
 		    return FAIL;
@@ -8152,9 +8147,7 @@ ses_win_rec(fd, fr)
 
 	/* Go back to the first window. */
 	if (count > 0 && (fprintf(fd, fr->fr_layout == FR_COL
-			? IF_EB("normal %d\027k", "normal %d" CTRL_W_STR "k")
-			: IF_EB("normal %d\027h", "normal %d" CTRL_W_STR "h"),
-			count) < 0
+			? "%dwincmd k" : "%dwincmd h", count) < 0
 						      || put_eol(fd) == FAIL))
 	    return FAIL;
 
@@ -8166,8 +8159,7 @@ ses_win_rec(fd, fr)
 	    ses_win_rec(fd, frc);
 	    frc = ses_skipframe(frc->fr_next);
 	    /* Go to next window. */
-	    if (frc != NULL && put_line(fd, IF_EB("normal \027w",
-					   "normal " CTRL_W_STR "w")) == FAIL)
+	    if (frc != NULL && put_line(fd, "wincmd w") == FAIL)
 		return FAIL;
 	}
     }
@@ -8365,14 +8357,14 @@ put_view(fd, wp, add_edit, flagp)
 		|| put_eol(fd) == FAIL
 		|| put_line(fd, "if s:l < 1 | let s:l = 1 | endif") == FAIL
 		|| put_line(fd, "exe s:l") == FAIL
-		|| put_line(fd, "normal zt") == FAIL
+		|| put_line(fd, "normal! zt") == FAIL
 		|| fprintf(fd, "%ld", (long)wp->w_cursor.lnum) < 0
 		|| put_eol(fd) == FAIL)
 	    return FAIL;
 	/* Restore the cursor column and left offset when not wrapping. */
 	if (wp->w_cursor.col == 0)
 	{
-	    if (put_line(fd, "normal 0") == FAIL)
+	    if (put_line(fd, "normal! 0") == FAIL)
 		return FAIL;
 	}
 	else
@@ -8387,18 +8379,18 @@ put_view(fd, wp, add_edit, flagp)
 			|| put_eol(fd) == FAIL
 			|| put_line(fd, "if s:c > 0") == FAIL
 			|| fprintf(fd,
-			    "  exe 'normal 0' . s:c . 'lzs' . (%ld - s:c) . 'l'",
+			    "  exe 'normal! 0' . s:c . 'lzs' . (%ld - s:c) . 'l'",
 			    (long)wp->w_cursor.col) < 0
 			|| put_eol(fd) == FAIL
 			|| put_line(fd, "else") == FAIL
-			|| fprintf(fd, "  normal 0%dl", wp->w_cursor.col) < 0
+			|| fprintf(fd, "  normal! 0%dl", wp->w_cursor.col) < 0
 			|| put_eol(fd) == FAIL
 			|| put_line(fd, "endif") == FAIL)
 		    return FAIL;
 	    }
 	    else
 	    {
-		if (fprintf(fd, "normal 0%dl", wp->w_cursor.col) < 0
+		if (fprintf(fd, "normal! 0%dl", wp->w_cursor.col) < 0
 			|| put_eol(fd) == FAIL)
 		    return FAIL;
 	    }

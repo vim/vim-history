@@ -3049,7 +3049,7 @@ put_folds(fd, wp)
 {
     if (foldmethodIsManual(wp))
     {
-	if (put_line(fd, "silent! normal zE") == FAIL
+	if (put_line(fd, "silent! normal! zE") == FAIL
 		|| put_folds_recurse(fd, &wp->w_folds, (linenr_T)0) == FAIL)
 	    return FAIL;
     }
