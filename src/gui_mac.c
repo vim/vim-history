@@ -1162,6 +1162,25 @@ pascal OSErr HandleODocAE (const AppleEvent *theAEvent, AppleEvent *theReply, lo
       return (error);
     }
 
+#ifdef MACOS_X_UNIX
+    if (starting > 0)
+    {
+	int i;
+	char_u *p;
+
+	/* these are the initial files dropped on the Vim icon */
+	for (i = 0 ; i < numFiles; i++)
+	{
+	    if (ga_grow(&global_alist.al_ga, 1) == FAIL
+				      || (p = vim_strsave(fnames[i])) == NULL)
+		mch_exit(2);
+	    else
+		alist_add(&global_alist, p, 2);
+	}
+	goto finished;
+    }
+#endif
+
     /* Handle the drop, :edit to get to the file */
     handle_drop(numFiles, fnames, FALSE);
 
@@ -1188,6 +1207,10 @@ pascal OSErr HandleODocAE (const AppleEvent *theAEvent, AppleEvent *theReply, lo
     update_screen(NOT_VALID);
     setcursor();
     out_flush();
+
+#ifdef MACOS_X_UNIX
+  finished:
+#endif
 
     AEDisposeDesc(&theList); /* dispose what we allocated */
 
