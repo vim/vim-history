@@ -4246,6 +4246,11 @@ auto_format()
     if (*old != NUL && pos.col == STRLEN(old) && vim_iswhite(old[pos.col - 1]))
 	return;
 
+    /* With the 'c' flag in 'formatoptions' only format comments. */
+    if (has_format_option(FO_WRAP_COMS)
+				     && get_leader_len(old, NULL, FALSE) == 0)
+	return;
+
     old = vim_strsave(old);
     format_lines((linenr_T)-1);
 
