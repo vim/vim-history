@@ -569,6 +569,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     if (newfile)
     {
 	curbuf->b_p_eol = TRUE;
+	curbuf->b_start_eol = TRUE;
 #ifdef FEAT_MBYTE
 	curbuf->b_p_bomb = FALSE;
 #endif
@@ -2012,6 +2013,11 @@ failed:
     {
 	int m = msg_scroll;
 	int n = msg_scrolled;
+
+	/* Save the fileformat now, otherwise the buffer will be considered
+	 * modified if the format/encoding was automatically detected. */
+	if (newfile)
+	    save_file_ff(curbuf);
 
 	/*
 	 * The output from the autocommands should not overwrite anything and
