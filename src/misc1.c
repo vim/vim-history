@@ -3233,7 +3233,11 @@ expand_env_esc(src, dst, dstlen, esc)
     while (*src && dstlen > 0)
     {
 	copy_char = TRUE;
-	if (*src == '$'
+	if ((*src == '$'
+#ifdef VMS
+		    && at_start
+#endif
+	   )
 #if defined(MSDOS) || defined(MSWIN) || defined(OS2)
 		|| *src == '%'
 #endif

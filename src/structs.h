@@ -918,7 +918,9 @@ struct file_buffer
     FSSpec	b_FSSpec;	/* MacOS File Identification */
 #endif
 #ifdef VMS
-    char	b_fab_rfm;	/* Record format */
+    char	 b_fab_rfm;	/* Record format    */
+    char	 b_fab_rat;	/* Record attribute */
+    unsigned int b_fab_mrs;	/* Max record size  */
 #endif
 #ifdef FEAT_SNIFF
     int		b_sniff;	/* file was loaded through Sniff */
@@ -1497,7 +1499,7 @@ struct window
 #endif
     int		w_arg_idx;	    /* current index in argument list (can be
 				       out of range!) */
-    int		w_arg_idx_invalid;  /* editing another file then w_arg_idx */
+    int		w_arg_idx_invalid;  /* editing another file than w_arg_idx */
 
     char_u	*w_localdir;	    /* absolute path of local directory or
 				       NULL */
