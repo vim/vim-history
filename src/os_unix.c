@@ -3027,9 +3027,9 @@ mch_call_shell(cmd, options)
     int		tmode = cur_tmode;
 #ifdef USE_SYSTEM	/* use system() to start the shell: simple but slow */
     int	    x;
-#ifndef __EMX__
+# ifndef __EMX__
     char_u  *newcmd;   /* only needed for unix */
-#else
+# else
     /*
      * Set the preferred shell in the EMXSHELL environment variable (but
      * only if it is different from what is already in the environment).
@@ -3050,14 +3050,14 @@ mch_call_shell(cmd, options)
 	    putenv((char *)p);	/* don't free the pointer! */
 	}
     }
-#endif
+# endif
 
     out_flush();
 
     if (options & SHELL_COOKED)
 	settmode(TMODE_COOK);	    /* set to normal mode */
 
-#ifdef __EMX__
+# ifdef __EMX__
     if (cmd == NULL)
 	x = system("");	/* this starts an interactive shell in emx */
     else
@@ -3069,12 +3069,12 @@ mch_call_shell(cmd, options)
 	msg_outtrans(p_sh);
 	msg_putchar('\n');
     }
-#else /* not __EMX__ */
+# else /* not __EMX__ */
     if (cmd == NULL)
 	x = system((char *)p_sh);
     else
     {
-# ifdef VMS
+#  ifdef VMS
 	if (ofn = strchr((char *)cmd, '>'))
 	    *ofn++ = '\0';
 	if (ifn = strchr((char *)cmd, '<'))
@@ -3090,7 +3090,7 @@ mch_call_shell(cmd, options)
 	    x = vms_sys((char *)cmd, ofn, ifn);
 	else
 	    x = system((char *)cmd);
-# else
+#  else
 	newcmd = lalloc(STRLEN(p_sh)
 		+ (extra_shell_arg == NULL ? 0 : STRLEN(extra_shell_arg))
 		+ STRLEN(p_shcf) + STRLEN(cmd) + 4, TRUE);
@@ -3124,9 +3124,9 @@ mch_call_shell(cmd, options)
 
     if (tmode == TMODE_RAW)
 	settmode(TMODE_RAW);	/* set to raw mode */
-#ifdef FEAT_TITLE
+# ifdef FEAT_TITLE
     resettitle();
-#endif
+# endif
     return x;
 
 #else /* USE_SYSTEM */	    /* don't use system(), use fork()/exec() */
@@ -3137,31 +3137,31 @@ mch_call_shell(cmd, options)
     char_u	*newcmd = NULL;
     pid_t	pid;
     pid_t	wait_pid = 0;
-#ifdef HAVE_UNION_WAIT
+# ifdef HAVE_UNION_WAIT
     union wait	status;
-#else
+# else
     int		status = -1;
-#endif
+# endif
     int		retval = -1;
     char	**argv = NULL;
     int		argc;
     int		i;
     char_u	*p;
     int		inquote;
-#ifdef FEAT_GUI
+# ifdef FEAT_GUI
     int		pty_master_fd = -1;	    /* for pty's */
     int		pty_slave_fd = -1;
     char	*tty_name;
     int		fd_toshell[2];	    /* for pipes */
     int		fd_fromshell[2];
     int		pipe_error = FALSE;
-# ifdef HAVE_SETENV
+#  ifdef HAVE_SETENV
     char	envbuf[50];
-# else
+#  else
     static char	envbuf_Rows[20];
     static char	envbuf_Columns[20];
+#  endif
 # endif
-#endif
     int		did_settmode = FALSE; /* TRUE when settmode(TMODE_RAW) called */
 
     out_flush();
@@ -3213,7 +3213,7 @@ mch_call_shell(cmd, options)
     }
     argv[argc] = NULL;
 
-#ifdef FEAT_GUI
+# ifdef FEAT_GUI
     /*
      * For the GUI: Try using a pseudo-tty to get the stdin/stdout of the
      * executed command into the Vim window.  Or use a pipe.
@@ -3259,16 +3259,16 @@ mch_call_shell(cmd, options)
     }
 
     if (!pipe_error)			/* pty or pipe opened or not used */
-#endif
+# endif
 
     {
-#ifdef __BEOS__
+# ifdef __BEOS__
 	beos_cleanup_read_thread();
-#endif
+# endif
 	if ((pid = fork()) == -1)	/* maybe we should use vfork() */
 	{
 	    MSG_PUTS(_("\nCannot fork\n"));
-#ifdef FEAT_GUI
+# ifdef FEAT_GUI
 	    if (gui.in_use && show_shell_mess)
 	    {
 		if (pty_master_fd >= 0)		/* close the pseudo tty */
@@ -3284,7 +3284,7 @@ mch_call_shell(cmd, options)
 		    close(fd_fromshell[1]);
 		}
 	    }
-#endif
+# endif
 	}
 	else if (pid == 0)	/* child */
 	{
@@ -3326,23 +3326,23 @@ mch_call_shell(cmd, options)
 		    close(fd);
 		}
 	    }
-#ifdef FEAT_GUI
+# ifdef FEAT_GUI
 	    else if (gui.in_use)
 	    {
 
-#ifdef HAVE_SETSID
+#  ifdef HAVE_SETSID
 		(void)setsid();
-#endif
+#  endif
 		/* push stream discipline modules */
 		if (options & SHELL_COOKED)
 		    SetupSlavePTY(pty_slave_fd);
-#ifdef TIOCSCTTY
+#  ifdef TIOCSCTTY
 		/* try to become controlling tty (probably doesn't work,
 		 * unless run by root) */
 		ioctl(pty_slave_fd, TIOCSCTTY, (char *)NULL);
-#endif
+#  endif
 		/* Simulate to have a dumb terminal (for now) */
-#ifdef HAVE_SETENV
+#  ifdef HAVE_SETENV
 		setenv("TERM", "dumb", 1);
 		sprintf((char *)envbuf, "%ld", Rows);
 		setenv("ROWS", (char *)envbuf, 1);
@@ -3350,7 +3350,7 @@ mch_call_shell(cmd, options)
 		setenv("LINES", (char *)envbuf, 1);
 		sprintf((char *)envbuf, "%ld", Columns);
 		setenv("COLUMNS", (char *)envbuf, 1);
-#else
+#  else
 		/*
 		 * Putenv does not copy the string, it has to remain valid.
 		 * Use a static array to avoid loosing allocated memory.
@@ -3362,7 +3362,7 @@ mch_call_shell(cmd, options)
 		putenv(envbuf_Rows);
 		sprintf(envbuf_Columns, "COLUMNS=%ld", Columns);
 		putenv(envbuf_Columns);
-#endif
+#  endif
 
 		if (pty_master_fd >= 0)
 		{
@@ -3397,7 +3397,7 @@ mch_call_shell(cmd, options)
 		    dup(1);
 		}
 	    }
-#endif
+# endif /* FEAT_GUI */
 	    /*
 	     * There is no type cast for the argv, because the type may be
 	     * different on different machines. This may cause a warning
@@ -3415,18 +3415,18 @@ mch_call_shell(cmd, options)
 	     */
 	    catch_signals(SIG_IGN, SIG_ERR);
 
-#ifdef FEAT_GUI
+# ifdef FEAT_GUI
 
 	    /*
 	     * For the GUI we redirect stdin, stdout and stderr to our window.
 	     */
 	    if (gui.in_use && show_shell_mess)
 	    {
-#define BUFLEN 100		/* length for buffer, pseudo tty limit is 128 */
+#  define BUFLEN 100		/* length for buffer, pseudo tty limit is 128 */
 		char_u	    buffer[BUFLEN + 1];
-#ifdef FEAT_MBYTE
+#  ifdef FEAT_MBYTE
 		int	    buffer_off = 0;	/* valid bytes in buffer[] */
-#endif
+#  endif
 		char_u	    ta_buf[BUFLEN + 1];	/* TypeAHead */
 		int	    ta_len = 0;		/* valid bytes in ta_buf[] */
 		int	    len;
@@ -3491,19 +3491,19 @@ mch_call_shell(cmd, options)
 			 */
 			if (len == 1 && (pty_master_fd < 0 || cmd != NULL))
 			{
-#ifdef SIGINT
+#  ifdef SIGINT
 			    /*
 			     * Send SIGINT to the child's group or all
 			     * processes in our group.
 			     */
 			    if (ta_buf[ta_len] == Ctrl_C
 					       || ta_buf[ta_len] == intr_char)
-# ifdef HAVE_SETSID
+#   ifdef HAVE_SETSID
 				kill(-pid, SIGINT);
-# else
+#   else
 				kill(0, SIGINT);
-# endif
-#endif
+#   endif
+#  endif
 			    if (pty_master_fd < 0 && toshell_fd >= 0
 					       && ta_buf[ta_len] == Ctrl_D)
 			    {
@@ -3531,10 +3531,10 @@ mch_call_shell(cmd, options)
 			    }
 			    else if (ta_buf[i] == '\r')
 				ta_buf[i] = '\n';
-#ifdef FEAT_MBYTE
+#  ifdef FEAT_MBYTE
 			    if (has_mbyte)
 				i += (*mb_ptr2len_check)(ta_buf + i) - 1;
-#endif
+#  endif
 			}
 
 			/*
@@ -3547,7 +3547,7 @@ mch_call_shell(cmd, options)
 			    {
 				if (ta_buf[i] == '\n' || ta_buf[i] == '\b')
 				    msg_putchar(ta_buf[i]);
-#ifdef FEAT_MBYTE
+#  ifdef FEAT_MBYTE
 				else if (has_mbyte)
 				{
 				    int l = (*mb_ptr2len_check)(ta_buf + i);
@@ -3555,7 +3555,7 @@ mch_call_shell(cmd, options)
 				    msg_outtrans_len(ta_buf + i, l);
 				    i += l - 1;
 				}
-#endif
+#  endif
 				else
 				    msg_outtrans_len(ta_buf + i, 1);
 			    }
@@ -3593,15 +3593,15 @@ mch_call_shell(cmd, options)
 		    while (RealWaitForChar(fromshell_fd, 10L, NULL))
 		    {
 			len = read(fromshell_fd, (char *)buffer
-#ifdef FEAT_MBYTE
+#  ifdef FEAT_MBYTE
 				+ buffer_off, (size_t)(BUFLEN - buffer_off)
-#else
+#  else
 				, (size_t)BUFLEN
-#endif
+#  endif
 				);
 			if (len <= 0)		    /* end of file or error */
 			    goto finished;
-#ifdef FEAT_MBYTE
+#  ifdef FEAT_MBYTE
 			len += buffer_off;
 			buffer[len] = NUL;
 			if (has_mbyte)
@@ -3647,7 +3647,7 @@ mch_call_shell(cmd, options)
 			    buffer_off = 0;
 			}
 			else
-#endif
+#  endif /* FEAT_MBYTE */
 			{
 			    buffer[len] = NUL;
 			    msg_puts(buffer);
@@ -3664,11 +3664,11 @@ mch_call_shell(cmd, options)
 		     * Check if the child still exists, before checking for
 		     * typed characters (otherwise we would loose typeahead).
 		     */
-#ifdef __NeXT__
+#  ifdef __NeXT__
 		    wait_pid = wait4(pid, &status, WNOHANG, (struct rusage *) 0);
-#else
+#  else
 		    wait_pid = waitpid(pid, &status, WNOHANG);
-#endif
+#  endif
 		    if ((wait_pid == (pid_t)-1 && errno == ECHILD)
 			    || (wait_pid == pid && WIFEXITED(status)))
 		    {
@@ -3680,19 +3680,19 @@ mch_call_shell(cmd, options)
 finished:
 		p_more = p_more_save;
 
-#ifndef MACOS_X_UNIX /* TODO: Is it needed for MACOS_X ? */
+#  ifndef MACOS_X_UNIX /* TODO: Is it needed for MACOS_X ? */
 		/*
 		 * Give all typeahead that wasn't used back to ui_inchar().
 		 */
 		if (ta_len)
 		    ui_inchar_undo(ta_buf, ta_len);
-#endif
+#  endif
 		State = old_State;
 		if (toshell_fd >= 0)
 		    close(toshell_fd);
 		close(fromshell_fd);
 	    }
-#endif /* FEAT_GUI */
+# endif /* FEAT_GUI */
 
 	    /*
 	     * Wait until our child has exited.
@@ -3705,9 +3705,9 @@ finished:
 	    {
 		wait_pid = wait(&status);
 		if (wait_pid <= 0
-#ifdef ECHILD
+# ifdef ECHILD
 			&& errno == ECHILD
-#endif
+# endif
 		   )
 		    break;
 	    }
@@ -3750,9 +3750,9 @@ error:
     if (!did_settmode)
 	if (tmode == TMODE_RAW)
 	    settmode(TMODE_RAW);	/* set to raw mode */
-#ifdef FEAT_TITLE
+# ifdef FEAT_TITLE
     resettitle();
-#endif
+# endif
     vim_free(newcmd);
 
     return retval;
