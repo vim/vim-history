@@ -471,18 +471,18 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, flags)
 	 * still be running, don't move the cursor to the last line, unless
 	 * always using the GUI.
 	 */
-#ifndef ALWAYS_USE_GUI
 	if (read_stdin)
 	{
+#ifndef ALWAYS_USE_GUI
 	    mch_msg("Vim: Reading from stdin...\n");
-# ifdef USE_GUI
+#endif
+#ifdef USE_GUI
 	    /* Also write a message in the GUI window, if there is one. */
 	    if (gui.in_use)
 		gui_write((char_u *)"Reading from stdin...", 21);
-# endif
+#endif
 	}
 	else
-#endif
 	    filemess(curbuf, sfname, (char_u *)"", 0);
     }
 
@@ -951,7 +951,14 @@ retry:
 		c = TRUE;
 	    msg_add_lines(c, (long)linecnt, filesize);
 
-	    keep_msg = msg_trunc_attr(IObuff, FALSE, 0);
+#ifdef ALWAYS_USE_GUI
+	    /* Don't show the message when reading stdin, it would end up in a
+	     * message box (which might be shown when exiting!) */
+	    if (read_stdin)
+		keep_msg = msg_may_trunc(FALSE, IObuff);
+	    else
+#endif
+		keep_msg = msg_trunc_attr(IObuff, FALSE, 0);
 	    keep_msg_attr = 0;
 	    if (read_stdin)
 	    {
