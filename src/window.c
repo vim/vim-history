@@ -1421,10 +1421,14 @@ win_totop(size, flags)
     last_status(FALSE);	    /* may need to remove last status line */
     (void)win_comp_pos();   /* recompute window positions */
 
-    /* Split a window on the right side and put the window there. */
+    /* Split a window on the desired side and put the window there. */
     (void)win_split_ins(size, flags, curwin, dir);
     if (!(flags & WSP_VERT))
+    {
 	win_setheight(height);
+	if (p_ea)
+	    win_equal(curwin, TRUE, 'v');
+    }
 
 #if defined(FEAT_GUI) && defined(FEAT_VERTSPLIT)
     /* When 'guioptions' includes 'L' or 'R' may have to remove or add
