@@ -2664,6 +2664,9 @@ gui_create_scrollbar(sb, type, wp)
     sb->max = 1;
     sb->top = 1;
     sb->height = 0;
+#ifdef FEAT_VERTSPLIT
+    sb->width = 0;
+#endif
     sb->status_height = 0;
     gui_mch_create_scrollbar(sb, (wp == NULL) ? SBAR_HORIZ : SBAR_VERT);
 }
@@ -2968,14 +2971,20 @@ gui_update_scrollbars(force)
 #ifdef FEAT_WINDOWS
 	    || sb->top != wp->w_winrow
 	    || sb->status_height != wp->w_status_height
+# ifdef FEAT_VERTSPLIT
+	    || sb->width != wp->w_width
+# endif
 #endif
 	    )
 	{
-	    /* Height or position of scrollbar has changed */
+	    /* Height, width or position of scrollbar has changed */
 	    sb->height = wp->w_height;
 #ifdef FEAT_WINDOWS
 	    sb->top = wp->w_winrow;
 	    sb->status_height = wp->w_status_height;
+# ifdef FEAT_VERTSPLIT
+	    sb->width = wp->w_width;
+# endif
 #endif
 
 	    /* Calculate height and position in pixels */

@@ -29,6 +29,7 @@ void command_height __ARGS((long old_p_ch));
 void last_status __ARGS((int morewin));
 char_u *file_name_at_cursor __ARGS((int options, long count));
 char_u *get_file_name_in_path __ARGS((char_u *line, int col, int options, long count));
+int path_with_url __ARGS((char_u *fname));
 int min_rows __ARGS((void));
 int only_one_window __ARGS((void));
 void check_lnums __ARGS((int do_curwin));

@@ -343,7 +343,6 @@ update_screen(type)
     if (!redrawing())
     {
 	redraw_later(type);		/* remember type for next time */
-	curwin->w_redr_type = type;
 	if (type > INVERTED)
 	    curwin->w_lines_valid = 0;	/* don't use w_lines[].wl_size now */
 	return;
@@ -419,7 +418,8 @@ update_screen(type)
      */
     if (type == INVERTED)
 	update_curswant();
-    if (!((type == VALID
+    if (curwin->w_redr_type < type
+	    && !((type == VALID
 		    && curwin->w_lines[0].wl_valid
 		    && curwin->w_topline == curwin->w_lines[0].wl_lnum)
 #ifdef FEAT_VISUAL
@@ -1875,6 +1875,7 @@ win_line(wp, lnum, startrow, endrow)
     int		multi_attr = 0;		/* attributes desired by multibyte */
     int		mb_l = 1;		/* multi-byte byte length */
     int		mb_c = 0;		/* decoded multi-byte character */
+    int		mb_utf8 = FALSE;	/* screen char is UTF-8 char */
     int		u8c_c1 = 0;		/* first composing UTF-8 char */
     int		u8c_c2 = 0;		/* second composing UTF-8 char */
 #endif
@@ -2424,10 +2425,14 @@ win_line(wp, lnum, startrow, endrow)
 			/* If the UTF-8 character is more than one byte:
 			 * Decode it into "mb_c". */
 			mb_l = mb_ptr2len_check(p_extra);
+			mb_utf8 = FALSE;
 			if (mb_l > n_extra)
 			    mb_l = 1;
 			else if (mb_l > 1)
+			{
 			    mb_c = utfc_ptr2char(p_extra, &u8c_c1, &u8c_c2);
+			    mb_utf8 = TRUE;
+			}
 		    }
 		    else
 		    {
@@ -2446,8 +2451,10 @@ win_line(wp, lnum, startrow, endrow)
 				    (col >= W_WIDTH(wp) - 1)
 			    && mb_char2cells(mb_c) == 2)
 		    {
-			c = mb_c = '>';
+			c = '>';
+			mb_c = c;
 			mb_l = 1;
+			mb_utf8 = FALSE;
 			++n_extra;
 			--p_extra;
 			/* FIXME: Bad hack! however it works */
@@ -2481,22 +2488,28 @@ win_line(wp, lnum, startrow, endrow)
 		    /* If the UTF-8 character is more than one byte: Decode it
 		     * into "mb_c". */
 		    mb_l = mb_ptr2len_check(ptr);
+		    mb_utf8 = FALSE;
 		    if (mb_l > 1)
 		    {
 			mb_c = utfc_ptr2char(ptr, &u8c_c1, &u8c_c2);
-			/* Overlong encoded ASCII is displayed normally,
-			 * except a NUL. */
+			/* Overlong encoded ASCII or ASCII with composing char
+			 * is displayed normally, except a NUL. */
 			if (mb_c < 0x80)
 			    c = mb_c;
+			mb_utf8 = TRUE;
 		    }
-		    if ((mb_l == 1 && c >= 0x80) || (mb_l >= 1 && mb_c == 0))
+		    if ((mb_l == 1 && c >= 0x80)
+			    || (mb_l >= 1 && mb_c == 0)
+			    || (mb_l > 1 && !vim_isprintc(mb_c)))
 		    {
 			/*
 			 * Illegal UTF-8 byte: display as <xx>.
 			 */
-			transchar_hex(extra, c);
+			transchar_hex(extra, mb_c);
 			p_extra = extra;
 			c = *p_extra++;
+			mb_c = c;
+			mb_utf8 = FALSE;
 			n_extra = STRLEN(p_extra);
 			c_extra = NUL;
 			if (!area_attr && !search_attr)
@@ -2509,7 +2522,7 @@ win_line(wp, lnum, startrow, endrow)
 		    else if (mb_l == 0)  /* at the NUL at end-of-line */
 			mb_l = 1;
 		}
-		else
+		else	/* cc_dbcs */
 		{
 		    mb_l = MB_BYTE2LEN(c);
 		    if (mb_l == 0)  /* at the NUL at end-of-line */
@@ -2525,7 +2538,9 @@ win_line(wp, lnum, startrow, endrow)
 			(col >= W_WIDTH(wp) - 1)
 			&& mb_char2cells(mb_c) == 2)
 		{
-		    c = mb_c = '>';
+		    c = '>';
+		    mb_c = c;
+		    mb_utf8 = FALSE;
 		    mb_l = 1;
 		    --ptr;
 		    /* FIXME: Bad hack! however it works */
@@ -2621,7 +2636,7 @@ win_line(wp, lnum, startrow, endrow)
 			c = ' ';
 		    }
 #ifdef FEAT_MBYTE
-		    mb_l = 1;	    /* don't draw as UTF-8 */
+		    mb_utf8 = FALSE;	/* don't draw as UTF-8 */
 #endif
 		}
 		else if (c == NUL && wp->w_p_list && lcs_eol != NUL)
@@ -2633,7 +2648,7 @@ win_line(wp, lnum, startrow, endrow)
 		    --ptr;	    /* put it back at the NUL */
 		    char_attr = hl_attr(HLF_AT);
 #ifdef FEAT_MBYTE
-		    mb_l = 1;	    /* don't draw as UTF-8 */
+		    mb_utf8 = FALSE;	/* don't draw as UTF-8 */
 #endif
 		}
 		else if (c != NUL)
@@ -2643,7 +2658,7 @@ win_line(wp, lnum, startrow, endrow)
 		    c_extra = NUL;
 		    c = *p_extra++;
 #ifdef FEAT_MBYTE
-		    mb_l = 1;	    /* don't draw as UTF-8 */
+		    mb_utf8 = FALSE;	/* don't draw as UTF-8 */
 #endif
 		}
 #ifdef FEAT_VIRTUALEDIT
@@ -2677,7 +2692,7 @@ win_line(wp, lnum, startrow, endrow)
 	    n_attr = 1;
 	    saved_attr2 = char_attr; /* save current attr */
 #ifdef FEAT_MBYTE
-	    mb_l = 1;		 /* (don't draw as UTF-8) */
+	    mb_utf8 = FALSE;	/* don't draw as UTF-8 */
 #endif
 	}
 
@@ -2777,7 +2792,7 @@ win_line(wp, lnum, startrow, endrow)
 #ifdef FEAT_MBYTE
 	    if (cc_utf8)
 	    {
-		if (mb_l > 1)
+		if (mb_utf8)
 		{
 		    ScreenLinesUC[off] = mb_c;
 		    ScreenLinesC1[off] = u8c_c1;
@@ -3442,17 +3457,23 @@ status_match_len(s)
 {
     int	len = 0;
 
+#ifdef FEAT_MENU
+    int emenu = (expand_context == EXPAND_MENUS
+				       || expand_context == EXPAND_MENUNAMES);
+
     /* Check for menu separators - replace with '|'. */
-    if (menu_is_separator(s))
+    if (emenu && menu_is_separator(s))
 	return 1;
+#endif
 
     while (*s != NUL)
     {
 	/* Don't display backslashes used for escaping, they look ugly. */
 	if (rem_backslash(s)
-		|| ((expand_context == EXPAND_MENUNAMES
-			|| expand_context == EXPAND_MENUS)
-		    && (s[0] == '\\' && s[1] != NUL)))
+#ifdef FEAT_MENU
+		|| (emenu && (s[0] == '\\' && s[1] != NUL))
+#endif
+		)
 	    ++s;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
@@ -3497,6 +3518,9 @@ win_redr_status_matches(num_matches, matches, match)
     static int	first_match = 0;
     int		add_left = FALSE;
     char_u	*s;
+#ifdef FEAT_MENU
+    int		emenu;
+#endif
 
     if (matches == NULL)	/* interrupted completion? */
 	return;
@@ -3572,17 +3596,25 @@ win_redr_status_matches(num_matches, matches, match)
 
 	s = L_MATCH(i);
 	/* Check for menu separators - replace with '|' */
-	if (menu_is_separator(s))
+#ifdef FEAT_MENU
+	emenu = (expand_context == EXPAND_MENUS
+				       || expand_context == EXPAND_MENUNAMES);
+	if (emenu && menu_is_separator(s))
 	{
-	    STRCPY(buf+len, transchar('|'));
-	    len+= STRLEN(buf+len);
+	    STRCPY(buf + len, transchar('|'));
+	    len += STRLEN(buf + len);
 	}
-	else for ( ; *s; ++s)
+	else
+#endif
+	    for ( ; *s; ++s)
 	{
 	    /* Don't display backslashes used for escaping, they look ugly. */
-	    if ( rem_backslash(s)
-		    || ((expand_context == EXPAND_MENUNAMES || expand_context == EXPAND_MENUS)
-		     && ( s[0] == '\t' || (s[0] == '\\' && s[1] != NUL))))
+	    if (rem_backslash(s)
+#ifdef FEAT_MENU
+		    || (emenu
+			  && (s[0] == '\t' || (s[0] == '\\' && s[1] != NUL)))
+#endif
+		    )
 		++s;
 	    STRCPY(buf + len, transchar(*s));
 	    len += STRLEN(buf + len);

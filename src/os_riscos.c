@@ -649,6 +649,13 @@ mch_nodetype(name)
 }
 
     void
+mch_init()
+{
+    /* Turn off all the horrible filename munging in UnixLib. */
+    __uname_control = __UNAME_NO_PROCESS;
+}
+
+    void
 mch_windexit(r)
     int r;
 {

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0j.  Last change: 2000 Oct 22
+*version6.txt*  For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -44,6 +44,7 @@ Ports					|ports-6|
 Quickfix extended			|quickfix-6|
 Operator modifiers			|new-operator-mod|
 Search Path				|new-search-path|
+Editing files over a network		|new-network-files|
 Writing files				|new-file-writing|
 Various new items			|new-items-6|
 
@@ -196,6 +197,12 @@ manual indenting with "=" still works.
 When formatting with "=" uses 'cindent' or 'indentexpr' indenting, and there
 is no change in indent, this is not counted as a change ('modified' isn't set
 and there is nothing to undo).
+
+The "Save As" menu entry now edits the saved file.  Most people expect it to
+work like this.
+
+Renamed <Return> to <Enter>, since that's what it's called on most keyboards.
+Thus it's now the hit-enter prompt instead of the hit-return prompt.
 
 ==============================================================================
 NEW FEATURES
@@ -464,6 +471,7 @@ Support for dec mouse in Unix. (Steve Wall)
 Port to 16-bit MS Windows (Windows 3.1x) (Vince Negri)
 
 Allow cross-compiling the Win32 version with Make_ming.mak. (Ron Aaron)
+Added Python support for compiling with Mingw. (Ron Aaron)
 
 
 Quickfix extended					*quickfix-6*
@@ -495,8 +503,23 @@ Search Path						*new-search-path*
 - Added 'suffixesadd', suffixes to be added to a file name when searching for
   a file for the "gf", "[I", etc. commands.
 
-							*new-file-writing*
-Writing files
+
+Editing files over a network				*new-network-files*
+----------------------------
+
+Files starting with scp://, rcp://, ftp:// and http:// are recognized as
+remote files.  An attempt is made to access these files with the indicated
+method.  For http:// only reading is possible, for the others writing is also
+supported.  Uses the netrw.vim script as a standard "plugin". |netrw|
+
+Made "gf" work on a URL.  It no longer assumes the file is local on the
+computer (mostly didn't work anyway, because the full path was required).
+Adjusted test2 for this.
+
+Allow using a URL in 'path'.  Makes ":find index.html" work.
+
+
+Writing files						*new-file-writing*
 -------------
 
 Added the 'backupcopy' option: Select whether a file is copied or renamed to
@@ -517,7 +540,7 @@ Interface to Ruby. (Shugo Maeda)
 :silent[!] cmd
 		Execute a command silently.
 		RISCOS: Removed that "!~cmd" didn't output anything, and
-		didn't wait for <Return> afterwards.  Can use ":silent !cmd"
+		didn't wait for <Enter> afterwards.  Can use ":silent !cmd"
 		now.
 
 :finish		Finish sourcing a file.  Can be used to skip the rest of a Vim
@@ -586,6 +609,9 @@ The preview window is now also used by these commands:
 |:psearch| searches for a word in included files, like |:ijump|, and
 displays the found text in the preview window.
 
+MS-DOS and MS-Windows also read the system-wide vimrc file $VIM/vimrc.  Mostly
+for NT systems with multiple users.
+
 ==============================================================================
 IMPROVEMENTS						*improvements-6*
 
@@ -630,6 +656,23 @@ Performance:
 - Improved speed of screen output for 32 bit DOS version. (Vince Negri)
 - When dragging with the mouse, there is a lookahead to skip mouse codes when
   there is another one next.  Makes dragging with the mouse a lot faster.
+
+Robustness:
+- Unix: Check for running out of stack space when executing a regexp.  Avoids
+  a nasty crash.  Only works when the system supports running the signal
+  function on another stack.
+- Unix: Added check for running out of stack space when matching a regexp.
+  Now it aborts with an error message.  Needs to be checked on many different
+  systems.
+
+Security:
+- When reading from or writing to a temporary file, check that it isn't a
+  symbolic link.  Gives some protection against symlink attacks.
+- When creating a backup file copy or a swap file, check for it already
+  existing to avoid a symlink attack. (Colin Phipps)
+
+Reduced the amount of stack space used by regmatch() to allow it to handle
+complicated patterns on a longer text.
 
 Syntax highlighting:
 - Optimized by caching the state stack all over the file, not just the part
@@ -758,7 +801,8 @@ When an xterm is in 8-bit mode this is detected by the code returned for
 |t_RV|.  All key codes are automatically converted to their 8-bit versions.
 
 The OPT_TCAP_QUERY in xterm patch level 141 and later is used to obtain the
-actual key codes used.  Only when |t_RV| is also used.
+actual key codes used and the number of colors for t_Co.  Only when |t_RV| is
+also used.
 
 ":browse set" now also works in the console mode.  ":browse edit" will give an
 error message.
@@ -902,7 +946,7 @@ previous message.
 When 'verbose' is set, the header from ":select" was put after the last
 message.  Now start a new line.
 
-The hit-return prompt reacted to the the response of the t_RV string, causing
+The hit-enter prompt reacted to the response of the t_RV string, causing
 messages at startup to disappear.
 
 When t_Co was set to 1, colors were still used.  Now only use color when t_Co
@@ -910,5 +954,15 @@ When t_Co was set to 1, colors were still used.  Now only use color when t_Co
 
 Listing functions with ":function" didn't quit when 'q' or ':' was typed at
 the more prompt.
+
+Use mkstemp() instead of mktemp() when it's available, avoids a warning for
+linking on FreeBSD.
+
+When doing Insert mode completion it's possible that b_sfname is NULL.  Don't
+give it to printf() for the "Scanning" message.
+
+":set runtimepath-=$VIMRUNTIME" didn't work, because expansion of wildcards
+was done after trying to remove the string.  Now for ":set opt+=val" and ":set
+opt-=val" the expansion of wildcards is done before adding or removing "val".
 
  vim:tw=78:

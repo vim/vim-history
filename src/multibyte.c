@@ -488,6 +488,8 @@ mb_ptr2len_check(p)
 utf_char2cells(c)
     int		c;
 {
+    if (c <= 0x9f && c >= 0x80)	    /* unprintable, displays <xx> */
+	return 4;
     if (c >= 0x1100
 	    && (c <= 0x115f			/* Hangul Jamo */
 		|| (c >= 0x2e80 && c <= 0xa4cf && (c & ~0x0011) != 0x300a
@@ -520,9 +522,9 @@ mb_ptr2cells(p)
     if (cc_utf8 && *p >= 0x80)
     {
 	c = utf_ptr2char(p);
-	/* If the char is equal to the first byte, must be an illegal byte. */
-	if (c == *p || c == NUL)
-	    return 4;			/* will become <xx> */
+	/* An illegal byte is displayed as <xx>. */
+	if (utf_ptr2len_check(p) == 1 || c == NUL)
+	    return 4;
 	/* If the char is ASCII it must be an overlong sequence. */
 	if (c < 0x80)
 	    return char2cells(c);

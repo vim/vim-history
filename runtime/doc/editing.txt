@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0j.  Last change: 2000 Aug 21
+*editing.txt*   For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -297,7 +297,7 @@ unmodified.
 <			To make gf always work like that: >
 				:map gf :e <cfile><CR>
 <			If the name is a hypertext link, that looks like
-			"type://machine/path", only "/path" is used.
+			"type://machine/path", you need the |netrw| plugin.
 			For Unix the '~' character is expanded, like in
 			"~user/file".  Environment variables are expanded too
 			|expand-env|.

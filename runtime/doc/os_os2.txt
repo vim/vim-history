@@ -1,4 +1,4 @@
-*os_os2.txt*    For Vim version 6.0j.  Last change: 2000 Jul 07
+*os_os2.txt*    For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Paul Slootman
@@ -57,7 +57,7 @@ not (read COPYING.EMX to find out what that means to you).
 
 This emx.dll is from the emxfix04.zip package, which unfortunately has a bug,
 eh, I mean a POSIX feature, in select().  Versions of Vim before 3.27 will
-appear to hang when starting (actually, while processing vimrc). Hit return a
+appear to hang when starting (actually, while processing vimrc). Hit <Enter> a
 couple of times until Vim starts working if this happens.  Next, get an up to
 date version of Vim!
 

@@ -111,7 +111,8 @@
 #	If you don't want to install everything, there are other targets:
 #		make installvim		only installs Vim, not the tools
 #		make installvimbin	only installs the Vim executable
-#		make installvimhelp	only installs the Vim help files
+#		make installruntime	only installs the Vim help and
+#							runtime files
 #		make installlinks	only installs the Vim binary links
 #		make installhelplinks	only installs the Vim manpage links
 #		make installmacros	only installs the Vim macros
@@ -783,10 +784,11 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60j
+VIMRTDIR = /vim60k
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
+PLUGSUBDIR = /plugin
 FTPLUGSUBDIR = /ftplugin
 LANGSUBDIR = /lang
 MACROSUBDIR = /macros
@@ -801,7 +803,8 @@ PODIR = po
 ### HELPSUBLOC	location for help files
 ### SYNSUBLOC	location for syntax files
 ### INDSUBLOC	location for indent files
-### FTPLUGSUBLOC	location for ftplugin files
+### PLUGSUBLOC	location for standard plugin files
+### FTPLUGSUBLOC  location for ftplugin files
 ### LANGSUBLOC	location for syntax files
 ### MACROSUBLOC	location for macro files
 ### TOOLSSUBLOC	location for tools files
@@ -815,6 +818,7 @@ VIMRCLOC	= $(VIMLOC)
 HELPSUBLOC	= $(VIMRTLOC)$(HELPSUBDIR)
 SYNSUBLOC	= $(VIMRTLOC)$(SYNSUBDIR)
 INDSUBLOC	= $(VIMRTLOC)$(INDSUBDIR)
+PLUGSUBLOC	= $(VIMRTLOC)$(PLUGSUBDIR)
 FTPLUGSUBLOC	= $(VIMRTLOC)$(FTPLUGSUBDIR)
 LANGSUBLOC	= $(VIMRTLOC)$(LANGSUBDIR)
 MACROSUBLOC	= $(VIMRTLOC)$(MACROSUBDIR)
@@ -838,6 +842,8 @@ SYNTAXENDLOC = $(SYNSUBLOC)
 #SYNTAXENDLOC = /usr/lib/vim/syntax
 INDENTENDLOC = $(INDSUBLOC)
 #INDENTENDLOC = /usr/lib/vim/indent
+PLUGINFTENDLOC = $(PLUGSUBLOC)
+#PLUGINFTENDLOC = /usr/lib/vim/plugin
 FTPLUGINFTENDLOC = $(FTPLUGSUBLOC)
 #FTPLUGINFTENDLOC = /usr/lib/vim/ftplugin
 LANGENDLOC = $(LANGSUBLOC)
@@ -920,7 +926,10 @@ SYNSOURCE = ../runtime/syntax
 # Where to copy the indent files from
 INDSOURCE = ../runtime/indent
 
-# Where to copy the indent files from
+# Where to copy the standard plugin files from
+PLUGSOURCE = ../runtime/plugin
+
+# Where to copy the ftplugin files from
 FTPLUGSOURCE = ../runtime/ftplugin
 
 # Where to copy the macro files from
@@ -1445,7 +1454,7 @@ testclean:
 #
 install: installvim installtools install-languages
 
-installvim: installvimbin installvimhelp installlinks installhelplinks installmacros installtutor
+installvim: installvimbin installruntime installlinks installhelplinks installmacros installtutor
 
 installvimbin: $(VIMTARGET) $(exec_prefix) $(BINDIR)
 	-if test -f $(BINDIR)/$(VIMTARGET); then \
@@ -1459,9 +1468,9 @@ installvimbin: $(VIMTARGET) $(exec_prefix) $(BINDIR)
 	-$(LINKIT)
 
 # install the help files; first adjust the contents for the location
-installvimhelp: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) \
+installruntime: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) \
 		$(HELPSUBLOC) $(SYNSUBLOC) $(INDSUBLOC) $(FTPLUGSUBLOC) \
-		$(TUTORSUBLOC)
+		$(PLUGSUBLOC) $(TUTORSUBLOC)
 	@echo generating $(MANSUBDIR)/$(VIMNAME).1
 	@sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
 		-e s+$(VIMLOC)/doc+$(HELPENDLOC)+ \
@@ -1520,6 +1529,9 @@ installvimhelp: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) \
 # install the indent files
 	cd $(INDSOURCE); $(INSTALL_DATA) *.vim $(INDSUBLOC)
 	cd $(INDSUBLOC); chmod $(HELPMOD) *.vim
+# install the standard plugin files
+	cd $(PLUGSOURCE); $(INSTALL_DATA) *.vim README.txt $(PLUGSUBLOC)
+	cd $(PLUGSUBLOC); chmod $(HELPMOD) *.vim README.txt
 # install the ftplugin files
 	cd $(FTPLUGSOURCE); $(INSTALL_DATA_R) * $(FTPLUGSUBLOC)
 	cd $(FTPLUGSUBLOC); chmod $(DIRMOD) *
@@ -1573,7 +1585,7 @@ $(HELPSOURCE)/vim.1 $(MACROSOURCE) $(TOOLSSOURCE):
 
 $(exec_prefix) $(BINDIR) $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUBLOC) \
 		$(SYNSUBLOC) $(INDSUBLOC) $(FTPLUGSUBLOC) $(LANGSUBLOC) \
-		$(MACROSUBLOC) $(TOOLSSUBLOC) $(TUTORSUBLOC):
+		$(MACROSUBLOC) $(TOOLSSUBLOC) $(TUTORSUBLOC) $(PLUGSUBLOC):
 	-$(SHELL) ./mkinstalldirs $@
 	-chmod $(DIRMOD) $@
 
@@ -1653,6 +1665,8 @@ uninstall_runtime:
 	-rm -f $(SYS_MENU_FILE) $(SYS_BUGR_FILE)
 	-rm -f $(SCRIPTLOC)/gvimrc_example.vim $(SCRIPTLOC)/vimrc_example.vim
 	-rm -f $(SYS_FILETYPE_FILE) $(SYS_FTOFF_FILE) $(SYS_SCRIPTS_FILE)
+	-rm -f $(SYS_INDOFF_FILE) $(SYS_INDENT_FILE)
+	-rm -f $(SYS_FTPLUGOF_FILE) $(SYS_FTPLUGIN_FILE)
 	-rm -f $(SYS_OPTWIN_FILE)
 	-rm -f $(SYNSUBLOC)/*.vim $(INDSUBLOC)/*.vim
 	-rm -rf $(MACROSUBLOC)
@@ -1661,7 +1675,8 @@ uninstall_runtime:
 	-rm -rf $(LANGSUBLOC)
 	-rmdir $(HELPSUBLOC) $(SYNSUBLOC) $(INDSUBLOC) $(VIMRTLOC)
 	-rm -rf $(FTPLUGSUBLOC)/*/*.vim $(FTPLUGSUBLOC)/README.txt
-	-rmdir $(FTPLUGSUBLOC)/* $(FTPLUGSUBLOC)
+	-rm -f $(PLUGSUBLOC)/*.vim $(PLUGSUBLOC)/README.txt
+	-rmdir $(FTPLUGSUBLOC)/* $(FTPLUGSUBLOC) $(PLUGSUBLOC)
 
 # Clean up all the files that have been produced, except configure's.
 # We support common typing mistakes for Juergen! :-)
@@ -1681,7 +1696,7 @@ shadow:	runtime pixmaps
 	mkdir $(SHADOWDIR)
 	cd $(SHADOWDIR); ln -s ../*.[ch] ../*.in ../*.sh ../*.xs ../*.xbm ../toolcheck ../proto ../vimtutor ../mkinstalldirs .
 	mkdir $(SHADOWDIR)/auto
-	cd $(SHADOWDIR)/auto ln -s ../../auto/configure .
+	cd $(SHADOWDIR)/auto; ln -s ../../auto/configure .
 	cd $(SHADOWDIR); rm -f auto/link.sed
 	cp Makefile configure $(SHADOWDIR)
 	@echo generating auto/config.mk

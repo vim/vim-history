@@ -1,4 +1,4 @@
-*os_riscos.txt* For Vim version 6.0j.  Last change: 2000 Jul 07
+*os_riscos.txt* For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Thomas Leonard
@@ -263,7 +263,7 @@ Some examples may make this clearer:
   since many pathnames contain them.
 
 - You can prefix the command with '~', which stops any output from being
-  displayed. This also means that you don't have to press Return afterwards,
+  displayed. This also means that you don't have to press <Enter> afterwards,
   and stops the screen from being redrawn. {only in the GUI version}
 
 ==============================================================================

@@ -12,10 +12,8 @@
 # include <fcntl.h>	    /* for chdir() */
 #endif
 
-#if defined(FEAT_WINDOWS) || defined(PROTO)
-#ifdef FEAT_SEARCHPATH
 static int path_is_url __ARGS((char_u *p));
-#endif
+#if defined(FEAT_WINDOWS) || defined(PROTO)
 static int win_comp_pos __ARGS((void));
 static void frame_comp_pos __ARGS((frame_t *topfrp, int *row, int *col));
 static void frame_setheight __ARGS((frame_t *curfrp, int height));
@@ -1509,6 +1507,9 @@ win_close(win, free_buf)
 #endif
     int		close_curwin = FALSE;
     frame_t	*frp, *frp2;
+#ifdef FEAT_VERTSPLIT
+    int		dir;
+#endif
 
     if (lastwin == firstwin)
     {
@@ -1571,13 +1572,19 @@ win_close(win, free_buf)
 
 #ifdef FEAT_VERTSPLIT
     if (frp->fr_parent->fr_layout == FR_COL)
+    {
 #endif
 	frame_new_height(frp2, frp2->fr_height + frp->fr_height,
 					 frp2 == frp->fr_next ? TRUE : FALSE);
 #ifdef FEAT_VERTSPLIT
+	dir = 'v';
+    }
     else
+    {
 	frame_new_width(frp2, frp2->fr_width + frp->fr_width,
 					 frp2 == frp->fr_next ? TRUE : FALSE);
+	dir = 'h';
+    }
 #endif
 
     vim_free(frp);
@@ -1607,7 +1614,13 @@ win_close(win, free_buf)
 	close_curwin = TRUE;
     }
     if (p_ea)
-	win_equal(curwin, 0);
+	win_equal(curwin,
+#ifdef FEAT_VERTSPLIT
+		dir
+#else
+		0
+#endif
+		);
     else
 	win_comp_pos();
     if (close_curwin)
@@ -2544,13 +2557,8 @@ win_free(wp)
     ruby_window_free(wp);
 #endif
 
-#ifdef FEAT_FOLDING
-    free_string_option(wp->w_p_fde);
-    free_string_option(wp->w_p_fdi);
-    free_string_option(wp->w_p_fdm);
-    free_string_option(wp->w_p_fdt);
-    free_string_option(wp->w_p_fmr);
-#endif
+    clear_winopt(&wp->w_onebuf_opt);
+    clear_winopt(&wp->w_allbuf_opt);
 
 #ifdef FEAT_EVAL
     var_clear(&wp->w_vars);	    /* free all internal variables */
@@ -3696,7 +3704,6 @@ get_file_name_in_path(line, col, options, count)
 {
     char_u	*ptr;
     char_u	*file_name;
-    char_u	*path;
     int		len;
     int		first;
 #if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
@@ -3717,15 +3724,12 @@ get_file_name_in_path(line, col, options, count)
     }
 
     /*
-     * search backward for first char of the file name
-     */
-    while (ptr > line && vim_isfilec(ptr[-1]))
-	--ptr;
-
-    /*
+     * Search backward for first char of the file name.
      * Go one char back to ":" before "//" even when ':' is not in 'isfname'.
      */
-    if ((options & FNAME_HYP) && ptr > line && path_is_url(ptr - 1))
+    while (ptr > line
+	    && (vim_isfilec(ptr[-1])
+		|| ((options & FNAME_HYP) && path_is_url(ptr - 1))))
 	--ptr;
 
     /*
@@ -3742,8 +3746,19 @@ get_file_name_in_path(line, col, options, count)
 #endif
 	    ++len;
 
+    /*
+     * If there is trailing punctuation, remove it.
+     * But don't remove "..", could be a directory name.
+     */
+    if (len > 2 && vim_strchr((char_u *)".,:;!", ptr[len - 1]) != NULL
+						       && ptr[len - 2] != '.')
+	--len;
+
+#if 0
     if (options & FNAME_HYP)
     {
+	char_u	*path;
+
 	/* For hypertext links, ignore the name of the machine.
 	 * Such a link looks like "type://machine/path". Only "/path" is used.
 	 * First search for the string "://", then for the extra '/'
@@ -3764,6 +3779,7 @@ get_file_name_in_path(line, col, options, count)
 	    }
 	}
     }
+#endif
 
 #if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
     if ((options & FNAME_INCL) && *curbuf->b_p_inex != NUL)
@@ -3807,6 +3823,7 @@ get_file_name_in_path(line, col, options, count)
     return file_name;
 
 }
+#endif /* FEAT_SEARCHPATH */
 
 /*
  * Check if the "://" of a URL is at the pointer, return URL_SLASH.
@@ -3823,7 +3840,22 @@ path_is_url(p)
 	return URL_BACKSLASH;
     return 0;
 }
-#endif /* FEAT_SEARCHPATH */
+
+/*
+ * Check if "fname" starts with "name://".  Return URL_SLASH if it does.
+ * Return URL_BACKSLASH for "name:\\".
+ * Return zero otherwise.
+ */
+    int
+path_with_url(fname)
+    char_u *fname;
+{
+    char_u *p;
+
+    for (p = fname; isalpha(*p); ++p)
+	;
+    return path_is_url(p);
+}
 
 /*
  * Return the minimal number of rows that is needed on the screen to display

@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0j.  Last change: 2000 Oct 15
+*syntax.txt*    For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2491,7 +2491,7 @@ MoreMsg		|more-prompt|
 NonText		'~' and '@' at the end of the window and characters from
 		'showbreak'
 							*hl-Question*
-Question	|hit-return| prompt and yes/no questions
+Question	|hit-enter| prompt and yes/no questions
 							*hl-SpecialKey*
 SpecialKey	Meta and special keys listed with ":map"
 							*hl-StatusLine*

@@ -489,6 +489,19 @@ EXTERN int	vr_lines_changed INIT(= 0); /* #Lines changed by "gR" so far */
 EXTERN colnr_t	vr_virtcol INIT(= MAXCOL);  /* Virtual column for "gR" */
 EXTERN int	vr_virtoffset INIT(= 0);  /* Offset when columns can't align */
 
+#if defined(HAVE_SETJMP_H)
+/*
+ * Stuff for setjmp() and longjmp().
+ * Used to protect areas where we could crash.
+ */
+EXTERN JMP_BUF lc_jump_env;	/* argument to SETJMP() */
+# ifdef FEAT_EVAL
+EXTERN int lc_signal;		/* catched signal number, 0 when no was signal
+				   catched; used for mch_libcall() */
+# endif
+EXTERN int lc_active INIT(= FALSE); /* TRUE when lc_jump_env is valid. */
+#endif
+
 #ifdef FEAT_MBYTE
 /*
  * These flags are set based upon 'fileencoding'.

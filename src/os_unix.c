@@ -175,22 +175,6 @@ static int	deadly_signal = 0;	    /* The signal we caught */
 
 static int curr_tmode = TMODE_COOK;	/* contains current terminal mode */
 
-#if defined(HAVE_SETJMP_H)
-# ifdef HAVE_SIGSETJMP
-static sigjmp_buf lc_jump_env;
-#  define SETJMP(x) sigsetjmp(x, 1)
-#  define LONGJMP siglongjmp
-# else
-static jmp_buf lc_jump_env;
-#  define SETJMP(x) setjmp(x)
-#  define LONGJMP longjmp
-# endif
-# ifdef FEAT_EVAL
-static int lc_signal;
-# endif
-static int lc_active = FALSE;
-#endif
-
 #ifdef SYS_SIGLIST_DECLARED
 /*
  * I have seen
@@ -503,6 +487,103 @@ mch_delay(msec, ignoreinput)
 	WaitForChar(msec);
 }
 
+#if defined(HAVE_GETRLIMIT) \
+	|| (!defined(HAVE_SIGALTSTACK) && defined(HAVE_SIGSTACK))
+# define HAVE_CHECK_STACK_GROWTH
+/*
+ * Support for checking for an almost-out-of-stack-space situation.
+ */
+
+/*
+ * Return a pointer to an item on the stack.  Used to find out if the stack
+ * grows up or down.
+ */
+static void check_stack_growth __ARGS((char *p));
+static int stack_grows_downwards;
+
+/*
+ * Find out if the stack grows upwards or downwards.
+ * "p" points to a variable on the stack of the caller.
+ */
+    static void
+check_stack_growth(p)
+    char	*p;
+{
+    int		i;
+
+    stack_grows_downwards = (p > (char *)&i);
+}
+#endif
+
+#if defined(HAVE_GETRLIMIT) || defined(PROTO)
+static char *stack_limit = NULL;
+
+/*
+ * Return FAIL when running out of stack space.
+ * This assumes a stack that grows downwards.  If it grows in the other
+ * direction the check won't work but doesn't cause problems.
+ * "p" must point to any variable local to the caller that's on the stack.
+ */
+    int
+mch_stackcheck(p)
+    char	*p;
+{
+    if (stack_limit != NULL)
+    {
+	if (stack_grows_downwards)
+	{
+	    if (p < stack_limit)
+		return FAIL;
+	}
+	else if (p > stack_limit)
+	    return FAIL;
+    }
+    return OK;
+}
+#endif
+
+#if defined(HAVE_SIGALTSTACK) || defined(HAVE_SIGSTACK)
+/*
+ * Support for using the signal stack.
+ * This helps when we run out of stack space, which causes a SIGSEGV.  The
+ * signal handler then must run on another stack, since the normal stack is
+ * completely full.
+ */
+
+#ifndef SIGSTKSZ
+# define SIGSTKSZ 8000    /* just a guess of how much stack is needed... */
+#endif
+
+# ifdef HAVE_SIGALTSTACK
+static stack_t sigstk;	/* for sigaltstack() */
+# else
+static sigstack sigstk;	/* for sigstack() */
+# endif
+
+static void init_signal_stack __ARGS((void));
+static char *signal_stack;
+
+    static void
+init_signal_stack()
+{
+    if (signal_stack != NULL)
+    {
+# ifdef HAVE_SIGALTSTACK
+	sigstk.ss_sp = signal_stack;
+	sigstk.ss_size = SIGSTKSZ;
+	sigstk.ss_flags = 0;
+	(void)sigaltstack(&sigstk, NULL);
+# else
+	sigstk.ss_sp = signal_stack;
+	if (stack_grows_downwards)
+	    sigstk.ss_sp += SIGSTKSZ - 1;
+	sigstk.ss_onstack = 0;
+	(void)sigstack(&sigstk, NULL);
+# endif
+    }
+}
+#endif
+
 /*
  * We need correct potatotypes for a signal function, otherwise mean compilers
  * will barf when the second argument to signal() is ``wrong''.
@@ -545,41 +626,52 @@ sig_alarm SIGDEFARG(sigarg)
 }
 #endif
 
+#if defined(HAVE_SETJMP_H) || defined(PROTO)
 /*
  * A simplistic version of setjmp() that only allows one level of using.
  * Don't call twice before calling mch_endjmp()!.
  * Usage:
- *	if (mch_setjmp() == FAIL)
- *	    EMSG("crash!")
+ *	mch_startjmp()
+ *	if (SETJMP(lc_jump_env) != 0)
+ *	{
+ *	    mch_didjmp();
+ *	    EMSG("crash!");
+ *	}
  *	else
  *	{
  *	    do_the_work;
  *	    mch_endjmp();
  *	}
+ * Note: Can't move SETJMP() here, because a function calling setjmp() must
+ * not return before the saved environment is used.
  * Returns OK for normal return, FAIL when the protected code caused a
  * problem and LONGJMP() was used.
  */
-    int
-mch_setjmp()
+    void
+mch_startjmp()
 {
-#if defined(HAVE_SETJMP_H)
 # ifdef FEAT_EVAL
     lc_signal = 0;
 # endif
     lc_active = TRUE;
-    if (SETJMP(lc_jump_env) != 0)
-	return FAIL;
-#endif
-    return OK;
 }
 
     void
 mch_endjmp()
 {
-#if defined(HAVE_SETJMP_H)
     lc_active = FALSE;
-#endif
 }
+
+    void
+mch_didjmp()
+{
+# if defined(HAVE_SIGALTSTACK) || defined(HAVE_SIGSTACK)
+    /* On FreeBSD the signal stack has to be reset after using siglongjmp(),
+     * otherwise catching the signal only works once. */
+    init_signal_stack();
+# endif
+}
+#endif
 
 /*
  * This function handles deadly signals.
@@ -596,14 +688,16 @@ deathtrap SIGDEFARG(sigarg)
 
 #if defined(HAVE_SETJMP_H)
     /*
-     * Catch a crash in protected code.  Jump back to mch_setjmp().
+     * Catch a crash in protected code.
+     * Restores the environment saved in lc_jump_env, which looks like
+     * SETJMP() returns 1.
      */
     if (lc_active)
     {
-# ifdef FEAT_EVAL
+# if defined(FEAT_EVAL) && defined(SIGHASARG)
 	lc_signal = sigarg;
 # endif
-	lc_active = FALSE;
+	lc_active = FALSE;	/* don't jump again */
 	LONGJMP(lc_jump_env, 1);
 	/* NOTREACHED */
     }
@@ -796,7 +890,29 @@ catch_signals(func_deadly, func_other)
 
     for (i = 0; signal_info[i].sig != -1; i++)
 	if (signal_info[i].deadly)
+	{
+#if defined(HAVE_SIGALTSTACK) && defined(HAVE_SIGACTION)
+	    struct sigaction sa;
+
+	    /* Setup to use the alternate stack for the signal function. */
+	    sa.sa_handler = func_deadly;
+	    sigemptyset(&sa.sa_mask);
+	    sa.sa_flags = SA_ONSTACK;
+	    sigaction(signal_info[i].sig, &sa, NULL);
+#else
+# if defined(HAVE_SIGALTSTACK) && defined(HAVE_SIGVEC)
+	    struct sigvec sv;
+
+	    /* Setup to use the alternate stack for the signal function. */
+	    sv.sv_handler = func_deadly;
+	    sv.sv_mask = 0;
+	    sv.sv_flags = SV_ONSTACK;
+	    sigvec(signal_info[i].sig, &sv, NULL);
+# else
 	    signal(signal_info[i].sig, func_deadly);
+# endif
+#endif
+	}
 	else if (func_other != SIG_ERR)
 	    signal(signal_info[i].sig, func_other);
 }
@@ -1836,6 +1952,41 @@ mch_nodetype(name)
 #endif
     /* Everything else is writable? */
     return NODE_WRITABLE;
+}
+
+    void
+mch_init()
+{
+    int			i;
+#ifdef HAVE_GETRLIMIT
+    struct rlimit	rlp;
+#endif
+
+#ifdef HAVE_CHECK_STACK_GROWTH
+    check_stack_growth((char *)&i);
+
+# ifdef HAVE_GETRLIMIT
+    /* Set the stack limit to 15/16 of the allowable size. */
+    if (getrlimit(RLIMIT_STACK, &rlp) == 0)
+    {
+	if (stack_grows_downwards)
+	    stack_limit = (char *)((long)&i - ((long)rlp.rlim_cur / 16L * 15L));
+	else
+	    stack_limit = (char *)((long)&i + ((long)rlp.rlim_cur / 16L * 15L));
+    }
+# endif
+#endif
+
+    /*
+     * Setup an alternative stack for signals.  Helps to catch signals when
+     * running out of stack space.
+     * Use of sigaltstack() is preferred, it's more portable.
+     * Ignore any errors.
+     */
+#if defined(HAVE_SIGALTSTACK) || defined(HAVE_SIGSTACK)
+    signal_stack = malloc(SIGSTKSZ);
+    init_signal_stack();
+#endif
 }
 
     void
@@ -3702,9 +3853,9 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 	return FAIL;
     }
 
-/*
- * read the names from the file into memory
- */
+    /*
+     * read the names from the file into memory
+     */
     fd = fopen((char *)tempname, "r");
     if (fd == NULL)
     {
@@ -3761,7 +3912,8 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 	    p = skipwhite(p);		/* skip leading white space */
 	}
     }
-    else /* file names are separated with NUL */
+    /* file names are separated with NUL */
+    else
     {
 	/*
 	 * Some versions of zsh use spaces instead of NULs to separate
@@ -4162,7 +4314,8 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 	 * Catch a crash when calling the library function.  For example when
 	 * using a number where a string pointer is expected.
 	 */
-	if (mch_setjmp() == FAIL)
+	mch_startjmp();
+	if (SETJMP(lc_jump_env) != 0)
 	    success = FALSE;
 	else
 # endif

@@ -39,6 +39,23 @@ CROSS=0
 PERLLIB=c:/perl/lib
 PERLLIBS=$(PERLLIB)/core
 
+# Python support -- works with the ActiveState python 2.0 release (and others
+# too, probably)
+# 
+# uncomment 'PYTHON' to make python-enabled version
+# Put the path to the python distro here.  If cross compiling from Linux, you
+# will also need to convert the header files to unix instead of dos format:
+#   for fil in *.h ; do vim -e -c 'set ff=unix|w|q' $fil
+# and also, you will need to make a mingw32 'libpython20.a' to link with:
+#   cd $PYTHON/libs
+#   pexports python20.dll > python20.def
+#   dlltool -d python20.def -l libpython20.a
+#PYTHON=c:/Python20
+ifdef PYTHON
+PYTHONLIB=-L$(PYTHON)/libs -lpython20
+PYTHONINC=-I $(PYTHON)/include
+endif
+
 # See feature.h for a list of options.
 # Any other defines can be included here.
 DEF_GUI=-DFEAT_GUI_W32 -DFEAT_CLIPBOARD -DFEAT_BIG
@@ -64,6 +81,10 @@ CFLAGS += -march=$(ARCH) -mcpu=$(CPU) -Wall
 
 ifdef PERL
 CFLAGS += -I$(PERLLIBS) -DFEAT_PERL -L$(PERLLIBS)
+endif
+
+ifdef PYTHON
+CFLAGS += -DFEAT_PYTHON $(PYTHONINC)
 endif
 
 ifeq ($(DEBUG),1)
@@ -96,6 +117,9 @@ SRC    =  os_w32exe.c buffer.c charset.c digraph.c edit.c eval.c ex_cmds.c \
 ifdef PERL
 SRC += if_perl.c
 endif
+ifdef PYTHON
+SRC += if_python.c
+endif
 
 GUIOBJ = $(GUISRC:.c=.o)
 OBJ    = $(SRC:.c=.o)
@@ -113,7 +137,7 @@ vim.exe: $(OBJ)
 
 gvim.exe: DEFINES+=$(DEF_GUI)
 gvim.exe: $(OBJ) $(GUIOBJ)
-	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ -mwindows $(LIB)
+	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ -mwindows $(LIB) $(PYTHONLIB)
 
 exes:
 	@$(DEL) *.o

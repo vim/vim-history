@@ -3229,6 +3229,7 @@ nv_gd(oap, nchar)
 	while (curwin->w_cursor.lnum > 1 && *skipwhite(ml_get_curline()) != NUL)
 	    --curwin->w_cursor.lnum;
     }
+    curwin->w_cursor.col = 0;
 
     /* Search forward for the identifier, ignore comment lines. */
     while ((t = searchit(curbuf, &curwin->w_cursor, FORWARD, pat, 1L, 0,
@@ -4500,7 +4501,8 @@ nv_gotofile(cap)
 	if (curbufIsChanged() && curbuf->b_nwindows <= 1 && !P_HID(curbuf))
 	    autowrite(curbuf, FALSE);
 	setpcmark();
-	(void)do_ecmd(0, ptr, NULL, NULL, ECMD_LAST, P_HID(curbuf) ? ECMD_HIDE : 0);
+	(void)do_ecmd(0, ptr, NULL, NULL, ECMD_LAST,
+					       P_HID(curbuf) ? ECMD_HIDE : 0);
 	vim_free(ptr);
     }
     else

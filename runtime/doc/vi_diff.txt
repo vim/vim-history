@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.0j.  Last change: 2000 Oct 15
+*vi_diff.txt*   For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -684,7 +684,7 @@ filesystem under Unix.  See |'shortname'|.
 
 Error messages are shown at least one second (Vi overwrites error messages).
 
-If Vim gives the |hit-return| prompt, you can hit any key.  Characters other
+If Vim gives the |hit-enter| prompt, you can hit any key.  Characters other
 than <CR>, <NL> and <Space> are interpreted as the (start of) a command.  (Vi
 only accepts a command starting with ':').
 

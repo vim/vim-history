@@ -244,6 +244,6 @@ vim.cfg: Makefile
 
 test:
 	cd testdir
-	copy makefile.dos makefile
+	copy make_dos.mak makefile
 	$(MAKE) small
 	cd ..

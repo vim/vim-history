@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.0j.  Last change: 2000 Oct 20
+*term.txt*      For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -545,7 +545,7 @@ be used by Vim:
 		c	Command-line mode
 		h	all previous modes when in a help file
 		a	all previous modes
-		r	for |hit-return| prompt
+		r	for |hit-enter| prompt
 		A	auto-select in Visual mode
 
 The default for 'mouse' is empty, the mouse is not used.  Normally you would

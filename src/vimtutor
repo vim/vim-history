@@ -3,7 +3,7 @@
 # Start Vim on a copy of the tutor file.
 
 # Use Vim to copy the tutor, it knows the value of $VIMRUNTIME
-TUTORCOPY=/tmp/tutor$$
+TUTORCOPY=`tempfile -p tutor || mktemp /tmp/tutorXXXXXX || echo /tmp/tutor$$`
 export TUTORCOPY
 vim -u NONE -c 'e $VIMRUNTIME/tutor/tutor' -c 'w! $TUTORCOPY' -c 'q'
 

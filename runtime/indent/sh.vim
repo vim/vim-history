@@ -1,10 +1,10 @@
 " Vim indent file
 " Language:	Shell script
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:	2000/09/08
+" Last Change:	2000 Oct 23
 
 setlocal indentexpr=GetShIndent()
-setlocal cinkeys+==else,=esac,=fi,=done
+setlocal indentkeys+==else,=esac,=fi,=done
 
 " Only define the function once.
 if exists("*GetShIndent")

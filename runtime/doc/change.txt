@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0j.  Last change: 2000 Oct 13
+*change.txt*    For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1133,7 +1133,7 @@ t	Auto-wrap text using textwidth
 c	Auto-wrap comments using textwidth, inserting the current comment
 	leader automatically.
 r	Automatically insert the current comment leader after hitting
-	<return> in insert mode.
+	<Enter> in insert mode.
 o	Automatically insert the current comment leader after hitting 'o' or
 	'O' in Normal mode.
 q	Allow formatting of comments with "gq".
@@ -1275,7 +1275,7 @@ Special key names:
 ^	Letters preceded by a caret (^) are control characters.  For example:
 	"^F" is CTRL-F.
 o	Reindent a line when you use the "o" command or when Vim opens a new
-	line below the current one (e.g., when you type <Return> in insert
+	line below the current one (e.g., when you type <Enter> in insert
 	mode).
 O	Reindent a line when you use the "O" command.
 e	Reindent a line that starts with "else" when you type the second 'e'.
@@ -1294,7 +1294,7 @@ If you really want to reindent when you type 'o', 'O', 'e', '0', '<', '>',
 "<!>", respectively, for those keys.
 
 For an emacs-style indent mode where lines aren't indented every time you
-press Return but only if you press Tab, I suggest:
+press Enter but only if you press Tab, I suggest:
 	:set cinkeys=0{,0},:,0#,!<Tab>,!^F
 You might also want to switch off 'autoindent' then.
 

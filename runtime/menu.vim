@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Oct 21
+" Last Change:	2000 Oct 28
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -56,7 +56,7 @@ amenu 10.325 &File.&New<Tab>:enew		:confirm enew<CR>
 amenu 10.330 &File.&Close<Tab>:q		:confirm q<CR>
 amenu 10.335 &File.-SEP1-			:
 amenu 10.340 &File.&Save<Tab>:w			:confirm w<CR>
-amenu 10.350 &File.Save\ &As\.\.\.<Tab>:w	:browse confirm w<CR>
+amenu 10.350 &File.Save\ &As\.\.\.<Tab>:w	:browse confirm w<Bar>silent edit #<CR>
 if has("win32")
   amenu 10.355 &File.-SEP2-			:
   " Use Notepad for printing. ":w >> prn" doesn't work for PostScript printers.

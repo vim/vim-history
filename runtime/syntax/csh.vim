@@ -2,9 +2,7 @@
 " Language:	C-shell (csh)
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Version:	1.02
-" Last Change:	August 11, 2000
-" History:
-"   v1.02: contains improved HereDoc handling for v6.0
+" Last Change:	September 19, 2000
 
 " Remove any old syntax stuff hanging around
 syn clear

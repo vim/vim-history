@@ -1,8 +1,9 @@
-*netrw.txt*    For Vim version 6.0h.  Last change: 2000 Aug 23
+*pi_netrw.txt*   For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Charles E. Campbell, Jr.
 
+*http* *scp* *rcp*
 
 Network-Oriented File Transfers with Vim		*netrw* *network*
 1. Network-Oriented File Transfer			|netrw-xfer|
@@ -12,25 +13,31 @@ Network-Oriented File Transfers with Vim		*netrw* *network*
 
 {Vi does not have any of these commands}
 
-Netrw is only available if nocompatible mode is set.
-
+Netrw is only available if 'compatible' is not set.
 
 ==============================================================================
 1. Network-Oriented File Transfer			*netrw-xfer*
 
 Network-oriented file transfer under Vim is implemented by a VimL-based
 script (<netrw.vim>).  It currently supports both reading and writing
-across networks using rcp, ftp, or ftp+<.netrc> as appropriate.
- >
-    Reading				Writing			Uses
+across networks using rcp, scp, ftp, or ftp+<.netrc> as appropriate.
+http is supported read-only.
+ 
+    Reading				Writing			Uses ~
     --------------------------	---------------------------	----------
     * rcp://machine/path	* rcp://machine/path		rcp
-    :Nr "rcp://machine/path"	:Nw "rcp://machine/path		rcp
+    :Nr rcp://machine/path	:Nw rcp://machine/path		rcp
+
+    * scp://machine/path	* scp://machine/path		scp
+    :Nr scp://machine/path	:Nw scp://machine/path		scp
 
     * ftp://machine/path	* ftp://machine/path		ftp
-    :Nr "ftp://machine/path"	:Nw "ftp://machine/path		ftp+(**)
-    :Nr "machine path"		:Nw "machine path"		ftp+.netrc
-    :Nr "machine uid pass path"	:Nw "machine uid pass path"	ftp
+    :Nr ftp://machine/path	:Nw ftp://machine/path		ftp+(**)
+    :Nr machine path		:Nw machine path		ftp+.netrc
+    :Nr machine uid pass path	:Nw machine uid pass path	ftp
+
+    * http://machine/path					wget
+    :Nr http://machine/path					wget
 
 	(*) transparent file transfer: i.e. vim rcp://machine/path
 	                                    :r  ftp://machine/path
@@ -40,16 +47,16 @@ across networks using rcp, ftp, or ftp+<.netrc> as appropriate.
 	     work with your ftp client.  Otherwise the script will
 	     prompt for user-id and pasword.
 
-Both the :Nr and the :Nw command can accept multiple filenames:
- >
+Both the :Nr and the :Nw command can accept multiple filenames: >
+
 	:Nr rcp://machine/path1 rcp://machine/path2
 
 
 NETRC							*netrw-netrc*
 
 The ftp transfers can make use of the optional <.netrc> file.  The typical
-syntax for lines in a <.netrc> file is given as shown below.
- >
+syntax for lines in a <.netrc> file is given as shown below. >
+
 	machine {full machine name} login {user-id} password "{password}"
 	default                     login {user-id} password "{password}"
 
@@ -62,8 +69,8 @@ PASSWORD						*netrw-passwd*
 
 The script attempts to get passwords for ftp invisibly.  If the user has
 explicitly specified both foreground and background colors for Normal
-highlighting (see following example)
- >
+highlighting (see following example) >
+
   hi Normal      term=NONE cterm=NONE gui=NONE  start=<Esc>[m<Esc>[1;32;m
   \              stop=t_me   guifg=green      guibg=navyblue  ctermfg=2
 
@@ -73,7 +80,7 @@ one has set it.
 
 
 ==============================================================================
-2. Activation						*netrw-activation*
+2. Activation						*netrw-activate*
 
 Network-oriented file transfers are available by default whenever
 |'nocompatible'| mode is enabled.
@@ -82,9 +89,9 @@ Network-oriented file transfers are available by default whenever
 TRANSPARENT FILE TRANSFER				*netrw-transparent*
 
 Transparent file transfers occur whenever a regular file read or write
-(invoked via an |autocmd| for |BufReadCmd| or |BufWriteCmd| events) is
-made.  Thus one may use files across networks as if they were local.
- >
+(invoked via an |:autocmd| for |BufReadCmd| or |BufWriteCmd| events) is
+made.  Thus one may use files across networks as if they were local. >
+
 	vim ftp://machine/path
 	...
 	:wq

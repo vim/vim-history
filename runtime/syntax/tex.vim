@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:    TeX
-" Version:     6.0-3
+" Version:     6.0-4
 " Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: September 28, 2000	NOT RELEASED
+" Last Change: October 18, 2000
 "
 " Notes:
 " 1. If you have a \begin{verbatim} that appears to overrun its boundaries,
@@ -23,7 +23,8 @@
 syn clear
 
 " (La)TeX keywords only use the letters a-zA-Z
-set isk=a-z,A-Z
+" but _ is the only one that causes problems.
+set isk-=_
 
 " Clusters
 " --------

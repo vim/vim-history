@@ -1,5 +1,5 @@
 /* memfile.c */
-memfile_t *mf_open __ARGS((char_u *fname, int trunc_file));
+memfile_t *mf_open __ARGS((char_u *fname, int flags));
 int mf_open_file __ARGS((memfile_t *mfp, char_u *fname));
 void mf_close __ARGS((memfile_t *mfp, int del_file));
 void mf_close_file __ARGS((buf_t *buf, int getlines));

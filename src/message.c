@@ -771,9 +771,9 @@ hit_return_msg()
 	MSG_PUTS(_("Interrupt: "));
 
 #ifdef ORG_HITRETURN
-    MSG_PUTS_ATTR(_("Press RETURN to continue"), hl_attr(HLF_R));
+    MSG_PUTS_ATTR(_("Hit ENTER to continue"), hl_attr(HLF_R));
 #else
-    MSG_PUTS_ATTR(_("Press RETURN or enter command to continue"), hl_attr(HLF_R));
+    MSG_PUTS_ATTR(_("Hit ENTER or type command to continue"), hl_attr(HLF_R));
 #endif
     if (!msg_use_printf())
 	msg_clr_eos();
@@ -971,7 +971,7 @@ msg_outtrans_len_attr(str, len, attr)
 	    if (vim_isprintc(c))
 	    {
 		msg_puts_attr(buf, attr);
-		retval += mb_ptr2cells(str);
+		retval += mb_ptr2cells(buf);
 	    }
 	    else
 	    {

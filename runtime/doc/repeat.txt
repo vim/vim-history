@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0j.  Last change: 2000 Oct 18
+*repeat.txt*    For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -180,11 +180,11 @@ have to type any needed keyboard input.  The ':source!' command reads from a
 script file character by character, interpreting each character as if you
 typed it.
 
-Example: When you give the ":!ls" command you get the |hit-return| prompt.  If
+Example: When you give the ":!ls" command you get the |hit-enter| prompt.  If
 you ':source' a file with the line "!ls" in it, you will have to type the
-return yourself.  But if you ':source!' a file with the line ":!ls" in it, the
-next characters from that file are read until a <CR> is found.  You will not
-have to type <CR> yourself, unless ":!ls" was the last line in the file.
+<Enter> yourself.  But if you ':source!' a file with the line ":!ls" in it,
+the next characters from that file are read until a <CR> is found.  You will
+not have to type <CR> yourself, unless ":!ls" was the last line in the file.
 
 It is possible to put ':source[!]' commands in the script file, so you can
 make a top-down hierarchy of script files.  The ':source' command can be

@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0j.  Last change: 2000 Aug 22
+*windows.txt*   For Vim version 6.0k.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -394,7 +394,7 @@ have manually resized a vertically split window and want to keep this width.
 Likewise, "hor" causes only the widths of windows to be equalized.
 
 The option 'cmdheight' ('ch') is used to set the height of the command-line.
-If you are annoyed by the |hit-return| prompt for long messages, set this
+If you are annoyed by the |hit-enter| prompt for long messages, set this
 option to 2 or 3.
 
 If there is only one window, resizing that window will also change the command

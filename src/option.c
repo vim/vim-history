@@ -212,8 +212,6 @@ struct vimoption
 
 /*
  * Flags
- *
- * Note: P_EXPAND can never be used for local options!
  */
 #define P_BOOL		0x01	/* the option is boolean */
 #define P_NUM		0x02	/* the option is numeric */
@@ -221,7 +219,8 @@ struct vimoption
 #define P_ALLOCED	0x08	/* the string option is in allocated memory,
 				    must use vim_free() when assigning new
 				    value. Not set if default is the same. */
-#define P_EXPAND	0x10	/* environment expansion */
+#define P_EXPAND	0x10	/* environment expansion.  NOTE: P_EXPAND can
+				   never be used for local or hidden options! */
 #define P_NODEFAULT	0x40	/* don't set to default value */
 #define P_DEF_ALLOCED	0x80	/* default value is in allocated memory, must
 				    use vim_free() when assigning new value */
@@ -1974,7 +1973,7 @@ static char_u *illegal_char __ARGS((char_u *, int));
 #ifdef FEAT_TITLE
 static void did_set_title __ARGS((int icon));
 #endif
-static char_u *option_expand __ARGS((int));
+static char_u *option_expand __ARGS((int opt_idx, char_u *val));
 static void set_string_option_global __ARGS((int opt_idx, char_u **varp));
 static void set_string_option __ARGS((int opt_idx, char_u *value, int local));
 static char_u *did_set_string_option __ARGS((int opt_idx, char_u **varp, int new_value_alloced, char_u *oldval, char_u *errbuf, int local));
@@ -2142,16 +2141,17 @@ set_init_1()
 
     /*
      * Expand environment variables and things like "~" for the defaults.
-     * If option_expand() returns non-NULL the variable is expanded. This can
+     * If option_expand() returns non-NULL the variable is expanded.  This can
      * only happen for non-indirect options.
      * Also set the default to the expanded value, so ":set" does not list
-     * them. Don't set the P_ALLOCED flag, because we don't want to free the
+     * them.
+     * Don't set the P_ALLOCED flag, because we don't want to free the
      * default.
      */
     for (opt_idx = 0; !istermoption(&options[opt_idx]); opt_idx++)
     {
-	p = option_expand(opt_idx);
-	if (p != NULL)
+	p = option_expand(opt_idx, NULL);
+	if (p != NULL && (p = vim_strsave(p)) != NULL)
 	{
 	    *(char_u **)options[opt_idx].var = p;
 	    /* VIMEXP
@@ -2974,6 +2974,19 @@ do_set(arg, opt_flags)
 			    new_value_alloced =
 					 (options[opt_idx].flags & P_ALLOCED);
 			    options[opt_idx].flags = flags;
+
+			    /* expand environment variables and ~ (since the
+			     * default value was already expanded, only
+			     * required when an environment variable was set
+			     * later */
+			    s = option_expand(opt_idx, *(char_u **)(varp));
+			    if (s != NULL && (s = vim_strsave(s)) != NULL)
+			    {
+				if (new_value_alloced)
+				    vim_free(*(char_u **)(varp));
+				*(char_u **)(varp) = s;
+				new_value_alloced = TRUE;
+			    }
 			}
 			else
 			{
@@ -3050,6 +3063,22 @@ do_set(arg, opt_flags)
 				*s++ = *arg++;
 			    }
 			    *s = NUL;
+
+			    /*
+			     * Expand environment variables and ~.
+			     */
+			    s = option_expand(opt_idx, newval);
+			    if (s != NULL)
+			    {
+				vim_free(newval);
+				newlen = STRLEN(s) + 1;
+				if (adding || prepending || removing)
+				    newlen += STRLEN(oldval) + 1;
+				newval = alloc(newlen);
+				if (newval == NULL)
+				    break;
+				STRCPY(newval, s);
+			    }
 
 			    /* locate newval[] in oldval[] when removing it
 			     * and when adding to avoid duplicates */
@@ -3152,16 +3181,6 @@ do_set(arg, opt_flags)
 
 			    if (save_arg != NULL)   /* number for 'whichwrap' */
 				arg = save_arg;
-			    new_value_alloced = TRUE;
-			}
-
-			/* expand environment variables and ~ */
-			s = option_expand(opt_idx);
-			if (s != NULL)
-			{
-			    if (new_value_alloced)
-				vim_free(*(char_u **)(varp));
-			    *(char_u **)(varp) = s;
 			    new_value_alloced = TRUE;
 			}
 
@@ -3390,25 +3409,26 @@ find_viminfo_parameter(type)
 /*
  * Expand environment variables for some string options.
  * These string options cannot be indirect!
+ * If "val" is NULL expand the current value of the option.
  * Return pointer to allocated memory, or NULL when not expanded.
  */
     static char_u *
-option_expand(opt_idx)
-    int	    opt_idx;
+option_expand(opt_idx, val)
+    int		opt_idx;
+    char_u	*val;
 {
-    char_u	*p;
-
-	/* if option doesn't need expansion or is hidden: nothing to do */
+    /* if option doesn't need expansion nothing to do */
     if (!(options[opt_idx].flags & P_EXPAND) || options[opt_idx].var == NULL)
 	return NULL;
 
-    p = *(char_u **)(options[opt_idx].var);
+    if (val == NULL)
+	val = *(char_u **)options[opt_idx].var;
 
     /*
      * Expanding this with NameBuff, expand_env() must not be passed IObuff.
      */
-    expand_env(p, NameBuff, MAXPATHL);
-    if (STRCMP(NameBuff, p) == 0)   /* they are the same */
+    expand_env(val, NameBuff, MAXPATHL);
+    if (STRCMP(NameBuff, val) == 0)   /* they are the same */
 	return NULL;
 
     return vim_strsave(NameBuff);
@@ -3420,8 +3440,8 @@ option_expand(opt_idx)
     void
 check_options()
 {
-    int	    opt_idx;
-    char_u  **p;
+    int		opt_idx;
+    char_u	**p;
 
     for (opt_idx = 0; options[opt_idx].fullname != NULL; opt_idx++)
 	if ((options[opt_idx].flags & P_STRING) && options[opt_idx].var != NULL)

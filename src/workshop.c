@@ -1236,7 +1236,8 @@ workshop_get_positions(
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
     {
 	wstrace("workshop_get_positions(%#x, \"%s\", ...)\n",
-		clientData, curbuf ? (char *) curbuf->b_sfname : "<None>");
+		clientData, (curbuf && curbuf->b_sfname != NULL)
+				      ? (char *)curbuf->b_sfname : "<None>");
     }
 #endif
 

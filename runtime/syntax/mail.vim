@@ -1,10 +1,13 @@
 " Vim syntax file
 " Language:	Mail file
 " Maintainer:	Felix von Leitner <leitner@math.fu-berlin.de>
-" Last Change:	1999 Aug 27
+" Last Change:	2000 Oct 28
 
 " Remove any old syntax stuff hanging around
 syn clear
+
+" Highlight a diff inside a message
+source <sfile>:p:h/diff.vim
 
 " The mail header is recognized starting with a "keyword:" line and ending
 " with an empty line or other line that can't be in the header.

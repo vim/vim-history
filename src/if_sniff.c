@@ -869,7 +869,7 @@ SendRequest(command, symbol)
 	    return;
 	}
 	buffer_name = vi_buffer_name();
-	if (!buffer_name)
+	if (buffer_name == NULL)
 	    return;
 	if (cmd_type & NEED_SYMBOL)
 	{

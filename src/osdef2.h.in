@@ -72,5 +72,9 @@ extern struct passwd *getpwnam __ARGS((const char *));
 #ifdef USE_TMPNAM
 extern char	*tmpnam __ARGS((char *));
 #else
+# ifdef HAVE_MKSTEMP
+extern int	mkstemp __ARGS((char *));
+# else
 extern char	*mktemp __ARGS((char *));
+# endif
 #endif

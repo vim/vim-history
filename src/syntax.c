@@ -485,8 +485,7 @@ syntax_start(wp, lnum)
 	    if (p->sst_lnum <= lnum && p->sst_change_lnum == 0)
 	    {
 		last_valid = p;
-		if (syn_buf->b_syn_sync_minlines != 0
-			&& p->sst_lnum >= lnum - syn_buf->b_syn_sync_minlines)
+		if (p->sst_lnum >= lnum - syn_buf->b_syn_sync_minlines)
 		    last_min_valid = p;
 	    }
 	}
@@ -651,10 +650,16 @@ syn_sync(wp, start_lnum, last_valid)
     invalidate_current_state();
 
     /*
-     * Start at least "minlines" back.
-     * Default starting point for parsing is there.
+     * Start at least "minlines" back.  Default starting point for parsing is
+     * there.
+     * Add ten lines, to avoid that scrolling backwards will result in
+     * resyncing for every line.  Now it resyncs only one out of ten lines.
+     * But don't add more than "minlines".
      */
-    start_lnum -= syn_buf->b_syn_sync_minlines;
+    if (syn_buf->b_syn_sync_minlines < 10)
+	start_lnum -= syn_buf->b_syn_sync_minlines * 2;
+    else
+	start_lnum -= syn_buf->b_syn_sync_minlines + 10;
     if (start_lnum < 1)
 	start_lnum = 1;
     current_lnum = start_lnum;
@@ -834,6 +839,7 @@ syn_sync(wp, start_lnum, last_valid)
 			cur_si->si_h_startpos.lnum = found_current_lnum;
 			cur_si->si_h_startpos.col = found_current_col;
 			update_si_end(cur_si, (int)current_col, TRUE);
+			check_keepend();
 		    }
 		    current_col = found_m_endpos.col;
 		    current_lnum = found_m_endpos.lnum;
@@ -910,6 +916,7 @@ syn_start_line()
 		update_si_end(cur_si, 0, FALSE);
 	    }
 	}
+	check_keepend();
 	check_state_ends();
     }
     next_match_idx = -1;
@@ -2006,12 +2013,19 @@ syn_current_attr(syncing, displaying)
 	 * Check for end of current state (and the states before it) at the
 	 * next column.  Don't do this for syncing, because we would miss a
 	 * single character match.
+	 * First check if the current state ends at the current column.  It
+	 * may be for an empty match and a containing item might end in the
+	 * current column.
 	 */
 	if (!syncing)
 	{
-	    ++current_col;
 	    check_state_ends();
-	    --current_col;
+	    if (current_state.ga_len > 0)
+	    {
+		++current_col;
+		check_state_ends();
+		--current_col;
+	    }
 	}
     }
 
@@ -2080,6 +2094,7 @@ push_next_match(cur_si)
 	{
 	    /* Try to find the end pattern in the current line */
 	    update_si_end(cur_si, (int)(next_match_m_endpos.col), TRUE);
+	    check_keepend();
 	}
 	else
 	{
@@ -2185,6 +2200,7 @@ check_state_ends()
 			     && !(cur_si->si_flags & (HL_MATCH | HL_KEEPEND)))
 		{
 		    update_si_end(cur_si, (int)current_col, TRUE);
+		    check_keepend();
 		    if ((current_next_flags & HL_HAS_EOL)
 			    && keepend_level < 0
 			    && syn_getcurline()[current_col] == NUL)
@@ -2302,7 +2318,8 @@ update_si_end(sip, startcol, force)
     int		end_idx;
 
     /* Don't update when it's already done.  Can be a match of an end pattern
-     * that started in a previous line. */
+     * that started in a previous line.  Watch out: can also be a "keepend"
+     * from a containing item. */
     if (!force && sip->si_m_endpos.lnum >= current_lnum)
 	return;
 
@@ -2343,7 +2360,6 @@ update_si_end(sip, startcol, force)
 	sip->si_ends = TRUE;
 	sip->si_end_idx = end_idx;
     }
-    check_keepend();
 }
 
 /*

@@ -13,6 +13,9 @@
  * Some of these may have been defined in the makefile or feature.h.
  */
 
+#ifndef SYS_VIMRC_FILE
+# define SYS_VIMRC_FILE		"$VIM\\vimrc"
+#endif
 #ifndef USR_VIMRC_FILE
 # define USR_VIMRC_FILE		"$HOME\\_vimrc"
 #endif
@@ -28,6 +31,9 @@
 #endif
 
 #ifdef FEAT_GUI
+# ifndef SYS_GVIMRC_FILE
+#  define SYS_GVIMRC_FILE	"$VIM\\gvimrc"
+# endif
 # ifndef USR_GVIMRC_FILE
 #  define USR_GVIMRC_FILE	"$HOME\\_gvimrc"
 # endif

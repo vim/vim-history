@@ -31,10 +31,10 @@ static VALUE cWindow;
 static VALUE eDeletedBufferError;
 static VALUE eDeletedWindowError;
 
-static void ensure_ruby_initialized();
+static void ensure_ruby_initialized(void);
 static void error_print(int);
-static void ruby_io_init();
-static void ruby_vim_init();
+static void ruby_io_init(void);
+static void ruby_vim_init(void);
 
 void ex_ruby(exarg_t *eap)
 {
@@ -101,7 +101,7 @@ void ruby_window_free(win_t *win)
     }
 }
 
-static void ensure_ruby_initialized()
+static void ensure_ruby_initialized(void)
 {
     if (!ruby_initialized) {
 	ruby_init();
@@ -475,7 +475,7 @@ static VALUE f_p(int argc, VALUE *argv, VALUE self)
     return Qnil;
 }
 
-static void ruby_io_init()
+static void ruby_io_init(void)
 {
     extern VALUE rb_defout;
 
@@ -484,7 +484,7 @@ static void ruby_io_init()
     rb_define_global_function("p", f_p, -1);
 }
 
-static void ruby_vim_init()
+static void ruby_vim_init(void)
 {
     objtbl = rb_hash_new();
     rb_global_variable(&objtbl);
