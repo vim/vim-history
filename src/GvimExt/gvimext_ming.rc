@@ -29,7 +29,7 @@ VS_VERSION_INFO VERSIONINFO
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "Tianmiao Hu's  gvimext context menu extension\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
-            
+
 #if defined(__GNUC__)
             VALUE "SpecialBuild", "Build With " "MingW " xstr(__GNUC__) "." xstr(__GNUC_MINOR__) "." xstr(__GNUC_PATCHLEVEL__)  " on " __DATE__ " " __TIME__ "\0"
 #else

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Smarty Templates (http://www.phpinsider.com/php/code/Smarty/)
 " Maintainer:	Manfred Stienstra manfred.stienstra@dwerg.net
-" Last Change:  Fri Apr 12 10:33:51 CEST 2002 
+" Last Change:  Fri Apr 12 10:33:51 CEST 2002
 " Filenames:    *.tpl
 " URL:		http://www.dwerg.net/download/vim/smarty.vim
 
@@ -28,7 +28,7 @@ syn keyword smartyTagName insert if elseif else ldelim rdelim literal
 syn keyword smartyTagName php section sectionelse foreach foreachelse
 syn keyword smartyTagName strip
 
-syn keyword smartyInFunc ne eq 
+syn keyword smartyInFunc ne eq
 
 syn keyword smartyProperty contained "file="
 syn keyword smartyProperty contained "loop="
@@ -37,7 +37,7 @@ syn keyword smartyProperty contained "include="
 syn keyword smartyProperty contained "skip="
 syn keyword smartyProperty contained "section="
 
-syn keyword smartyConstant "\$smarty" 
+syn keyword smartyConstant "\$smarty"
 
 syn keyword smartyDot .
 
@@ -57,15 +57,15 @@ if version >= 508 || !exists("did_smarty_syn_inits")
   endif
 
   HiLink smartyTagName Identifier
-  HiLink smartyProperty Constant 
+  HiLink smartyProperty Constant
   " if you want the text inside the braces to be colored, then
   " remove the comment in from of the next statement
-  "HiLink smartyZone Include 
+  "HiLink smartyZone Include
   HiLink smartyInFunc Function
   HiLink smartyBlock Constant
   HiLink smartyDot SpecialChar
   delcommand HiLink
-endif 
+endif
 
 let b:current_syntax = "smarty"
 

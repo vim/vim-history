@@ -45,6 +45,8 @@ IME=no
 POSTSCRIPT=no
 # set to yes to enable OLE support
 OLE=no
+#set to yes to enable Cscope support 
+CSCOPE=yes
 
 # Added by E.F. Amatria <eferna1@platea.ptic.mec.es> 2001 Feb 23
 # Uncomment the first line and one of the following three if you want Native Language
@@ -248,6 +250,10 @@ ifeq (yes, $(OLE))
 CFLAGS += -DFEAT_OLE
 endif
 
+ifeq ($(CSCOPE),yes)
+CFLAGS += -DFEAT_CSCOPE
+endif
+
 ifeq ($(DEBUG),yes)
 CFLAGS += -g -fstack-check
 else
@@ -287,6 +293,9 @@ SRC += if_ruby.c
 endif
 ifdef TCL
 SRC += if_tcl.c
+endif
+ifeq ($(CSCOPE),yes)
+SRC += if_cscope.c
 endif
 
 
@@ -337,7 +346,7 @@ DEFINES+=-DDYNAMIC_ICONV
 CFLAGS += -I$(ICONV)
 endif
 
-all: $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstal.exe
+all: $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstal.exe GvimExt/gvimext.dll
 
 vimrun.exe: vimrun.c
 	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c $(LIB)
@@ -369,6 +378,9 @@ upx: exes
 xxd/xxd.exe: xxd/xxd.c
 	$(CC) $(CFLAGS) -o xxd/xxd.exe -s -DWIN32 xxd/xxd.c $(LIB)
 
+GvimExt/gvimext.dll: GvimExt/gvimext.cpp GvimExt/gvimext.rc GvimExt/gvimext.h
+	cd GvimExt; $(MAKE) -f Make_ming.mak; cd ..
+
 clean:
 	-$(DEL) *.o
 	-$(DEL) *.res
@@ -397,9 +409,9 @@ $(OBJ) $(GUIOBJ): $(INCL)
 
 if_ole.o: if_ole.cpp
 	$(CC) $(CFLAGS) -D__IID_DEFINED__ -c -o if_ole.o if_ole.cpp
-	
+
 if_ruby.o: if_ruby.c
 	$(CC) $(CFLAGS) -U_WIN32 -c -o if_ruby.o if_ruby.c
-	
+
 if_perl.c: if_perl.xs typemap
 	perl $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap $(PERLLIB)/ExtUtils/typemap if_perl.xs > $@

@@ -19,7 +19,7 @@ endif
 syn case ignore
 
 " Hercules runset sections
-syn keyword   herculesType        header assign_property alias assign 
+syn keyword   herculesType        header assign_property alias assign
 syn keyword   herculesType        options preprocess_options
 syn keyword   herculesType        explode_options technology_options
 syn keyword   herculesType        drc_options database_options
@@ -27,38 +27,38 @@ syn keyword   herculesType        text_options lpe_options evaccess_options
 syn keyword   herculesType        check_point compare_group environment
 syn keyword   herculesType        grid_check include layer_stats load_group
 syn keyword   herculesType        restart run_only self_intersect set snap
-syn keyword   herculesType        system variable waiver 
+syn keyword   herculesType        system variable waiver
 
 " Hercules commands
 syn keyword   herculesStatement   attach_property boolean cell_extent
 syn keyword   herculesStatement   common_hierarchy connection_points
 syn keyword   herculesStatement   copy data_filter alternate delete
-syn keyword   herculesStatement   explode explode_all fill_pattern find_net 
+syn keyword   herculesStatement   explode explode_all fill_pattern find_net
 syn keyword   herculesStatement   flatten
-syn keyword   herculesStatement   level negate polygon_features push 
-syn keyword   herculesStatement   rectangles relocate remove_overlap reverse select 
-syn keyword   herculesStatement   select_cell select_contains select_edge select_net size 
+syn keyword   herculesStatement   level negate polygon_features push
+syn keyword   herculesStatement   rectangles relocate remove_overlap reverse select
+syn keyword   herculesStatement   select_cell select_contains select_edge select_net size
 syn keyword   herculesStatement   text_polygon text_property vertex area cut
-syn keyword   herculesStatement   density enclose external inside_edge 
-syn keyword   herculesStatement   internal notch vectorize center_to_center 
-syn keyword   herculesStatement   length mask_align moscheck rescheck 
-syn keyword   herculesStatement   analysis buildsub init_lpe_db capacitor 
-syn keyword   herculesStatement   device gendev nmos pmos diode npn pnp 
-syn keyword   herculesStatement   resistor set_param save_property 
-syn keyword   herculesStatement   connect disconnect text  text_boolean 
-syn keyword   herculesStatement   replace_text create_ports label graphics 
-syn keyword   herculesStatement   save_netlist_database lpe_stats netlist 
+syn keyword   herculesStatement   density enclose external inside_edge
+syn keyword   herculesStatement   internal notch vectorize center_to_center
+syn keyword   herculesStatement   length mask_align moscheck rescheck
+syn keyword   herculesStatement   analysis buildsub init_lpe_db capacitor
+syn keyword   herculesStatement   device gendev nmos pmos diode npn pnp
+syn keyword   herculesStatement   resistor set_param save_property
+syn keyword   herculesStatement   connect disconnect text  text_boolean
+syn keyword   herculesStatement   replace_text create_ports label graphics
+syn keyword   herculesStatement   save_netlist_database lpe_stats netlist
 syn keyword   herculesStatement   spice graphics_property graphics_netlist
 syn keyword   herculesStatement   write_milkyway multi_rule_enclose
-syn keyword   herculesStatement   if error_property equate compare 
-syn keyword   herculesStatement   antenna_fix c_thru dev_connect_check 
-syn keyword   herculesStatement   dev_net_count device_count net_filter 
-syn keyword   herculesStatement   net_path_check ratio process_text_opens 
+syn keyword   herculesStatement   if error_property equate compare
+syn keyword   herculesStatement   antenna_fix c_thru dev_connect_check
+syn keyword   herculesStatement   dev_net_count device_count net_filter
+syn keyword   herculesStatement   net_path_check ratio process_text_opens
 
 " Hercules keywords
 syn keyword   herculesStatement   black_box_file block compare_dir equivalence
-syn keyword   herculesStatement   format gdsin_dir group_dir group_dir_usage 
-syn keyword   herculesStatement   inlib layout_path outlib output_format 
+syn keyword   herculesStatement   format gdsin_dir group_dir group_dir_usage
+syn keyword   herculesStatement   inlib layout_path outlib output_format
 syn keyword   herculesStatement   output_layout_path schematic schematic_format
 syn keyword   herculesStatement   scheme_file output_block else
 syn keyword   herculesStatement   and or not xor andoverlap inside outside by to
@@ -67,7 +67,7 @@ syn keyword   herculesStatement   by_property cutting edge_touch enclosing insid
 syn keyword   herculesStatement   inside_hole interact touching vertex
 
 " Hercules comments
-syn region    herculesComment           start="/\*" skip="/\*" end="\*/" contains=herculesTodo 
+syn region    herculesComment           start="/\*" skip="/\*" end="\*/" contains=herculesTodo
 syn match     herculesComment           "//.*" contains=herculesTodo
 
 " Preprocessor directives

@@ -5,7 +5,7 @@
 " URL:		http://mywebpage.netscape.com/sharppeople/vim/ftplugin
 
 if exists("b:did_ftplugin") | finish | endif
-    
+
 runtime! ftplugin/html.vim ftplugin/html_*.vim ftplugin/html/*.vim
 
 " ASP:  Active Server Pages (with Visual Basic Script)

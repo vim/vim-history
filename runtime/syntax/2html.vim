@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2003 Apr 04
+" Last Change: 2003 Apr 25
 "	       (modified by David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>)
 
 " Transform a file into HTML, using the current syntax highlighting.
@@ -194,7 +194,11 @@ endif
 if exists("html_use_css")
   exe "normal a<style type=\"text/css\">\n<!--\n-->\n</style>\n\e"
 endif
-exe "normal a</head>\n<body>\n<pre>\n\e"
+if exists("html_no_pre")
+  exe "normal a</head>\n<body>\n\e"
+else
+  exe "normal a</head>\n<body>\n<pre>\n\e"
+endif
 
 wincmd p
 
@@ -272,12 +276,20 @@ while s:lnum <= s:end
     let s:idx = stridx(strpart(s:line, s:start), "\t")
   endwhile
 
+  if exists("html_no_pre")
+    let s:new = substitute(s:new, '  ', '\&nbsp;\&nbsp;', 'g') . '<br>'
+  endif
   exe "normal \<C-W>pa" . strtrans(s:new) . "\n\e\<C-W>p"
   let s:lnum = s:lnum + 1
   +
 endwhile
 " Finish with the last line
-exe "normal \<C-W>pa</pre>\n</body>\n</html>\e"
+if exists("html_no_pre")
+  exe "normal \<C-W>pa\n</body>\n</html>\e"
+else
+  exe "normal \<C-W>pa</pre>\n</body>\n</html>\e"
+endif
+
 
 " Now, when we finally know which, we define the colors and styles
 if exists("html_use_css")
@@ -298,12 +310,20 @@ endif
 " For Netscape 4, set <body> attributes too, though, strictly speaking, it's
 " incorrect.
 if exists("html_use_css")
-  execute "normal A\npre { color: " . s:fgc . "; background-color: " . s:bgc . "; }\e"
-  yank
-  put
-  execute "normal ^cwbody\e"
+  if exists("html_no_pre")
+    execute "normal A\nbody { color: " . s:fgc . "; background-color: " . s:bgc . "; font-family: Courier, monospace; }\e"
+  else
+    execute "normal A\npre { color: " . s:fgc . "; background-color: " . s:bgc . "; }\e"
+    yank
+    put
+    execute "normal ^cwbody\e"
+  endif
 else
-  execute '%s:<body>:<body ' . 'bgcolor="' . s:bgc . '" text="' . s:fgc . '">'
+  if exists("html_no_pre")
+    execute '%s:<body>:<body ' . 'bgcolor="' . s:bgc . '" text="' . s:fgc . '" style="font-family\: Courier, monospace;">'
+  else
+    execute '%s:<body>:<body ' . 'bgcolor="' . s:bgc . '" text="' . s:fgc . '">'
+  endif
 endif
 
 " Line numbering attributes

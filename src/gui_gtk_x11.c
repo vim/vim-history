@@ -5251,7 +5251,7 @@ gui_mch_draw_string(int row, int col, char_u *s, int len, int flags)
      * stuff is broken in X11 in first place. And the internationalization API
      * isn't something you would really like to use.
      */
-    
+
     xfont = (XFontStruct *)((GdkFontPrivate*)gui.current_font)->xfont;
     is_wide = ((xfont->min_byte1 != 0 || xfont->max_byte1 != 0)
 # ifdef FEAT_XFONTSET

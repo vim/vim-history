@@ -1,4 +1,4 @@
-*filetype.txt*  For Vim version 6.2a.  Last change: 2002 Sep 25
+*filetype.txt*  For Vim version 6.2b.  Last change: 2003 Apr 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -129,8 +129,8 @@ kind of file it is.  This doesn't always work.  A number of global variables
 can be used to overrule the filetype used for certain extensions:
 
 	file name	variable ~
-	*.asa		g:filetype_asa	|aspvbs-syntax| |aspperl-syntax| 
-	*.asp		g:filetype_asp	|aspvbs-syntax| |aspperl-syntax| 
+	*.asa		g:filetype_asa	|aspvbs-syntax| |aspperl-syntax|
+	*.asp		g:filetype_asp	|aspvbs-syntax| |aspperl-syntax|
 	*.asm		g:asmsyntax	|asm-syntax|
 	*.prg		g:filetype_prg
 	*.pl		g:filetype_pl
@@ -416,7 +416,7 @@ g:changelog_date_entry_search
 			The default is '^\s*%d\_s*%u' which finds lines
 			matching the form >
 				|2003-01-14  Full Name  <user@host>
-< 			and some similar formats.
+<			and some similar formats.
 
 The Changelog entries are inserted where they add the least amount of text.
 After figuring out the current date and user, the file is searched for an

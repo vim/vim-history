@@ -22,7 +22,7 @@
 " highlighting char and [char] followed by an opening paren. He also added
 " some words for operators, conditionals, and definitions; and added the
 " highlighting for s" and c".
-" 
+"
 " 2000-03-28:
 " John Providenza <john@probo.com> made improvements for the
 " highlighting of strings, and added the code for highlighting hex numbers.

@@ -11,18 +11,33 @@
 
 #include <X11/StringDefs.h>
 #include <X11/Intrinsic.h>
-#include <X11/Xaw/Form.h>
-#include <X11/Xaw/SimpleMenu.h>
-#include <X11/Xaw/MenuButton.h>
-#include <X11/Xaw/SmeBSB.h>
-#include <X11/Xaw/SmeLine.h>
-#include <X11/Xaw/Box.h>
-#include <X11/Xaw/Dialog.h>
-#include <X11/Xaw/Text.h>
-#include <X11/Xaw/AsciiText.h>
+#ifdef FEAT_GUI_NEXTAW
+# include <X11/neXtaw/Form.h>
+# include <X11/neXtaw/SimpleMenu.h>
+# include <X11/neXtaw/MenuButton.h>
+# include <X11/neXtaw/SmeBSB.h>
+# include <X11/neXtaw/SmeLine.h>
+# include <X11/neXtaw/Box.h>
+# include <X11/neXtaw/Dialog.h>
+# include <X11/neXtaw/Text.h>
+# include <X11/neXtaw/AsciiText.h>
+# include <X11/neXtaw/Scrollbar.h>
+#else
+# include <X11/Xaw/Form.h>
+# include <X11/Xaw/SimpleMenu.h>
+# include <X11/Xaw/MenuButton.h>
+# include <X11/Xaw/SmeBSB.h>
+# include <X11/Xaw/SmeLine.h>
+# include <X11/Xaw/Box.h>
+# include <X11/Xaw/Dialog.h>
+# include <X11/Xaw/Text.h>
+# include <X11/Xaw/AsciiText.h>
+#endif /* FEAT_GUI_NEXTAW */
 
 #include "vim.h"
-#include "gui_at_sb.h"
+#ifndef FEAT_GUI_NEXTAW
+# include "gui_at_sb.h"
+#endif
 
 extern Widget vimShell;
 
@@ -133,6 +148,24 @@ gui_athena_scroll_cb_scroll(w, client_data, call_data)
 	    page = sb_info->size - 2;	    /* use two lines of context */
 	else
 	    page = sb_info->size;
+#ifdef FEAT_GUI_NEXTAW
+	if (data < 0)
+	{
+	    data = (data - gui.char_height + 1) / gui.char_height;
+	    if (data > -sb_info->size)
+		data = -1;
+	    else
+		data = -page;
+	}
+	else if (data > 0)
+	{
+	    data = (data + gui.char_height - 1) / gui.char_height;
+	    if (data < sb_info->size)
+		data = 1;
+	    else
+		data = page;
+	}
+#else
 	switch (data)
 	{
 	    case  ONE_LINE_DATA: data = 1; break;
@@ -143,10 +176,25 @@ gui_athena_scroll_cb_scroll(w, client_data, call_data)
 	    case -END_PAGE_DATA: data = -sb_info->max; break;
 			default: data = 0; break;
 	}
+#endif
     }
     else			/* Bottom scrollbar */
     {
 	sb_info = sb;
+#ifdef FEAT_GUI_NEXTAW
+	if (data < 0)
+	{
+	    data = (data - gui.char_width + 1) / gui.char_width;
+	    if (data > -sb->size)
+		data = -1;
+	}
+	else if (data > 0)
+	{
+	    data = (data + gui.char_width - 1) / gui.char_width;
+	    if (data < sb->size)
+		data = 1;
+	}
+#endif
 	if (data < -1)		/* page-width left */
 	{
 	    if (sb->size > 8)
@@ -196,7 +244,11 @@ gui_x11_create_widgets()
     XtInitializeWidgetClass(menuButtonWidgetClass);
 #endif
     XtInitializeWidgetClass(simpleMenuWidgetClass);
+#ifdef FEAT_GUI_NEXTAW
+    XtInitializeWidgetClass(scrollbarWidgetClass);
+#else
     XtInitializeWidgetClass(vim_scrollbarWidgetClass);
+#endif
 #endif
 
     /* The form containing all the other widgets */
@@ -646,6 +698,7 @@ gui_mch_add_menu(menu, idx)
     {
 	menu->id = XtVaCreateManagedWidget((char *)menu->dname,
 	    smeBSBObjectClass, parent->submenu_id,
+	    XtNlabel, menu->dname,
 #ifdef FONTSET_ALWAYS
 	    XtNinternational,	True,
 #endif
@@ -1064,6 +1117,7 @@ gui_mch_add_menu_item(menu, idx)
 	    menu->submenu_id = (Widget)0;
 	    menu->id = XtVaCreateManagedWidget((char *)menu->dname,
 		    smeBSBObjectClass, parent->submenu_id,
+		    XtNlabel, menu->dname,
 #ifdef FONTSET_ALWAYS
 		    XtNinternational,	True,
 #endif
@@ -1715,13 +1769,21 @@ gui_mch_set_scrollbar_thumb(sb, val, size, max)
     if (max == 0)
     {
 	/* So you can't scroll it at all (normally it scrolls past end) */
+#ifdef FEAT_GUI_NEXTAW
+	XawScrollbarSetThumb(sb->id, 0.0, 1.0);
+#else
 	vim_XawScrollbarSetThumb(sb->id, 0.0, 1.0, 0.0);
+#endif
     }
     else
     {
 	v = (double)val / (double)(max + 1);
 	s = (double)size / (double)(max + 1);
+#ifdef FEAT_GUI_NEXTAW
+	XawScrollbarSetThumb(sb->id, v, s);
+#else
 	vim_XawScrollbarSetThumb(sb->id, v, s, 1.0);
+#endif
     }
 }
 
@@ -1766,7 +1828,11 @@ gui_mch_create_scrollbar(sb, orient)
     int		orient;	/* SBAR_VERT or SBAR_HORIZ */
 {
     sb->id = XtVaCreateWidget("scrollBar",
+#ifdef FEAT_GUI_NEXTAW
+	    scrollbarWidgetClass, vimForm,
+#else
 	    vim_scrollbarWidgetClass, vimForm,
+#endif
 	    XtNresizable,   True,
 	    XtNtop,	    XtChainTop,
 	    XtNbottom,	    XtChainTop,
@@ -1786,7 +1852,11 @@ gui_mch_create_scrollbar(sb, orient)
     XtAddCallback(sb->id, XtNscrollProc,
 		  gui_athena_scroll_cb_scroll, (XtPointer)sb->ident);
 
+#ifdef FEAT_GUI_NEXTAW
+    XawScrollbarSetThumb(sb->id, 0.0, 1.0);
+#else
     vim_XawScrollbarSetThumb(sb->id, 0.0, 1.0, 0.0);
+#endif
 }
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)
@@ -1864,7 +1934,8 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 #endif
 	    , &x, &y);
     return (char_u *)vim_SelFile(vimShell, (char *)title, (char *)dirbuf,
-		  NULL, (int)x, (int)y, gui.menu_fg_pixel, gui.menu_bg_pixel);
+		  NULL, (int)x, (int)y, gui.menu_fg_pixel, gui.menu_bg_pixel,
+		  gui.scroll_fg_pixel, gui.scroll_bg_pixel);
 }
 #endif
 

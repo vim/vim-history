@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.2a.  Last change: 2003 Apr 17
+*intro.txt*     For Vim version 6.2b.  Last change: 2003 Apr 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -717,8 +717,8 @@ the first column of the last lines in the window, like this: >
 	+-----------------------+
 	|some line		|
 	|last line		|
-	|~ 			|
-	|~ 			|
+	|~			|
+	|~			|
 	+-----------------------+
 
 Thus the '~' lines indicate that the end of the buffer was reached.

@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.2a.  Last change: 2003 Apr 18
+*repeat.txt*    For Vim version 6.2b.  Last change: 2003 Apr 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -512,7 +512,7 @@ OBSCURE
 		of getting them directly from the user.  Only useful for test
 		scripts.  Example: >
 		  echo 'q^Mq' | vim -e -s -c debuggreedy -c 'breakadd file script.vim' -S script.vim
-	
+
 :0debugg[reedy]
 		Undo ":debuggreedy": get debug mode commands directly from the
 		user, don't use typeahead for debug commands.

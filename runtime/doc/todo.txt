@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.2a.  Last change: 2003 Apr 20
+*todo.txt*      For Vim version 6.2b.  Last change: 2003 Apr 27
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,10 +29,19 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
+Arabic support:
+- When setting 'arabic' a number of options are changed.  Restore the old
+  values when resetting 'arabic'?
+- Handling of p_arshape in screen.c is inefficient.  Only try shaping on
+  Arabic characters.
+- The location where shaping is done is error prone and inefficient.  Use a
+  separate filter to do the arabic shaping, before doing the actual
+  displaying, so that you can go through it in the right direction?
+
 GTK2 patch problems:
 - ":sp" ":q" leaves cursor on the cmdline.
 - DND doesn't work with KDE?
-- Title shows "GVIMIM" instead of "GVIM".
+- Title leaves tail of old title behind: shows "GVIMIM" instead of "GVIM".
 
 Check that these problems are fixed by the GTK 2 port:
 9   GTK GUI with Gnome: When $DISPLAY is wrong, ":gui" unexpectedly exits.
@@ -52,13 +61,11 @@ Check that these problems are fixed by the GTK 2 port:
 8   When using a theme with different scrollbars (gtkstep), the scrollbars can
     be too narrow. (Drazen Kacar)
 
-7   Add patch from Nadim Shaikli to add Arabic support.
-    http://cvs.arabeyes.org/cvsweb/projects/external/vim/arabic_shape.patch
-    - ext_bidi not needed, use 'arabicshape' option only
-    See remarks in message to Shaikli, Apr 20.
-    -> use a separate filter to do the arabic shaping, before doing the actual
-       displaying, so that you can go through it in the right direction?
-    -> changes in screen.c look suspicious.
+Win32: Patches for bc5, cyg et al. Makefiles. (Dan Sharp, April 17)
+On top of that patch for OLE: April 25.  And patch for bc5: April 25.
+
+Win32: patches for GvimExt from Rene de Zwart. (Jan 30)  old patches for mingw
+can be discarded.
 
 8   Aligning comments that are indented a bit more: (Helmut Stiegler)
 	a = b;
@@ -66,20 +73,20 @@ Check that these problems are fixed by the GTK 2 port:
 	// this one should have the same indent.
     Patch from Helmut Mar 1.
 
-Patch to support neXtaw GUI (kind of Athena). (Sep 10) (Alexey Froloff)
-
-Win32: Patches for bc5, cyg et al. Makefiles. (Dan Sharp, April 17)
-
 Win32: Add ":8" file modifier to get short filename? (patch from Michael
 Geddes, Oct 9)
 
-Win32: patches for GvimExt from Rene de Zwart. (Jan 30)  old patches for mingw
-can be discarded.
-
 Add patch for v:register, setreg() and getreg(). (Michael Geddes, Jan 8)
+
+Make ":redraw" also update the Visual area.  Test with script:
+    normal V
+    redraw
+    while 1 | sleep | endwhile
 
 Patch to leave text on screen with backspace in Insert mode. (Phillip Vandry,
 Apr 8)
+
+Dosinst.c: Also build gvimext.dll?  Find it in ../GvimExt/?
 
 Using folds + signs + linenumber doesn't work correctly. (patch from Kamil
 Burzynski)  Need to shift the line number for the space signs take up.
@@ -112,11 +119,11 @@ patch from Jason Maiorana (seer26), Aug 21. Sep 6.
 Win32 GUI: quote handling in WinMain() is not correct. (Walter Briscoe, Oct
 22; Patch Oct 28, patch Nov 8)
 
+Support 8-bit encodings for printing, patch from Mike Williams 2003 Apr 27.
 Patch to support page breaks for printing. (Mike Williams June 24)
 Patch for number color for printing (Mike Williams, Aug 3)
 Make printing PostScript work on Mac.  Patch from Mike Williams
     2002 feb 24 (VMS already works?)
-Support 8-bit encodings for printing, patch from Mike Williams 2003 feb 9.
 
 Mac OSX multi-lang patch. (Muraoka Taro, Jul 1; update by Axel Jul 30)
 
@@ -133,20 +140,21 @@ Also check work from Steve Hall for NSIS.
 "%" does not ignore "\(".  Patch from Haakon Riiser (Feb 25).
 Is this Vi compatible?  If not, disable it for some flag in 'cpoptions'.
 
-Win32: Using a shortcut for gvim that sets the window to maximized, the window
-is not maximized.  Patch from Yasuhiro Matsumoto, alternative from Helmut
-Stiegler (Apr 2)
-
-Win32: add patch for cscope support. (Khorev Sergey, Mar 17)
-http://iamphet.nm.ru/cscope/index.html
-
 ":try" patch: (Servatius Brandt)
 - test49 fails
 - Add section to user manual
 
+"/$" causes "e" in last column of screen to disappear, highlighted char is
+displayed instead.
+
 ":s/ *\ze\n//e" introduces arbitrary text. (Klaus Bosau)
 
+Adding "c" flag to ":s" changes the behavior: (Klaus Bosau, April 24)
+    1,4 s/\v%(\_^A.*B.*)@<=\nA%(\s*|.*B)@=/ /ge
+
 Change [ CTRL-D completion to use 'iskeyword' instead of 'isident'? (Dorai)
+
+Redraw problem in help file after listing completions. (Jacob Lerner, Apr 27)
 
 Redraw problem: three windows, horizontal split.  HTML in top and bottom,
 /tmp/junk.txt in the middle, sourced /tmp/rtf.vim.  Dragging status line
@@ -640,13 +648,6 @@ Athena GUI:
     through files.
 7   The file selector is not resizable.  With a big font it is difficult to
     read long file names. (Schroeder)
-7   The file selector's scrollbar colors are not set after doing a
-    ":hi Scrollbar guifg=color".  David Harrison has a patch for this.
-7   The file selector's colors are not changed by the colorscheme command.
-    Related to the above problem.  Actually, the file selector gets it's
-    colors from the menu's background color upon creation.  Is this what we
-    really want?  The solution for this should match the solution for the
-    Motif version.
 4   Re-write the widget attachments and code so that we will not have to go
     through and calculate the absolute position of every widget every time the
     window is refreshed/changes size.  This will help the "flashing-widgets"
@@ -672,9 +673,6 @@ Motif GUI:
 8   Lesstif: When deleting a menu that's torn off, the torn off menu becomes
     very small instead of disappearing.  When closing it, Vim crashes.
     (Phillipps)
-8   When compiling with FEAT_FOOTER defined, the text area gets a few pixels
-    extra space on the right.  Remove the special case in
-    gui_get_base_width(). (David Harrison)
 
 
 GUI:
@@ -1376,6 +1374,8 @@ Multi-byte characters:
 8   UTF-8: "r" in Visual mode doesn't take composing characters.
 8   UTF-8: When there is a precomposed character in the font, use it instead
     of a character and a composing character.  See xterm for an example.
+7   When a character can't be displayed, display its digraph instead.
+    'display' option to specify this.
 7   Use ideas for nl_langinfo() from Markus Kuhn in enc_default():
     (www.cl.cam.ac.uk/~mgk25/ucs/langinfo.c)
 -   GTK and Win32: Allow selecting fonts for 'guifontset' with the

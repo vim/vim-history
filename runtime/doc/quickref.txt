@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim version 6.2a.  Last change: 2003 Mar 03
+*quickref.txt*  For Vim version 6.2b.  Last change: 2003 Mar 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -588,6 +588,7 @@ Short explanation of each option:		*option-list*
 |'aleph'|	  |'al'|     ASCII code of the letter Aleph (Hebrew)
 |'allowrevins'|	  |'ari'|    allow CTRL-_ in Insert and Command-line mode
 |'altkeymap'|	  |'akm'|    for default second language (Farsi/Hebrew)
+|'arabic'|	  |'arab'|   for Arabic as a default second language
 |'autoindent'|	  |'ai'|     take indent for new line from previous line
 |'autoread'|	  |'ar'|     autom. read file when changed outside of Vim
 |'autowrite'|	  |'aw'|     automatically write file if changed
@@ -1120,6 +1121,7 @@ Context-sensitive completion on the command-line:
 |-m|	-m		    modifications not allowed (resets 'write' option)
 |-b|	-b		    binary mode
 |-l|	-l		    lisp mode
+|-A|	-A		    Arabic mode ('arabic' is set)
 |-F|	-F		    Farsi mode ('fkmap' and 'rightleft' are set)
 |-H|	-H		    Hebrew mode ('hkmap' and 'rightleft' are set)
 |-V|	-V		    Verbose, give informative messages

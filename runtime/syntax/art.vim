@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:      ART-IM and ART*Enterprise
 " Maintainer:    Dorai Sitaram <ds26@gte.com>
-" URL:           http://www.ccs.neu.edu/~dorai/vimplugins/vimplugins.html 
+" URL:           http://www.ccs.neu.edu/~dorai/vimplugins/vimplugins.html
 " Last Change:   Nov 6, 2002
 
 if exists("b:current_syntax")
@@ -10,7 +10,7 @@ endif
 
 syn case ignore
 
-syn keyword artspform => and assert bind 
+syn keyword artspform => and assert bind
 syn keyword artspform declare def-art-fun deffacts defglobal defrule defschema do
 syn keyword artspform else for if in$ not or
 syn keyword artspform progn retract salience schema test then while
@@ -33,7 +33,7 @@ syn match comment "#+:\=ignore" nextgroup=artignore skipwhite skipnl
 
 syn region artignore start="(" end=")" contained contains=artignore,comment
 
-syn region artignore start=/"/ skip=/\\[\\"]/ end=/"/ contained 
+syn region artignore start=/"/ skip=/\\[\\"]/ end=/"/ contained
 
 hi def link artinstance type
 hi def link artglobalvar preproc

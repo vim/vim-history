@@ -3,7 +3,7 @@
 " Maintaner:    Radu Dineiu <littledragon@altern.org>
 " URL:          http://ld.yi.org/vim/resolv.vim
 " ChangeLog:    http://ld.yi.org/vim/resolv.ChangeLog
-" Last Change:  2003 Apr 05
+" Last Change:  2003 Apr 25
 " Version:      0.1
 
 if version < 600
@@ -55,12 +55,12 @@ if version >= 508 || !exists("did_config_syntax_inits")
 	else
 		command! -nargs=+ HiLink hi def link <args>
 	endif
-	
+
 	HiLink resolvIP Number
 	HiLink resolvIPNetmask Number
 	HiLink resolvHostname String
 	HiLink resolvOption String
-	
+
 	HiLink resolvIPNameserver Number
 	HiLink resolvHostnameSearch String
 	HiLink resolvIPNetmaskSortList Number

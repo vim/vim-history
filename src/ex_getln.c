@@ -203,6 +203,14 @@ getcmdline(firstc, count, indent)
     ccline.cmdlen = ccline.cmdpos = 0;
     ccline.cmdbuff[0] = NUL;
 
+#ifdef FEAT_RIGHTLEFT
+    if (curwin->w_p_rl && *curwin->w_p_rlc == 's'
+					  && (firstc == '/' || firstc == '?'))
+	cmdmsg_rl = TRUE;
+    else
+	cmdmsg_rl = FALSE;
+#endif
+
     redir_off = TRUE;		/* don't redirect the typed command */
     if (!cmd_silent)
     {
@@ -801,7 +809,12 @@ getcmdline(firstc, count, indent)
 		    ccline.cmdbuff = NULL;
 		    if (!cmd_silent)
 		    {
-			msg_col = 0;
+#ifdef FEAT_RIGHTLEFT
+			if (cmdmsg_rl)
+			    msg_col = Columns;
+			else
+#endif
+			    msg_col = 0;
 			msg_putchar(' ');		/* delete ':' */
 		    }
 		    redraw_cmdline = TRUE;
@@ -1470,12 +1483,21 @@ cmdline_changed:
 	    redrawcmdline();
 	    did_incsearch = TRUE;
 	}
-#else
+#else /* FEAT_SEARCH_EXTRA */
 	;
+#endif
+
+#ifdef FEAT_RIGHTLEFT
+	if (cmdmsg_rl)
+	    redrawcmd();
 #endif
     }
 
 returncmd:
+
+#ifdef FEAT_RIGHTLEFT
+    cmdmsg_rl = FALSE;
+#endif
 
 #ifdef FEAT_FKMAP
     cmd_fkmap = 0;
@@ -2176,27 +2198,48 @@ put_on_cmdline(str, len, redraw)
 	ccline.cmdbuff[ccline.cmdlen] = NUL;
 
 #ifdef FEAT_MBYTE
-	/* When the inserted text starts with a composing character, backup to
-	 * the character before it.  There could be two of them. */
-	c = 0;
-	while (enc_utf8 && ccline.cmdpos > 0
-	     && utf_iscomposing(utf_ptr2char(ccline.cmdbuff + ccline.cmdpos)))
+	if (enc_utf8)
 	{
-	    c = (*mb_head_off)(ccline.cmdbuff,
-				      ccline.cmdbuff + ccline.cmdpos - 1) + 1;
-	    ccline.cmdpos -= c;
-	    len += c;
-	}
-	if (c != 0)
-	{
-	    /* Also backup the cursor position. */
-	    c = ptr2cells(ccline.cmdbuff + ccline.cmdpos);
-	    ccline.cmdspos -= c;
-	    msg_col -= c;
-	    if (msg_col < 0)
+	    /* When the inserted text starts with a composing character,
+	     * backup to the character before it.  There could be two of them.
+	     */
+	    i = 0;
+	    c = utf_ptr2char(ccline.cmdbuff + ccline.cmdpos);
+	    while (ccline.cmdpos > 0 && utf_iscomposing(c))
 	    {
-		msg_col += Columns;
-		--msg_row;
+		i = (*mb_head_off)(ccline.cmdbuff,
+				      ccline.cmdbuff + ccline.cmdpos - 1) + 1;
+		ccline.cmdpos -= i;
+		len += i;
+		c = utf_ptr2char(ccline.cmdbuff + ccline.cmdpos);
+	    }
+# ifdef FEAT_ARABIC
+	    if (i == 0 && ccline.cmdpos > 0 && arabic_maycombine(c))
+	    {
+		/* Check the previous character for Arabic combining pair. */
+		i = (*mb_head_off)(ccline.cmdbuff,
+				      ccline.cmdbuff + ccline.cmdpos - 1) + 1;
+		if (arabic_combine(utf_ptr2char(ccline.cmdbuff
+						     + ccline.cmdpos - i), c))
+		{
+		    ccline.cmdpos -= i;
+		    len += i;
+		}
+		else
+		    i = 0;
+	    }
+# endif
+	    if (i != 0)
+	    {
+		/* Also backup the cursor position. */
+		i = ptr2cells(ccline.cmdbuff + ccline.cmdpos);
+		ccline.cmdspos -= i;
+		msg_col -= i;
+		if (msg_col < 0)
+		{
+		    msg_col += Columns;
+		    --msg_row;
+		}
 	    }
 	}
 #endif
@@ -2285,6 +2328,25 @@ redrawcmdline()
     cursorcmd();
 }
 
+/*
+ * This function is called when the command/message line is set to rightleft
+ * for proper display during consecutive searches (ie. I do a search for
+ * 'jk' and then simply do '/return' - the 'jk' ought to be shaped and
+ * displayed properly).
+ */
+#if defined(FEAT_ARABIC) || defined(PROTO)
+    void
+redraw_msg(msg_ptr, msg_len)
+    char_u	*msg_ptr;
+    int		msg_len;
+{
+    /* Re-populate the ccline for redisplay for the '/return' cases */
+    ccline.cmdbuff = msg_ptr;
+    ccline.cmdlen  = msg_len;
+    redrawcmd();
+}
+#endif
+
     static void
 redrawcmdprompt()
 {
@@ -2353,10 +2415,24 @@ cursorcmd()
 {
     if (cmd_silent)
 	return;
-    msg_row = cmdline_row + (ccline.cmdspos / (int)Columns);
-    msg_col = ccline.cmdspos % (int)Columns;
-    if (msg_row >= Rows)
-	msg_row = Rows - 1;
+
+#ifdef FEAT_RIGHTLEFT
+    if (cmdmsg_rl)
+    {
+	msg_row = cmdline_row  + (ccline.cmdspos / (int)(Columns - 1));
+	msg_col = (int)Columns - (ccline.cmdspos % (int)(Columns - 1)) - 1;
+	if (msg_row <= 0)
+	    msg_row = Rows - 1;
+    }
+    else
+#endif
+    {
+	msg_row = cmdline_row + (ccline.cmdspos / (int)Columns);
+	msg_col = ccline.cmdspos % (int)Columns;
+	if (msg_row >= Rows)
+	    msg_row = Rows - 1;
+    }
+
     windgoto(msg_row, msg_col);
 #if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
     redrawcmd_preedit();
@@ -2371,7 +2447,12 @@ gotocmdline(clr)
     int		    clr;
 {
     msg_start();
-    msg_col = 0;	    /* always start in column 0 */
+#ifdef FEAT_RIGHTLEFT
+    if (cmdmsg_rl)
+	msg_col = Columns - 1;
+    else
+#endif
+	msg_col = 0;	    /* always start in column 0 */
     if (clr)		    /* clear the bottom line(s) */
 	msg_clr_eos();	    /* will reset clear_cmdline */
     windgoto(cmdline_row, 0);

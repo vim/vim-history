@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 6.2a.  Last change: 2002 Oct 29
+*os_vms.txt*    For Vim version 6.2b.  Last change: 2003 Apr 25
 
 
 		  VIM REFERENCE MANUAL
@@ -72,8 +72,8 @@ compiler is not fully ANSI C compatible in pre-processor directives
 semantics, therefore you have to use a converter program what will do the
 lion part of the job. For detailed instruction read file INSTALLvms.txt
 
-MMS_VIM.EXE is building together with VIM.EXE, but for XD.EXE you should 
-change to subdirectory and build it separately. 
+MMS_VIM.EXE is building together with VIM.EXE, but for XD.EXE you should
+change to subdirectory and build it separately.
 
 CTAGS is not part of Vim source distribution any more, however the OpenVMS
 specific source might contain CTAGS source files as it is described above.
@@ -106,7 +106,7 @@ Vim uses a special directory structure to hold the document and runtime files:
     |----- syntax
     |- vim60
     |----- doc
-    |----- syntax 
+    |----- syntax
     |- vim61
     |----- doc
     |----- syntax
@@ -115,8 +115,8 @@ Vim uses a special directory structure to hold the document and runtime files:
 
 Use: >
 
-	define/nolog VIM        device:[path.vim]       
-	define/nolog VIMRUNTIME device:[path.vim.vim60] 
+	define/nolog VIM        device:[path.vim]
+	define/nolog VIMRUNTIME device:[path.vim.vim60]
 	define/nolog TMP        device:[path.tmp]
 
 to get vim.exe to find its document, filetype, and syntax files, and to
@@ -129,14 +129,14 @@ If $VIMRUNTIME is not set, Vim will guess and try to set up automatically.
 Read more about at :help runtime
 
 If $TMP is not set, you will not be able to use some functions as CTAGS,
-XXD, printing etc. that use temporary directory for normal operation. 
+XXD, printing etc. that use temporary directory for normal operation.
 $TMP directory should be readable and writable by the user(s).
 The easiest way to set up $TMP is to define logical: >
 
-	define/nolog TMP SYS$SCRATCH 
-or as:
+	define/nolog TMP SYS$SCRATCH
+or as: >
 	define/nolog TMP SYS$LOGIN
-	
+
 ==============================================================================
 
 6. Practical usage					*vms-usage*
@@ -159,7 +159,7 @@ Set up some symbols: >
 
 Please, check the notes for customization and configuration of symbols.
 
-You may want to create .vimrc and .gvimrc files in your home directory 
+You may want to create .vimrc and .gvimrc files in your home directory
 (SYS$LOGIN) to overwrite default settings.
 
 The easiest way is just rename example files. You may leave the menu file
@@ -226,14 +226,14 @@ It will set up normal Vim work environment for every user on the system.
 7. GUI mode questions					*vms-gui*
 
 OpenVMS in a real mainframe OS, therefore even if it has a GUI console, most of
-the users does not use a native X/Window environment during normal operation. 
-It is not possible to start Vim in GUI mode "just like that". But anyhow it is 
+the users does not use a native X/Window environment during normal operation.
+It is not possible to start Vim in GUI mode "just like that". But anyhow it is
 not too complicate either.
 
 First of all: you will need an executable that is built with enabled GUI.
 
 Second: you need to have installed DECW/Motif on your VMS server, otherwise
-you will get errors that some shareable libraries are missing. 
+you will get errors that some shareable libraries are missing.
 
 Third: If you choose to run Vim with extra feature as GUI/GTK then you need
 GTK installation too or at least GTK runtime environment (LIBGTK etc.)
@@ -272,7 +272,7 @@ For more information type $help set disp in VMS prompt.
 
 Please note, that executables without GUI are slightly faster during startup
 then with enabled GUI in character mode. Therefore, if you do not use GUI
-features, it is worth to choose non GUI executables. 
+features, it is worth to choose non GUI executables.
 
 ==============================================================================
 
@@ -530,7 +530,7 @@ diff program as: >
 	define /nolog diff <GNU_PATH>diff.exe
 
 Another, more sophisticated solution is described below (8.12 diff-mode)
-There are some other programs as patch, make etc that may cause same problems. 
+There are some other programs as patch, make etc that may cause same problems.
 At www.polarhome.com is possible to download an GNU package for Alpha and VAX
 boxes that is meant to solve GNU problems on OpenVMS.
 ( Zoltan Arpadffy, Vim 6.1)
@@ -583,7 +583,7 @@ You can now use vim in diff-mode, e.g. to compare two files in read-only
 mode: >
 
     $ VIM -D/R <FILE1> <FILE2>
-    
+
 You can also define new symbols for vimdiff, e.g.: >
 
     $ VIMDIFF     :== 'VIM' -D/R
@@ -625,7 +625,7 @@ It exits VIMTUTOR.COM DCL script that can help Vim beginners to learn/make
 first steps with Vim on OpenVMS. Depending of binary distribution you may start
 it with: >
 
-	@vim:vimtutor 
+	@vim:vimtutor
 
 (Thomas.R.Wyant III, Vim 6.1)
 
@@ -633,13 +633,13 @@ it with: >
 
 9. VMS related changes					*vms-changes*
 
-Version 6.1 (2002 Mar 25) 
-- Minor "casting" changes 
+Version 6.1 (2002 Mar 25)
+- Minor "casting" changes
 - TCL init_tcl() problem fixed
-- CTAGS v5.2.3 included 
+- CTAGS v5.2.3 included
 - GNU tools binaries for OpenVMS
 - GTK runtime libraries available
-- VMS VIMtutor created 
+- VMS VIMtutor created
 - Make file changes
 	- GTK feature added
 	- PERL, PYTHON and TCL support improved

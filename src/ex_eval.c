@@ -15,6 +15,7 @@
 
 #if defined(FEAT_EVAL) || defined(PROTO)
 
+static void	free_msglist __ARGS((struct msglist *l));
 static int	throw_exception __ARGS((void *, int, char_u *));
 static void	rewind_conditionals __ARGS((struct condstack *,
 							    int, int, int *));
@@ -277,6 +278,25 @@ cause_errthrow(msg, severe, ignore)
 }
 
 /*
+ * Free a "msg_list" and the messages it contains.
+ */
+    static void
+free_msglist(l)
+    struct msglist  *l;
+{
+    struct msglist  *messages, *next;
+
+    messages = l;
+    while (messages != NULL)
+    {
+	next = messages->next;
+	vim_free(messages->msg);
+	vim_free(messages);
+	messages = next;
+    }
+}
+
+/*
  * Throw the message specified in the call to cause_errthrow() above as an
  * error exception.  If cstack is NULL, postpone the throw until do_cmdline()
  * has returned (see do_one_cmd()).
@@ -286,8 +306,6 @@ do_errthrow(cstack, cmdname)
     struct condstack	*cstack;
     char_u		*cmdname;
 {
-    struct msglist  *messages, *next;
-
     /*
      * Ensure that all commands in nested function calls and sourced files
      * are aborted immediately.
@@ -304,17 +322,7 @@ do_errthrow(cstack, cmdname)
 	return;
 
     if (throw_exception(*msg_list, ET_ERROR, cmdname) == FAIL)
-    {
-	messages = *msg_list;
-	do
-	{
-	    next = messages->next;
-	    vim_free(messages->msg);
-	    vim_free(messages);
-	    messages = next;
-	}
-	while (messages != NULL);
-    }
+	free_msglist(*msg_list);
     else
     {
 	if (cstack != NULL)
@@ -472,7 +480,8 @@ throw_exception(value, type, cmdname)
 	excp->value = value;
 
     excp->type = type;
-    excp->throw_name = vim_strsave(sourcing_name);
+    excp->throw_name = vim_strsave(sourcing_name == NULL
+					      ? (char_u *)"" : sourcing_name);
     if (excp->throw_name == NULL)
     {
 	if (type == ET_ERROR)
@@ -513,7 +522,6 @@ discard_exception(excp, was_finished)
     int			was_finished;
 {
     char_u		*saved_IObuff;
-    struct msglist	*messages, *next;
 
     if (excp == NULL)
     {
@@ -539,17 +547,7 @@ discard_exception(excp, was_finished)
     if (excp->type != ET_INTERRUPT)
 	vim_free(excp->value);
     if (excp->type == ET_ERROR)
-    {
-	messages = excp->messages;
-	do
-	{
-	    next = messages->next;
-	    vim_free(messages->msg);
-	    vim_free(messages);
-	    messages = next;
-	}
-	while (messages != NULL);
-    }
+	free_msglist(excp->messages);
     vim_free(excp->throw_name);
     vim_free(excp);
 }
@@ -1272,6 +1270,7 @@ ex_catch(eap)
     regmatch_T	regmatch;
     int		prev_got_int;
     struct condstack	*cstack = eap->cstack;
+    char_u	*pat;
 
     if (cstack->cs_trylevel <= 0 || cstack->cs_idx < 0)
     {
@@ -1304,7 +1303,16 @@ ex_catch(eap)
 	    rewind_conditionals(cstack, idx, CSF_WHILE, &cstack->cs_whilelevel);
     }
 
-    end = skip_regexp(eap->arg + 1, *eap->arg, TRUE, NULL);
+    if (*eap->arg == NUL)	/* no argument, catch all errors */
+    {
+	pat = (char_u *)".*";
+	end = NULL;
+    }
+    else
+    {
+	pat = eap->arg + 1;
+	end = skip_regexp(pat, *eap->arg, TRUE, NULL);
+    }
 
     if (!give_up)
     {
@@ -1324,7 +1332,7 @@ ex_catch(eap)
 	if (!skip && (cstack->cs_flags[idx] & CSF_THROWN)
 		&& !(cstack->cs_flags[idx] & CSF_CAUGHT))
 	{
-	    if (*end != NUL && !ends_excmd(*skipwhite(end + 1)))
+	    if (end != NULL && *end != NUL && !ends_excmd(*skipwhite(end + 1)))
 	    {
 		EMSG(_(e_trailing));
 		return;
@@ -1342,15 +1350,17 @@ ex_catch(eap)
 		/* Terminate the pattern and avoid the 'l' flag in 'cpoptions'
 		 * while compiling it. */
 		save_char = *end;
+		if (end != NULL)
+		    *end = NUL;
 		save_cpo  = p_cpo;
-		*end = NUL;
 		p_cpo = (char_u *)"";
-		regmatch.regprog = vim_regcomp(eap->arg + 1, TRUE);
+		regmatch.regprog = vim_regcomp(pat, TRUE);
 		regmatch.rm_ic = FALSE;
-		*end = save_char;
+		if (end != NULL)
+		    *end = save_char;
 		p_cpo = save_cpo;
 		if (regmatch.regprog == NULL)
-		    EMSG2(_(e_invarg2), eap->arg);
+		    EMSG2(_(e_invarg2), pat);
 		else
 		{
 		    /*
@@ -1399,7 +1409,8 @@ ex_catch(eap)
 	}
     }
 
-    eap->nextcmd = find_nextcmd(end);
+    if (end != NULL)
+	eap->nextcmd = find_nextcmd(end);
 }
 
 /*

@@ -22,6 +22,6 @@ endif
 
 xxd.exe: xxd.c
 	gcc $(CFLAGS) -s -o xxd.exe xxd.c $(LIBS)
-	
+
 clean:
 	-$(DEL) xxd.exe

@@ -121,6 +121,9 @@ EXTERN int	completion_interrupted INIT(= FALSE);
  * Functions for putting characters in the command line,
  * while keeping ScreenLines[] updated.
  */
+#ifdef FEAT_RIGHTLEFT
+EXTERN int	cmdmsg_rl INIT(= FALSE);    /* cmdline is drawn right to left */
+#endif
 EXTERN int	msg_col;
 EXTERN int	msg_row;
 EXTERN int	msg_scrolled;	/* Number of screen lines that windows have
@@ -1212,6 +1215,9 @@ EXTERN char_u e_nohebrew[]	INIT(=N_("E26: Hebrew cannot be used: Not enabled at 
 #ifndef FEAT_FKMAP
 EXTERN char_u e_nofarsi[]	INIT(=N_("E27: Farsi cannot be used: Not enabled at compile time\n"));
 #endif
+#ifndef FEAT_ARABIC
+EXTERN char_u e_noarabic[]	INIT(=N_("E800: Arabic cannot be used: Not enabled at compile time\n"));
+#endif
 #if defined(FEAT_SEARCH_EXTRA) || defined(FEAT_SYN_HL)
 EXTERN char_u e_nogroup[]	INIT(=N_("E28: No such highlight group name: %s"));
 #endif
@@ -1315,4 +1321,10 @@ EXTERN short disallow_gui	INIT(= FALSE);
  */
 #ifdef FEAT_FKMAP
 # include "farsi.h"
+#endif
+/*
+ * Optional Arabic support. Include it here, so EXTERN and INIT are defined.
+ */
+#ifdef FEAT_ARABIC
+# include "arabic.h"
 #endif

@@ -19,4 +19,5 @@ int F_isalpha __ARGS((int c));
 int F_isdigit __ARGS((int c));
 int F_ischar __ARGS((int c));
 void farsi_fkey __ARGS((cmdarg_T *cap));
+int arabic_shape __ARGS((int offset, int c));
 /* vim: set ft=c : */

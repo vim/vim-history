@@ -12,7 +12,7 @@
 # comment the next line if you do not want to add Native Language Support
 !define HAVE_NLS
 
-!define VER_MINOR 2a
+!define VER_MINOR 2b
 !define VER_MAJOR 6
 
 Name "Vim ${VER_MAJOR}.${VER_MINOR}"
@@ -214,7 +214,7 @@ Section "Add an Edit-with-Vim context menu entry"
 SectionIn 1,3
 
 SetOutPath $0
-File ..\GvimExt\gvimext.dll
+File ..\src\GvimExt\gvimext.dll
 
 StrCpy $1 "$1 -install-popup"
 
@@ -256,9 +256,9 @@ SectionDivider
 Section "VisVim Extension for MS Visual Studio"
 SectionIn 3
 
-SetOutPath $0\VisVim
-File ..\VisVim\VisVim.dll
-File ..\VisVim\README.txt
+SetOutPath $0
+File ..\src\VisVim\VisVim.dll
+File ..\src\VisVim\README_VisVim.txt
 ExecWait "regsvr32.exe /s $0\VisVim.dll"
 
 SectionEnd

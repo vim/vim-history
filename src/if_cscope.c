@@ -1,6 +1,7 @@
 /* vi:set ts=8 sts=4 sw=4:
  *
  * CSCOPE support for Vim added by Andy Kahn <kahn@zk3.dec.com>
+ * Ported to Win32 by Sergey Khorev <khorev@softlab.ru>
  *
  * The basic idea/structure of cscope for Vim was borrowed from Nvi.  There
  * might be a few lines of code that look similar to what Nvi has.
@@ -17,7 +18,17 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#if defined(UNIX)
 #include <sys/wait.h>
+#elif defined(WIN32)
+# include <io.h>
+# include <fcntl.h>
+# include <process.h>
+# define STDIN_FILENO    0
+# define STDOUT_FILENO   1
+# define STDERR_FILENO   2
+# define pipe(fds) _pipe(fds, 256, O_TEXT|O_NOINHERIT)
+#endif
 #include "if_cscope.h"
 
 
@@ -432,7 +443,11 @@ staterr:
 	if (fname2 == NULL)
 	    goto add_err;
 
-	while (fname[strlen(fname)-1] == '/')
+	while (fname[strlen(fname)-1] == '/'
+#ifdef WIN32
+		|| fname[strlen(fname)-1] == '\\'
+#endif
+		)
 	{
 	    fname[strlen(fname)-1] = '\0';
 	    if (strlen(fname) == 0)
@@ -461,7 +476,12 @@ staterr:
 	    (void)sprintf(buf, _("Added cscope database %s"), fname2);
 	vim_free(fname2);
     }
+#if defined(UNIX)
     else if (S_ISREG(statbuf.st_mode) || S_ISLNK(statbuf.st_mode))
+#elif defined(WIN32)
+	/* substitute define S_ISREG from os_unix.h */
+    else if (((statbuf.st_mode) & S_IFMT) == S_IFREG) 
+#endif
     {
 	i = cs_insert_filelist(fname, ppath, flags, &statbuf);
 	if (p_csverbose)
@@ -659,6 +679,13 @@ cs_create_connection(i)
 {
     int to_cs[2], from_cs[2], len;
     char *prog, *cmd, *ppath = NULL;
+#ifdef WIN32
+    int in_save, out_save, err_save;
+    int ph;
+# ifdef FEAT_GUI
+    char *console = NULL;
+# endif
+#endif
 
     /*
      * Cscope reads from to_cs[0] and writes to from_cs[1]; vi reads from
@@ -666,11 +693,18 @@ cs_create_connection(i)
      */
     to_cs[0] = to_cs[1] = from_cs[0] = from_cs[1] = -1;
     if (pipe(to_cs) < 0 || pipe(from_cs) < 0)
+#if defined(UNIX)
 	goto err;
 
     switch (csinfo[i].pid = fork())
     {
     case -1:
+#elif defined(WIN32)
+        /*
+         * Don't want to duplicate code, so some spaghetti code
+         */
+        {
+#endif
 err:
 	if (to_cs[0] != -1)
 	    (void)close(to_cs[0]);
@@ -682,7 +716,14 @@ err:
 	    (void)close(from_cs[1]);
 	(void)EMSG(_("E566: Could not create cscope pipes"));
 	return CSCOPE_FAILURE;
+#if defined(WIN32)
+        }
+        in_save = dup(STDIN_FILENO);
+        out_save = dup(STDOUT_FILENO);
+        err_save = dup(STDERR_FILENO);
+#elif defined(UNIX)
     case 0:				/* child: run cscope. */
+#endif
 	if (dup2(to_cs[0], STDIN_FILENO) == -1)
 	    perror("cs_create_connection 1");
 	if (dup2(from_cs[1], STDOUT_FILENO) == -1)
@@ -691,9 +732,17 @@ err:
 	    perror("cs_create_connection 3");
 
 	/* close unused */
+#if defined(UNIX)
 	(void)close(to_cs[1]);
 	(void)close(from_cs[0]);
-
+#elif defined(WIN32)
+        /* On win32 we must close opposite ends because we are the parent */
+	(void)close(to_cs[0]);
+	(void)close(from_cs[1]);
+        
+        to_cs[0] = -1;
+        from_cs[1] = -1;
+#endif
 	/* expand the cscope exec for env var's */
 	if ((prog = (char *)alloc(MAXPATHL + 1)) == NULL)
 	{
@@ -730,7 +779,11 @@ err:
 	}
 
 	/* run the cscope command; is there execl for non-unix systems? */
+#if defined(UNIX)
 	(void)sprintf(cmd, "exec %s -dl -f %s", prog, csinfo[i].fname);
+#elif defined(WIN32)
+	(void)sprintf(cmd, "%s -dl -f %s", prog, csinfo[i].fname);
+#endif
 	if (csinfo[i].ppath != NULL)
 	{
 	    (void)strcat(cmd, " -P");
@@ -741,15 +794,56 @@ err:
 	    (void)strcat(cmd, " ");
 	    (void)strcat(cmd, csinfo[i].flags);
 	}
+# ifdef UNIX        
+      /* on Win32 we still need prog */
 	vim_free(prog);
+# endif      
 	vim_free(ppath);
 
+#if defined(UNIX)
 	if (execl("/bin/sh", "sh", "-c", cmd, NULL) == -1)
 	    perror(_("cs_create_connection exec failed"));
 
 	exit (127);
 	/* NOTREACHED */
     default:	/* parent. */
+#elif defined(WIN32)
+# ifdef FEAT_GUI
+        /* Dirty hack to hide anoying console window */
+        if (AllocConsole())
+        {
+            console = (char *)alloc(1024);
+            if (console == NULL)
+                FreeConsole();
+            else
+            {
+                GetConsoleTitle(console, 1024); /* save for future restore */
+                SetConsoleTitle("GVIMCS{5499421B-CBEF-45b0-85EF-38167FDEA5C5}GVIMCS");
+            }
+        }
+# endif
+        /* May be use &shell, &shellquote etc */        
+	  ph = _spawnlp(_P_NOWAIT, prog, cmd, NULL);
+        vim_free(prog);
+        vim_free(cmd);
+# ifdef FEAT_GUI
+        /* Dirty hack part two */
+        if (console != NULL)
+        {
+            HWND h;
+            if (h = FindWindow(NULL, "GVIMCS{5499421B-CBEF-45b0-85EF-38167FDEA5C5}GVIMCS"))
+                ShowWindow(h, SW_HIDE);
+            SetConsoleTitle(console);
+            FreeConsole();
+            vim_free(console);
+        }
+# endif
+        if (ph == -1)
+        {
+            perror(_("cs_create_connection exec failed"));
+            goto err;
+        }
+#endif /* defined(WIN32) */
 	/*
 	 * Save the file descriptors for later duplication, and
 	 * reopen as streams.
@@ -759,12 +853,22 @@ err:
 	if ((csinfo[i].fr_fp = fdopen(from_cs[0], "r")) == NULL)
 	    perror(_("cs_create_connection: fdopen for fr_fp failed"));
 
+#if defined(UNIX)
 	/* close unused */
 	(void)close(to_cs[0]);
 	(void)close(from_cs[1]);
 
 	break;
     }
+#elif defined(WIN32)
+	/* restore stdhandles */
+    dup2(in_save, STDIN_FILENO);
+    dup2(out_save, STDOUT_FILENO);
+    dup2(err_save, STDERR_FILENO);
+    close(in_save);
+    close(out_save);
+    close(err_save);
+#endif
     return CSCOPE_SUCCESS;
 } /* cs_create_connection */
 
@@ -943,9 +1047,15 @@ clear_csinfo(i)
     csinfo[i].fname  = NULL;
     csinfo[i].ppath  = NULL;
     csinfo[i].flags  = NULL;
-    csinfo[i].pid    = -1;
+#if defined(UNIX)
     csinfo[i].st_dev = (dev_t)0;
     csinfo[i].st_ino = (ino_t)0;
+#elif defined(WIN32)
+    csinfo[i].nVolume = 0;
+    csinfo[i].nIndexHigh = 0;
+    csinfo[i].nIndexLow = 0;
+#endif
+    csinfo[i].pid    = -1;
     csinfo[i].fr_fp  = NULL;
     csinfo[i].to_fp  = NULL;
 }
@@ -963,11 +1073,39 @@ cs_insert_filelist(fname, ppath, flags, sb)
     struct stat *sb;
 {
     short i;
+#ifdef WIN32
+    HANDLE hFile;
+    BY_HANDLE_FILE_INFORMATION bhfi;
+    hFile = CreateFile (fname, GENERIC_READ, 0, NULL, OPEN_EXISTING,
+			FILE_ATTRIBUTE_NORMAL, NULL);
+    if (!hFile)
+    {
+	if (p_csverbose)
+	    (void)EMSG(_("cannot open cscope database"));
+	return -1;
+    }
+    if (!GetFileInformationByHandle(hFile, &bhfi))
+    {
+	CloseHandle(hFile);
+	if (p_csverbose)
+	    (void)EMSG(_("cannot get cscope database information"));
+	return -1;
+    }
+    else
+	CloseHandle(hFile);
+#endif
 
     for (i = 0; i < CSCOPE_MAX_CONNECTIONS; i++)
     {
-	if (csinfo[i].fname &&
-	    csinfo[i].st_dev == sb->st_dev && csinfo[i].st_ino == sb->st_ino)
+	if (csinfo[i].fname 
+#if defined(UNIX)
+	    && csinfo[i].st_dev == sb->st_dev && csinfo[i].st_ino == sb->st_ino
+#elif defined(WIN32)
+	    && csinfo[i].nVolume == bhfi.dwVolumeSerialNumber
+	    && csinfo[i].nIndexHigh == bhfi.nFileIndexHigh
+	    && csinfo[i].nIndexLow == bhfi.nFileIndexLow
+#endif
+	    )
 	{
 	    if (p_csverbose)
 		(void)EMSG(_("E568: duplicate cscope database not added"));
@@ -1016,9 +1154,15 @@ cs_insert_filelist(fname, ppath, flags, sb)
     } else
 	csinfo[i].flags = NULL;
 
+#if defined(UNIX)
     csinfo[i].st_dev = sb->st_dev;
     csinfo[i].st_ino = sb->st_ino;
 
+#elif defined(WIN32)
+    csinfo[i].nVolume = bhfi.dwVolumeSerialNumber;
+    csinfo[i].nIndexLow = bhfi.nFileIndexLow;
+    csinfo[i].nIndexHigh = bhfi.nFileIndexHigh;
+#endif
     return i;
 } /* cs_insert_filelist */
 
@@ -1422,9 +1566,17 @@ cs_pathcomponents(path)
 
     s = path + strlen(path) - 1;
     for (i = 0; i < p_cspc; ++i)
-	while (s > path && *--s != '/')
+	while (s > path && *--s != '/'
+#ifdef WIN32 
+		&& *--s != '\\'
+#endif
+		)
 	    ;
-    if (s > path && *s == '/')
+    if (s > path && *s == '/'
+#ifdef WIN32
+	|| s > path && *s == '\\'
+#endif
+	    )
 	++s;
     return s;
 }
@@ -1550,7 +1702,14 @@ cs_print_tags_priv(matches, cntxts, num_matches)
 			  (cntxts[idx] == NULL) ? "GLOBAL" : cntxts[idx]);
 
 	    /* print the context only if it fits on the same line */
+#ifdef _MSC_VER
+# pragma warning( push )
+# pragma warning( disable : 4018 ) /* 'expression' : signed/unsigned mismatch */
+#endif
 	    if (msg_col + strlen(buf) >= (int)Columns)
+#ifdef _MSC_VER
+# pragma warning( pop )
+#endif
 		msg_putchar('\n');
 	    msg_advance(12);
 	    MSG_PUTS_LONG(buf);
@@ -1634,7 +1793,15 @@ cs_release_csp(i, freefnpp)
     int i;
     int freefnpp;
 {
+#if defined(UNIX)
     int pstat;
+#elif defined(WIN32)
+    /*
+     * Trying to exit normally (not sure whether it is fit to UNIX cscope
+     */
+    (void)fputs("q\n", csinfo[i].to_fp);
+    (void)fflush(csinfo[i].to_fp);
+#endif
 
     if (csinfo[i].fr_fp != NULL)
 	(void)fclose(csinfo[i].fr_fp);
@@ -1645,11 +1812,13 @@ cs_release_csp(i, freefnpp)
      * Safety check: If the PID would be zero here, the entire X session would
      * be killed...
      */
+#if defined(UNIX)
     if (csinfo[i].pid != 0)
     {
 	kill(csinfo[i].pid, SIGTERM);
 	(void)waitpid(csinfo[i].pid, &pstat, 0);
     }
+#endif
 
     if (freefnpp)
     {
@@ -1762,7 +1931,11 @@ cs_resolve_file(i, name)
      */
     if (csinfo[i].ppath != NULL &&
 	(strncmp(name, csinfo[i].ppath, strlen(csinfo[i].ppath)) != 0) &&
-	(name[0] != '/'))
+	(name[0] != '/')
+#ifdef WIN32
+	&& name[0] != '\\' && name[1] != ':'
+#endif
+	)
 	(void)sprintf(fullname, "%s/%s", csinfo[i].ppath, name);
     else
 	(void)sprintf(fullname, "%s", name);

@@ -8,7 +8,7 @@ USEDLL = no
 RT_DEF = -D_RTLDLL
 RT_LIB = cw32i.lib
 !else
-RT_DEF = 
+RT_DEF =
 RT_LIB = cw32.lib
 !endif
 

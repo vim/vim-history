@@ -4,9 +4,9 @@
 # Note: ja.sjis, *.cp1250 and zh_CN.cp936 are only for MS-Windows, they are
 # not installed on Unix
 
-LANGUAGES = af cs de en_gb es fr it ja ko pl sk uk zh_TW zh_CN zh_CN.UTF-8
+LANGUAGES = af cs de en_gb es fr it ja ko pl sk uk zh_TW zh_TW.UTF-8 zh_CN zh_CN.UTF-8
 MOFILES = af.mo cs.mo de.mo en_gb.mo es.mo fr.mo it.mo ja.mo \
-		ko.mo pl.mo sk.mo uk.mo zh_TW.mo zh_CN.mo zh_CN.UTF-8.mo
+		ko.mo pl.mo sk.mo uk.mo zh_TW.mo zh_TW.UTF-8.mo zh_CN.mo zh_CN.UTF-8.mo
 
 PACKAGE = vim
 SHELL = /bin/sh
@@ -60,6 +60,7 @@ converted: ja.sjis.mo cs.cp1250.mo pl.cp1250.mo sk.cp1250.mo zh_CN.cp936.mo
 # ja.sjis.po is outdated.
 ja.sjis.po: ja.po
 	@$(MAKE) sjiscorr
+	rm -f ja.sjis.po
 	iconv -f euc-jp -t cp932 ja.po | ./sjiscorr > ja.sjis.po
 
 sjiscorr: sjiscorr.c
@@ -67,22 +68,26 @@ sjiscorr: sjiscorr.c
 
 # Convert cs.po to create cs.cp1250.po.
 cs.cp1250.po: cs.po
+	rm -f cs.cp1250.po
 	iconv -f iso-8859-2 -t cp1250 cs.po | \
 		sed -e 's/charset=ISO-8859-2/charset=cp1250/' -e 's/# Original translations/# Generated from cs.po, DO NOT EDIT/' > cs.cp1250.po
 
 # Convert pl.po to create pl.cp1250.po.
 pl.cp1250.po: pl.po
+	rm -f pl.cp1250.po
 	iconv -f iso-8859-2 -t cp1250 pl.po | \
 		sed -e 's/charset=ISO-8859-2/charset=cp1250/' -e 's/# Original translations/# Generated from pl.po, DO NOT EDIT/' > pl.cp1250.po
 
 # Convert sk.po to create sk.cp1250.po.
 sk.cp1250.po: sk.po
+	rm -f sk.cp1250.po
 	iconv -f iso-8859-2 -t cp1250 sk.po | \
 		sed -e 's/charset=ISO-8859-2/charset=cp1250/' -e 's/# Original translations/# Generated from sk.po, DO NOT EDIT/' > sk.cp1250.po
 
 # Convert zh_CN.po to create zh_CN.cp936.po.
 # set 'charset' to gbk to avoid that msfmt generates a warning
 zh_CN.cp936.po: zh_CN.po
+	rm -f zh_CN.cp936.po
 	iconv -f gb2312 -t cp936 zh_CN.po | \
 		sed -e 's/charset=gb2312/charset=gbk/' -e 's/# Original translations/# Generated from zh_CN.po, DO NOT EDIT/' > zh_CN.cp936.po
 

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.2a.  Last change: 2003 Apr 20
+*options.txt*   For Vim version 6.2b.  Last change: 2003 Apr 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -614,7 +614,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	"double":	Use twice the width of ASCII characters.
 
 	There are a number of CJK fonts for which the width of glyphs for
-	those characters are solely based on how many octets they take in 
+	those characters are solely based on how many octets they take in
 	legacy/traditional CJK encodings.  In those encodings, Euro,
 	Registered sign, Greek/Cyrillic letters are represented by two octets,
 	therefore those fonts have "wide" glyphs for them. This is also
@@ -623,9 +623,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	vim is running inside a terminal (emulators) that uses a CJK font
 	(or vim is run inside an xterm invoked with "-cjkwidth" option.),
 	this option should be set to "double" to match the width perceived
-	by Vim with the width of glyphs in the font.  Perhaps it also has 
-	to be set to "double" under CJK Windows 9x/ME or Windows 2k/XP 
-	when the system locale is set to one of CJK locales.  See Unicode 
+	by Vim with the width of glyphs in the font.  Perhaps it also has
+	to be set to "double" under CJK Windows 9x/ME or Windows 2k/XP
+	when the system locale is set to one of CJK locales.  See Unicode
 	Standard Annex #11 (http://www.unicode.org/reports/tr11).
 
 			*'autochdir'* *'acd'* *'noatuochdir'* *'noacd'*
@@ -640,6 +640,45 @@ A jump table for the options with a short description can be found at |Q_op|.
 	file which was opened or selected.  This option is provided for
 	backward compatibility with the vim released with Sun ONE Studio 4
 	Enterprise Edition.
+
+				*'arabic'* *'arab'* *'noarabic'* *'noarab'*
+'arabic' 'arab'		boolean (default off)
+			local to window
+			{not in Vi}
+			{only available when compiled with the |+arabic|
+			feature}
+	When on, the second language is Arabic. In editing mode CTRL-^
+        toggles the keyboard map between Arabic and English.  When on,
+	this option forces the 'keymap' to Arabic for proper keyboard mapping
+	and sets 'delcombine'.
+	It enables the 'rightleft' mode and sets 'arabicshape' if 'termbidi'
+	is not set.
+
+	When disabled, the keymap is removed, 'rightleft' is reset,
+	'delcombine' is reset.
+	Note that 'arabicshape' isn't reset.
+        Also see |arabic.txt|.
+
+					*'arabicshape'* *'arshape'*
+					*'noarabicshape'* *'noarshape'*
+'arabicshape' 'arshape'	boolean (default off)
+			global
+			{not in Vi}
+			{only available when compiled with the |+arabic|
+			feature}
+	When on, the required visual character corrections that need to
+	take place for displaying the Arabic language take affect.
+	Shaping, in essence, gets enabled; the term is a broad one which
+	encompasses,
+	  a) the changing/morphing of characters based on their location
+	     within a word (initial, medial, final and stand-alone).
+	  b) the enabling of the ability to compose characters
+	  c) the enabling of the required combining of some characters
+	When disabled the character display reverts back to each character's
+	true stand-alone form.
+	This option is ignored when 'termbidi' is set.
+	Arabic is a complex language which requires other settings, for
+	further details see |arabic.txt|.
 
 			*'autoindent'* *'ai'* *'noautoindent'* *'noai'*
 'autoindent' 'ai'	boolean	(default off)
@@ -4428,8 +4467,22 @@ A jump table for the options with a short description can be found at |Q_op|.
 	written from the right to the left such as Hebrew and Arabic.  This
 	option is per window, so it is possible to edit mixed files
 	simultaneously, or to view the same file in both ways (this is
-	sometimes useful when editing Hebrew TeX--XeT files).  See
-	|rileft.txt|.
+	sometimes useful when editing Hebrew TeX--XeT files).
+	See |rileft.txt|.
+
+			*'rightleftcmd'* *'rlc'* *'norightleftcmd'* *'norlc'*
+'rightleftcmd' 'rlc'	string	(default "search")
+			local to window
+			{not in Vi}
+			{only available when compiled with the |+rightleft|
+			feature}
+	Each word in this option enables the command line editing to work in
+	right-to-left mode for a group of commands:
+
+		search		"/" and "?" commands
+
+	This is useful for languages such as Hebrew, Arabic and Farsi.
+	The 'rightleft' option must be set for 'rightleftcmd' to take effect.
 
 					 *'ruler'* *'ru'* *'noruler'* *'noru'*
 'ruler' 'ru'		boolean	(default off)
@@ -5541,6 +5594,21 @@ A jump table for the options with a short description can be found at |Q_op|.
 	For example: >
 		:set term=$TERM
 <	See |termcap|.
+
+						*'termbidi'* *'tbidi'*
+						*'notermbidi'* *'notbidi'*
+'termbidi' 'tbidi'	boolean (default off, on for "mlterm")
+			global
+			{not in Vi}
+			{only available when compiled with the |+arabic|
+			feature}
+	The terminal is in charge of Bi-directionality of text (as specified
+	by Unicode).  The terminal is also expected to do the required shaping
+	that some languages (such as Arabic) require.
+	Setting this option implies that 'rightleft' is not set when
+	_('arabic') is set and the value of 'arabicshape' will be ignored.
+	This option is reset when the GUI is started.
+	For further details see |arabic.txt|.
 
 					*'termencoding'* *'tenc'*
 'termencoding' 'tenc'	string	(default "")

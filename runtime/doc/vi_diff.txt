@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.2a.  Last change: 2003 Mar 03
+*vi_diff.txt*   For Vim version 6.2b.  Last change: 2003 Mar 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -780,6 +780,8 @@ Only Vim is able to accept options in between and after the file names.
 
 -f		Vim: Run GUI in foreground (Amiga: don't open new window).
 -f {session}	Elvis: Use {session} as the session file.
+
+-A		Vim: Start in Arabic mode (when compiled with Arabic).
 
 -F		Vim: Start in Farsi mode (when compiled with Farsi).
 		Nvi: Fast start, don't read the entire file when editing

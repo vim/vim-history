@@ -1,6 +1,6 @@
 " Script to define the syntax menu in synmenu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 Apr 05
+" Last Change:	2003 Apr 27
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/synmenu.vim
@@ -183,6 +183,7 @@ SynMenu HIJK.Inno\ setup:iss
 SynMenu HIJK.InstallShield\ script:ishd
 SynMenu HIJK.Interactive\ Data\ Lang:idlang
 SynMenu HIJK.IPfilter:ipfilter
+SynMenu HIJK.JAL:jal
 SynMenu HIJK.JAM:jam
 SynMenu HIJK.Jargon:jargon
 SynMenu HIJK.Java.Java:java

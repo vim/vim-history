@@ -140,7 +140,7 @@ syn keyword plsqlException NOT_LOGGED_ON PROGRAM_ERROR ROWTYPE_MISMATCH
 syn keyword plsqlException SELF_IS_NULL STORAGE_ERROR SUBSCRIPT_BEYOND_COUNT
 syn keyword plsqlException SUBSCRIPT_OUTSIDE_LIMIT SYS_INVALID_ROWID
 syn keyword plsqlException TIMEOUT_ON_RESOURCE TOO_MANY_ROWS VALUE_ERROR
-syn keyword plsqlException ZERO_DIVIDE 
+syn keyword plsqlException ZERO_DIVIDE
 
 " Oracle Pseudo Colums.
 syn keyword plsqlPseudo CURRVAL LEVEL NEXTVAL ROWID ROWNUM

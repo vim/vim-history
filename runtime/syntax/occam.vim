@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	occam
-" Copyright:	Fred Barnes <frmb2@ukc.ac.uk>, Mario Schweigler <ms44@ukc.ac.uk>
-" Maintainer:	Mario Schweigler <ms44@ukc.ac.uk>
-" Last Change:	26 October 2002
+" Copyright:	Fred Barnes <frmb2@kent.ac.uk>, Mario Schweigler <ms44@kent.ac.uk>
+" Maintainer:	Mario Schweigler <ms44@kent.ac.uk>
+" Last Change:	23 April 2003
 
 if version < 600
   syntax clear

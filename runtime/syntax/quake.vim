@@ -2,9 +2,9 @@
 " Language:		Quake[1-3] Configuration File.
 " Maintainer:		Nikolai 'pcp' Weibull <da.box@home.se>
 " Latest Revision: 2002-07-31
-" Variables: 	quake_is_quake1 - the syntax is to be used for quake1 configs
-" 		quake_is_quake2 - the syntax is to be used for quake2 configs
-" 		quake_is_quake3 - the syntax is to be used for quake3 configs
+" Variables:	quake_is_quake1 - the syntax is to be used for quake1 configs
+"		quake_is_quake2 - the syntax is to be used for quake2 configs
+"		quake_is_quake3 - the syntax is to be used for quake3 configs
 
 
 if version < 600
@@ -18,9 +18,9 @@ endif
 " For version 5.x: Set it globally
 " For version 6.x: Set it locally
 if version >= 600
-  	command -nargs=1 SetIsk setlocal iskeyword=<args>
+	command -nargs=1 SetIsk setlocal iskeyword=<args>
 else
-  	command -nargs=1 SetIsk set iskeyword=<args>
+	command -nargs=1 SetIsk set iskeyword=<args>
 endif
 SetIsk 48-57,65-90,97-122,+,-,_
 delcommand SetIsk
@@ -66,8 +66,8 @@ syn keyword	quakeCommand	-movedown -moveleft -moveright -moveup play
 syn keyword	quakeCommand	quit rcon reconnect record -right say say_team
 syn keyword	quakeCommand	screenshot serverinfo serverrecord serverstop
 syn keyword	quakeCommand	set sizedown sizeup snd_restart soundinfo
-syn keyword	quakeCommand	soundlist -speed spmap status -strafe stopsound 
-syn keyword	quakeCommand	toggleconsole unbind unbindall userinfo pause 
+syn keyword	quakeCommand	soundlist -speed spmap status -strafe stopsound
+syn keyword	quakeCommand	toggleconsole unbind unbindall userinfo pause
 syn keyword	quakeCommand	vid_restart viewpos wait weapnext weapprev
 
 if exists("quake_is_quake1")
@@ -138,9 +138,9 @@ if version >= 508 || !exists("did_screen_syn_inits")
 		command -nargs=+ HiLink hi def link <args>
 	endif
 
-	HiLink quakeComment 	Comment
-	HiLink quakeTodo 	Todo
-	HiLink quakeString 	String
+	HiLink quakeComment	Comment
+	HiLink quakeTodo	Todo
+	HiLink quakeString	String
 	HiLink quakeNumber	Number
 	HiLink quakeOctal	Number
 	HiLink quakeOctalZero	Number

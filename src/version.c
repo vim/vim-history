@@ -60,6 +60,11 @@ static char *(features[]) =
 	"-ARP",
 # endif
 #endif
+#ifdef FEAT_ARABIC
+	"+arabic",
+#else
+	"-arabic",
+#endif
 #ifdef FEAT_AUTOCMD
 	"+autocmd",
 #else
@@ -811,7 +816,11 @@ list_version()
     MSG_PUTS(_("with X11-Motif GUI."));
 #  else
 #   ifdef FEAT_GUI_ATHENA
+#    ifdef FEAT_GUI_NEXTAW
+    MSG_PUTS(_("with X11-neXtaw GUI."));
+#    else
     MSG_PUTS(_("with X11-Athena GUI."));
+#    endif
 #   else
 #    ifdef FEAT_GUI_BEOS
     MSG_PUTS(_("with BeOS GUI."));

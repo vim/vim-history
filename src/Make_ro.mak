@@ -26,7 +26,7 @@ Vim: $(OBJS)
 install: Vim
 	squeeze -v Vim @.!Vim.Vim
 
-clean:	
+clean:
 	create o.!fake! 0
 	wipe o.* ~cf
 	remove Vim

@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.2a.  Last change: 2003 Apr 20
+*change.txt*    For Vim version 6.2b.  Last change: 2003 Apr 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1372,10 +1372,10 @@ And a few warnings:
 - When part of the text is not properly separated in paragraphs, making
   changes in this text will cause it to be formatted anyway.  Consider doing >
 
-  	:set fo-=a
+	:set fo-=a
 
-- When using the 'w' flag (trailing space means paragraph continues) and 
-  deleting the last line of a paragraph with |dd|, the paragraph will be 
+- When using the 'w' flag (trailing space means paragraph continues) and
+  deleting the last line of a paragraph with |dd|, the paragraph will be
   joined with the next one.
 
 - Changed text is saved for undo.  Formatting is also a change.  Thus each

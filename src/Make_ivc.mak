@@ -206,7 +206,7 @@ LINK32_FLAGS=$(LINK32_FLAGS) libcd.lib /subsystem:console /debug /profile /pdb:.
 
 !ENDIF
 
-ALL : .\$(VIM).exe vimrun.exe install.exe uninstal.exe xxd/xxd.exe
+ALL : .\$(VIM).exe vimrun.exe install.exe uninstal.exe xxd/xxd.exe GvimExt/gvimext.dll
 
 LINK32_OBJS= \
 	$(EXTRAS) \
@@ -287,6 +287,11 @@ vimrun.exe: vimrun.c
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd
 	$(MAKE) /NOLOGO -f Make_mvc.mak
+	cd ..
+
+GvimExt/gvimext.dll: GvimExt/gvimext.cpp GvimExt/gvimext.rc GvimExt/gvimext.h
+	cd GvimExt
+	$(MAKE) /NOLOGO -f Makefile
 	cd ..
 
 {.}.c{$(INTDIR)/}.obj:

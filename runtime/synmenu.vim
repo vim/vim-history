@@ -163,18 +163,19 @@ an 50.40.260 &Syntax.HIJK.Inno\ setup :cal SetSyn("iss")<CR>
 an 50.40.270 &Syntax.HIJK.InstallShield\ script :cal SetSyn("ishd")<CR>
 an 50.40.280 &Syntax.HIJK.Interactive\ Data\ Lang :cal SetSyn("idlang")<CR>
 an 50.40.290 &Syntax.HIJK.IPfilter :cal SetSyn("ipfilter")<CR>
-an 50.40.310 &Syntax.HIJK.JAM :cal SetSyn("jam")<CR>
-an 50.40.320 &Syntax.HIJK.Jargon :cal SetSyn("jargon")<CR>
-an 50.40.330 &Syntax.HIJK.Java.Java :cal SetSyn("java")<CR>
-an 50.40.340 &Syntax.HIJK.Java.JavaCC :cal SetSyn("javacc")<CR>
-an 50.40.350 &Syntax.HIJK.Java.Java\ Server\ Pages :cal SetSyn("jsp")<CR>
-an 50.40.360 &Syntax.HIJK.Java.Java\ Properties :cal SetSyn("jproperties")<CR>
-an 50.40.370 &Syntax.HIJK.JavaScript :cal SetSyn("javascript")<CR>
-an 50.40.380 &Syntax.HIJK.Jess :cal SetSyn("jess")<CR>
-an 50.40.390 &Syntax.HIJK.Jgraph :cal SetSyn("jgraph")<CR>
-an 50.40.410 &Syntax.HIJK.KDE\ script :cal SetSyn("kscript")<CR>
-an 50.40.420 &Syntax.HIJK.Kimwitu++ :cal SetSyn("kwt")<CR>
-an 50.40.430 &Syntax.HIJK.KixTart :cal SetSyn("kix")<CR>
+an 50.40.310 &Syntax.HIJK.JAL :cal SetSyn("jal")<CR>
+an 50.40.320 &Syntax.HIJK.JAM :cal SetSyn("jam")<CR>
+an 50.40.330 &Syntax.HIJK.Jargon :cal SetSyn("jargon")<CR>
+an 50.40.340 &Syntax.HIJK.Java.Java :cal SetSyn("java")<CR>
+an 50.40.350 &Syntax.HIJK.Java.JavaCC :cal SetSyn("javacc")<CR>
+an 50.40.360 &Syntax.HIJK.Java.Java\ Server\ Pages :cal SetSyn("jsp")<CR>
+an 50.40.370 &Syntax.HIJK.Java.Java\ Properties :cal SetSyn("jproperties")<CR>
+an 50.40.380 &Syntax.HIJK.JavaScript :cal SetSyn("javascript")<CR>
+an 50.40.390 &Syntax.HIJK.Jess :cal SetSyn("jess")<CR>
+an 50.40.400 &Syntax.HIJK.Jgraph :cal SetSyn("jgraph")<CR>
+an 50.40.420 &Syntax.HIJK.KDE\ script :cal SetSyn("kscript")<CR>
+an 50.40.430 &Syntax.HIJK.Kimwitu++ :cal SetSyn("kwt")<CR>
+an 50.40.440 &Syntax.HIJK.KixTart :cal SetSyn("kix")<CR>
 an 50.50.100 &Syntax.L-Ma.Lace :cal SetSyn("lace")<CR>
 an 50.50.110 &Syntax.L-Ma.LamdaProlog :cal SetSyn("lprolog")<CR>
 an 50.50.120 &Syntax.L-Ma.Latte :cal SetSyn("latte")<CR>

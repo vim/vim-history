@@ -1,3 +1,5 @@
+# Makefile for GvimExt, using MSVC
+
 TARGETOS=BOTH
 APPVER=4.0
 

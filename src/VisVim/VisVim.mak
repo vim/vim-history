@@ -88,7 +88,7 @@ RSC_PROJ=$(RSC_PROJ) /l 0x409 /d "_AFXDLL" /fo"$(INTDIR)/VisVim.res"
 LINK32_FLAGS=$(LINK32_FLAGS) /nologo /subsystem:windows /dll /machine:I386\
  /incremental:no /def:".\VisVim.def"\
  /out:"$(OUTDIR)/VisVim.dll" /implib:"$(OUTDIR)/VisVim.lib"
- 
+
 ALL : "$(OUTDIR)\VisVim.dll"
 
 CLEAN : 
@@ -161,7 +161,7 @@ SOURCE=.\VisVim.odl
 # Begin Source File
 
 SOURCE=.\StdAfx.cpp
-	
+
 "$(INTDIR)\StdAfx.obj" : $(SOURCE) "$(INTDIR)"
 
 # End Source File

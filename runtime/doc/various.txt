@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.2a.  Last change: 2003 Apr 19
+*various.txt*   For Vim version 6.2b.  Last change: 2003 Apr 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -230,6 +230,7 @@ g8			Print the hex values of the bytes used in the
 
 							*+feature-list*
    *+ARP*		Amiga only: ARP support included
+B  *+arabic*		|arabic| language support
 N  *+autocmd*		|:autocmd|, automatic commands
 m  *+balloon_eval*	|balloon-eval| support
 N  *+browse*		|:browse| command
@@ -266,6 +267,7 @@ N  *+folding*		|folding|
    *+fork*		Unix only: |fork| shell commands
 N  *+gettext*		message translations |multi-lang|
    *+GUI_Athena*	Unix only: Athena |GUI|
+   *+GUI_neXtaw*	Unix only: neXtaw |GUI|
    *+GUI_BeOS*		BeOS only: BeOS |GUI|
    *+GUI_GTK*		Unix only: GTK+ |GUI|
    *+GUI_Motif*		Unix only: Motif |GUI|
@@ -544,7 +546,7 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 <			{not in Vi}
 
 							*:helpg* *:helpgrep*
-:helpg[rep] {pattern}	
+:helpg[rep] {pattern}
 			Search all help text files and make a list of lines
 			in which {pattern} matches.  Jumps to the first match.
 			You can navigate through the matches with the

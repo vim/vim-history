@@ -617,6 +617,15 @@ main
 		    argv_idx = -1;	/* skip to next argument */
 		break;
 
+	    case 'A':		/* "-A" start in Arabic mode */
+#ifdef FEAT_ARABIC
+		set_option_value((char_u *)"arabic", 1L, NULL, 0);
+#else
+		mch_errmsg(_(e_noarabic));
+		mch_exit(2);
+#endif
+		break;
+
 	    case 'b':		/* "-b" binary mode */
 		bin_mode = TRUE;    /* postpone to after reading .exrc files */
 		break;
@@ -1219,21 +1228,6 @@ scripterror:
     set_init_2();
     TIME_MSG("inits 2");
 
-#if 0	/* disabled, don't know why it's needed */
-    /*
-     * Don't call msg_start() if the GUI is expected to start, it switches the
-     * cursor off.  Only need to avoid it when want_full_screen could not have
-     * been reset above.
-     * Also don't do it when reading from stdin (the program writing to the
-     * pipe might use the cursor).
-     */
-    if (full_screen && edit_type != EDIT_STDIN
-#if defined(FEAT_GUI) && !defined(ALWAYS_USE_GUI) && !defined(FEAT_GUI_X11)
-	    && !gui.starting
-#endif
-       )
-	msg_start();	    /* in case a mapping or error message is printed */
-#endif
     msg_scroll = TRUE;
     no_wait_return = TRUE;
 
@@ -1441,6 +1435,9 @@ scripterror:
     if (curwin->w_p_rl && p_altkeymap)
     {
 	p_hkmap = FALSE;	/* Reset the Hebrew keymap mode */
+# ifdef FEAT_ARABIC
+	curwin->w_p_arab = FALSE; /* Reset the Arabic keymap mode */
+# endif
 	p_fkmap = TRUE;		/* Set the Farsi keymap mode */
     }
 #endif
@@ -2406,6 +2403,9 @@ usage()
     main_msg(_("-f\t\t\tDon't use newcli to open window"));
     main_msg(_("-dev <device>\t\tUse <device> for I/O"));
 #endif
+#ifdef FEAT_ARABIC
+    main_msg(_("-A\t\t\tstart in Arabic mode"));
+#endif
 #ifdef FEAT_RIGHTLEFT
     main_msg(_("-H\t\t\tStart in Hebrew mode"));
 #endif
@@ -2460,7 +2460,11 @@ usage()
     mch_msg(_("\nArguments recognised by gvim (Motif version):\n"));
 # else
 #  ifdef FEAT_GUI_ATHENA
+#   ifdef FEAT_GUI_NEXTAW
+    mch_msg(_("\nArguments recognised by gvim (neXtaw version):\n"));
+#   else
     mch_msg(_("\nArguments recognised by gvim (Athena version):\n"));
+#   endif
 #  endif
 # endif
     main_msg(_("-display <display>\tRun vim on <display>"));
@@ -3022,4 +3026,11 @@ serverMakeName(arg, cmd)
  */
 #if defined(FEAT_FKMAP) || defined(PROTO)
 # include "farsi.c"
+#endif
+
+/*
+ * When FEAT_ARABIC is defined, also compile the Arabic source code.
+ */
+#if defined(FEAT_ARABIC) || defined(PROTO)
+# include "arabic.c"
 #endif

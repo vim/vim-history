@@ -19,7 +19,7 @@ endif
 
 function GetTildeIndent(lnum)
 	let plnum = prevnonblank(v:lnum-1)
-	
+
 	if plnum == 0
 		return 0
 	endif
@@ -27,7 +27,7 @@ function GetTildeIndent(lnum)
 	if getline(v:lnum) =~ '^\s*\~\(endif\|else\|elseif\|end\)\>'
 		return indent(v:lnum) - &sw
 	endif
-	
+
 	if getline(plnum) =~ '^\s*\~\(if\|foreach\|foreach_row\|xml_loop\|file_loop\|file_write\|file_append\|imap_loopsections\|imap_index\|imap_list\|ldap_search\|post_loopall\|post_loop\|file_loop\|sql_loop_num\|sql_dbmsselect\|search\|sql_loop\|post\|for\|function_define\|silent\|while\|setvalbig\|mail_create\|systempipe\|mail_send\|dual\|elseif\|else\)\>'
 		return indent(plnum) + &sw
 	else

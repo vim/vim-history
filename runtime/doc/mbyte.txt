@@ -1,4 +1,4 @@
-*mbyte.txt*     For Vim version 6.2a.  Last change: 2003 Apr 16
+*mbyte.txt*     For Vim version 6.2b.  Last change: 2003 Apr 22
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -319,7 +319,8 @@ An incomplete list:
 1   ansi	same as latin1 (obsolete, for backward compatibility)
 2   japan	Japanese: on Unix "euc-jp", on MS-Windows cp932
 2   korea	Korean: on Unix "euc-kr", on MS-Windows cp949
-2   prc		simplified Chinese: on Unix "chinese", on MS-Windows cp936
+2   prc		simplified Chinese: on Unix "euc-cn", on MS-Windows cp936
+2   chinese     same as "prc"
 2   taiwan	traditional Chinese: on Unix "euc-tw", on MS-Windows cp950
 u   utf8	same as utf-8
 u   unicode	same as ucs-2

@@ -1,9 +1,9 @@
 " Vim compiler file
-" Compiler:	HP aCC 
+" Compiler:	HP aCC
 " Maintainer:	Matthias Ulrich <matthias-ulrich@web.de>
-" URL:		http://www.subhome.de/vim/hp_acc.vim 
-" Last Change:	2003 Apr 16
-" 
+" URL:		http://www.subhome.de/vim/hp_acc.vim
+" Last Change:	2003 Apr 25
+"
 "  aCC --version says: "HP ANSI C++ B3910B A.03.13"
 "  This compiler has been tested on:
 "       hp-ux 10.20, hp-ux 11.0 and hp-ux 11.11 (64bit)

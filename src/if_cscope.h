@@ -1,6 +1,7 @@
 /* vi:set ts=8 sts=4 sw=4:
  *
  * CSCOPE support for Vim added by Andy Kahn <kahn@zk3.dec.com>
+ * Ported to Win32 by Sergey Khorev <khorev@softlab.ru>
  *
  * The basic idea/structure of cscope for Vim was borrowed from Nvi.
  * There might be a few lines of code that look similar to what Nvi
@@ -10,8 +11,15 @@
 
 #if defined(FEAT_CSCOPE) || defined(PROTO)
 
+#if defined(UNIX)
 #include <sys/types.h>		/* pid_t */
 #include <sys/stat.h>		/* dev_t, ino_t */
+#elif defined (WIN32)
+# ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+# endif
+# include <windows.h>
+#endif
 
 #define CSCOPE_SUCCESS		0
 #define CSCOPE_FAILURE		-1
@@ -57,9 +65,16 @@ typedef struct csi {
     char *	    fname;	/* cscope db name */
     char *	    ppath;	/* path to prepend (the -P option) */
     char *	    flags;	/* additional cscope flags/options (e.g, -p2) */
+#if defined(UNIX)
     pid_t	    pid;	/* PID of the connected cscope process. */
     dev_t	    st_dev;	/* ID of dev containing cscope db */
     ino_t	    st_ino;	/* inode number of cscope db */
+#elif defined(WIN32)
+    int	    pid;        /* Can't get pid so set it to 0 ;) */
+    DWORD	    nVolume;	/* Volume serial number, instead of st_dev */
+    DWORD	    nIndexHigh;	/* st_ino has no meaning in the Windows */
+    DWORD	    nIndexLow;	
+#endif
 
     FILE *	    fr_fp;	/* from cscope: FILE. */
     FILE *	    to_fp;	/* to cscope: FILE. */

@@ -662,6 +662,7 @@ typedef int (*MYSTRPROCINT)(LPSTR);
 typedef int (*MYINTPROCINT)(int);
 #endif
 
+#ifndef WIN16
 /*
  * Check if a pointer points to a valid NUL terminated string.
  * Return the length of the string, including terminating NUL.
@@ -701,6 +702,7 @@ check_str_len(char_u *str)
 
     return 0;
 }
+#endif
 
     int
 mch_libcall(
@@ -755,7 +757,16 @@ mch_libcall(
 	// Assume that a "1" result is an illegal pointer.
 	if (string_result == NULL)
 	    *number_result = retval_int;
-	else if (retval_str != NULL && (len = check_str_len(retval_str)) > 0)
+	else if (retval_str != NULL
+# ifdef WIN16
+		&& retval_str != (char_u *)1
+		&& retval_str != (char_u *)-1
+		&& !IsBadStringPtr(retval_str, INT_MAX)
+		&& (len = strlen(retval_str) + 1) > 0
+# else
+		&& (len = check_str_len(retval_str)) > 0
+# endif
+		)
 	{
 	    *string_result = lalloc((long_u)len, TRUE);
 	    if (*string_result != NULL)

@@ -5,8 +5,8 @@
 " This keymap adds the special consonants of Esperanto to an existing Latin
 " keyboard.
 "
-" All keys same as usual, except: 
-" ^ followed by any of CcGgHhJjSs adds a circumflex on top of the letter 
+" All keys same as usual, except:
+" ^ followed by any of CcGgHhJjSs adds a circumflex on top of the letter
 " ù and Ù replaces the grave accent by a breve
 " any of CcGgHhJjSsUu followed by X or x maps to consonant with ^ or Uu with
 " breve.

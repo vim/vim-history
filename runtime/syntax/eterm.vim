@@ -168,7 +168,7 @@ if version >= 508 || !exists("did_eterm_syn_inits")
     HiLink etermBoolean		Boolean
     HiLink etermColor		Number
     HiLink etermPreProc		PreProc
-    HiLink etermFunctions    	Function
+    HiLink etermFunctions	Function
     HiLink etermKeyMod		Special
     HiLink etermContext		Keyword
     HiLink etermOption		Keyword

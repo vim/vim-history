@@ -5,7 +5,7 @@
 " Changes:
 " - Dynamic 4GL/FourJs/4GL 7.30 pseudo comment directives (Julian Bridle)
 " - Conditionally allow case insensitive keywords (Julian Bridle)
-" 
+"
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

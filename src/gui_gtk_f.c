@@ -345,8 +345,8 @@ gtk_form_realize(GtkWidget *widget)
 }
 
 
-/* After reading the documentation at 
- * http://developer.gnome.org/doc/API/2.0/gtk/gtk-changes-2-0.html 
+/* After reading the documentation at
+ * http://developer.gnome.org/doc/API/2.0/gtk/gtk-changes-2-0.html
  * I think it should be possible to remove this function when compiling
  * against gtk-2.0.  It doesn't seem to cause problems, though.
  *
@@ -540,7 +540,7 @@ gtk_form_expose(GtkWidget *widget, GdkEventExpose *event)
 	GtkWidget	*child	   = formchild->widget;
 	/*
 	 * The following chunk of code is taken from gtkcontainer.c.  The
-	 * gtk1.x code synthesized expose events directly on the child widgets, 
+	 * gtk1.x code synthesized expose events directly on the child widgets,
 	 * which can't be done in gtk2
 	 */
 	if (GTK_WIDGET_DRAWABLE(child) && GTK_WIDGET_NO_WINDOW(child)
@@ -548,7 +548,7 @@ gtk_form_expose(GtkWidget *widget, GdkEventExpose *event)
 	{
 	    GdkEventExpose child_event;
 	    child_event = *event;
- 
+
 	    child_event.region = gtk_widget_region_intersect(child, event->region);
 	    if (!gdk_region_empty(child_event.region))
 	    {

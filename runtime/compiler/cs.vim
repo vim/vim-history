@@ -1,7 +1,7 @@
 " Vim compiler file
-" Compiler:	ms C# 
+" Compiler:	ms C#
 " Maintainer:	Joseph H. Yao (hyao@sina.com)
-" Last Change:	2002 Dec 30
+" Last Change:	2003 Apr 25
 
 if exists("current_compiler")
   finish
@@ -12,4 +12,4 @@ let current_compiler = "cs"
 setlocal errorformat&
 
 " default make
-setlocal makeprg=csc\ % 
+setlocal makeprg=csc\ %

@@ -4,7 +4,7 @@
 # Authors:	Zoltan Arpadffy, <arpadffy@polarfox.com>
 #		Sandor Kopanyi,  <sandor.kopanyi@mailbox.hu>
 #
-# Last change:  2002 Apr 14
+# Last change:  2003 Apr 25
 #
 # This has been tested on VMS 6.2 to 7.2 on DEC Alpha and VAX.
 # Edit the lines in the Configuration section below to select.
@@ -104,7 +104,7 @@ nolog :
         -@ write sys$output " Vim version:"
         -@ mcr $(VIMPROG) --version
         -@ write sys$output " Test date:"
-        -@ show time	
+        -@ show time
 	-@ write sys$output "-----------------------------------------------"
 	-@ write sys$output "                Test results:"
 	-@ write sys$output "-----------------------------------------------"

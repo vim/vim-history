@@ -1,8 +1,8 @@
 " Vim filetype plugin file
 " Language:	occam
-" Copyright:	Christian Jacobsen <C.L.Jacobsen@ukc.ac.uk>, Mario Schweigler <ms44@ukc.ac.uk>
-" Maintainer:	Mario Schweigler <ms44@ukc.ac.uk>
-" Last Change:	August 2002
+" Copyright:	Christian Jacobsen <clj3@kent.ac.uk>, Mario Schweigler <ms44@kent.ac.uk>
+" Maintainer:	Mario Schweigler <ms44@kent.ac.uk>
+" Last Change:	23 April 2003
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")

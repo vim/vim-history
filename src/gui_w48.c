@@ -735,6 +735,7 @@ _OnMouseMoveOrRelease(
 
     _OnMouseEvent(button, x, y, FALSE, keyFlags);
 }
+
 #ifdef FEAT_MENU
 /*
  * Find the vimmenu_T with the given id
@@ -950,8 +951,10 @@ gui_mch_def_colors()
     int
 gui_mch_open(void)
 {
-    /* Actually open the window */
-    ShowWindow(s_hwnd, SW_SHOWNORMAL);
+    /* Actually open the window, if not already visible
+     * (may be done already in gui_mch_set_shellsize) */
+    if (!IsWindowVisible(s_hwnd))
+        ShowWindow(s_hwnd, SW_SHOWDEFAULT);
 
     return OK;
 }
@@ -983,6 +986,9 @@ gui_mch_set_winpos(int x, int y)
     void
 gui_mch_set_text_area_pos(int x, int y, int w, int h)
 {
+    static int oldx = 0;
+    static int oldy = 0;
+
     SetWindowPos(s_textArea, NULL, x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
 
 #ifdef FEAT_TOOLBAR
@@ -990,6 +996,16 @@ gui_mch_set_text_area_pos(int x, int y, int w, int h)
 	SendMessage(s_toolbarhwnd, WM_SIZE,
 		(WPARAM)0, (LPARAM)(w + ((long)(TOOLBAR_BUTTON_HEIGHT+8)<<16)));
 #endif
+    /* When side scroll bar is unshown, the size of window will change.
+     * then, the text area move left or right. thus client rect should be
+     * forcely redraw. (Yasuhiro Matsumoto) */
+    if (oldx != x || oldy != y)
+    {
+	InvalidateRect(s_hwnd, NULL, FALSE);
+	oldx = x;
+	oldy = y;
+    }
+
 }
 
 

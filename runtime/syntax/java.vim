@@ -2,7 +2,7 @@
 " Language:     Java
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:  2002 Nov 14
+" Last Change:  2003 Apr 25
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -281,7 +281,7 @@ if version >= 508 || !exists("did_java_syn_inits")
   JavaHiLink javaConditional		Conditional
   JavaHiLink javaRepeat			Repeat
   JavaHiLink javaExceptions		Exception
-  JavaHiLink javaAssert 		Statement
+  JavaHiLink javaAssert			Statement
   JavaHiLink javaStorageClass		StorageClass
   JavaHiLink javaMethodDecl		javaStorageClass
   JavaHiLink javaClassDecl		javaStorageClass

@@ -120,6 +120,10 @@ typedef struct taggy
  */
 typedef struct
 {
+#ifdef FEAT_ARABIC
+    int		wo_arab;
+# define w_p_arab w_onebuf_opt.wo_arab	/* 'arabic' */
+#endif
 #ifdef FEAT_DIFF
     int		wo_diff;
 # define w_p_diff w_onebuf_opt.wo_diff	/* 'diff' */
@@ -167,6 +171,8 @@ typedef struct
 #ifdef FEAT_RIGHTLEFT
     int		wo_rl;
 # define w_p_rl w_onebuf_opt.wo_rl	/* 'rightleft' */
+    char_u	*wo_rlc;
+# define w_p_rlc w_onebuf_opt.wo_rlc	/* 'rightleftcmd' */
 #endif
     long	wo_scr;
 #define w_p_scr w_onebuf_opt.wo_scr	/* 'scroll' */

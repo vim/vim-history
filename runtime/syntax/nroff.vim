@@ -1,35 +1,49 @@
 " VIM syntax file
-" Language:	nroff / groff
-" Maintainer:	Jérôme Plût <Jerome.Plut@ens.fr>
-" URL:		http://www.eleves.ens.fr:8080/home/plut/nroff.vim
-" Last Change:	2001 May 10
+" Language:	  nroff/groff
+" Maintainer:	  Alejandro López-Valencia <dradul@yahoo.com>
+" URL:		  http://dradul.tripod.com/vim
+" Last Change:	  2003-04-27-08:39:43 GMT-5.
 "
-" {{{1 Preamble
-" groff (GNU troff) behaves slightly differently from groff; it allows
-" long names being specified between brackets: for instance, \[hy] is
-" equivalent to \(hy.
-" This file handle both syntaxes, depending on the value of 'filetype'.
-
+" {{{1 Acknowledgements
+"
+" ACKNOWLEDGEMENTS:
+"
+" My thanks to Jérôme Plût <Jerome.Plut@ens.fr>, who was the
+" creator and maintainer of this syntax file for several years.
+" May I be as good at it as he has been.
+"
+" {{{1 Todo
+"
+" TODO:
+"
+" * Add syntax error highlighting for other spacing errors to
+"	'nroff_spacing_errors'. See |syntax.txt| for details.
+"
+" * Write syntax highlighting files for the preprocessors,
+"	and integrate with nroff.vim.
+"
+" {{{1 Start syntax highlighting.
+"
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
+"
 if version < 600
-  syntax clear
+	syntax clear
 elseif exists("b:current_syntax")
-  finish
+	finish
 endif
 
-
 if exists("nroff_space_errors")
-  syn match nroffError /\s\+$/
+	syn match nroffError /\s\+$/
 endif
 
 " {{{1 Escape sequences
 " ------------------------------------------------------------
 
 syn match nroffEscChar /\\[CN]/ nextgroup=nroffEscCharArg
-syn match nroffEscape /\\[*gnYV]/ nextgroup=nroffEscRegPar,nroffEscRegArg
+syn match nroffEscape /\\[*fgmnYV]/ nextgroup=nroffEscRegPar,nroffEscRegArg
 syn match nroffEscape /\\s[+-]\=/ nextgroup=nroffSize
-syn match nroffEscape /\\[$AbDfhlLRvxXZ]/ nextgroup=nroffEscPar,nroffEscArg
+syn match nroffEscape /\\[$AbDhlLRvxXZ]/ nextgroup=nroffEscPar,nroffEscArg
 
 syn match nroffEscRegArg /./ contained
 syn match nroffEscRegArg2 /../ contained
@@ -43,8 +57,8 @@ syn region nroffEscCharArg start=/'/ end=/'/ contained
 syn region nroffEscArg start=/'/ end=/'/ contained contains=nroffEscape,@nroffSpecial
 
 if exists("b:nroff_is_groff")
-  syn region nroffEscRegArg matchgroup=nroffEscape start=/\[/ end=/\]/ contained oneline
-  syn region nroffSize matchgroup=nroffEscape start=/\[/ end=/\]/ contained
+	syn region nroffEscRegArg matchgroup=nroffEscape start=/\[/ end=/\]/ contained oneline
+	syn region nroffSize matchgroup=nroffEscape start=/\[/ end=/\]/ contained
 endif
 
 syn match nroffEscape /\\[adprtu{}]/
@@ -55,12 +69,14 @@ syn match nroffEscape /\\\$[@*]/
 " ------------------------------------------------------------
 
 syn match nroffSpecialChar /\\[\\eE?!-]/
-syn match nroffSpace  "\\[&%~|^0)/,]"
+syn match nroffSpace "\\[&%~|^0)/,]"
 syn match nroffSpecialChar /\\(../
+
 if exists("b:nroff_is_groff")
-  syn match nroffSpecialChar /\\\[[^]]*]/
-  syn region nroffPreserve matchgroup=nroffSpecialChar start=/\\?/ end=/\\?/ oneline
+	syn match nroffSpecialChar /\\\[[^]]*]/
+	syn region nroffPreserve  matchgroup=nroffSpecialChar start=/\\?/ end=/\\?/ oneline
 endif
+
 syn region nroffPreserve matchgroup=nroffSpecialChar start=/\\!/ end=/$/ oneline
 
 syn cluster nroffSpecial contains=nroffSpecialChar,nroffSpace
@@ -82,17 +98,21 @@ syn match nroffUnit /[icpPszmnvMu]/ contained
 " {{{1 Requests
 " ------------------------------------------------------------
 
-" Requests begin with . or ' at the beginning of a line, or after .if or
-" .ie.
+" Requests begin with . or ' at the beginning of a line, or
+" after .if or .ie.
 
-syn match nroffReqLeader /^[.']/ nextgroup=nroffReqName skipwhite
-syn match nroffReqLeader /[.']/ contained nextgroup=nroffReqName skipwhite
+syn match nroffReqLeader /^[.']/	nextgroup=nroffReqName skipwhite
+syn match nroffReqLeader /[.']/	contained nextgroup=nroffReqName skipwhite
+
 if exists("b:nroff_is_groff")
+"
 " GNU troff allows long request names
-  syn match nroffReqName /[^\t \\\[?]\+/ contained nextgroup=nroffReqArg
+"
+syn match nroffReqName /[^\t \\\[?]\+/ contained nextgroup=nroffReqArg
 else
-  syn match nroffReqName /[^\t \\\[?]\{1,2}/ contained nextgroup=nroffReqArg
+	syn match nroffReqName /[^\t \\\[?]\{1,2}/ contained nextgroup=nroffReqArg
 endif
+
 syn region roffReqArg start=/\S/ skip=/\\$/ end=/$/ contained contains=nroffEscape,@nroffSpecial,nroffString,nroffError,nroffNumBlock,nroffComment
 
 " {{{2 Conditional: .if .ie .el
@@ -108,106 +128,114 @@ syn match nroffDefSpecial /\\$/ contained
 syn match nroffDefSpecial /\\\((.\)\=./ contained
 
 if exists("b:nroff_is_groff")
-  syn match nroffDefSpecial /\\\[[^]]*]/ contained
+	syn match nroffDefSpecial /\\\[[^]]*]/ contained
 endif
 
 " {{{2 Macro definition: .de .am, also diversion: .di
 syn match nroffReqName /\(d[ei]\|am\)/ contained nextgroup=nroffIdent skipwhite
 syn match nroffIdent /[^[?( \t]\+/ contained
 if exists("b:nroff_is_groff")
-  syn match nroffReqName /als/ contained nextgroup=nroffIdent skipwhite
+	syn match nroffReqName /als/ contained nextgroup=nroffIdent skipwhite
 endif
 
 " {{{2 Register definition: .rn .rr
 syn match nroffReqName /[rn]r/ contained nextgroup=nroffIdent skipwhite
 if exists("b:nroff_is_groff")
-  syn match nroffReqName /\(rnn\|aln\)/ contained nextgroup=nroffIdent skipwhite
+	syn match nroffReqName /\(rnn\|aln\)/ contained nextgroup=nroffIdent skipwhite
 endif
 
 
 " {{{1 eqn/tbl/pic
 " ------------------------------------------------------------
+" <jp>
 " XXX: write proper syntax highlight for eqn / tbl / pic ?
+" <jp />
 
 syn region nroffEquation start=/^\.\s*EQ/ end=/^\.\s*EN/
-syn region nroffTable start=/^\.\s*TB/ end=/^\.\s*TE/
-syn region nroffPicture start=/^\.\s*PB/ end=/^\.\s*PE/
+syn region nroffTable start=/^\.\s*TS/ end=/^\.\s*TE/
+syn region nroffPicture start=/^\.\s*PS/ end=/^\.\s*PE/
+syn region nroffRefer start=/^\.\s*\[/ end=/^\.\s*\]/
+syn region nroffGrap start=/^\.\s*G1/ end=/^\.\s*G2/
+syn region nroffGremlin start=/^\.\s*GS/ end=/^\.\s*GE|GF/
 
 " {{{1 Comments
 " ------------------------------------------------------------
 
 syn region nroffIgnore start=/^[.']\s*ig/ end=/^['.]\s*\./
 syn match nroffComment /\(^[.']\s*\)\=\\".*/ contains=nroffTodo
-syn match nroffComment /^'''.*/ contains=nroffTodo
+syn match nroffComment /^'''.*/  contains=nroffTodo
+
 if exists("b:nroff_is_groff")
-  syn match nroffComment "\\#.*$" contains=nroffTodo
+	syn match nroffComment "\\#.*$" contains=nroffTodo
 endif
+
 syn keyword nroffTodo TODO XXX FIXME contained
 
 " {{{1 Hilighting
 " ------------------------------------------------------------
+"
 
+"
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
+"
 if version >= 508 || !exists("did_nroff_syn_inits")
-  if version < 508
-    let did_nroff_syn_inits = 1
-    command -nargs=+ HiLink hi link <args>
-  else
-    command -nargs=+ HiLink hi def link <args>
-  endif
 
-HiLink nroffEscChar	nroffSpecialChar
-HiLink nroffEscCharAr	nroffSpecialChar
-HiLink nroffSpecialChar	SpecialChar
-HiLink nroffSpace	Delimiter
+	if version < 508
+		let did_nroff_syn_inits = 1
+		command -nargs=+ HiLink hi link <args>
+	else
+		command -nargs=+ HiLink hi def link <args>
+	endif
 
-HiLink nroffEscRegArg2	nroffEscRegArg
-HiLink nroffEscRegArg	nroffIdent
+	HiLink nroffEscChar nroffSpecialChar
+	HiLink nroffEscCharAr nroffSpecialChar
+	HiLink nroffSpecialChar SpecialChar
+	HiLink nroffSpace Delimiter
 
-HiLink nroffEscArg2	nroffEscArg
-HiLink nroffEscPar	nroffEscape
+	HiLink nroffEscRegArg2 nroffEscRegArg
+	HiLink nroffEscRegArg nroffIdent
 
-HiLink nroffEscRegPar	nroffEscape
-HiLink nroffEscArg	nroffEscape
-HiLink nroffSize	nroffEscape
-HiLink nroffEscape	Preproc
+	HiLink nroffEscArg2 nroffEscArg
+	HiLink nroffEscPar nroffEscape
 
-HiLink nroffIgnore	Comment
-HiLink nroffComment	Comment
-HiLink nroffTodo	Todo
+	HiLink nroffEscRegPar nroffEscape
+	HiLink nroffEscArg nroffEscape
+	HiLink nroffSize nroffEscape
+	HiLink nroffEscape Preproc
 
-HiLink nroffReqLeader	nroffRequest
-HiLink nroffReqName	nroffRequest
-HiLink nroffRequest	Statement
-HiLink nroffCond	PreCondit
-HiLink nroffDefIdent	nroffIdent
-HiLink nroffIdent	Identifier
+	HiLink nroffIgnore Comment
+	HiLink nroffComment Comment
+	HiLink nroffTodo Todo
 
-HiLink nroffEquation	PreProc
-HiLink nroffTable	PreProc
-HiLink nroffPicture	PreProc
+	HiLink nroffReqLeader nroffRequest
+	HiLink nroffReqName nroffRequest
+	HiLink nroffRequest Statement
+	HiLink nroffCond PreCondit
+	HiLink nroffDefIdent nroffIdent
+	HiLink nroffIdent Identifier
 
-HiLink nroffNumber	Number
-HiLink nroffBadChar	nroffError
-HiLink nroffError	Error
+	HiLink nroffEquation PreProc
+	HiLink nroffTable PreProc
+	HiLink nroffPicture PreProc
+	HiLink nroffRefer PreProc
+	HiLink nroffGrap PreProc
+	HiLink nroffGremlin PreProc
 
-HiLink nroffPreserve	String
-HiLink nroffString	String
-HiLink nroffDefinition	String
-HiLink nroffDefSpecial	Special
+	HiLink nroffNumber Number
+	HiLink nroffBadChar nroffError
+	HiLink nroffError Error
 
-  delcommand HiLink
+	HiLink nroffPreserve String
+	HiLink nroffString String
+	HiLink nroffDefinition String
+	HiLink nroffDefSpecial Special
+
+	delcommand HiLink
+
 endif
-
-" I recommend using for nroffDefinition an highlight that shows spaces,
-" since nroff includes them in the string, for instance:
-" hi def nroffDefinition term=italic cterm=italic gui=reverse
-" hi def nroffDefSpecial term=italic,bold cterm=italic,bold gui=reverse,bold
 
 let b:current_syntax = "nroff"
 
-" }}}1
-" vim: set ts=8 sw=2:
 " vim600: set fdm=marker fdl=2:

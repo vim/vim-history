@@ -2816,8 +2816,11 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 #ifdef FEAT_SCROLLBIND
 	curwin->w_p_scb = FALSE;	/* no scroll binding */
 #endif
+#ifdef FEAT_ARABIC
+	curwin->w_p_arab = FALSE;	/* no arabic mode */
+#endif
 #ifdef FEAT_RIGHTLEFT
-	curwin->w_p_rl = 0;		/* help window is left-to-right */
+	curwin->w_p_rl  = FALSE;	/* help window is left-to-right */
 #endif
 #ifdef FEAT_FOLDING
 	curwin->w_p_fen = FALSE;	/* No folding in the help window */

@@ -32,7 +32,7 @@ let s:no_indent = '^\s*\(class\|feature\|creation\|inherit\)\>'
 let s:single_dent = '^[^-]\+[[:alnum:]]\+ is\(\s*\(--\).*\)\=$'
 let s:inheritance_dent = '\s*\(redefine\|rename\|export\)\>'
 
-    
+
 " Only define the function once.
 if exists("*GetEiffelIndent")
   finish
@@ -41,7 +41,7 @@ endif
 function GetEiffelIndent()
 
   " Eiffel Class indenting
-  " 
+  "
   " Find a non-blank line above the current line.
   let lnum = prevnonblank(v:lnum - 1)
 

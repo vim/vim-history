@@ -685,7 +685,8 @@ _WndProc(
 
 	    idButton = (UINT)LOWORD(wParam);
 	    pMenu = gui_mswin_find_menu(root_menu, idButton);
-	    if (pMenu != NULL && pMenu->strings[MENU_INDEX_TIP] != 0)
+	    if (pMenu != NULL && pMenu->strings[MENU_INDEX_TIP] != 0
+		    && GetMenuState(s_menuBar, pMenu->id, MF_BYCOMMAND) != -1)
 	    {
 		msg(pMenu->strings[MENU_INDEX_TIP]);
 		setcursor();
@@ -1086,18 +1087,8 @@ gui_mch_set_shellsize(int width, int height,
     wndpl.length = sizeof(WINDOWPLACEMENT);
     GetWindowPlacement(s_hwnd, &wndpl);
 
-    /* Resizing a maximized window looks very strange, unzoom it first. */
-    if (wndpl.showCmd == SW_SHOWMAXIMIZED)
-    {
-	ShowWindow(s_hwnd, SW_SHOWNORMAL);
-	win_xpos = workarea_rect.left;
-	win_ypos = workarea_rect.top;
-    }
-    else
-    {
-	win_xpos = wndpl.rcNormalPosition.left;
-	win_ypos = wndpl.rcNormalPosition.top;
-    }
+    win_xpos = wndpl.rcNormalPosition.left;
+    win_ypos = wndpl.rcNormalPosition.top;
 
     /* compute the size of the outside of the window */
     win_width = width + GetSystemMetrics(SM_CXFRAME) * 2;

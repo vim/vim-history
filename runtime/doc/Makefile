@@ -11,6 +11,7 @@ AWK = awk
 include ../../src/auto/config.mk
 
 DOCS = \
+	arabic.txt \
 	autocmd.txt \
 	change.txt \
 	cmdline.txt \
@@ -125,6 +126,7 @@ DOCS = \
 	workshop.txt
 
 HTMLS = \
+	arabic.html \
 	autocmd.html \
 	change.html \
 	cmdline.html \
@@ -294,6 +296,9 @@ clean:
 	-rm doctags *.html tags.ref
 
 # These files are in the extra archive, skip if not present
+
+arabic.txt:
+	touch arabic.txt
 
 farsi.txt:
 	touch farsi.txt

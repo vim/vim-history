@@ -48,6 +48,7 @@ typedef enum
     PV_NONE = 0
     , PV_AI
     , PV_AR
+    , PV_ARAB
     , PV_BH
     , PV_BIN
     , PV_BL
@@ -106,6 +107,7 @@ typedef enum
     , PV_PATH
     , PV_PVW
     , PV_RL
+    , PV_RLC
     , PV_RO
     , PV_SCBIND
     , PV_SCROLL
@@ -313,6 +315,20 @@ static struct vimoption
 			    (char_u *)224L,
 #endif
 					    (char_u *)0L}},
+    {"arabic",	    "arab", P_BOOL|P_VI_DEF|P_VIM,
+#ifdef FEAT_ARABIC
+			    (char_u *)VAR_WIN, PV_ARAB,
+#else
+			    (char_u *)NULL, PV_NONE,
+#endif
+			    {(char_u *)FALSE, (char_u *)0L}},
+    {"arabicshape", "arshape", P_BOOL|P_VI_DEF|P_VIM|P_RCLR,
+#ifdef FEAT_ARABIC
+			    (char_u *)&p_arshape, PV_NONE,
+#else
+			    (char_u *)NULL, PV_NONE,
+#endif
+			    {(char_u *)FALSE, (char_u *)0L}},
     {"allowrevins", "ari",  P_BOOL|P_VI_DEF|P_VIM,
 #ifdef FEAT_RIGHTLEFT
 			    (char_u *)&p_ari, PV_NONE,
@@ -1627,6 +1643,15 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)FALSE, (char_u *)0L}},
+    {"rightleftcmd", "rlc", P_STRING|P_ALLOCED|P_VI_DEF|P_RWIN,
+#ifdef FEAT_RIGHTLEFT
+			    (char_u *)VAR_WIN, PV_RLC,
+			    {(char_u *)"search", (char_u *)NULL}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)NULL, (char_u *)0L}
+#endif
+			    },
     {"ruler",	    "ru",   P_BOOL|P_VI_DEF|P_VIM|P_RSTAT,
 #ifdef FEAT_CMDL_INFO
 			    (char_u *)&p_ru, PV_NONE,
@@ -1949,6 +1974,13 @@ static struct vimoption
     {"term",	    NULL,   P_STRING|P_EXPAND|P_NODEFAULT|P_NO_MKRC|P_VI_DEF|P_RALL,
 			    (char_u *)&T_NAME, PV_NONE,
 			    {(char_u *)"", (char_u *)0L}},
+    {"termbidi", "tbidi",   P_BOOL|P_VI_DEF,
+#ifdef FEAT_ARABIC
+			    (char_u *)&p_tbidi, PV_NONE,
+#else
+			    (char_u *)NULL, PV_NONE,
+#endif
+			    {(char_u *)FALSE, (char_u *)0L}},
     {"termencoding", "tenc", P_STRING|P_VI_DEF|P_RCLR,
 #ifdef FEAT_MBYTE
 			    (char_u *)&p_tenc, PV_NONE,
@@ -2632,6 +2664,17 @@ set_init_1()
 
     /* Parse default for 'wildmode'  */
     check_opt_wim();
+
+#if defined(FEAT_ARABIC)
+    /* Detect use of mlterm.
+     * Mlterm is a terminal emulator akin to xterm that has some special
+     * abilities (bidi namely).
+     * NOTE: mlterm's author is being asked to 'set' a variable
+     *       instead of an environment variable due to inheritance.
+     */
+    if (mch_getenv("MLTERM") != NULL)
+	set_option_value((char_u *)"tbidi", 1L, NULL, 0);
+#endif
 
 #if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
     /* Parse default for 'fillchars'. */
@@ -4894,23 +4937,23 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     {
 	if (gui.in_use)
 	{
-            p = p_guifont;
+	    p = p_guifont;
 # ifdef FEAT_GUI_GTK
-            /*
-             * Put up a font dialog and let the user select a new value.
-             * If this is cancelled go back to the old value but don't
-             * give an error message.
-             */
-            if (STRCMP(p, "*") == 0)
+	    /*
+	     * Put up a font dialog and let the user select a new value.
+	     * If this is cancelled go back to the old value but don't
+	     * give an error message.
+	     */
+	    if (STRCMP(p, "*") == 0)
 	    {
-                p = gui_mch_font_dialog(oldval);
+		p = gui_mch_font_dialog(oldval);
 
-                if (new_value_alloced)
-                    free_string_option(p_guifont);
+		if (new_value_alloced)
+		    free_string_option(p_guifont);
 
-                p_guifont = (p != NULL) ? p : vim_strsave(oldval);
-                new_value_alloced = TRUE;
-            }
+		p_guifont = (p != NULL) ? p : vim_strsave(oldval);
+		new_value_alloced = TRUE;
+	    }
 # endif
 	    if (p != NULL && gui_init_font(p_guifont, FALSE) != OK)
 	    {
@@ -6055,6 +6098,19 @@ set_bool_option(opt_idx, varp, value, opt_flags)
      * In case some second language keymapping options have changed, check
      * and correct the setting in a consistent way.
      */
+
+    /*
+     * If hkmap or fkmap are set, reset Arabic keymapping.
+     */
+    if ((p_hkmap || p_fkmap) && p_altkeymap)
+    {
+	p_altkeymap = p_fkmap;
+# ifdef FEAT_ARABIC
+	curwin->w_p_arab = FALSE;
+# endif
+	(void)init_chartab();
+    }
+
     /*
      * If hkmap set, reset Farsi keymapping.
      */
@@ -6062,6 +6118,9 @@ set_bool_option(opt_idx, varp, value, opt_flags)
     {
 	p_altkeymap = 0;
 	p_fkmap = 0;
+# ifdef FEAT_ARABIC
+	curwin->w_p_arab = FALSE;
+# endif
 	(void)init_chartab();
     }
 
@@ -6072,7 +6131,88 @@ set_bool_option(opt_idx, varp, value, opt_flags)
     {
 	p_altkeymap = 1;
 	p_hkmap = 0;
+# ifdef FEAT_ARABIC
+	curwin->w_p_arab = FALSE;
+# endif
 	(void)init_chartab();
+    }
+#endif
+
+#ifdef FEAT_ARABIC
+    if ((int *)varp == &curwin->w_p_arab)
+    {
+	if (curwin->w_p_arab)
+	{
+	    /*
+	     * 'arabic' is set, handle various sub-settings.
+	     */
+	    if (!p_tbidi)
+	    {
+		/* set rightleft mode */
+		if (!curwin->w_p_rl)
+		{
+		    curwin->w_p_rl = TRUE;
+		    changed_window_setting();
+		}
+
+		/* Enable Arabic shaping (major part of what Arabic requires) */
+		if (!p_arshape)
+		{
+		    p_arshape = TRUE;
+		    redraw_later_clear();
+		}
+	    }
+
+	    /* Arabic requires a utf-8 encoding, inform the user if its not
+	     * set. */
+	    if (STRCMP(p_enc, "utf-8") != 0)
+		MSG_ATTR(_("W17: Arabic requires UTF-8, do ':set encoding=utf-8'"),
+			hl_attr(HLF_W));
+
+# ifdef FEAT_MBYTE
+	    /* set 'delcombine' */
+	    p_deco = TRUE;
+# endif
+
+# ifdef FEAT_KEYMAP
+	    /* Force-set the necessary keymap for arabic */
+	    set_option_value((char_u *)"keymap", 0L, (char_u *)"arabic",
+								   OPT_LOCAL);
+# endif
+# ifdef FEAT_FKMAP
+	    p_altkeymap = 0;
+	    p_hkmap = 0;
+	    p_fkmap = 0;
+	    (void)init_chartab();
+# endif
+	}
+	else
+	{
+	    /*
+	     * 'arabic' is reset, handle various sub-settings.
+	     */
+	    if (!p_tbidi)
+	    {
+		/* reset rightleft mode */
+		if (curwin->w_p_rl)
+		{
+		    curwin->w_p_rl = FALSE;
+		    changed_window_setting();
+		}
+
+		/* 'arabicshape' isn't reset, it is a global variable and
+		 * other window may still need it "on". */
+	    }
+
+	    /* 'delcombine' isn't reset, it is a global variable and other
+	     * windows may still want it "on". */
+
+# ifdef FEAT_KEYMAP
+	    /* Revert to the default keymap */
+	    curbuf->b_p_iminsert = B_IMODE_NONE;
+	    curbuf->b_p_imsearch = B_IMODE_USE_INSERT;
+# endif
+	}
     }
 #endif
 
@@ -7340,6 +7480,9 @@ get_varp(p)
 				    ? (char_u *)&(curbuf->b_p_efm) : p->var;
 #endif
 
+#ifdef FEAT_ARABIC
+	case PV_ARAB:	return (char_u *)&(curwin->w_p_arab);
+#endif
 	case PV_LIST:	return (char_u *)&(curwin->w_p_list);
 #ifdef FEAT_DIFF
 	case PV_DIFF:	return (char_u *)&(curwin->w_p_diff);
@@ -7367,6 +7510,7 @@ get_varp(p)
 #endif
 #ifdef FEAT_RIGHTLEFT
 	case PV_RL:	return (char_u *)&(curwin->w_p_rl);
+	case PV_RLC:	return (char_u *)&(curwin->w_p_rlc);
 #endif
 	case PV_SCROLL:	return (char_u *)&(curwin->w_p_scr);
 	case PV_WRAP:	return (char_u *)&(curwin->w_p_wrap);
@@ -7513,10 +7657,14 @@ copy_winopt(from, to)
     winopt_T	*from;
     winopt_T	*to;
 {
+#ifdef FEAT_ARABIC
+    to->wo_arab = from->wo_arab;
+#endif
     to->wo_list = from->wo_list;
     to->wo_nu = from->wo_nu;
 #ifdef FEAT_RIGHTLEFT
-    to->wo_rl = from->wo_rl;
+    to->wo_rl  = from->wo_rl;
+    to->wo_rlc = vim_strsave(from->wo_rlc);
 #endif
     to->wo_wrap = from->wo_wrap;
 #ifdef FEAT_LINEBREAK
@@ -7573,6 +7721,9 @@ check_winopt(wop)
 # endif
     check_string_option(&wop->wo_fmr);
 #endif
+#ifdef FEAT_RIGHTLEFT
+    check_string_option(&wop->wo_rlc);
+#endif
 }
 
 /*
@@ -7591,6 +7742,9 @@ clear_winopt(wop)
     clear_string_option(&wop->wo_fdt);
 # endif
     clear_string_option(&wop->wo_fmr);
+#endif
+#ifdef FEAT_RIGHTLEFT
+    clear_string_option(&wop->wo_rlc);
 #endif
 }
 

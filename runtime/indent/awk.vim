@@ -1,13 +1,13 @@
 "  vim: set sw=3 sts=3:
 
 " Awk indent script. It can handle multi-line statements and expressions.
-" It works up to the point where the distinction between correct/incorrect 
+" It works up to the point where the distinction between correct/incorrect
 " and personal taste gets fuzzy. Drop me an e-mail for bug reports and
 " reasonable style suggestions.
-" 
+"
 " Bugs:
 " =====
-" - Some syntax errors may cause erratic indentation. 
+" - Some syntax errors may cause erratic indentation.
 " - Same for very unusual but syntacticly correct use of { }
 " - In some cases it's confused by the use of ( and { in strings constants
 " - This version likes the closing brace of a multiline pattern-action be on
@@ -55,21 +55,21 @@ function! GetAwkIndent()
    let ind = indent( prev_lineno )
 
    " Increase indent if the previous line contains an opening brace. Search
-   " for this brace the hard way to prevent errors if the previous line is a  
+   " for this brace the hard way to prevent errors if the previous line is a
    " 'pattern { action }' (simple check match on /{/ increases the indent then)
-   
+
    if s:Get_brace_balance( prev_data, '{', '}' ) > 0
       return ind + &sw
    endif
- 
-   let brace_balance = s:Get_brace_balance( prev_data, '(', ')' ) 
+
+   let brace_balance = s:Get_brace_balance( prev_data, '(', ')' )
 
    " If prev line has positive brace_balance and starts with a word (keyword
-   " or function name), align the current line on the first '(' of the prev 
+   " or function name), align the current line on the first '(' of the prev
    " line
 
    if brace_balance > 0 && s:Starts_with_word( prev_data )
-      return s:Safe_indent( ind, s:First_word_len(prev_data), getline(v:lnum)) 
+      return s:Safe_indent( ind, s:First_word_len(prev_data), getline(v:lnum))
    endif
 
    " If this line starts with an open brace bail out now before the line
@@ -98,7 +98,7 @@ function! GetAwkIndent()
           return s:Safe_indent( ind, s:First_word_len(prev_data), getline(v:lnum))
        else
          " if/for/while without '{'
-         return ind + &sw 
+         return ind + &sw
        endif
      endif
    endif
@@ -111,12 +111,12 @@ function! GetAwkIndent()
    " The start of a multiline statement can be found by:
    "
    " 1 If the previous line contains closing braces and has negative brace
-   "   balance, search backwards until cumulative brace balance becomes zero, 
+   "   balance, search backwards until cumulative brace balance becomes zero,
    "   take indent of that line
    " 2 If the line before the previous needs continuation search backward
    "   until that's not the case anymore. Take indent of one line down.
- 
-   " Case 1 
+
+   " Case 1
    if prev_data =~ ')' && brace_balance < 0
       while brace_balance != 0
          let prev_lineno = s:Get_prev_line( prev_lineno )
@@ -136,7 +136,7 @@ function! GetAwkIndent()
          let ind = indent( prev_lineno + 1 )
       endif
    endif
-       
+
    " Decrease indent if this line contains a '}'.
    if getline(v:lnum) =~ '^\s*}'
       let ind = ind - &sw
@@ -174,7 +174,7 @@ endfunction
 
 function! s:First_word_len( line )
    let white_end = matchend( a:line, '^\s*' )
-   if match( a:line, '^\s*func' ) != -1     
+   if match( a:line, '^\s*func' ) != -1
      let word_end = matchend( a:line, '[a-z]\+\s\+[a-zA-Z_0-9]\+[ (]*' )
    else
      let word_end = matchend( a:line, '[a-zA-Z_0-9]\+[ (]*' )
@@ -200,8 +200,8 @@ endfunction
 
 " Get previous relevant line. Search back until a line is that is no
 " comment or blank and return the line number
-    
-function! s:Get_prev_line( lineno )    
+
+function! s:Get_prev_line( lineno )
    let lnum = a:lineno - 1
    let data = getline( lnum )
    while lnum > 0 && (data =~ '^\s*#' || data =~ '^\s*$')
@@ -215,7 +215,7 @@ endfunction
 " (hardcoded 80). If so and it is possible to stay within 80 positions (or
 " limit num of characters beyond linewidth) by decreasing the indent (keeping
 " it > base_indent), do so.
- 
+
 function! s:Safe_indent( base, wordlen, this_line )
    let line_base = matchend( a:this_line, '^\s*' )
    let line_len = strlen( a:this_line ) - line_base

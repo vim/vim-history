@@ -1,6 +1,6 @@
 " Menu Translations:	Traditional Chinese (for Big5 UNIX/Windows)
 " Translated By:	Hung-Teh, Lin	<piaip@csie.ntu.edu.tw>
-" Last Change:		Tue Sep 25 17:47:20 CST 2001
+" Last Change:		Thu Apr 24 17:34:50 CST 2003
 
 " {{{ Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -20,6 +20,7 @@ menutrans &How-to\ links	如何作\.\.\.(&H)
 menutrans &GUI			圖型界面(&G)
 menutrans &Credits		感謝(&C)
 menutrans Co&pying		版權宣告(&P)
+menutrans O&rphans		拯救孤兒(&R)
 " ------------------------------------------------------------------------
 menutrans &Version		程式版本資訊(&V)
 menutrans &About		關於\ Vim(&A)
@@ -71,7 +72,7 @@ menutrans &Keymap			鍵盤對應(&K)
     " "{{{ Keymap:
     menutrans None			無
     " }}}
-menutrans Select\ Fo&nt\.\.\.		設定字型(&F)\.\.\.
+menutrans Select\ Fo&nt\.\.\.		設定字型(&N)\.\.\.
 " }}}
 
 " {{{ Edit.FileSettings
@@ -93,7 +94,8 @@ menutrans &File\ Format\.\.\.			    設定檔案格式(對應作業系統)(&F)\.\.\.
 menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls! 切換高亮度搜尋字串(&H)<Tab>:set\ hls!
 menutrans Toggle\ &Ignore-case<Tab>:set\ ic!	     切換忽略大小寫(&I)<Tab>:set\ ic!
 menutrans Toggle\ &Showmatch<Tab>:set\ sm!	     切換顯示對應括號(&S)<Tab>:set\ sm!
-menutrans &Context\ lines			     本文行數(scrolloff)(&C)
+menutrans Toggle\ Vi\ C&ompatible<Tab>:set\ cp!	     切換傳統Vi相容模式(&O)<Tab>:set\ cp!
+menutrans &Context\ lines			     本文前後保留行數(scrolloff)(&C)
 menutrans &Virtual\ Edit			     游標任意移動(virtualedit)(&V)
     " {{{ Edit.GlobalSettings.VirtualEdit
     menutrans Never				     不使用
@@ -119,10 +121,10 @@ menutrans &Jump\ to\ this\ tag<Tab>g^]	檢索游標處的標籤關鍵字(tag)(&J)<Tab>g^]
 menutrans Jump\ &back<Tab>^T		跳回檢索前的位置(&B)<Tab>^T
 menutrans Build\ &Tags\ File		建立標籤索引檔\ Tags(&T)
 " ------------------------------------------------------------------------
-menutrans &Folding			覆疊(Folding)設定(&F)
+menutrans &Folding			覆疊(Fold)設定(&F)
     " {{{ Tools.Fold
     menutrans &Enable/Disable\ folds<Tab>zi	    切換使用\ Folding(&E)<Tab>zi
-    menutrans &View\ Cursor\ Line<Tab>zv	    檢視此\ Fold(&V)<Tab>zv
+    menutrans &View\ Cursor\ Line<Tab>zv	    檢視此層\ Fold(&V)<Tab>zv
     menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx    只檢視此\ Fold(&W)<Tab>zMzx
     menutrans C&lose\ more\ folds<Tab>zm	    收起一層\ Folds(&L)<Tab>zm
     menutrans &Close\ all\ folds<Tab>zM		    收起所有\ Folds(&C)<Tab>zM
@@ -173,6 +175,7 @@ menutrans Conve&rt\ back<Tab>:%!xxd\ -r	從16進位碼轉換回文字(&R)<Tab>:%!xxd\ -r
 " {{{ Syntax menu: compete
 menutrans &Syntax		    語法效果(&S)
 " ------------------------------------------------------------------------
+menutrans &Show\ filetypes\ in\ menu	顯示所有可用檔案格式(&S)
 menutrans Set\ '&syntax'\ only	    只使用\ 'syntax'(&S)
 menutrans Set\ '&filetype'\ too	    使用\ 'syntax'+'filetype'(&F)
 menutrans &Off			    關閉效果(&O)
