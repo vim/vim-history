@@ -5249,6 +5249,7 @@ vim_rename(from, to)
 #ifdef AMIGA
     BPTR	flock;
 #endif
+    struct stat	st;
 
     /*
      * When the names are identical, there is nothing to do.
@@ -5257,9 +5258,15 @@ vim_rename(from, to)
 	return 0;
 
     /*
-     * First delete the "to" file, this is required on some systems to make
-     * the mch_rename() work, on other systems it makes sure that we don't
-     * have two files when the mch_rename() fails.
+     * Fail if the "from" file doesn't exist.  Avoids that "to" is deleted.
+     */
+    if (mch_stat((char *)from, &st) < 0)
+	return -1;
+
+    /*
+     * Delete the "to" file, this is required on some systems to make the
+     * mch_rename() work, on other systems it makes sure that we don't have
+     * two files when the mch_rename() fails.
      */
 
 #ifdef AMIGA
