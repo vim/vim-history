@@ -2809,8 +2809,8 @@ static const long_u  cterm_color_16[16] =
 static int		current_syn_id;
 #endif
 
-#define COLOR_BLACK	(long_u)0
-#define COLOR_WHITE	(long_u)0xFFFFFFL
+#define PRCOLOR_BLACK	(long_u)0
+#define PRCOLOR_WHITE	(long_u)0xFFFFFFL
 
 static int	curr_italic;
 static int	curr_bold;
@@ -2888,15 +2888,15 @@ prt_get_attr(hl_id, pattr, modec)
     if (gui.in_use)
     {
 	bg_color = highlight_gui_color_rgb(hl_id, FALSE);
-	if (bg_color == COLOR_BLACK)
-	    bg_color = COLOR_WHITE;
+	if (bg_color == PRCOLOR_BLACK)
+	    bg_color = PRCOLOR_WHITE;
 
 	fg_color = highlight_gui_color_rgb(hl_id, TRUE);
     }
     else
 # endif
     {
-	bg_color = COLOR_WHITE;
+	bg_color = PRCOLOR_WHITE;
 
 	color = (char *)highlight_color(hl_id, (char_u *)"fg", modec);
 	if (color == NULL)
@@ -2907,11 +2907,11 @@ prt_get_attr(hl_id, pattr, modec)
 	if (colorindex >= 0 && colorindex < t_colors)
 	    fg_color = prt_get_term_color(colorindex);
 	else
-	    fg_color = COLOR_BLACK;
+	    fg_color = PRCOLOR_BLACK;
     }
 
-    if (fg_color == COLOR_WHITE)
-	fg_color = COLOR_BLACK;
+    if (fg_color == PRCOLOR_WHITE)
+	fg_color = PRCOLOR_BLACK;
     else if (*p_bg == 'd')
 	fg_color = darken_rgb(fg_color);
 
@@ -2990,8 +2990,8 @@ prt_line_number(psettings, page_line, lnum)
 #endif
     {
 	/* Set colors and font back to normal. */
-	prt_set_fg(COLOR_BLACK);
-	prt_set_bg(COLOR_WHITE);
+	prt_set_fg(PRCOLOR_BLACK);
+	prt_set_bg(PRCOLOR_WHITE);
 	prt_set_font(FALSE, FALSE, FALSE);
     }
 }
@@ -3104,8 +3104,8 @@ prt_header(psettings, pagenum, lnum)
 #endif
 	sprintf((char *)tbuf, _("Page %d"), pagenum);
 
-    prt_set_fg(COLOR_BLACK);
-    prt_set_bg(COLOR_WHITE);
+    prt_set_fg(PRCOLOR_BLACK);
+    prt_set_bg(PRCOLOR_WHITE);
     prt_set_font(TRUE, FALSE, FALSE);
 
     /* Use a negative line number to indicate printing in the top margin. */
@@ -3143,8 +3143,8 @@ prt_header(psettings, pagenum, lnum)
 #endif
     {
 	/* Set colors and font back to normal. */
-	prt_set_fg(COLOR_BLACK);
-	prt_set_bg(COLOR_WHITE);
+	prt_set_fg(PRCOLOR_BLACK);
+	prt_set_bg(PRCOLOR_WHITE);
 	prt_set_font(FALSE, FALSE, FALSE);
     }
 }
@@ -3232,8 +3232,8 @@ ex_hardcopy(eap)
 #endif
 
     /* Set up printing attributes for line numbers */
-    settings.number.fg_color = COLOR_BLACK;
-    settings.number.bg_color = COLOR_WHITE;
+    settings.number.fg_color = PRCOLOR_BLACK;
+    settings.number.bg_color = PRCOLOR_WHITE;
     settings.number.bold = FALSE;
     settings.number.italic = TRUE;
     settings.number.underline = FALSE;
@@ -3269,8 +3269,8 @@ ex_hardcopy(eap)
     curr_bold = MAYBE;
     curr_underline = MAYBE;
 
-    prt_set_fg(COLOR_BLACK);
-    prt_set_bg(COLOR_WHITE);
+    prt_set_fg(PRCOLOR_BLACK);
+    prt_set_bg(PRCOLOR_WHITE);
     prt_set_font(FALSE, FALSE, FALSE);
 #ifdef FEAT_SYN_HL
     current_syn_id = -1;
@@ -3934,7 +3934,7 @@ prt_flush_buffer()
     if (prt_ps_buffer.ga_len > 0)
     {
 	/* Any background color must be drawn first */
-	if (prt_do_bgcol && (prt_new_bgcol != COLOR_WHITE))
+	if (prt_do_bgcol && (prt_new_bgcol != PRCOLOR_WHITE))
 	{
 	    int     r, g, b;
 
@@ -5002,8 +5002,8 @@ mch_print_begin_page(str)
     prt_dsc_noarg("BeginPageSetup");
 
     prt_write_string("sv\n0 g\nF0 sf\n");
-    prt_fgcol = COLOR_BLACK;
-    prt_bgcol = COLOR_WHITE;
+    prt_fgcol = PRCOLOR_BLACK;
+    prt_bgcol = PRCOLOR_WHITE;
     prt_font = PRT_PS_FONT_ROMAN;
 
     /* Set up page transformation for landscape printing. */
@@ -5103,7 +5103,7 @@ mch_print_text_out(p, len)
 	    prt_need_fgcol = FALSE;
 	}
 
-	if (prt_bgcol != COLOR_WHITE)
+	if (prt_bgcol != PRCOLOR_WHITE)
 	{
 	    prt_new_bgcol = prt_bgcol;
 	    if (prt_need_bgcol)
