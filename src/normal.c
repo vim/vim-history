@@ -6578,7 +6578,10 @@ nv_pcmark(cap)
 
     if (!checkclearopq(cap->oap))
     {
-	pos = movemark((int)cap->count1);
+	if (cap->cmdchar == 'g')
+	    pos = movechangelist((int)cap->count1);
+	else
+	    pos = movemark((int)cap->count1);
 	if (pos == (pos_T *)-1)		/* jump to other file */
 	{
 	    curwin->w_set_curswant = TRUE;
@@ -7343,6 +7346,17 @@ nv_g_cmd(cap)
 	if (!checkclearopq(oap))
 	    do_exmode(TRUE);
 	break;
+
+#ifdef FEAT_JUMPLIST
+    case ',':
+	nv_pcmark(cap);
+	break;
+
+    case ';':
+	cap->count1 = -cap->count1;
+	nv_pcmark(cap);
+	break;
+#endif
 
     default:
 	clearopbeep(oap);

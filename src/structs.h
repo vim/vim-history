@@ -404,6 +404,7 @@ typedef struct
     int		confirm;		/* TRUE to invoke yes/no dialog */
 # endif
     int		keepmarks;		/* TRUE when ":keepmarks" was used */
+    int		keepjumps;		/* TRUE when ":keepjumps" was used */
     int		lockmarks;		/* TRUE when ":lockmarks" was used */
 } cmdmod_T;
 
@@ -949,6 +950,15 @@ struct file_buffer
 				   buffer */
     pos_T	b_last_insert;	/* where Insert mode was left */
     pos_T	b_last_change;	/* position of last change: '. mark */
+
+#ifdef FEAT_JUMPLIST
+    /*
+     * the changelist contains old change positions
+     */
+    pos_T	b_changelist[JUMPLISTSIZE];
+    int		b_changelistlen;	/* number of active entries */
+    int		b_new_change;		/* set by u_savecommon() */
+#endif
 
     /*
      * Character table, only used in charset.c for 'iskeyword'
@@ -1511,6 +1521,8 @@ struct window
     xfmark_T	w_jumplist[JUMPLISTSIZE];
     int		w_jumplistlen;		/* number of active entries */
     int		w_jumplistidx;		/* current position */
+
+    int		w_changelistidx;	/* current position in b_changelist */
 #endif
 
 #ifdef FEAT_SEARCH_EXTRA

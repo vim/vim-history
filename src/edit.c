@@ -6090,7 +6090,8 @@ ins_esc(count, cmdchar)
 	curwin->w_set_curswant = TRUE;
 
     /* Remember the last Insert position in the '^ mark. */
-    curbuf->b_last_insert = curwin->w_cursor;
+    if (!cmdmod.keepjumps)
+	curbuf->b_last_insert = curwin->w_cursor;
 
     /*
      * The cursor should end up on the last inserted character.

@@ -2499,8 +2499,49 @@ changed_common(lnum, col, lnume, xtra)
     changed();
 
     /* set the '. mark */
-    curbuf->b_last_change.lnum = lnum;
-    curbuf->b_last_change.col = col;
+    if (!cmdmod.keepjumps)
+    {
+	curbuf->b_last_change.lnum = lnum;
+	curbuf->b_last_change.col = col;
+
+#ifdef FEAT_JUMPLIST
+	if (curbuf->b_new_change)
+	{
+	    /* This is the first of a new sequence of undo-able changes.
+	     * Use a new position in the changelist. */
+	    curbuf->b_new_change = FALSE;
+
+	    if (curbuf->b_changelistlen == JUMPLISTSIZE)
+	    {
+		/* changelist is full: remove oldest entry */
+		curbuf->b_changelistlen = JUMPLISTSIZE - 1;
+		mch_memmove(curbuf->b_changelist, curbuf->b_changelist + 1,
+					  sizeof(pos_T) * (JUMPLISTSIZE - 1));
+		FOR_ALL_WINDOWS(wp)
+		{
+		    /* Correct position in changelist for other windows on
+		     * this buffer. */
+		    if (wp->w_buffer == curbuf && wp->w_changelistidx > 0)
+			--wp->w_changelistidx;
+		}
+	    }
+	    FOR_ALL_WINDOWS(wp)
+	    {
+		/* For other windows, if the position in the changelist is at
+		 * the end it stays at the end. */
+		if (wp->w_buffer == curbuf
+			    && wp->w_changelistidx == curbuf->b_changelistlen)
+		    ++wp->w_changelistidx;
+	    }
+	    ++curbuf->b_changelistlen;
+	}
+	curbuf->b_changelist[curbuf->b_changelistlen - 1] =
+							curbuf->b_last_change;
+	/* The current window is always after the last change, so that "g,"
+	 * takes you back to it. */
+	curwin->w_changelistidx = curbuf->b_changelistlen;
+#endif
+    }
 
     FOR_ALL_WINDOWS(wp)
     {
