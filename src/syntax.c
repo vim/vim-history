@@ -1630,7 +1630,6 @@ push_next_match(cur_si, line)
 	 */
 	if (	   spp->sp_type == SPTYPE_START
 		&& spp->sp_syn_match_id != 0
-		&& spp->sp_syn_id != spp->sp_syn_match_id
 		&& push_current(next_match_idx) == OK)
 	{
 	    cur_si = &CUR_STATE(current_state.ga_len - 1);
