@@ -24,6 +24,8 @@
 #	- Uncomment the line with --disable-gui if you have Motif, GTK and/or
 #	  Athena but don't want to make gvim (the GUI version of Vim with nice
 #	  menus and scrollbars, but makes Vim bigger and startup slower).
+#	- Uncomment --disable-darwin if on Mac OS X but you want to compile a
+#	  Unix version.
 #	- Uncomment the line "CONF_OPT_X = --without-x" if you have X11 but
 #	  want to disable using X11 libraries.	This speeds up starting Vim,
 #	  but the window title will not be set and the X11 selection can not
@@ -339,6 +341,11 @@ CClink = $(CC)
 #CONF_OPT_GUI = --enable-gui=motif --with-motif-lib="-static -lXm -shared"
 #CONF_OPT_GUI = --enable-gui=athena
 #CONF_OPT_GUI = --enable-gui=nextaw
+
+# DARWIN - detecting Mac OS X
+# Uncomment this line when you want to compile a Unix version of Vim on
+# Darwin.  None of the Mac specific options or files will be used.
+#CONF_OPT_DARWIN = --disable-darwin
 
 # PERL - For creating Vim with Perl interface
 # Uncomment this when you want to include the Perl interface.
@@ -1132,16 +1139,16 @@ PHOTONGUI_MAN_TARGETS = installghelplinks
 PHOTONGUI_TESTTARGET = gui
 
 # CARBON GUI
-CARBONGUI_SRC	=  gui.c gui_mac.c
-CARBONGUI_OBJ	=  objects/gui.o objects/gui_mac.o objects/pty.o
-CARBONGUI_DEFS	=  -arch ppc -fno-common -fpascal-strings \
+CARBONGUI_SRC	= gui.c gui_mac.c
+CARBONGUI_OBJ	= objects/gui.o objects/gui_mac.o objects/pty.o
+CARBONGUI_DEFS	= -DFEAT_GUI_MAC -arch ppc -fno-common -fpascal-strings \
                   -Wall -Wno-unknown-pragmas \
                   -mdynamic-no-pic -pipe
-CARBONGUI_IPATH	= -I. -Iproto -I/Developer/Headers/FlatCarbon
+CARBONGUI_IPATH	= -I. -Iproto
 CARBONGUI_LIBS_DIR =
 CARBONGUI_LIBS1	= -framework Carbon
 CARBONGUI_LIBS2	= -ltermcap
-CARBONGUI_INSTALL = gui_mac.rsrc install_macosx
+CARBONGUI_INSTALL = install_macosx
 CARBONGUI_TARGETS =
 CARBONGUI_MAN_TARGETS =
 CARBONGUI_TESTTARGET =
@@ -1429,7 +1436,7 @@ config auto/config.mk: auto/configure config.mk.in config.h.in
 		CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" \
 		LDFLAGS="$(LDFLAGS)" $(CONF_SHELL) srcdir="$(srcdir)" \
 		./configure $(CONF_OPT_GUI) $(CONF_OPT_X) $(CONF_OPT_XSMP) \
-		$(CONF_OPT_PERL) $(CONF_OPT_PYTHON) \
+		$(CONF_OPT_DARWIN) $(CONF_OPT_PERL) $(CONF_OPT_PYTHON) \
 		$(CONF_OPT_TCL) $(CONF_OPT_RUBY) \
 		$(CONF_OPT_CSCOPE) $(CONF_OPT_MULTIBYTE) $(CONF_OPT_INPUT) \
 		$(CONF_OPT_OUTPUT) $(CONF_OPT_GPM) $(CONF_OPT_WORKSHOP) \
@@ -2309,7 +2316,6 @@ Makefile:
 ### This creates a runnable Vim.app in the src directory
 
 REZ    = /Developer/Tools/Rez
-RESMRG = /Developer/Tools/ResMerger
 APPDIR = $(VIMNAME).app
 RESDIR = $(APPDIR)/Contents/Resources
 # FIXME: i'm sure someone else can do something clever with grep
@@ -2353,18 +2359,11 @@ bundle-icons: $(ICONS)
 ### Classic resources
 # Resource fork (in the form of a .rsrc file) for Classic Vim (Mac OS 9)
 # This file is also required for OS X Vim.
-bundle-rsrc: gui_mac.rsrc
+bundle-rsrc: os_mac.rsr.hqx
 	@echo "Creating resource fork"
-	$(RESMRG) gui_mac.rsrc -dstIs DF -o $(RESDIR)/$(VIMNAME).rsrc
-
-gui_mac.rsrc:
-	open os_mac.rsr.hqx
-	sleep 1
-	@echo
-	@echo "--------------------"
-	@echo "If this fails, run make install again after StuffIt Expander quits."
-	@echo "--------------------"
-	@echo
+	python dehqx.py $<
+	rm -f gui_mac.rsrc
+	mv gui_mac.rsrc.rsrcfork $(RESDIR)/$(VIMNAME).rsrc
 
 # po/Make_osx.pl says something about generating a Mac message file
 # for Ukrananian.  Would somebody using Mac OS X in Ukranian
