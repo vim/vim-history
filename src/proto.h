@@ -85,13 +85,15 @@
 # endif
 # include "main.pro"
 # include "mark.pro"
-# ifndef MESSAGE_FILE
-void
+# if !defined MESSAGE_FILE || defined(HAVE_STDARG_H)
+    /* These prototypes cannot be produced automatically and conflict with
+     * the old-style prototypes in message.c. */
+int
 #ifdef __BORLANDC__
 _RTLENTRYF
 #endif
-smsg __ARGS((char_u *, ...));	/* cannot be produced automatically */
-void
+smsg __ARGS((char_u *, ...));
+int
 #ifdef __BORLANDC__
 _RTLENTRYF
 #endif

@@ -15,7 +15,7 @@
 
 #include "vim.h"
 
-#ifdef __QNX__
+#ifdef HAVE_STDARG_H
 # include <stdarg.h>
 #endif
 
@@ -288,7 +288,7 @@ trunc_string(s, buf, room)
  * shorter than IOSIZE!!!
  */
 #ifndef PROTO
-# ifndef __QNX__
+# ifndef HAVE_STDARG_H
 
 int
 #ifdef __BORLANDC__
@@ -329,9 +329,12 @@ smsg_attr(attr, s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
     return msg_attr(IObuff, attr);
 }
 
-# else /* __QNX__ */
+# else /* HAVE_STDARG_H */
 
     int
+#ifdef __BORLANDC__
+_RTLENTRYF
+#endif
 smsg(char_u *s, ...)
 {
     va_list arglist;
@@ -343,6 +346,9 @@ smsg(char_u *s, ...)
 }
 
     int
+#ifdef __BORLANDC__
+_RTLENTRYF
+#endif
 smsg_attr(int attr, char_u *s, ...)
 {
     va_list arglist;
@@ -353,7 +359,7 @@ smsg_attr(int attr, char_u *s, ...)
     return msg_attr(IObuff, attr);
 }
 
-# endif /* __QNX__ */
+# endif /* HAVE_STDARG_H */
 #endif
 
 /*
