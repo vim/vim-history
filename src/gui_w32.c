@@ -653,7 +653,7 @@ _OnDropFiles(
 	update_curbuf(NOT_VALID);	/* delete the inversion */
     }
 
-    fnames = (char_u **) alloc(cFiles * sizeof(char_u *));
+    fnames = (char_u **)alloc(cFiles * sizeof(char_u *));
 
     for (i = 0; i < cFiles; ++i)
     {
@@ -666,42 +666,61 @@ _OnDropFiles(
 	    fname = szFile;
 	fnames[i] = vim_strsave(fname);
     }
-
-    /*
-     * Handle dropping a directory on Vim.
-     * Change to that directory and don't open any file.
-     */
-    if (cFiles == 1 && mch_isdir(fnames[0]))
-    {
-	if (mch_chdir(fnames[0]) == 0)
-	{
-	    smsg((char_u *)":cd %s", fnames[0]);
-	    vim_free(fnames[0]);
-	    fnames[0] = NULL;
-	    redo_dirs = TRUE;
-	}
-    }
-
     DragFinish(hDrop);
 
-    if (fnames[0] != NULL)
+    /*
+     * When the cursor is at the command line, add the file names to the
+     * command line, don't edit the files.
+     */
+    if (State & CMDLINE)
     {
-	/* Shift held down, change to first file's directory */
-	if (GetKeyState(VK_SHIFT) & 0x8000)
-	    if (vim_chdirfile(fnames[0]) == 0)
-		redo_dirs = TRUE;
-
-	/* Handle the drop, :edit or :split to get to the file */
-	handle_drop(cFiles, fnames, ((GetKeyState(VK_CONTROL) & 0x8000) != 0));
+	for (i = 0; i < cFiles; ++i)
+	{
+	    if (fnames[i] != NULL)
+	    {
+		if (i > 0)
+		    add_to_input_buf(" ", 1);
+		add_to_input_buf(fnames[i], STRLEN(fnames[i]));
+	    }
+	}
     }
+    else
+    {
+	/*
+	 * Handle dropping a directory on Vim.
+	 * Change to that directory and don't open any file.
+	 */
+	if (cFiles == 1 && mch_isdir(fnames[0]))
+	{
+	    if (mch_chdir(fnames[0]) == 0)
+	    {
+		smsg((char_u *)":cd %s", fnames[0]);
+		vim_free(fnames[0]);
+		fnames[0] = NULL;
+		redo_dirs = TRUE;
+	    }
+	}
 
-    if (redo_dirs)
-	shorten_fnames(TRUE);
+	if (fnames[0] != NULL)
+	{
+	    /* Shift held down, change to first file's directory */
+	    if (GetKeyState(VK_SHIFT) & 0x8000)
+		if (vim_chdirfile(fnames[0]) == 0)
+		    redo_dirs = TRUE;
 
-    /* Update the screen display */
-    update_screen(NOT_VALID);
-    setcursor();
-    out_flush();
+	    /* Handle the drop, :edit or :split to get to the file */
+	    handle_drop(cFiles, fnames,
+				   ((GetKeyState(VK_CONTROL) & 0x8000) != 0));
+	}
+
+	if (redo_dirs)
+	    shorten_fnames(TRUE);
+
+	/* Update the screen display */
+	update_screen(NOT_VALID);
+	setcursor();
+	out_flush();
+    }
 
     /* SetActiveWindow() doesn't work here... */
     (void)SetForegroundWindow(s_hwnd);
