@@ -914,7 +914,7 @@ gui_mch_browse(int saving,
 				       GTK_WIDGET(gui.filedlg), VW_POS_MOUSE);
 
     gtk_widget_show(gui.filedlg);
-    while (gui.filedlg && GTK_WIDGET_VISIBLE(gui.filedlg))
+    while (gui.filedlg && GTK_WIDGET_DRAWABLE(gui.filedlg))
 	gtk_main_iteration_do(TRUE);
 
     if (gui.browse_fname == NULL)
@@ -1080,7 +1080,7 @@ gui_gnome_dialog( int	type,
 			       GTK_WIDGET(dlg), VW_POS_MOUSE);
 
     return (1 + gnome_dialog_run_and_close(GNOME_DIALOG(dlg)));
-} /* gui_mch_dialog */
+}
 
 # endif /* FEAT_GUI_GNOME */
 
@@ -1413,7 +1413,7 @@ gui_mch_dialog(	int	type,		/* type of dialog */
     gtk_widget_show(dialog);
 
     /* loop here until the dialog goes away */
-    while (dialog_status == -1 && GTK_WIDGET_VISIBLE(dialog))
+    while (dialog_status == -1 && GTK_WIDGET_DRAWABLE(dialog))
 	gtk_main_iteration_do(TRUE);
 
     if (dialog_status < 0)
