@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 May 27
+" Last Change:	2003 Jul 23
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -224,7 +224,7 @@ au BufNewFile,BufRead *.bl			setf blank
 au BufNewFile,BufRead *.c			call <SID>FTlpc()
 
 fun! <SID>FTlpc()
-  if exists("lpc_syntax_for_c")
+  if exists("g:lpc_syntax_for_c")
     let lnum = 1
     while lnum <= 12
       if getline(lnum) =~# '^\(//\|inherit\|private\|protected\|nosave\|string\|object\|mapping\|mixed\)'
