@@ -1555,6 +1555,8 @@ win_setheight(height)
     if (full_screen && msg_scrolled == 0)
 	screen_fill(row, cmdline_row, 0, (int)Columns, ' ', ' ', 0);
     cmdline_row = row;
+    msg_row = row;
+    msg_col = 0;
 
     update_screen(NOT_VALID);
 }
