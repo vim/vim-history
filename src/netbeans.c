@@ -32,6 +32,10 @@
  * errno... */
 # define sock_errno WSAGetLastError()
 # define ECONNREFUSED WSAECONNREFUSED
+# ifdef EINTR
+#  undef EINTR
+# endif
+# define EINTR WSAEINTR
 # define sock_write(sd, buf, len) send(sd, buf, len, 0)
 # define sock_read(sd, buf, len) recv(sd, buf, len, 0)
 # define sock_close(sd) closesocket(sd)
