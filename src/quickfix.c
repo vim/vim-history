@@ -476,7 +476,11 @@ restofline:
 		if ((i = (int)fmt_ptr->addr[6]) > 0)		/* %r */
 		    tail = regmatch.startp[i];
 		if ((i = (int)fmt_ptr->addr[7]) > 0)		/* %p */
+		{
 		    col = (int)(regmatch.endp[i] - regmatch.startp[i] + 1);
+		    if (*((char_u *)regmatch.startp[i]) != TAB)
+			use_virt_col = TRUE;
+		}
 		if ((i = (int)fmt_ptr->addr[8]) > 0)		/* %v */
 		{
 		    col = (int)atol((char *)regmatch.startp[i]);
