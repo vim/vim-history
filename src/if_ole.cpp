@@ -710,12 +710,9 @@ extern "C" void UninitOLE()
 	CoRevokeClassObject(cf_id);
 	cf_id = 0;
     }
-    else if (cf)
-    {
-	// Delete the class factory
-	delete cf;
-	cf = NULL;
-    }
+
+    // Shut down the OLE libraries
+    OleUninitialize();
 
     // Delete the application object
     if (app)
@@ -724,7 +721,11 @@ extern "C" void UninitOLE()
 	app = NULL;
     }
 
-    // Shut down the OLE libraries
-    OleUninitialize();
+    // Delete the class factory
+    if (cf)
+    {
+	delete cf;
+	cf = NULL;
+    }
 }
 #endif /* HAVE_OLE */
