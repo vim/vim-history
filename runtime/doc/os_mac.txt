@@ -1,4 +1,4 @@
-*os_mac.txt*    For Vim version 6.3b.  Last change: 2004 Apr 27
+*os_mac.txt*    For Vim version 6.3.  Last change: 2004 Apr 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar et al.

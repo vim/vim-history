@@ -3,7 +3,7 @@
 " Maintainer:	    Kazunobu Kuriyama <kazunobu.kuriyama@nifty.com>
 " Ex-maintainer:    Anthony Hodsdon <ahodsdon@fastmail.fm>
 " First Author:	    Valentino Kyriakides <1kyriaki@informatik.uni-hamburg.de>
-" Last Change:	    2004 May 15
+" Last Change:	    2004 May 20
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -54,15 +54,25 @@ syn match  objcDirective    "@encode\|@protocol\|@selector"
 syn match objcInstMethod    "^\s*-\s*"
 syn match objcFactMethod    "^\s*+\s*"
 
-" To distinguish labels from method's parameters
+" To distinguish from a header inclusion from a protocol list.
+syn match objcProtocol display "<[_a-zA-Z][_a-zA-Z0-9]*>" contains=objcType,cType,Type
+
+
+" To distinguish labels from the keyword for a method's parameter.
 syn region objcKeyForMethodParam display
-    \ start="^\s*[_a-zA-Z0-9]*\s*:\s*("
-    \ end="\()\s*)\s*[_a-zA-Z0-9]*\|)\s*[_a-zA-Z0-9]\)"
+    \ start="^\s*[_a-zA-Z][_a-zA-Z0-9]*\s*:\s*("
+    \ end=")\s*[_a-zA-Z][_a-zA-Z0-9]*"
     \ contains=objcType,objcTypeModifier,cType,cStructure,cStorageClass,Type
 
-" For Objective-C constant strings
+" Objective-C Constant Strings
 syn match objcSpecial display "%@" contained
 syn region objcString start=+\(@"\|"\)+ skip=+\\\\\|\\"+ end=+"+ contains=cFormat,cSpecial,objcSpecial
+
+" Objective-C Message Expressions
+syn region objcMessage display start="\[" end="\]" contains=objcMessage,objcStatement,objcType,objcTypeModifier,objcString,objcConstant,objcDirective,cType,cStructure,cStorageClass,cString,cCharacter,cSpecialCharacter,cNumbers,cConstant,cOperator,cComment,cCommentL,Type
+
+syn cluster cParenGroup add=objcMessage
+syn cluster cPreProcGroup add=objcMessage
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
@@ -87,6 +97,7 @@ if version >= 508 || !exists("did_objc_syntax_inits")
   HiLink objcKeyForMethodParam	None
   HiLink objcString		cString
   HiLink objcSpecial		Special
+  HiLink objcProtocol		None
 
   delcommand HiLink
 endif

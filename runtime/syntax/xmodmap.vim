@@ -1,20 +1,21 @@
 " Vim syntax file
 " Language:	    xmodmap definition file
-" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
-" URL:		    http://www.pcppopper.org/
-" Latest Revision:  2002-10-24
+" Maintainer:	    Nikolai Weibull <source@pcppopper.org>
+" URL:		    http://www.pcppopper.org/vim/syntax/pcp/xmodmap/
+" Latest Revision:  2004-05-22
+" arch-tag:	    8c37ed41-655a-479d-8050-e15dc6770338
 
 if version < 600
-    syntax clear
+  syntax clear
 elseif exists("b:current_syntax")
-    finish
+  finish
 endif
 
 " comments
 syn region  xmodmapComment	display oneline matchgroup=xmodmapComment start=/^!/ end=/$/ contains=xmodmapTodo
 
 " todo
-syn keyword xmodmapTodo		contained TODO FIXME
+syn keyword xmodmapTodo		contained TODO FIXME XXX NOTE
 
 " numbers
 syn case ignore
@@ -144,35 +145,28 @@ syn match   xmodmapKeySym	"\<[A-Za-z]\>"
 " keywords
 syn keyword xmodmapKeyword	keycode keysym clear add remove pointer
 
-if exists("indent_minlines")
-    let b:indent_minlines = indent_minlines
-else
-    let b:indent_minlines = 10
-endif
-exec "syn sync minlines=" . b:indent_minlines
-
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
-if version >= 508 || !exists("did_indent_syn_inits")
-    if version < 508
-	let did_indent_syn_inits = 1
-	command -nargs=+ HiLink hi link <args>
-    else
-	command -nargs=+ HiLink hi def link <args>
-    endif
+if version >= 508 || !exists("did_xmodmap_syn_inits")
+  if version < 508
+    let did_xmodmap_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-    HiLink xmodmapComment	Comment
-    HiLink xmodmapTodo		Todo
-    HiLink xmodmapInt		Number
-    HiLink xmodmapHex		Number
-    HiLink xmodmapOctal		Number
-    HiLink xmodmapOctalError	Error
-    HiLink xmodmapKeySym	Constant
-    HiLink xmodmapKeyword	Keyword
-    delcommand HiLink
+  HiLink xmodmapComment	    Comment
+  HiLink xmodmapTodo	    Todo
+  HiLink xmodmapInt	    Number
+  HiLink xmodmapHex	    Number
+  HiLink xmodmapOctal	    Number
+  HiLink xmodmapOctalError  Error
+  HiLink xmodmapKeySym	    Constant
+  HiLink xmodmapKeyword	    Keyword
+  delcommand HiLink
 endif
 
 let b:current_syntax = "xmodmap"
 
-" vim: set sw=4 sts=4:
+" vim: set sts=2 sw=2:

@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.3b.  Last change: 2004 May 16
+*todo.txt*      For Vim version 6.3.  Last change: 2004 Jun 07
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -124,6 +124,11 @@ GTK+ GUI known bugs:
 
 
 Win32 GUI known bugs:
+8   On Windows 98 the unicows library is needed to support functions with UCS2
+    file names.  Can we load unicows.dll dynamically?
+8   The -P argument doesn't work very well with many MDI applications.
+    The last argument of CreateWindowEx() should be used, see MSDN docs.
+    Tutorial: http://win32assembly.online.fr/tut32.html
 8   In eval.c, io.h is included when MSWIN32 is defined.  Shouldn't this be
     WIN32?  Or can including io.h be moved to vim.h? (Dan Sharp)
 7   Windows XP: When using "ClearType" for text smoothing, a column of yellow
@@ -383,6 +388,7 @@ MSDOS, OS/2 and Win32:
 8   OS/2: Add Extended Attributes support and define HAVE_ACL.
 8   OS/2: When editing a file name "foo.txt" that is actually called FOO.txt,
     writing uses "foo.txt".  Should obtain the real file name.
+8   Should $USERPROFILE be used instead of $HOMEDRIVE/$HOMEPATH?
 8   Win32 console: <M-Up> and <M-Down> don't work. (Geddes)  We don't have
     special keys for these.  Should use modifier + key.
 8   Win32 console: caps-lock makes non-alpha keys work like with shift.
@@ -481,6 +487,16 @@ Macintosh:
 
 
 "Small" problems:
+8   When an ":edit" is inside a try command and the ATTENTION prompt is used,
+    the :catch commands are always executed, also when the file is edited
+    normally.  Should reset did_emsg and undo side effects.  Also make sure
+    the ATTENTION message shows up.
+9   When using ":e ++enc=foo file" and the file is already loaded with
+    'fileencoding' set to "bar", then do_ecmd() uses that buffer, even though
+    the fileencoding differs.  Reload the buffer in this situation?  Need to
+    check for the buffer to be unmodified.
+8   ":g//" gives "Pattern not found error" with E486.  Should not use the
+    error number, it's not a regular error message.
 7   Vimtutor leaves escape sequence in terminal. This is the xterm response to
     requesting the version number.  (Yasuhiro Matsumoto)
 8   When redirecting and using ":silent" the current column for displaying and
@@ -540,6 +556,11 @@ Macintosh:
 9   The argument <f-args> of a user command doesn't handle backslashes
     properly. "Cmd \ e" is one argument, "Cmd \\ e" still is one argument.
     "Cmd \  e" is two arguments, first one ending in space. (Kontra Gergely)
+9   User commands use the context of the script they were defined in.  This
+    causes a "s:var" argument to unexpectedly use a variable in the defining
+    script, not the calling script.  Add an argument to ":command":
+    "-keepcontext".  Do replace <SID>, so that a function in the defining
+    script can be called.
 8   The Japanese message translations for MS-Windows are called ja.sjis.po,
     but they use encoding cp932.  Rename the file and check that it still
     works.
@@ -548,6 +569,11 @@ Macintosh:
     region. (Lutz Eymers)  Another example Nov 14 2002.
 8   A very long message in confirm() can't be quit.  Make this possible with
     CTRL-C.
+7   clip_x11_own_selection() uses CurrentTime, that is not allowed.  VNC X
+    server has a problem with this.  (Mark Waggoner) Remembering the timestamp
+    of events isn't always possible.  We don't get them in an xterm.  GTK
+    doesn't obtain the selection again when the timestamp differs, thus it
+    won't work for GTK anyway.
 8   When the clipboard isn't supported: ":yank*" gives a confusing error
     message.  Specifically mention that the register name is invalid.
 8   "gf" always excludes trailing punctuation characters. file_name_in_line()
@@ -559,6 +585,8 @@ Macintosh:
     then. (Pritesh Mistry)
 8   ":s!from!to!" works, but ":smagic!from!to!" doesn't.  It sees the "!" as a
     flag to to the command.  Same for ":snomagic". (Johan Spetz)
+8   Using ":s" in a function changes the previous replacement string.  Save
+    "old_sub" in save_search_patterns()?
 8   When appending to a file and 'patchmode' isn't empty, a backup file is
     always written, even when the original file already exists.
 7   When using "daw" on the last word in a file and this is a single letter,
@@ -657,6 +685,9 @@ Macintosh:
     background (forked), so that Vim starts up quicker?  Connect as soon as
     the clipboard is to be used (Visual select mode starts, paste from
     clipboard)
+7   X11: Some people prefer to use CLIPBOARD instead of PRIMARY for the normal
+    selection.  Add an "xclipboard" argument to the 'clipboard' option? (Mark
+    Waggoner)
 8   For xterm need to open a connection to the X server to get the window
     title, which can be slow.  Can also get the title with "<Esc>[21t", no
     need to use X11 calls.  This returns "<Esc>]l{title}<Esc>\".
@@ -803,6 +834,9 @@ Problems that will (probably) not be solved:
     DJGPP version is OK. (Zaimi)  Looks like a problem with the Win32 library.
     Rebooting doesn't help.  Time stamps look OK in directory. (Penn)
     Is this on FAT (stores wall clock time) or NTFS (stores UTS)?
+-   Win32, MS-Windows XP: $HOME uses the wrong drive when the user profiles
+    are not on the boot disk.  This is caused by a wrong value of $HOMEDRIVE.
+    This is a bug in XP, see MSKB article 818134.
 -   SunOS 5.5.1 with Motif: The file open dialog does not have a horizontal
     scroll bar for the "files" selection.  This is a problem in the Motif
     libraries, get a patch from Sun.
@@ -1024,6 +1058,8 @@ Multi-byte characters:
     convert_input() for Mac GUI, RiscOS GUI, BeOS GUI.
 -   Add mnemonics from RFC1345 longer than two characters.
     Support CTRL-K _{mnemonic}_
+7   In "-- INSERT (lang) --" show the name of the keymap used instead of
+    "lang". (Ilya Dogolazky)
 -   Make 'langmap' accept multi-byte characters.
 -   Do we need the reverse of 'keymap', like 'langmap' but with files and
     multi-byte characters?  E.g., when using a Russian keyboard.
@@ -1159,7 +1195,9 @@ Syntax highlighting:
     words.
 8   Add spell checking.  Use "ispell -a" somehow.
     ~/vim/patches/wm_vim-5_4d.zip  can be used as an example (includes ispell
-    inside Vim).  Gautam Iyer has an example with "aspell".
+    inside Vim).  Gautam Iyer has an example with "aspell".  "engspchk" from
+    Charles Campbell is a good way.  Support for approximate-regexps will help
+    (agrep http://www.tgries.de/agrep/).
 7   Command line completion for ":find" should search in 'path'.
 8   Add more command line completion for :syntax.
 8   Add more command line completion for :highlight.
@@ -1188,8 +1226,7 @@ Syntax highlighting:
 -   Add line-continuation pattern for non-syncing items too?
 -   Add possibility to highlight specific columns (for Fortran).  Or put a
     line in between columns (e.g. for 'textwidth').
-    Patch to add 'hlcolumn' from Vit Stradal, 2003 June 2:
-    http://vitas.matfyz.cz/vim/vim62-hlc.patch
+    Patch to add 'hlcolumn' from Vit Stradal, 2004 May 20.
 -   Add possibility to highlight the whole line, including the right margin
     (for comment blocks).
 -   Add 'hlmatch' option: List of flags:
@@ -1673,6 +1710,8 @@ Win32 GUI:
 7   Should be able to set an option so that when you double click a file that
     is associated with Vim, you can either get a new instance of Vim, or have
     the file added into an already running Vim.
+7   The "-P" argument only works for the current codepage.  Use wide
+    functions to find the window title.
 
 
 GUI:
@@ -2055,6 +2094,11 @@ Insert mode:
 		  && lele);
 	   lulu;
        }
+9   Function gets extra indent: (Jamax)
+	void function(int param) {
+	     if (false)
+		 return;
+	}
 9   brace not indented correctly:
 	case 'c':   if (cond)
 			{
@@ -2170,6 +2214,8 @@ Text objects:
 8   Add "gp" and "gP" commands: insert text and make sure there is a single
     space before it, unless at the start of the line, and after it, unless at
     the end of the line or before a ".".
+7   Add objects with backwards extension?  Use "I" and "A".  Thus "2dAs"
+    deletes the current and previous sentence. (Jens Paulus)
 7   Add "g{" and "g}" to move to the first/last character of a paragraph
     (instead of the line just before/after a paragraph as with "{" and "}").
 8   Add "a'" and 'a"': a single or double quoted string. (Tim Chase)
@@ -2346,6 +2392,9 @@ Mappings and Abbreviations:
 
 Incsearch:
 -   Add a limit to the number of lines that are searched for 'incsearch'?
+-   When no match is found and the user types more, the screen is redrawn
+    anyway.  Could skip that.  Esp. if the line wraps and the text is scrolled
+    up every time.
 -   Temporarily open folds to show where the search ends up.  Restore the
     folds when going to another line.
 -   When incsearch used and hitting return, no need to search again in many
@@ -2884,6 +2933,8 @@ Various improvements:
 7   Add ModeMsgVisual, ModeMsgInsert, etc. so that each mode message can be
     highlighted differently.
 8   Allow using "**" as a wildcard in commands like ":next" and ":args".
+8   Provide a way to avoid wildcard expansion.  Use double quotes, like in the
+    shell?  :edit "my[file].txt"  (currently works if there is no "myf.txt")
 7   Add a message area for the user.  Set some option to reserve space (above
     the command line?).  Use an ":echouser" command to display the message
     (truncated to fit in the space).

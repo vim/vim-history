@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	TeX
 " Maintainer:	Dr. Charles E. Campbell, Jr. <NdrOchipS@PcampbellAfamily.Mbiz>
-" Last Change:	Mar 10, 2004
-" Version:	18
+" Last Change:	Jun 01, 2004
+" Version:	24
 " URL:		http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
 "
 " Notes: {{{1
@@ -49,21 +49,36 @@ if version >= 508 || !exists("did_tex_syntax_inits")
   command -nargs=+ HiLink hi def link <args>
  endif
 endif
-if exists("g:tex_tex")
+if exists("g:tex_tex") && !exists("g:tex_no_error")
  let g:tex_no_error= 1
+endif
+
+" Determine whether or not to use "*.sty" mode
+" The user may override the normal determination by setting
+"   g:tex_stylish to 1      (for    "*.sty" mode)
+"    or to           0 else (normal "*.tex" mode)
+" or on a buffer-by-buffer basis with b:tex_stylish
+let b:extfname=expand("%:e")
+if exists("g:tex_stylish")
+ let b:tex_stylish= g:tex_stylish
+elseif !exists("b:tex_stylish")
+ if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
+  let b:tex_stylish= 1
+ else
+  let b:tex_stylish= 0
+ endif
 endif
 
 " (La)TeX keywords: only use the letters a-zA-Z {{{1
 " but _ is the only one that causes problems.
-let b:extfname=expand("%:e")
 if version < 600
   set isk-=_
-  if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
+  if b:tex_stylish
     set isk+=@
   endif
 else
   setlocal isk-=_
-  if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
+  if b:tex_stylish
     setlocal isk+=@
   endif
 endif
@@ -89,7 +104,7 @@ if !exists("tex_no_math")
 endif
 
 " Try to flag {} and () mismatches: {{{1
-if exists("g:tex_no_error")
+if !exists("g:tex_no_error")
  syn region texMatcher		matchgroup=Delimiter start="{" skip="\\\\\|\\[{}]"	end="}"		contains=@texMatchGroup,texError
  syn region texMatcher		matchgroup=Delimiter start="\["				end="]"		contains=@texMatchGroup,texError
 else
@@ -97,11 +112,11 @@ else
  syn region texMatcher		matchgroup=Delimiter start="\["				end="]"		contains=@texMatchGroup
 endif
 syn region texParen		start="("						end=")"		contains=@texMatchGroup
-if exists("g:tex_no_error")
+if !exists("g:tex_no_error")
  syn match  texError		"[}\])]"
 endif
 if !exists("tex_no_math")
- if exists("g:tex_no_error")
+ if !exists("g:tex_no_error")
   syn match  texMathError	"}"	contained
  endif
  syn region texMathMatcher	matchgroup=Delimiter start="{"  skip="\\\\\|\\}"  end="}" end="%stopzone\>" contained contains=@texMathMatchGroup
@@ -110,7 +125,7 @@ endif
 " TeX/LaTeX keywords: {{{1
 " Instead of trying to be All Knowing, I just match \..alphameric..
 " Note that *.tex files may not have "@" in their \commands
-if exists("g:tex_tex") || b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
+if exists("g:tex_tex") || b:tex_stylish
   syn match texStatement	"\\[a-zA-Z@]\+"
 else
   syn match texStatement	"\\\a\+"
@@ -127,7 +142,7 @@ syn match texDelimiter		"\\\\"
 syn match texOption	"[^\\]\zs#\d\+\|^#\d\+"
 
 " texAccent (tnx to Karim Belabas) avoids annoying highlighting for accents: {{{1
-if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
+if b:tex_stylish
   syn match texAccent		"\\[bcdvuH][^a-zA-Z@]"me=e-1
   syn match texLigature		"\\\([ijolL]\|ae\|oe\|ss\|AA\|AE\|OE\)[^a-zA-Z@]"me=e-1
 else
@@ -231,9 +246,9 @@ endif
 " Math Zones: {{{1
 if !exists("tex_no_math")
  " TexNewMathZone: creates a mathzone with the given suffix and mathzone name. {{{2
- "		   Starred forms are created if starform is true.  Starred
- "		   forms have syntax group and synchronization groups with a
- "		   "S" appended.  Handles: cluster, syntax, sync, and HiLink.
+ "                 Starred forms are created if starform is true.  Starred
+ "                 forms have syntax group and synchronization groups with a
+ "                 "S" appended.  Handles: cluster, syntax, sync, and HiLink.
  fun! TexNewMathZone(sfx,mathzone,starform)
    let grpname  = "texMathZone".a:sfx
    let syncname = "texSyncMathZone".a:sfx
@@ -278,21 +293,21 @@ if !exists("tex_no_math")
 
  " \left..something.. and \right..something.. support: {{{2
  syn match   texMathDelimBad	contained		"\S"
- syn match   texMathDelim			"\\\(left\|right\|[bB]igg\=[lr]\)\>"	skipwhite nextgroup=texMathDelimSet1,texMathDelimSet2,texMathDelimBad
- syn match   texMathDelim			"\\\(left\|right\)arrow\>\|\([aA]rrow\|brace\)\=vert"
- syn match   texMathDelim			"\\lefteqn\>"
+ syn match   texMathDelim	contained		"\\\(left\|right\|[bB]igg\=[lr]\)\>"	skipwhite nextgroup=texMathDelimSet1,texMathDelimSet2,texMathDelimBad
+ syn match   texMathDelim	contained		"\\\(left\|right\)arrow\>\|\<\([aA]rrow\|brace\)\=vert\>"
+ syn match   texMathDelim	contained		"\\lefteqn\>"
  syn match   texMathDelimSet2	contained	"\\"		nextgroup=texMathDelimKey,texMathDelimBad
  syn match   texMathDelimSet1	contained	"[<>()[\]|/.]\|\\[{}|]"
- syn keyword texMathDelimKey	contained	backslash	lceil		lVert		rgroup		uparrow
- syn keyword texMathDelimKey	contained	downarrow	lfloor		rangle		rmoustache	Uparrow
- syn keyword texMathDelimKey	contained	Downarrow	lgroup		rbrace		rvert		updownarrow
- syn keyword texMathDelimKey	contained	langle		lmoustache	rceil		rVert		Updownarrow
- syn keyword texMathDelimKey	contained	lbrace		lvert		rfloor
+ syn keyword texMathDelimKey	contained	backslash       lceil           lVert           rgroup          uparrow
+ syn keyword texMathDelimKey	contained	downarrow       lfloor          rangle          rmoustache      Uparrow
+ syn keyword texMathDelimKey	contained	Downarrow       lgroup          rbrace          rvert           updownarrow
+ syn keyword texMathDelimKey	contained	langle          lmoustache      rceil           rVert           Updownarrow
+ syn keyword texMathDelimKey	contained	lbrace          lvert           rfloor
 endif
 
 " Special TeX characters  ( \$ \& \% \# \{ \} \_ \S \P ) : {{{1
 syn match texSpecialChar	"\\[$&%#{}_]"
-if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
+if b:tex_stylish
   syn match texSpecialChar	"\\[SP@][^a-zA-Z@]"me=e-1
 else
   syn match texSpecialChar	"\\[SP@]\A"me=e-1
@@ -325,7 +340,7 @@ if version < 600
  syn region texZone		start="\\verb\*\=`"			end="`\|%stopzone\>"
  syn region texZone		start="\\verb\*\=#"			end="#\|%stopzone\>"
 else
-  if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
+  if b:tex_stylish
     syn region texZone		start="\\verb\*\=\z([^\ta-zA-Z@]\)"	end="\z1\|%stopzone\>"
   else
     syn region texZone		start="\\verb\*\=\z([^\ta-zA-Z]\)"	end="\z1\|%stopzone\>"
@@ -338,7 +353,7 @@ syn region texRefZone		matchgroup=texStatement start="\\nocite{"		keepend end="}
 syn region texRefZone		matchgroup=texStatement start="\\bibliography{"		keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
 syn region texRefZone		matchgroup=texStatement start="\\cite\([tp]\*\=\)\={"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
 syn region texRefZone		matchgroup=texStatement start="\\label{"		keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
-syn region texRefZone		matchgroup=texStatement start="\\pageref{"		keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
+syn region texRefZone		matchgroup=texStatement start="\\\(page\|eq\)ref{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
 syn region texRefZone		matchgroup=texStatement start="\\v\=ref{"		keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
 
 " Handle newcommand, newenvironment : {{{1
@@ -353,7 +368,7 @@ syn region texEnvEnd  contained matchgroup=Delimiter start="{"rs=s+1  end="}"		s
 
 " Definitions/Commands: {{{1
 syn match texDefCmd				"\\def\>"				nextgroup=texDefName skipwhite skipnl
-if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
+if b:tex_stylish
   syn match texDefName contained		"\\[a-zA-Z@]\+"				nextgroup=texDefParms,texCmdBody skipwhite skipnl
   syn match texDefName contained		"\\[^a-zA-Z@]"				nextgroup=texDefParms,texCmdBody skipwhite skipnl
 else
@@ -400,7 +415,7 @@ if did_tex_syntax_inits == 1
     HiLink texBadMath		texError
     HiLink texMathDelimBad	texError
     HiLink texMathError		texError
-    if b:extfname != "sty" && b:extfname != "cls" && b:extfname != "clo" && b:extfname != "dtx" && b:extfname != "ltx"
+    if !b:tex_stylish
       HiLink texOnlyMath	texError
     endif
    endif

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.3b.  Last change: 2004 May 12
+*eval.txt*      For Vim version 6.3.  Last change: 2004 May 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -3369,7 +3369,8 @@ This would call the function "my_func_whizz(parameter)".
 :echom[sg] {expr1} ..	Echo the expression(s) as a true message, saving the
 			message in the |message-history|.
 			Spaces are placed between the arguments as with the
-			|:echo| command.
+			|:echo| command.  But unprintable characters are
+			displayed, not interpreted.
 			Uses the highlighting set by the |:echohl| command.
 			Example: >
 		:echomsg "It's a Zizzer Zazzer Zuzz, as you can plainly see."

@@ -1,7 +1,7 @@
 # Norwegian (Bokmål) translation of Vim.
 # Copyright (C) 2003-2004 Free Software Foundation, Inc.
 # FIRST AUTHOR Øyvind A. Holm <sunny@sunbase.org>, 2003-2004.
-# no.po 277 2004-05-12 06:48:15Z sunny
+# no.po 299 2004-06-01 20:50:09Z sunny
 #
 # Comments and error reports appreciated.
 #
@@ -9,7 +9,8 @@
 #
 #   http://www.sunbase.org/src/vim/norwegian/
 #
-# New versions of the translation files can be downloaded from
+# New versions of the translation files can be downloaded in .tar.gz
+# format from
 #
 #   http://svn.sunbase.org/repos/norwegian_vim/download/
 #
@@ -24,7 +25,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Vim 6.x\n"
-"POT-Creation-Date: 2004-05-12 08:29+0200\n"
+"POT-Creation-Date: 2004-05-31 15:46+0200\n"
 "PO-Revision-Date: 2003-05-13 08:19+0200\n"
 "Last-Translator: Øyvind A. Holm <sunny@sunbase.org>\n"
 "Language-Team: Norwegian <vim.in.norwegian@sunbase.org>\n"
@@ -137,75 +138,75 @@ msgstr "E94: Ingen samsvarende buffer for %s"
 msgid "line %ld"
 msgstr "linje %ld"
 
-#: buffer.c:2420
+#: buffer.c:2422
 msgid "E95: Buffer with this name already exists"
 msgstr "E95: En buffer med dette navnet finnes allerede"
 
-#: buffer.c:2713
+#: buffer.c:2717
 msgid " [Modified]"
 msgstr " [Modifisert]"
 
-#: buffer.c:2718
+#: buffer.c:2722
 msgid "[Not edited]"
 msgstr "[Uredigert]"
 
-#: buffer.c:2723
+#: buffer.c:2727
 msgid "[New file]"
 msgstr "[Ny fil]"
 
-#: buffer.c:2724
+#: buffer.c:2728
 msgid "[Read errors]"
 msgstr "[Lesefeil]"
 
-#: buffer.c:2726 fileio.c:2112
+#: buffer.c:2730 fileio.c:2112
 msgid "[readonly]"
 msgstr "[skrivebeskyttet]"
 
-#: buffer.c:2747
+#: buffer.c:2751
 #, c-format
 msgid "1 line --%d%%--"
 msgstr "1 linje --%d%%--"
 
-#: buffer.c:2749
+#: buffer.c:2753
 #, c-format
 msgid "%ld lines --%d%%--"
 msgstr "%ld linjer --%d%%--"
 
-#: buffer.c:2756
+#: buffer.c:2760
 #, c-format
 msgid "line %ld of %ld --%d%%-- col "
 msgstr "linje %ld av %ld --%d%%-- kol "
 
-#: buffer.c:2864
+#: buffer.c:2868
 msgid "[No file]"
 msgstr "[Uten navn]"
 
 #. must be a help buffer
-#: buffer.c:2904
+#: buffer.c:2908
 msgid "help"
 msgstr "hjelp"
 
-#: buffer.c:3463 screen.c:5075
+#: buffer.c:3467 screen.c:5075
 msgid "[help]"
 msgstr "[hjelp]"
 
-#: buffer.c:3495 screen.c:5081
+#: buffer.c:3499 screen.c:5081
 msgid "[Preview]"
 msgstr "[Forhåndsvisning]"
 
-#: buffer.c:3775
+#: buffer.c:3779
 msgid "All"
 msgstr "Alt"
 
-#: buffer.c:3775
+#: buffer.c:3779
 msgid "Bot"
 msgstr "Bunn"
 
-#: buffer.c:3777
+#: buffer.c:3781
 msgid "Top"
 msgstr "Topp"
 
-#: buffer.c:4523
+#: buffer.c:4529
 msgid ""
 "\n"
 "# Buffer list:\n"
@@ -213,15 +214,15 @@ msgstr ""
 "\n"
 "# Bufferliste:\n"
 
-#: buffer.c:4556
+#: buffer.c:4562
 msgid "[Error List]"
 msgstr "[Feilliste]"
 
-#: buffer.c:4569 memline.c:1520
+#: buffer.c:4575 memline.c:1521
 msgid "[No File]"
 msgstr "[Uten navn]"
 
-#: buffer.c:4882
+#: buffer.c:4888
 msgid ""
 "\n"
 "--- Signs ---"
@@ -229,12 +230,12 @@ msgstr ""
 "\n"
 "--- Skilt ---"
 
-#: buffer.c:4901
+#: buffer.c:4907
 #, c-format
 msgid "Signs for %s:"
 msgstr "Skilt for %s:"
 
-#: buffer.c:4907
+#: buffer.c:4913
 #, c-format
 msgid "    line=%ld  id=%d  name=%s"
 msgstr "    linje=%ld  id=%d  navn=%s"
@@ -510,121 +511,121 @@ msgstr "kalte inputrestore() oftere enn inputsave()"
 msgid "E655: Too many symbolic links (cycle?)"
 msgstr "E655: For mange symbolske linker (runddans?)"
 
-#: eval.c:6609
+#: eval.c:6626
 msgid "E240: No connection to Vim server"
 msgstr "E240: Ingen forbindelse med Vim-tjeneren"
 
-#: eval.c:6706
+#: eval.c:6724
 msgid "E277: Unable to read a server reply"
 msgstr "E277: Klarer ikke lese svar fra tjeneren"
 
-#: eval.c:6734
+#: eval.c:6752
 msgid "E258: Unable to send to client"
 msgstr "E258: Klarer ikke sende til klienten"
 
-#: eval.c:6782
+#: eval.c:6800
 #, c-format
 msgid "E241: Unable to send to %s"
 msgstr "E241: Klarer ikke sende til %s"
 
-#: eval.c:6882
+#: eval.c:6900
 msgid "(Invalid)"
 msgstr "(Ugyldig)"
 
-#: eval.c:8060
+#: eval.c:8078
 #, c-format
 msgid "E121: Undefined variable: %s"
 msgstr "E121: Udefinert variabel: %s"
 
-#: eval.c:8492
+#: eval.c:8510
 #, c-format
 msgid "E461: Illegal variable name: %s"
 msgstr "E461: Ugyldig variabelnavn: %s"
 
-#: eval.c:8784
+#: eval.c:8802
 #, c-format
 msgid "E122: Function %s already exists, add ! to replace it"
 msgstr "E122: Funksjonen %s eksisterer allerede, legg til ! for å erstatte den"
 
-#: eval.c:8857
+#: eval.c:8875
 #, c-format
 msgid "E123: Undefined function: %s"
 msgstr "E123: Udefinert funksjon: %s"
 
-#: eval.c:8870
+#: eval.c:8888
 #, c-format
 msgid "E124: Missing '(': %s"
 msgstr "E124: Mangler '(': %s"
 
-#: eval.c:8903
+#: eval.c:8921
 #, c-format
 msgid "E125: Illegal argument: %s"
 msgstr "E125: Ugyldig parameter: %s"
 
-#: eval.c:8982
+#: eval.c:9000
 msgid "E126: Missing :endfunction"
 msgstr "E126: Mangler :endfunction"
 
-#: eval.c:9089
+#: eval.c:9107
 #, c-format
 msgid "E127: Cannot redefine function %s: It is in use"
 msgstr "E127: Kan ikke omdefinere funksjonen %s: Den er i bruk"
 
-#: eval.c:9159
+#: eval.c:9177
 msgid "E129: Function name required"
 msgstr "E129: Funksjonsnavn nødvendig"
 
-#: eval.c:9210
+#: eval.c:9228
 #, c-format
 msgid "E128: Function name must start with a capital: %s"
 msgstr "E128: Funksjonsnavn må ha stor forbokstav: %s"
 
-#: eval.c:9402
+#: eval.c:9420
 #, c-format
 msgid "E130: Undefined function: %s"
 msgstr "E130: Udefinert funksjon: %s"
 
-#: eval.c:9407
+#: eval.c:9425
 #, c-format
 msgid "E131: Cannot delete function %s: It is in use"
 msgstr "E131: Kan ikke slette funksjonen %s: Den er i bruk"
 
-#: eval.c:9455
+#: eval.c:9473
 msgid "E132: Function call depth is higher than 'maxfuncdepth'"
 msgstr "E132: Funksjonskalldybden er større enn 'maxfuncdepth'"
 
 #. always scroll up, don't overwrite
-#: eval.c:9508
+#: eval.c:9526
 #, c-format
 msgid "calling %s"
 msgstr "kaller %s"
 
-#: eval.c:9570
+#: eval.c:9588
 #, c-format
 msgid "%s aborted"
 msgstr "%s avbrutt"
 
-#: eval.c:9572
+#: eval.c:9590
 #, c-format
 msgid "%s returning #%ld"
 msgstr "%s returnerer #%ld"
 
-#: eval.c:9579
+#: eval.c:9597
 #, c-format
 msgid "%s returning \"%s\""
 msgstr "%s returnerer \"%s\""
 
 #. always scroll up, don't overwrite
-#: eval.c:9595 ex_cmds2.c:2365
+#: eval.c:9613 ex_cmds2.c:2370
 #, c-format
 msgid "continuing in %s"
 msgstr "fortsetter i %s"
 
-#: eval.c:9621
+#: eval.c:9639
 msgid "E133: :return not inside a function"
 msgstr "E133: :return er ikke innenfor en funksjon"
 
-#: eval.c:9952
+#: eval.c:9970
 msgid ""
 "\n"
 "# global variables:\n"
@@ -736,7 +737,7 @@ msgstr "# Verdien av 'encoding' når denne filen ble skrevet\n"
 msgid "Illegal starting char"
 msgstr "Ulovlig starttegn"
 
-#: ex_cmds.c:2097 ex_cmds.c:2362 ex_cmds2.c:763
+#: ex_cmds.c:2097 ex_cmds2.c:761
 msgid "Save As"
 msgstr "Lagre som"
 
@@ -764,11 +765,11 @@ msgstr "Overskrive eksisterende fil \"%.*s\"?"
 msgid "E141: No file name for buffer %ld"
 msgstr "E141: Mangler filnavn for buffer %ld"
 
-#: ex_cmds.c:2405
+#: ex_cmds.c:2406
 msgid "E142: File not written: Writing is disabled by 'write' option"
 msgstr "E142: Filen ble ikke lagret: Lagring er deaktivert med 'write'-valget"
 
-#: ex_cmds.c:2425
+#: ex_cmds.c:2426
 #, c-format
 msgid ""
 "'readonly' option is set for \"%.*s\".\n"
@@ -777,68 +778,68 @@ msgstr ""
 "'readonly'-valget er satt for \"%.*s\".\n"
 "Vil du lagre likevel?"
 
-#: ex_cmds.c:2597
+#: ex_cmds.c:2599
 msgid "Edit File"
 msgstr "Rediger fil"
 
-#: ex_cmds.c:3205
+#: ex_cmds.c:3207
 #, c-format
 msgid "E143: Autocommands unexpectedly deleted new buffer %s"
 msgstr "E143: Autokommandoer slettet uventet den nye bufferen %s"
 
-#: ex_cmds.c:3339
+#: ex_cmds.c:3341
 msgid "E144: non-numeric argument to :z"
 msgstr "E144: Ikke-numerisk parameter til :z"
 
-#: ex_cmds.c:3424
+#: ex_cmds.c:3426
 msgid "E145: Shell commands not allowed in rvim"
 msgstr "E145: Skallkommandoer er ikke tillatt i rvim"
 
-#: ex_cmds.c:3531
+#: ex_cmds.c:3533
 msgid "E146: Regular expressions can't be delimited by letters"
 msgstr "E146: Regulære uttrykk kan ikke bli adskilt av bokstaver"
 
-#: ex_cmds.c:3877
+#: ex_cmds.c:3879
 #, c-format
 msgid "replace with %s (y/n/a/q/l/^E/^Y)?"
 msgstr "Erstatt med %s (y/n/a/q/l/^E/^Y)?"
 
-#: ex_cmds.c:4270
+#: ex_cmds.c:4272
 msgid "(Interrupted) "
 msgstr "(Avbrutt) "
 
-#: ex_cmds.c:4274
+#: ex_cmds.c:4276
 msgid "1 substitution"
 msgstr "1 erstatning"
 
-#: ex_cmds.c:4276
+#: ex_cmds.c:4278
 #, c-format
 msgid "%ld substitutions"
 msgstr "%ld erstatninger"
 
-#: ex_cmds.c:4279
+#: ex_cmds.c:4281
 msgid " on 1 line"
 msgstr " i 1 linje"
 
-#: ex_cmds.c:4281
+#: ex_cmds.c:4283
 #, c-format
 msgid " on %ld lines"
 msgstr " i %ld linjer"
 
-#: ex_cmds.c:4332
+#: ex_cmds.c:4334
 msgid "E147: Cannot do :global recursive"
 msgstr "E147: Kan ikke gjøre :global rekursiv"
 
-#: ex_cmds.c:4367
+#: ex_cmds.c:4369
 msgid "E148: Regular expression missing from global"
 msgstr "E148: Regulært uttrykk mangler i global kommando"
 
-#: ex_cmds.c:4416
+#: ex_cmds.c:4418
 #, c-format
 msgid "Pattern found in every line: %s"
 msgstr "Søkestreng funnet i alle linjene: %s"
 
-#: ex_cmds.c:4497
+#: ex_cmds.c:4499
 msgid ""
 "\n"
 "# Last Substitute String:\n"
@@ -848,96 +849,96 @@ msgstr ""
 "# Siste erstatningstekst:\n"
 "$"
 
-#: ex_cmds.c:4598
+#: ex_cmds.c:4600
 msgid "E478: Don't panic!"
 msgstr "E478: Ingen panikk!"
 
-#: ex_cmds.c:4650
+#: ex_cmds.c:4652
 #, c-format
 msgid "E661: Sorry, no '%s' help for %s"
 msgstr "E661: Dessverre ingen '%s' hjelp for %s"
 
-#: ex_cmds.c:4653
+#: ex_cmds.c:4655
 #, c-format
 msgid "E149: Sorry, no help for %s"
 msgstr "E149: Dessverre ingen hjelp for %s"
 
-#: ex_cmds.c:4687
+#: ex_cmds.c:4689
 #, c-format
 msgid "Sorry, help file \"%s\" not found"
 msgstr "Fant ikke hjelpefilen \"%s\""
 
-#: ex_cmds.c:5170
+#: ex_cmds.c:5172
 #, c-format
 msgid "E150: Not a directory: %s"
 msgstr "E150: Er ikke en katalog: %s"
 
-#: ex_cmds.c:5309
+#: ex_cmds.c:5311
 #, c-format
 msgid "E152: Cannot open %s for writing"
 msgstr "E152: Kan ikke åpne %s for skriving"
 
-#: ex_cmds.c:5345
+#: ex_cmds.c:5347
 #, c-format
 msgid "E153: Unable to open %s for reading"
 msgstr "E153: Kan ikke åpne %s for lesing"
 
-#: ex_cmds.c:5367
+#: ex_cmds.c:5369
 #, c-format
-#~ msgid "E670: Mix of help file encodings within a language: %s"
-#~ msgstr ""
+msgid "E670: Mix of help file encodings within a language: %s"
+msgstr "E670: Tegnsettblanding i hjelpefilen innenfor samme språk: %s"
 
-#: ex_cmds.c:5445
+#: ex_cmds.c:5447
 #, c-format
 msgid "E154: Duplicate tag \"%s\" in file %s"
 msgstr "E154: Duplisert tag \"%s\" i filen %s"
 
-#: ex_cmds.c:5557
+#: ex_cmds.c:5559
 #, c-format
 msgid "E160: Unknown sign command: %s"
 msgstr "E160: Ukjent skiltkommando: %s"
 
-#: ex_cmds.c:5577
+#: ex_cmds.c:5579
 msgid "E156: Missing sign name"
 msgstr "E156: Mangler skiltnavn"
 
-#: ex_cmds.c:5623
+#: ex_cmds.c:5625
 msgid "E612: Too many signs defined"
 msgstr "E612: For mange skilt definert"
 
-#: ex_cmds.c:5691
+#: ex_cmds.c:5693
 #, c-format
 msgid "E239: Invalid sign text: %s"
 msgstr "E239: Ugyldig skilttekst: %s"
 
-#: ex_cmds.c:5722 ex_cmds.c:5913
+#: ex_cmds.c:5724 ex_cmds.c:5915
 #, c-format
 msgid "E155: Unknown sign: %s"
 msgstr "E155: Ukjent skilt: %s"
 
-#: ex_cmds.c:5771
+#: ex_cmds.c:5773
 msgid "E159: Missing sign number"
 msgstr "E159: Mangler skiltnummer"
 
-#: ex_cmds.c:5853
+#: ex_cmds.c:5855
 #, c-format
 msgid "E158: Invalid buffer name: %s"
 msgstr "E158: Ugyldig buffernavn: %s"
 
-#: ex_cmds.c:5892
+#: ex_cmds.c:5894
 #, c-format
 msgid "E157: Invalid sign ID: %ld"
 msgstr "E157: Ulovlig skilt-ID: %ld"
 
-#: ex_cmds.c:5962
+#: ex_cmds.c:5964
 msgid " (NOT FOUND)"
 msgstr " (IKKE FUNNET)"
 
-#: ex_cmds.c:5964
+#: ex_cmds.c:5966
 msgid " (not supported)"
 msgstr " (ikke støttet)"
 
-#: ex_cmds.c:6063
+#: ex_cmds.c:6065
 msgid "[Deleted]"
 msgstr "[Slettet]"
 
@@ -945,7 +946,7 @@ msgstr "[Slettet]"
 msgid "Entering Debug mode.  Type \"cont\" to continue."
 msgstr "Går inn i debuggingsmodus. Skriv \"cont\" for å fortsette."
 
-#: ex_cmds2.c:96 ex_docmd.c:966
+#: ex_cmds2.c:96 ex_docmd.c:968
 #, c-format
 msgid "line %ld: %s"
 msgstr "linje %ld: %s"
@@ -979,7 +980,7 @@ msgstr "%3d  %s %s  linje %ld"
 msgid "Save changes to \"%.*s\"?"
 msgstr "Lagre forandringer til \"%.*s\"?"
 
-#: ex_cmds2.c:788 ex_docmd.c:9378
+#: ex_cmds2.c:788 ex_docmd.c:9398
 msgid "Untitled"
 msgstr "Uten navn"
 
@@ -1009,165 +1010,165 @@ msgstr "E165: Kan ikke gå forbi siste fil"
 msgid "E666: compiler not supported: %s"
 msgstr "E666: Kompilatoren er ikke støttet: %s"
 
-#: ex_cmds2.c:1897
+#: ex_cmds2.c:1901
 #, c-format
 msgid "Searching for \"%s\" in \"%s\""
 msgstr "Søker etter \"%s\" i \"%s\""
 
-#: ex_cmds2.c:1919
+#: ex_cmds2.c:1923
 #, c-format
 msgid "Searching for \"%s\""
 msgstr "Søker etter \"%s\""
 
-#: ex_cmds2.c:1940
+#: ex_cmds2.c:1945
 #, c-format
 msgid "not found in 'runtimepath': \"%s\""
 msgstr "ikke funnet i 'runtimepath': \"%s\""
 
-#: ex_cmds2.c:1974
+#: ex_cmds2.c:1979
 msgid "Source Vim script"
 msgstr "Kjør Vim-skript"
 
-#: ex_cmds2.c:2164
+#: ex_cmds2.c:2169
 #, c-format
 msgid "Cannot source a directory: \"%s\""
 msgstr "Kan ikke kjøre en katalog: \"%s\""
 
-#: ex_cmds2.c:2202
+#: ex_cmds2.c:2207
 #, c-format
 msgid "could not source \"%s\""
 msgstr "kunne ikke kjøre \"%s\""
 
-#: ex_cmds2.c:2204
+#: ex_cmds2.c:2209
 #, c-format
 msgid "line %ld: could not source \"%s\""
 msgstr "linje %ld: Kunne ikke kjøre \"%s\""
 
-#: ex_cmds2.c:2218
+#: ex_cmds2.c:2223
 #, c-format
 msgid "sourcing \"%s\""
 msgstr "kjører \"%s\""
 
-#: ex_cmds2.c:2220
+#: ex_cmds2.c:2225
 #, c-format
 msgid "line %ld: sourcing \"%s\""
 msgstr "linje %ld: kjører \"%s\""
 
-#: ex_cmds2.c:2363
+#: ex_cmds2.c:2368
 #, c-format
 msgid "finished sourcing %s"
 msgstr "ferdig med kjøring av %s"
 
-#: ex_cmds2.c:2707
+#: ex_cmds2.c:2712
 msgid "W15: Warning: Wrong line separator, ^M may be missing"
 msgstr "W15: Advarsel: Feil linjeseparator, det er mulig ^M mangler"
 
-#: ex_cmds2.c:2756
+#: ex_cmds2.c:2761
 msgid "E167: :scriptencoding used outside of a sourced file"
 msgstr "E167: :scriptencoding brukt utenfor en kjørt fil"
 
-#: ex_cmds2.c:2789
+#: ex_cmds2.c:2794
 msgid "E168: :finish used outside of a sourced file"
 msgstr "E168: :finish brukt utenfor en kjørt fil"
 
-#: ex_cmds2.c:3238
+#: ex_cmds2.c:3243
 #, c-format
 msgid "Page %d"
 msgstr "Side %d"
 
-#: ex_cmds2.c:3394
+#: ex_cmds2.c:3399
 msgid "No text to be printed"
 msgstr "Ingen tekst for utskrift"
 
-#: ex_cmds2.c:3472
+#: ex_cmds2.c:3477
 #, c-format
 msgid "Printing page %d (%d%%)"
 msgstr "Skriver ut side %d (%d%%)"
 
-#: ex_cmds2.c:3484
+#: ex_cmds2.c:3489
 #, c-format
 msgid " Copy %d of %d"
 msgstr " Kopi %d av %d"
 
-#: ex_cmds2.c:3542
+#: ex_cmds2.c:3547
 #, c-format
 msgid "Printed: %s"
 msgstr "Skrevet ut: %s"
 
-#: ex_cmds2.c:3549
+#: ex_cmds2.c:3554
 msgid "Printing aborted"
 msgstr "Utskrift avbrutt"
 
-#: ex_cmds2.c:3914
+#: ex_cmds2.c:3919
 msgid "E455: Error writing to PostScript output file"
 msgstr "E455: Feil under skriving til Postscript-fil"
 
-#: ex_cmds2.c:4189
+#: ex_cmds2.c:4194
 #, c-format
 msgid "E624: Can't open file \"%s\""
 msgstr "E624: Kan ikke åpne filen \"%s\""
 
-#: ex_cmds2.c:4199 ex_cmds2.c:4824
+#: ex_cmds2.c:4204 ex_cmds2.c:4829
 #, c-format
 msgid "E457: Can't read PostScript resource file \"%s\""
 msgstr "E457: Kan ikke lese Postscript-ressursfil \"%s\""
 
-#: ex_cmds2.c:4207
+#: ex_cmds2.c:4212
 #, c-format
 msgid "E618: file \"%s\" is not a PostScript resource file"
 msgstr "E618: Filen \"%s\" er ikke en Postscript-ressursfil"
 
-#: ex_cmds2.c:4222 ex_cmds2.c:4242 ex_cmds2.c:4257 ex_cmds2.c:4279
+#: ex_cmds2.c:4227 ex_cmds2.c:4247 ex_cmds2.c:4262 ex_cmds2.c:4284
 #, c-format
 msgid "E619: file \"%s\" is not a supported PostScript resource file"
 msgstr "E619: Det er ikke støtte for Postscript-ressursfilen \"%s\""
 
-#: ex_cmds2.c:4309
+#: ex_cmds2.c:4314
 #, c-format
 msgid "E621: \"%s\" resource file has wrong version"
 msgstr "E621: Ressursfilen \"%s\" er feil versjon"
 
-#: ex_cmds2.c:4776
+#: ex_cmds2.c:4781
 msgid "E324: Can't open PostScript output file"
 msgstr "E324: Kan ikke åpne Postscript-fil for skriving"
 
-#: ex_cmds2.c:4809
+#: ex_cmds2.c:4814
 #, c-format
 msgid "E456: Can't open file \"%s\""
 msgstr "E456: Kan ikke åpne filen \"%s\""
 
-#: ex_cmds2.c:4928
+#: ex_cmds2.c:4933
 msgid "E456: Can't find PostScript resource file \"prolog.ps\""
 msgstr "E456: Fant ikke Postscript-ressursfilen \"prolog.ps\""
 
-#: ex_cmds2.c:4959
+#: ex_cmds2.c:4964
 #, c-format
 msgid "E456: Can't find PostScript resource file \"%s.ps\""
 msgstr "E456: Fant ikke Postscript-ressursfilen \"%s.ps\""
 
-#: ex_cmds2.c:4977
+#: ex_cmds2.c:4982
 #, c-format
 msgid "E620: Unable to convert from multi-byte to \"%s\" encoding"
 msgstr "E620: Klarte ikke konvertere fra multibyte til \"%s\"-tegnsett"
 
-#: ex_cmds2.c:5102
+#: ex_cmds2.c:5107
 msgid "Sending to printer..."
 msgstr "Sender til skriver ..."
 
-#: ex_cmds2.c:5106
+#: ex_cmds2.c:5111
 msgid "E365: Failed to print PostScript file"
 msgstr "E365: Feil under utskrift av Postscript-fil"
 
-#: ex_cmds2.c:5108
+#: ex_cmds2.c:5113
 msgid "Print job sent."
 msgstr "Skriverjobb sendt."
 
-#: ex_cmds2.c:5618
+#: ex_cmds2.c:5623
 #, c-format
 msgid "Current %slanguage: \"%s\""
 msgstr "Nåværende %sspråk: \"%s\""
 
-#: ex_cmds2.c:5629
+#: ex_cmds2.c:5634
 #, c-format
 msgid "E197: Cannot set language to \"%s\""
 msgstr "E197: Kan ikke sette språk til \"%s\""
@@ -1181,74 +1182,74 @@ msgstr "Går inn i Ex-modus. Skriv \"visual\" for å gå til normalmodus."
 msgid "E501: At end-of-file"
 msgstr "E501: Ved slutten av filen"
 
-#: ex_docmd.c:669
+#: ex_docmd.c:670
 msgid "E169: Command too recursive"
 msgstr "E169: Kommando altfor rekursiv"
 
-#: ex_docmd.c:1229
+#: ex_docmd.c:1232
 #, c-format
 msgid "E605: Exception not caught: %s"
 msgstr "E605: Unntak ikke fanget opp: %s"
 
-#: ex_docmd.c:1317
+#: ex_docmd.c:1320
 msgid "End of sourced file"
 msgstr "Slutt på kjørt fil"
 
-#: ex_docmd.c:1318
+#: ex_docmd.c:1321
 msgid "End of function"
 msgstr "Slutt på funksjon"
 
-#: ex_docmd.c:1907
+#: ex_docmd.c:1910
 msgid "E464: Ambiguous use of user-defined command"
 msgstr "E464: Flertydig bruk av brukerdefinert kommando"
 
-#: ex_docmd.c:1921
+#: ex_docmd.c:1924
 msgid "E492: Not an editor command"
 msgstr "E492: Er ikke en editorkommando"
 
-#: ex_docmd.c:2028
+#: ex_docmd.c:2031
 msgid "E493: Backwards range given"
 msgstr "E493: Område bakover er angitt"
 
-#: ex_docmd.c:2037
+#: ex_docmd.c:2040
 msgid "Backwards range given, OK to swap"
 msgstr "Område bakover er angitt, OK å swappe"
 
-#: ex_docmd.c:2160
+#: ex_docmd.c:2163
 msgid "E494: Use w or w>>"
 msgstr "E494: Bruk w eller w>>"
 
-#: ex_docmd.c:3786
+#: ex_docmd.c:3789
 msgid "E319: Sorry, the command is not available in this version"
 msgstr "E319: Kommandoen er ikke tilgjengelig i denne versjonen"
 
-#: ex_docmd.c:3989
+#: ex_docmd.c:3992
 msgid "E172: Only one file name allowed"
 msgstr "E172: Bare ett filnavn tillatt"
 
-#: ex_docmd.c:4569
+#: ex_docmd.c:4572
 msgid "1 more file to edit.  Quit anyway?"
 msgstr "1 annen fil å redigere. Avslutt likevel?"
 
-#: ex_docmd.c:4572
+#: ex_docmd.c:4575
 #, c-format
 msgid "%d more files to edit.  Quit anyway?"
 msgstr "%d andre filer å redigere. Avslutt likevel?"
 
-#: ex_docmd.c:4579
+#: ex_docmd.c:4582
 msgid "E173: 1 more file to edit"
 msgstr "E173: 1 annen fil å redigere"
 
-#: ex_docmd.c:4581
+#: ex_docmd.c:4584
 #, c-format
 msgid "E173: %ld more files to edit"
 msgstr "E173: %ld andre filer å redigere"
 
-#: ex_docmd.c:4676
+#: ex_docmd.c:4679
 msgid "E174: Command already exists: add ! to replace it"
 msgstr "E174: Kommandoen finnes allerede: Legg til ! for å erstatte den"
 
-#: ex_docmd.c:4787
+#: ex_docmd.c:4790
 msgid ""
 "\n"
 "    Name        Args Range Complete  Definition"
@@ -1256,182 +1257,182 @@ msgstr ""
 "\n"
 "    Navn        Prm. Områd Fullfør   Definering"
 
-#: ex_docmd.c:4876
+#: ex_docmd.c:4879
 msgid "No user-defined commands found"
 msgstr "Ingen brukerdefinerte kommandoer funnet"
 
-#: ex_docmd.c:4908
+#: ex_docmd.c:4911
 msgid "E175: No attribute specified"
 msgstr "E175: Ingen attributt spesifisert"
 
-#: ex_docmd.c:4960
+#: ex_docmd.c:4963
 msgid "E176: Invalid number of arguments"
 msgstr "E176: Ugyldig antall parametere"
 
-#: ex_docmd.c:4975
+#: ex_docmd.c:4978
 msgid "E177: Count cannot be specified twice"
 msgstr "E177: Antall repeteringer kan ikke bli spesifisert to ganger"
 
-#: ex_docmd.c:4985
+#: ex_docmd.c:4988
 msgid "E178: Invalid default value for count"
 msgstr "E178: Ugyldig standardverdi for antall repeteringer"
 
-#: ex_docmd.c:5016
+#: ex_docmd.c:5019
 msgid "E179: argument required for complete"
 msgstr "E179: Trenger parameter til \"complete\""
 
-#: ex_docmd.c:5048
+#: ex_docmd.c:5051
 #, c-format
 msgid "E180: Invalid complete value: %s"
 msgstr "E180: Ugyldig \"complete\"-verdi: %s"
 
-#: ex_docmd.c:5057
+#: ex_docmd.c:5060
 msgid "E468: Completion argument only allowed for custom completion"
 msgstr "E468: Fullføringsparameter er bare tillatt for tilpasset fullføring"
 
-#: ex_docmd.c:5063
+#: ex_docmd.c:5066
 msgid "E467: Custom completion requires a function argument"
 msgstr "E467: Tilpassede fullføringer trenger et funksjonsparameter"
 
-#: ex_docmd.c:5074
+#: ex_docmd.c:5077
 #, c-format
 msgid "E181: Invalid attribute: %s"
 msgstr "E181: Ugyldig attributt: %s"
 
-#: ex_docmd.c:5117
+#: ex_docmd.c:5120
 msgid "E182: Invalid command name"
 msgstr "E182: Ugyldig kommandonavn"
 
-#: ex_docmd.c:5132
+#: ex_docmd.c:5135
 msgid "E183: User defined commands must start with an uppercase letter"
 msgstr "E183: Brukerdefinerte kommandoer må ha stor forbokstav"
 
-#: ex_docmd.c:5203
+#: ex_docmd.c:5206
 #, c-format
 msgid "E184: No such user-defined command: %s"
 msgstr "E184: Brukerdefinert kommando finnes ikke: %s"
 
-#: ex_docmd.c:5664
+#: ex_docmd.c:5667
 #, c-format
 msgid "E185: Cannot find color scheme %s"
 msgstr "E185: Kan ikke finne fargeoppsettet %s"
 
-#: ex_docmd.c:5672
+#: ex_docmd.c:5675
 msgid "Greetings, Vim user!"
 msgstr "Vær hilset, Vim-bruker!"
 
-#: ex_docmd.c:6389
+#: ex_docmd.c:6393
 msgid "Edit File in new window"
 msgstr "Rediger fil i nytt vindu"
 
-#: ex_docmd.c:6684
+#: ex_docmd.c:6688
 msgid "No swap file"
 msgstr "Ingen swapfil"
 
-#: ex_docmd.c:6788
+#: ex_docmd.c:6792
 msgid "Append File"
 msgstr "Legg til fil"
 
-#: ex_docmd.c:6852
+#: ex_docmd.c:6856
 msgid "E186: No previous directory"
 msgstr "E186: Ingen tidligere katalog"
 
-#: ex_docmd.c:6934
+#: ex_docmd.c:6938
 msgid "E187: Unknown"
 msgstr "E187: Ukjent"
 
-#: ex_docmd.c:7019
+#: ex_docmd.c:7023
 msgid "E465: :winsize requires two number arguments"
 msgstr "E465: :winsize trenger to numeriske parametere"
 
-#: ex_docmd.c:7075
+#: ex_docmd.c:7079
 #, c-format
 msgid "Window position: X %d, Y %d"
 msgstr "Vindusposisjon: X %d, Y %d"
 
-#: ex_docmd.c:7080
+#: ex_docmd.c:7084
 msgid "E188: Obtaining window position not implemented for this platform"
 msgstr ""
 "E188: Lesing av vindusposisjon er ikke implementert på denne plattformen"
 
-#: ex_docmd.c:7090
+#: ex_docmd.c:7094
 msgid "E466: :winpos requires two number arguments"
 msgstr "E466: :winpos trenger to numeriske parametere"
 
-#: ex_docmd.c:7368
+#: ex_docmd.c:7372
 msgid "Save Redirection"
 msgstr "Lagre omdirigering"
 
-#: ex_docmd.c:7558
+#: ex_docmd.c:7562
 msgid "Save View"
 msgstr "Lagre utseende"
 
-#: ex_docmd.c:7559
+#: ex_docmd.c:7563
 msgid "Save Session"
 msgstr "Lagre økt"
 
-#: ex_docmd.c:7561
+#: ex_docmd.c:7565
 msgid "Save Setup"
 msgstr "Lagre oppsett"
 
-#: ex_docmd.c:7713
+#: ex_docmd.c:7717
 #, c-format
 msgid "E189: \"%s\" exists (add ! to override)"
 msgstr "E189: \"%s\" finnes (legg til ! for å overstyre)"
 
-#: ex_docmd.c:7718
+#: ex_docmd.c:7722
 #, c-format
 msgid "E190: Cannot open \"%s\" for writing"
 msgstr "E190: Kan ikke åpne \"%s\" for skriving"
 
 #. set mark
-#: ex_docmd.c:7742
+#: ex_docmd.c:7746
 msgid "E191: Argument must be a letter or forward/backward quote"
 msgstr "E191: Parameter må være en bokstav eller vanlig/baklengs apostrof"
 
-#: ex_docmd.c:7784
+#: ex_docmd.c:7788
 msgid "E192: Recursive use of :normal too deep"
 msgstr "E192: Rekursiv bruk av :normal er for dyp"
 
-#: ex_docmd.c:8302
+#: ex_docmd.c:8306
 msgid "E194: No alternate file name to substitute for '#'"
 msgstr "E194: Ingen alternative filnavn tilgjengelig som erstatning for '#'"
 
-#: ex_docmd.c:8333
+#: ex_docmd.c:8337
 msgid "E495: no autocommand file name to substitute for \"<afile>\""
 msgstr ""
 "E495: Ingen autokommandofilnavn tilgjengelig som erstatning for \"<afile>\""
 
-#: ex_docmd.c:8341
+#: ex_docmd.c:8345
 msgid "E496: no autocommand buffer number to substitute for \"<abuf>\""
 msgstr ""
 "E496: Ingen buffernummer tilgjengelig som erstatning for \"<abuf>\" i "
 "autokommando"
 
-#: ex_docmd.c:8352
+#: ex_docmd.c:8356
 msgid "E497: no autocommand match name to substitute for \"<amatch>\""
 msgstr ""
 "E497: Ingen autokommandonavn tilgjengelig som erstatning for \"<amatch>\""
 
-#: ex_docmd.c:8362
+#: ex_docmd.c:8366
 msgid "E498: no :source file name to substitute for \"<sfile>\""
 msgstr ""
 "E498: Ingen ':source'-filnavn tilgjengelig som erstatning for \"<sfile>\""
 
-#: ex_docmd.c:8403
+#: ex_docmd.c:8407
 #, no-c-format
 msgid "E499: Empty file name for '%' or '#', only works with \":p:h\""
 msgstr "E499: Tomt filnavn for '%' eller '#', virker bare med \":p:h\""
 
-#: ex_docmd.c:8405
+#: ex_docmd.c:8409
 msgid "E500: Evaluates to an empty string"
 msgstr "E500: Resulterer i en tom streng"
 
-#: ex_docmd.c:9360
+#: ex_docmd.c:9380
 msgid "E195: Cannot open viminfo file for reading"
 msgstr "E195: Kan ikke åpne viminfo-fil for lesing"
 
-#: ex_docmd.c:9533
+#: ex_docmd.c:9553
 msgid "E196: No digraphs in this version"
 msgstr "E196: Ingen spesialtegn i denne versjonen"
 
@@ -1565,19 +1566,19 @@ msgstr "E602: :endtry uten :try"
 msgid "E193: :endfunction not inside a function"
 msgstr "E193: :endfunction er ikke innenfor en funksjon"
 
-#: ex_getln.c:3296
+#: ex_getln.c:3295
 msgid "tagname"
 msgstr "navn på tag"
 
-#: ex_getln.c:3299
+#: ex_getln.c:3298
 #~ msgid " kind file\n"
 #~ msgstr ""
 
-#: ex_getln.c:4752
+#: ex_getln.c:4764
 msgid "'history' option is zero"
 msgstr "'history'-valget er null"
 
-#: ex_getln.c:5023
+#: ex_getln.c:5035
 #, c-format
 msgid ""
 "\n"
@@ -1586,27 +1587,27 @@ msgstr ""
 "\n"
 "# %s-historie (nyeste til eldste):\n"
 
-#: ex_getln.c:5024
+#: ex_getln.c:5036
 msgid "Command Line"
 msgstr "Kommandolinje"
 
-#: ex_getln.c:5025
+#: ex_getln.c:5037
 msgid "Search String"
 msgstr "Søkestreng"
 
-#: ex_getln.c:5026
+#: ex_getln.c:5038
 msgid "Expression"
 msgstr "Uttrykk"
 
-#: ex_getln.c:5027
+#: ex_getln.c:5039
 msgid "Input Line"
 msgstr "Inndatalinje"
 
-#: ex_getln.c:5065
+#: ex_getln.c:5077
 msgid "E198: cmd_pchar beyond the command length"
 msgstr "E198: cmd_pchar utenfor kommandolengden"
 
-#: ex_getln.c:5242
+#: ex_getln.c:5254
 msgid "E199: Active window or buffer deleted"
 msgstr "E199: Aktivt vindu eller buffer slettet"
 
@@ -2071,39 +2072,39 @@ msgstr "E351: Kan ikke slette fold med nåværende 'foldmethod'"
 #~ msgid "E222: Add to read buffer"
 #~ msgstr ""
 
-#: getchar.c:2198
+#: getchar.c:2208
 msgid "E223: recursive mapping"
 msgstr "E223: Rekursiv mapping"
 
-#: getchar.c:3077
+#: getchar.c:3087
 #, c-format
 msgid "E224: global abbreviation already exists for %s"
 msgstr "E224: Global forkortelse finnes allerede for %s"
 
-#: getchar.c:3080
+#: getchar.c:3090
 #, c-format
 msgid "E225: global mapping already exists for %s"
 msgstr "E225: Global mapping finnes allerede for %s"
 
-#: getchar.c:3212
+#: getchar.c:3222
 #, c-format
 msgid "E226: abbreviation already exists for %s"
 msgstr "E226: Forkortelse finnes allerede for %s"
 
-#: getchar.c:3215
+#: getchar.c:3225
 #, c-format
 msgid "E227: mapping already exists for %s"
 msgstr "E227: Mappingen finnes allerede for %s"
 
-#: getchar.c:3279
+#: getchar.c:3289
 msgid "No abbreviation found"
 msgstr "Ingen forkortelse funnet"
 
-#: getchar.c:3281
+#: getchar.c:3291
 msgid "No mapping found"
 msgstr "Ingen mapping funnet"
 
-#: getchar.c:4173
+#: getchar.c:4183
 msgid "E228: makemap: Illegal mode"
 msgstr "E228: makemap: Ulovlig modus"
 
@@ -2171,7 +2172,7 @@ msgstr "Rullefeltelement: Klarte ikke hente dimensjoner på \"thumb pixmap\"."
 msgid "Vim dialog"
 msgstr "Dialogvindu for Vim"
 
-#: gui_beval.c:101 gui_w32.c:3829
+#: gui_beval.c:101 gui_w32.c:3978
 msgid "E232: Cannot create BalloonEval with both message and callback"
 msgstr "E232: Kan ikke lage BalloonEval med både melding og tilbakekall"
 
@@ -2179,7 +2180,7 @@ msgstr "E232: Kan ikke lage BalloonEval med både melding og tilbakekall"
 msgid "Vim dialog..."
 msgstr "Vim dialogvindu ..."
 
-#: gui_gtk.c:2060 message.c:2993
+#: gui_gtk.c:2060 message.c:2999
 msgid ""
 "&Yes\n"
 "&No\n"
@@ -2302,16 +2303,25 @@ msgstr ""
 "\n"
 "Sender beskjed om å avslutte barneprosess.\n"
 
-#: gui_w32.c:829
+#: gui_w32.c:839
+#, c-format
+msgid "E671: Cannot find window title \"%s\""
+msgstr "E671: Fant ikke vindutittel \"%s\""
+
+#: gui_w32.c:847
 #, c-format
 msgid "E243: Argument not supported: \"-%s\"; Use the OLE version."
 msgstr "E243: Parameter ikke støttet: \"-%s\"; Bruk OLE-versjonen."
 
-#: gui_w48.c:2090
+#: gui_w32.c:1100
+msgid "E672: Unable to open window inside MDI application"
+msgstr "E672: Klarer ikke åpne vindu inne i MDI-applikasjon"
+
+#: gui_w48.c:2163
 msgid "Find string (use '\\\\' to find  a '\\')"
 msgstr "Finn streng (bruk '\\\\' for å finne en '\\')"
 
-#: gui_w48.c:2115
+#: gui_w48.c:2188
 msgid "Find & Replace (use '\\\\' to find  a '\\')"
 msgstr "Søk og erstatt (bruk '\\\\' for å finne en '\\')"
 
@@ -2924,46 +2934,46 @@ msgstr ""
 msgid "Invalid argument for"
 msgstr "Ugyldig parameter for"
 
-#: main.c:466
+#: main.c:469
 msgid "This Vim was not compiled with the diff feature."
 msgstr "Denne Vim-versjonen er kompilert uten differansefunksjonen."
 
-#: main.c:932
+#: main.c:935
 msgid "Attempt to open script file again: \""
 msgstr "Forsøk på å åpne skriptfilen igjen: \""
 
-#: main.c:941
+#: main.c:944
 msgid "Cannot open for reading: \""
 msgstr "Kan ikke åpne for lesing: \""
 
-#: main.c:985
+#: main.c:988
 msgid "Cannot open for script output: \""
 msgstr "Kan ikke åpne for skript-utdata: \""
 
-#: main.c:1132
+#: main.c:1135
 #, c-format
 msgid "%d files to edit\n"
 msgstr "%d filer å redigere\n"
 
-#: main.c:1233
+#: main.c:1236
 msgid "Vim: Warning: Output is not to a terminal\n"
 msgstr "Vim: Advarsel: Utdata går ikke til en terminal\n"
 
-#: main.c:1235
+#: main.c:1238
 msgid "Vim: Warning: Input is not from a terminal\n"
 msgstr "Vim: Advarsel: Inndata kommer ikke fra en terminal\n"
 
 #. just in case..
-#: main.c:1297
+#: main.c:1306
 msgid "pre-vimrc command line"
 msgstr "pre-vimrc kommandolinje"
 
-#: main.c:1338
+#: main.c:1347
 #, c-format
 msgid "E282: Cannot read from \"%s\""
 msgstr "E282: Kan ikke lese fra \"%s\""
 
-#: main.c:2411
+#: main.c:2420
 msgid ""
 "\n"
 "More info with: \"vim -h\"\n"
@@ -2971,23 +2981,23 @@ msgstr ""
 "\n"
 "Mer info med: \"vim -h\"\n"
 
-#: main.c:2444
+#: main.c:2453
 msgid "[file ..]       edit specified file(s)"
 msgstr "[file ..]       rediger spesifisert(e) fil(er)"
 
-#: main.c:2445
+#: main.c:2454
 msgid "-               read text from stdin"
 msgstr "-               les tekst fra stdin"
 
-#: main.c:2446
+#: main.c:2455
 msgid "-t tag          edit file where tag is defined"
 msgstr "-t tag          rediger fil hvor en tag er definert"
 
-#: main.c:2448
+#: main.c:2457
 msgid "-q [errorfile]  edit file with first error"
 msgstr "-q [feilfil]    rediger fil med første feil"
 
-#: main.c:2457
+#: main.c:2466
 msgid ""
 "\n"
 "\n"
@@ -2997,11 +3007,11 @@ msgstr ""
 "\n"
 "bruk:"
 
-#: main.c:2460
+#: main.c:2469
 msgid " vim [arguments] "
 msgstr " vim [parametere] "
 
-#: main.c:2464
+#: main.c:2473
 msgid ""
 "\n"
 "   or:"
@@ -3009,7 +3019,7 @@ msgstr ""
 "\n"
 "   eller:"
 
-#: main.c:2467
+#: main.c:2476
 msgid ""
 "\n"
 "\n"
@@ -3019,244 +3029,244 @@ msgstr ""
 "\n"
 "Parametere:\n"
 
-#: main.c:2468
+#: main.c:2477
 msgid "--\t\t\tOnly file names after this"
 msgstr "--\t\t\tBare filnavn etter dette"
 
-#: main.c:2470
+#: main.c:2479
 msgid "--literal\t\tDon't expand wildcards"
 msgstr "--literal\t\tIkke utvid jokertegn"
 
-#: main.c:2473
+#: main.c:2482
 msgid "-register\t\tRegister this gvim for OLE"
 msgstr "-register\t\tRegistrer gvim for OLE"
 
-#: main.c:2474
+#: main.c:2483
 msgid "-unregister\t\tUnregister gvim for OLE"
 msgstr "-unregister\t\tFjern OLE-registrering for gvim"
 
-#: main.c:2477
+#: main.c:2486
 msgid "-g\t\t\tRun using GUI (like \"gvim\")"
 msgstr "-g\t\t\tKjør med GUI (som \"gvim\")"
 
-#: main.c:2478
+#: main.c:2487
 msgid "-f  or  --nofork\tForeground: Don't fork when starting GUI"
 msgstr "-f  eller  --nofork\tForgrunn: Ikke fork når GUI-et startes"
 
-#: main.c:2480
+#: main.c:2489
 msgid "-v\t\t\tVi mode (like \"vi\")"
 msgstr "-v\t\t\tVi-modus (som \"vi\")"
 
-#: main.c:2481
+#: main.c:2490
 msgid "-e\t\t\tEx mode (like \"ex\")"
 msgstr "-e\t\t\tEx-modus (som \"ex\")"
 
-#: main.c:2482
+#: main.c:2491
 msgid "-s\t\t\tSilent (batch) mode (only for \"ex\")"
 msgstr "-s\t\t\tStille (batch) modus (bare for \"ex\")"
 
-#: main.c:2484
+#: main.c:2493
 msgid "-d\t\t\tDiff mode (like \"vimdiff\")"
 msgstr "-d\t\t\tDifferanse-modus (som \"vimdiff\")"
 
-#: main.c:2486
+#: main.c:2495
 msgid "-y\t\t\tEasy mode (like \"evim\", modeless)"
 msgstr "-y\t\t\tLett modus (som \"evim\", uten modus)"
 
-#: main.c:2487
+#: main.c:2496
 msgid "-R\t\t\tReadonly mode (like \"view\")"
 msgstr "-R\t\t\tSkrivebeskyttet modus (som \"view\")"
 
-#: main.c:2488
+#: main.c:2497
 msgid "-Z\t\t\tRestricted mode (like \"rvim\")"
 msgstr "-Z\t\t\tBegrenset modus (som \"rvim\")"
 
-#: main.c:2489
+#: main.c:2498
 msgid "-m\t\t\tModifications (writing files) not allowed"
 msgstr "-m\t\t\tModifisering (lagring av filer) ikke tillatt"
 
-#: main.c:2490
+#: main.c:2499
 msgid "-M\t\t\tModifications in text not allowed"
 msgstr "-M\t\t\tModifiseringer i teksten ikke tillatt"
 
-#: main.c:2491
+#: main.c:2500
 msgid "-b\t\t\tBinary mode"
 msgstr "-b\t\t\tBinærmodus"
 
-#: main.c:2493
+#: main.c:2502
 msgid "-l\t\t\tLisp mode"
 msgstr "-l\t\t\tLisp-modus"
 
-#: main.c:2495
+#: main.c:2504
 msgid "-C\t\t\tCompatible with Vi: 'compatible'"
 msgstr "-C\t\t\tKompatibel med Vi: 'compatible'"
 
-#: main.c:2496
+#: main.c:2505
 msgid "-N\t\t\tNot fully Vi compatible: 'nocompatible'"
 msgstr "-N\t\t\tIkke helt Vi-kompatibel: 'nocompatible'"
 
-#: main.c:2497
+#: main.c:2506
 msgid "-V[N]\t\tVerbose level"
 msgstr "-V[N]\t\tInformasjonsnivå (\"Verbose\")"
 
-#: main.c:2498
+#: main.c:2507
 msgid "-D\t\t\tDebugging mode"
 msgstr "-D\t\t\tDebuggingsmodus"
 
-#: main.c:2499
+#: main.c:2508
 msgid "-n\t\t\tNo swap file, use memory only"
 msgstr "-n\t\t\tIngen swapfil, bruk bare hukommelsen"
 
-#: main.c:2500
+#: main.c:2509
 msgid "-r\t\t\tList swap files and exit"
 msgstr "-r\t\t\tList swapfiler og avslutt"
 
-#: main.c:2501
+#: main.c:2510
 msgid "-r (with file name)\tRecover crashed session"
 msgstr "-r (med filnavn)\tGjenopprett kræsjet økt"
 
-#: main.c:2502
+#: main.c:2511
 msgid "-L\t\t\tSame as -r"
 msgstr "-L\t\t\tSamme som -r"
 
-#: main.c:2504
+#: main.c:2513
 msgid "-f\t\t\tDon't use newcli to open window"
 msgstr "-f\t\t\tIkke bruk newcli for å åpne vindu"
 
-#: main.c:2505
+#: main.c:2514
 msgid "-dev <device>\t\tUse <device> for I/O"
 msgstr "-dev <enhet>\t\tBruk <enhet> for I/U"
 
-#: main.c:2508
+#: main.c:2517
 msgid "-A\t\t\tstart in Arabic mode"
 msgstr "-A\t\t\tStart i arabisk modus"
 
-#: main.c:2511
+#: main.c:2520
 msgid "-H\t\t\tStart in Hebrew mode"
 msgstr "-H\t\t\tStart in hebraisk modus"
 
-#: main.c:2514
+#: main.c:2523
 msgid "-F\t\t\tStart in Farsi mode"
 msgstr "-F\t\t\tStart i persisk (Farsi) modus"
 
-#: main.c:2516
+#: main.c:2525
 msgid "-T <terminal>\tSet terminal type to <terminal>"
 msgstr "-T <terminal>\tSett terminaltypen til <terminal>"
 
-#: main.c:2517
+#: main.c:2526
 msgid "-u <vimrc>\t\tUse <vimrc> instead of any .vimrc"
 msgstr "-u <vimrc>\t\tBruk <vimrc> istedenfor eventuell .vimrc"
 
-#: main.c:2519
+#: main.c:2528
 msgid "-U <gvimrc>\t\tUse <gvimrc> instead of any .gvimrc"
 msgstr "-U <gvimrc>\t\tBruk <gvimrc> istedenfor eventuell .gvimrc"
 
-#: main.c:2521
+#: main.c:2530
 msgid "--noplugin\t\tDon't load plugin scripts"
 msgstr "--noplugin\t\tIkke last plugin-skripts"
 
-#: main.c:2522
+#: main.c:2531
 msgid "-o[N]\t\tOpen N windows (default: one for each file)"
 msgstr "-o[N]\t\tÅpne N vinduer (standard: Ett for hver fil)"
 
-#: main.c:2523
+#: main.c:2532
 msgid "-O[N]\t\tLike -o but split vertically"
 msgstr "-O[N]\t\tSom -o men splitt loddrett"
 
-#: main.c:2524
+#: main.c:2533
 msgid "+\t\t\tStart at end of file"
 msgstr "+\t\t\tStart på slutten av filen"
 
-#: main.c:2525
+#: main.c:2534
 msgid "+<lnum>\t\tStart at line <lnum>"
 msgstr "+<lnr>\t\tStart på linje <lnr>"
 
-#: main.c:2527
+#: main.c:2536
 msgid "--cmd <command>\tExecute <command> before loading any vimrc file"
 msgstr "--cmd <kommando>\tKjør <kommando> før lasting av vimrc-filer"
 
-#: main.c:2529
+#: main.c:2538
 msgid "-c <command>\t\tExecute <command> after loading the first file"
 msgstr "-c <kommando>\t\tKjør <kommando> etter lasting av første fil"
 
-#: main.c:2530
+#: main.c:2539
 msgid "-S <session>\t\tSource file <session> after loading the first file"
 msgstr "-S <økt>\t\tKjør filen <økt> etter lasting av første fil"
 
-#: main.c:2531
+#: main.c:2540
 msgid "-s <scriptin>\tRead Normal mode commands from file <scriptin>"
 msgstr "-s <innskript>\tLes normalmodus-kommandoer fra filen <innskript>"
 
-#: main.c:2532
+#: main.c:2541
 msgid "-w <scriptout>\tAppend all typed commands to file <scriptout>"
 msgstr "-w <utskript>\tLegg alle skrevne kommandoer til filen <utskript>"
 
-#: main.c:2533
+#: main.c:2542
 msgid "-W <scriptout>\tWrite all typed commands to file <scriptout>"
 msgstr "-W <utskript>\tSkriv alle skrevne kommandoer til filen <utskript>"
 
-#: main.c:2535
+#: main.c:2544
 msgid "-x\t\t\tEdit encrypted files"
 msgstr "-x\t\t\tRediger krypterte filer"
 
-#: main.c:2539
+#: main.c:2548
 msgid "-display <display>\tConnect vim to this particular X-server"
 msgstr "-display <display>\tKoble vim til denne spesielle X-tjeneren"
 
-#: main.c:2541
+#: main.c:2550
 msgid "-X\t\t\tDo not connect to X server"
 msgstr "-X\t\t\tUnngå oppkobling til X-tjener"
 
-#: main.c:2544
+#: main.c:2553
 msgid "--remote <files>\tEdit <files> in a Vim server if possible"
 msgstr "--remote <filer>\tRediger <filer> på en Vim-tjener hvis mulig"
 
-#: main.c:2545
+#: main.c:2554
 msgid "--remote-silent <files>  Same, don't complain if there is no server"
 msgstr "--remote-silent <filer>  Samme, ikke klag hvis tjeneren mangler"
 
-#: main.c:2546
+#: main.c:2555
 msgid ""
 "--remote-wait <files>  As --remote but wait for files to have been edited"
 msgstr ""
 "--remote-wait <filer>  Som --remote men vent på filer som blir redigert"
 
-#: main.c:2547
+#: main.c:2556
 msgid ""
 "--remote-wait-silent <files>  Same, don't complain if there is no server"
 msgstr "--remote-wait-silent <files>  Samme, ikke klag hvis tjeneren mangler"
 
-#: main.c:2548
+#: main.c:2557
 msgid "--remote-send <keys>\tSend <keys> to a Vim server and exit"
 msgstr "--remote-send <nøkler>\tSend <nøkler> til en Vim-tjener og avslutt"
 
-#: main.c:2549
+#: main.c:2558
 msgid "--remote-expr <expr>\tEvaluate <expr> in a Vim server and print result"
 msgstr ""
 "--remote-expr <uttrykk>\tEvaluer <uttrykk> på en Vim-tjener og skriv "
 "resultatet"
 
-#: main.c:2550
+#: main.c:2559
 msgid "--serverlist\t\tList available Vim server names and exit"
 msgstr "--serverlist\t\tList navn på tilgjengelige Vim-tjenere og avslutt"
 
-#: main.c:2551
+#: main.c:2560
 msgid "--servername <name>\tSend to/become the Vim server <name>"
 msgstr "--servername <navn>\tSend til/bli Vim-tjeneren <navn>"
 
-#: main.c:2554
+#: main.c:2563
 msgid "-i <viminfo>\t\tUse <viminfo> instead of .viminfo"
 msgstr "-i <viminfo>\t\tBruk <viminfo> istedenfor .viminfo"
 
-#: main.c:2556
+#: main.c:2565
 msgid "-h  or  --help\tPrint Help (this message) and exit"
 msgstr "-h  eller  --help\tSkriv hjelpen (denne teksten) og avslutt"
 
-#: main.c:2557
+#: main.c:2566
 msgid "--version\t\tPrint version information and exit"
 msgstr "--version\t\tSkriv versjonsinformasjon og avslutt"
 
-#: main.c:2561
+#: main.c:2570
 msgid ""
 "\n"
 "Arguments recognised by gvim (Motif version):\n"
@@ -3264,7 +3274,7 @@ msgstr ""
 "\n"
 "Parametere gjenkjent av gvim (Motif-versjon):\n"
 
-#: main.c:2565
+#: main.c:2574
 msgid ""
 "\n"
 "Arguments recognised by gvim (neXtaw version):\n"
@@ -3272,7 +3282,7 @@ msgstr ""
 "\n"
 "Parametere gjenkjent av gvim (neXtaw-versjon):\n"
 
-#: main.c:2567
+#: main.c:2576
 msgid ""
 "\n"
 "Arguments recognised by gvim (Athena version):\n"
@@ -3280,76 +3290,76 @@ msgstr ""
 "\n"
 "Parametere gjenkjent av gvim (Athena-versjon):\n"
 
-#: main.c:2571
+#: main.c:2580
 msgid "-display <display>\tRun vim on <display>"
 msgstr "-display <display>\tKjør vim på <display>"
 
-#: main.c:2572
+#: main.c:2581
 msgid "-iconic\t\tStart vim iconified"
 msgstr "-iconic\t\tStart vim som ikon"
 
-#: main.c:2574
+#: main.c:2583
 msgid "-name <name>\t\tUse resource as if vim was <name>"
 msgstr "-name <navn>\t\tBruk ressurs som om Vim var <navn>"
 
-#: main.c:2575
+#: main.c:2584
 msgid "\t\t\t  (Unimplemented)\n"
 msgstr "\t\t\t  (Ikke implementert)\n"
 
-#: main.c:2577
+#: main.c:2586
 msgid "-background <color>\tUse <color> for the background (also: -bg)"
 msgstr "-background <farge>\tBruk <farge> på bakgrunnen (også: -bg)"
 
-#: main.c:2578
+#: main.c:2587
 msgid "-foreground <color>\tUse <color> for normal text (also: -fg)"
 msgstr "-foreground <farge>\tBruk <farge> på normal tekst (også: -fg)"
 
-#: main.c:2579 main.c:2599
+#: main.c:2588 main.c:2608
 msgid "-font <font>\t\tUse <font> for normal text (also: -fn)"
 msgstr "-font <skrifttype>\t\tBruk <skrifttype> på normal tekst (også: -fn)"
 
-#: main.c:2580
+#: main.c:2589
 msgid "-boldfont <font>\tUse <font> for bold text"
 msgstr "-boldfont <skrifttype>\tBruk <skrifttype> på fet skrift"
 
-#: main.c:2581
+#: main.c:2590
 msgid "-italicfont <font>\tUse <font> for italic text"
 msgstr "-italicfont <skrifttype>\tBruk <skrifttype> på skrå tekst"
 
-#: main.c:2582 main.c:2600
+#: main.c:2591 main.c:2609
 msgid "-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"
 msgstr ""
 "-geometry <geom>\tBruk <geom> for innledende vindusplassering (også: -geom)"
 
-#: main.c:2583
+#: main.c:2592
 msgid "-borderwidth <width>\tUse a border width of <width> (also: -bw)"
 msgstr ""
 "-borderwidth <bredde>\tBruk en rammebredde tilsvarende <bredde> (også: -bw)"
 
-#: main.c:2584
+#: main.c:2593
 msgid "-scrollbarwidth <width>  Use a scrollbar width of <width> (also: -sw)"
 msgstr ""
 "-scrollbarwidth <bredde>  Bruk en rullefeltbredde tilsvarende <bredde> "
 "(også: -sw)"
 
-#: main.c:2586
+#: main.c:2595
 msgid "-menuheight <height>\tUse a menu bar height of <height> (also: -mh)"
 msgstr ""
 "-menuheight <høyde>\tBruk en menyblokkhøyde tilsvarende <høyde> (også: -mh)"
 
-#: main.c:2588 main.c:2601
+#: main.c:2597 main.c:2610
 msgid "-reverse\t\tUse reverse video (also: -rv)"
 msgstr "-reverse\t\tBruk invers video (også: -rv)"
 
-#: main.c:2589
+#: main.c:2598
 msgid "+reverse\t\tDon't use reverse video (also: +rv)"
 msgstr "+reverse\t\tIkke bruk invers video (også: +rv)"
 
-#: main.c:2590
+#: main.c:2599
 msgid "-xrm <resource>\tSet the specified resource"
 msgstr "-xrm <ressurs>\tSett den spesifiserte ressursen"
 
-#: main.c:2593
+#: main.c:2602
 msgid ""
 "\n"
 "Arguments recognised by gvim (RISC OS version):\n"
@@ -3357,15 +3367,15 @@ msgstr ""
 "\n"
 "Parametere gjenkjent av gvim (RISC OS-versjon):\n"
 
-#: main.c:2594
+#: main.c:2603
 msgid "--columns <number>\tInitial width of window in columns"
 msgstr "--columns <antall>\tInnledende bredde på vindu i kolonner"
 
-#: main.c:2595
+#: main.c:2604
 msgid "--rows <number>\tInitial height of window in rows"
 msgstr "--rows <antall>\tInnledende høyde på vindu i rader"
 
-#: main.c:2598
+#: main.c:2607
 msgid ""
 "\n"
 "Arguments recognised by gvim (GTK+ version):\n"
@@ -3373,46 +3383,46 @@ msgstr ""
 "\n"
 "Parametere gjenkjent av gvim (GTK+-versjon):\n"
 
-#: main.c:2602
+#: main.c:2611
 msgid "-display <display>\tRun vim on <display> (also: --display)"
 msgstr "-display <display>\tKjør vim på <display> (også: --display)"
 
-#: main.c:2604
+#: main.c:2613
 msgid "--role <role>\tSet a unique role to identify the main window"
 msgstr "--role <role>\tSett en unik \"role\" for å identifisere hovedvinduet"
 
-#: main.c:2606
+#: main.c:2615
 msgid "--socketid <xid>\tOpen Vim inside another GTK widget"
 msgstr "--socketid <xid>\tÅpne Vim innenfor et annet GTK-skjermelement"
 
-#: main.c:2609
+#: main.c:2618
 msgid "-P <parent title>\tOpen Vim inside parent application"
 msgstr "-P <foreldretittel>\tStart Vim innenfor et foreldreprogram"
 
-#: main.c:2847
+#: main.c:2856
 msgid "No display"
 msgstr "Ingen display"
 
 #. Failed to send, abort.
-#: main.c:2862
+#: main.c:2871
 msgid ": Send failed.\n"
 msgstr ": Send feilet.\n"
 
 #. Let vim start normally.
-#: main.c:2868
+#: main.c:2877
 msgid ": Send failed. Trying to execute locally\n"
 msgstr ": Send feilet. Prøver å utføre lokalt\n"
 
-#: main.c:2906 main.c:2927
+#: main.c:2915 main.c:2936
 #, c-format
 msgid "%d of %d edited"
 msgstr "%d av %d redigert"
 
-#: main.c:2949
+#: main.c:2958
 msgid "No display: Send expression failed.\n"
 msgstr "Ingen display: Sending av uttrykk feilet.\n"
 
-#: main.c:2961
+#: main.c:2970
 msgid ": Send expression failed.\n"
 msgstr ": Sending av uttrykk feilet.\n"
 
@@ -3526,23 +3536,23 @@ msgstr "E292: Inndatametodetjener kjører ikke"
 msgid "E293: block was not locked"
 msgstr "E293: Blokken var ikke låst"
 
-#: memfile.c:1005
+#: memfile.c:1010
 msgid "E294: Seek error in swap file read"
 msgstr "E294: Søkefeil i lesing av swapfil"
 
-#: memfile.c:1010
+#: memfile.c:1015
 msgid "E295: Read error in swap file"
 msgstr "E295: Lesefeil i swapfil"
 
-#: memfile.c:1062
+#: memfile.c:1067
 msgid "E296: Seek error in swap file write"
 msgstr "E296: Søkefeil i skriving til swapfil"
 
-#: memfile.c:1080
+#: memfile.c:1085
 msgid "E297: Write error in swap file"
 msgstr "E297: Skrivefeil i swapfil"
 
-#: memfile.c:1277
+#: memfile.c:1282
 msgid "E300: Swap file already exists (symlink attack?)"
 msgstr "E300: Swapfilen finnes allerede (symlenke-angrep?)"
 
@@ -3559,42 +3569,42 @@ msgid "E298: Didn't get block nr 2?"
 msgstr "E298: Hentet ikke blokk nummer 2?"
 
 #. could not (re)open the swap file, what can we do????
-#: memline.c:443
+#: memline.c:444
 msgid "E301: Oops, lost the swap file!!!"
 msgstr "E301: Opps, mistet swapfilen!!!"
 
-#: memline.c:448
+#: memline.c:449
 msgid "E302: Could not rename swap file"
 msgstr "E302: Klarte ikke skifte navn på swapfil"
 
-#: memline.c:518
+#: memline.c:519
 #, c-format
 msgid "E303: Unable to open swap file for \"%s\", recovery impossible"
 msgstr "E303: Klarte ikke åpne swapfil for \"%s\", gjenoppretting umulig"
 
-#: memline.c:617
+#: memline.c:618
 msgid "E304: ml_timestamp: Didn't get block 0??"
 msgstr "E304: ml_timestamp: Hentet ikke blokk 0??"
 
-#: memline.c:757
+#: memline.c:758
 #, c-format
 msgid "E305: No swap file found for %s"
 msgstr "E305: Ingen swapfil funnet for %s"
 
-#: memline.c:767
+#: memline.c:768
 msgid "Enter number of swap file to use (0 to quit): "
 msgstr "Skriv nummeret på swapfil som skal brukes (0 for å avslutte): "
 
-#: memline.c:812
+#: memline.c:813
 #, c-format
 msgid "E306: Cannot open %s"
 msgstr "E306: Kan ikke åpne %s"
 
-#: memline.c:834
+#: memline.c:835
 msgid "Unable to read block 0 from "
 msgstr "Klarte ikke lese blokk 0 fra "
 
-#: memline.c:837
+#: memline.c:838
 msgid ""
 "\n"
 "Maybe no changes were made or Vim did not update the swap file."
@@ -3603,28 +3613,28 @@ msgstr ""
 "Det er mulig ingen forandringer ble gjort, eller Vim oppdaterte ikke "
 "swapfilen."
 
-#: memline.c:847 memline.c:864
+#: memline.c:848 memline.c:865
 msgid " cannot be used with this version of Vim.\n"
 msgstr " kan ikke brukes med denne Vim-versjonen.\n"
 
-#: memline.c:849
+#: memline.c:850
 msgid "Use Vim version 3.0.\n"
 msgstr "Bruk Vim versjon 3.0.\n"
 
-#: memline.c:855
+#: memline.c:856
 #, c-format
 msgid "E307: %s does not look like a Vim swap file"
 msgstr "E307: %s ser ikke ut som en Vim-swapfil"
 
-#: memline.c:868
+#: memline.c:869
 msgid " cannot be used on this computer.\n"
 msgstr " kan ikke brukes på denne maskinen.\n"
 
-#: memline.c:870
+#: memline.c:871
 msgid "The file was created on "
 msgstr "Filen ble laget på "
 
-#: memline.c:874
+#: memline.c:875
 msgid ""
 ",\n"
 "or the file has been damaged."
@@ -3632,81 +3642,81 @@ msgstr ""
 ",\n"
 "eller filen er blitt ødelagt."
 
-#: memline.c:903
+#: memline.c:904
 #, c-format
 msgid "Using swap file \"%s\""
 msgstr "Bruker swapfilen \"%s\""
 
-#: memline.c:909
+#: memline.c:910
 #, c-format
 msgid "Original file \"%s\""
 msgstr "Originalfil \"%s\""
 
-#: memline.c:922
+#: memline.c:923
 msgid "E308: Warning: Original file may have been changed"
 msgstr "E308: Advarsel: Originalfilen kan ha blitt forandret"
 
-#: memline.c:975
+#: memline.c:976
 #, c-format
 msgid "E309: Unable to read block 1 from %s"
 msgstr "E309: Klarte ikke lese blokk 1 fra %s"
 
-#: memline.c:979
+#: memline.c:980
 msgid "???MANY LINES MISSING"
 msgstr "???MANGE LINJER MANGLER"
 
-#: memline.c:995
+#: memline.c:996
 msgid "???LINE COUNT WRONG"
 msgstr "???FEIL LINJEANTALL"
 
-#: memline.c:1002
+#: memline.c:1003
 msgid "???EMPTY BLOCK"
 msgstr "???TOM BLOKK"
 
-#: memline.c:1028
+#: memline.c:1029
 msgid "???LINES MISSING"
 msgstr "???LINJER MANGLER"
 
-#: memline.c:1060
+#: memline.c:1061
 #, c-format
 msgid "E310: Block 1 ID wrong (%s not a .swp file?)"
 msgstr "E310: ID til blokk 1 er feil (%s ikke en \".swp\"-fil?)"
 
-#: memline.c:1065
+#: memline.c:1066
 msgid "???BLOCK MISSING"
 msgstr "???BLOKK MANGLER"
 
-#: memline.c:1081
+#: memline.c:1082
 msgid "??? from here until ???END lines may be messed up"
 msgstr "??? Herfra til ???SLUTT kan linjer være rotet til"
 
-#: memline.c:1097
+#: memline.c:1098
 msgid "??? from here until ???END lines may have been inserted/deleted"
 msgstr "??? Herfra til ???SLUTT kan linjer ha blitt lagt til eller slettet"
 
-#: memline.c:1117
+#: memline.c:1118
 msgid "???END"
 msgstr "???SLUTT"
 
-#: memline.c:1143
+#: memline.c:1144
 msgid "E311: Recovery Interrupted"
 msgstr "E311: Gjenoppretting avbrutt"
 
-#: memline.c:1148
+#: memline.c:1149
 msgid ""
 "E312: Errors detected while recovering; look for lines starting with ???"
 msgstr ""
 "E312: Feil oppdaget under gjenoppretting; se etter linjer som starter med ???"
 
-#: memline.c:1150
+#: memline.c:1151
 msgid "See \":help E312\" for more information."
 msgstr "Se \":help E312\" for mer informasjon."
 
-#: memline.c:1155
+#: memline.c:1156
 msgid "Recovery completed. You should check if everything is OK."
 msgstr "Gjenoppretting komplett. Du bør sjekke at alt er i orden."
 
-#: memline.c:1156
+#: memline.c:1157
 msgid ""
 "\n"
 "(You might want to write out this file under another name\n"
@@ -3714,11 +3724,11 @@ msgstr ""
 "\n"
 "(Du vil kanskje lagre denne filen under et annet navn\n"
 
-#: memline.c:1157
+#: memline.c:1158
 msgid "and run diff with the original file to check for changes)\n"
 msgstr "og sammenligne den mot den originale filen for å finne forandringer)\n"
 
-#: memline.c:1158
+#: memline.c:1159
 msgid ""
 "Delete the .swp file afterwards.\n"
 "\n"
@@ -3727,51 +3737,51 @@ msgstr ""
 "\n"
 
 #. use msg() to start the scrolling properly
-#: memline.c:1214
+#: memline.c:1215
 msgid "Swap files found:"
 msgstr "Swapfiler funnet:"
 
-#: memline.c:1392
+#: memline.c:1393
 msgid "   In current directory:\n"
 msgstr "   I nåværende katalog:\n"
 
-#: memline.c:1394
+#: memline.c:1395
 msgid "   Using specified name:\n"
 msgstr "   Bruker spesifisert navn:\n"
 
-#: memline.c:1398
+#: memline.c:1399
 msgid "   In directory "
 msgstr "   I katalog "
 
-#: memline.c:1416
+#: memline.c:1417
 msgid "      -- none --\n"
 msgstr "      -- ingen --\n"
 
-#: memline.c:1488
+#: memline.c:1489
 msgid "          owned by: "
 msgstr "          eies av: "
 
-#: memline.c:1490
+#: memline.c:1491
 msgid "   dated: "
 msgstr "   datert: "
 
-#: memline.c:1494 memline.c:3684
+#: memline.c:1495 memline.c:3685
 msgid "             dated: "
 msgstr "             datert: "
 
-#: memline.c:1510
+#: memline.c:1511
 msgid "         [from Vim version 3.0]"
 msgstr "         [fra Vim versjon 3.0]"
 
-#: memline.c:1514
+#: memline.c:1515
 msgid "         [does not look like a Vim swap file]"
 msgstr "         [ser ikke ut som en Vim-swapfil]"
 
-#: memline.c:1518
+#: memline.c:1519
 msgid "         file name: "
 msgstr "         filnavn: "
 
-#: memline.c:1524
+#: memline.c:1525
 msgid ""
 "\n"
 "          modified: "
@@ -3779,15 +3789,15 @@ msgstr ""
 "\n"
 "          modifisert: "
 
-#: memline.c:1525
+#: memline.c:1526
 msgid "YES"
 msgstr "JA"
 
-#: memline.c:1525
+#: memline.c:1526
 msgid "no"
 msgstr "nei"
 
-#: memline.c:1529
+#: memline.c:1530
 msgid ""
 "\n"
 "         user name: "
@@ -3795,11 +3805,11 @@ msgstr ""
 "\n"
 "         brukernavn: "
 
-#: memline.c:1536
+#: memline.c:1537
 msgid "   host name: "
 msgstr "   vertsnavn: "
 
-#: memline.c:1538
+#: memline.c:1539
 msgid ""
 "\n"
 "         host name: "
@@ -3807,7 +3817,7 @@ msgstr ""
 "\n"
 "         vertsnavn: "
 
-#: memline.c:1544
+#: memline.c:1545
 msgid ""
 "\n"
 "        process ID: "
@@ -3815,11 +3825,11 @@ msgstr ""
 "\n"
 "        prosess-ID: "
 
-#: memline.c:1550
+#: memline.c:1551
 msgid " (still running)"
 msgstr " (kjører fortsatt)"
 
-#: memline.c:1562
+#: memline.c:1563
 msgid ""
 "\n"
 "         [not usable with this version of Vim]"
@@ -3827,7 +3837,7 @@ msgstr ""
 "\n"
 "         [ikke brukbar med denne Vim-versjonen]"
 
-#: memline.c:1565
+#: memline.c:1566
 msgid ""
 "\n"
 "         [not usable on this computer]"
@@ -3835,92 +3845,92 @@ msgstr ""
 "\n"
 "         [ikke brukbar på denne maskinen]"
 
-#: memline.c:1570
+#: memline.c:1571
 msgid "         [cannot be read]"
 msgstr "         [kan ikke leses]"
 
-#: memline.c:1574
+#: memline.c:1575
 msgid "         [cannot be opened]"
 msgstr "         [kan ikke åpnes]"
 
-#: memline.c:1764
+#: memline.c:1765
 msgid "E313: Cannot preserve, there is no swap file"
 msgstr "E313: Kan ikke bevare, swapfil mangler"
 
-#: memline.c:1817
+#: memline.c:1818
 msgid "File preserved"
 msgstr "Fil bevart"
 
-#: memline.c:1819
+#: memline.c:1820
 msgid "E314: Preserve failed"
 msgstr "E314: Bevaring feilet"
 
-#: memline.c:1890
+#: memline.c:1891
 #, c-format
 msgid "E315: ml_get: invalid lnum: %ld"
 msgstr "E315: ml_get: Ugyldig lnum: %ld"
 
-#: memline.c:1916
+#: memline.c:1917
 #, c-format
 msgid "E316: ml_get: cannot find line %ld"
 msgstr "E316: ml_get: Kan ikke finne linje %ld"
 
-#: memline.c:2306
+#: memline.c:2307
 msgid "E317: pointer block id wrong 3"
 msgstr "E317: Pekerblokk-id feil 3"
 
-#: memline.c:2386
+#: memline.c:2387
 msgid "stack_idx should be 0"
 msgstr "stack_idx skulle være 0"
 
-#: memline.c:2448
+#: memline.c:2449
 msgid "E318: Updated too many blocks?"
 msgstr "E318: Oppdaterte for mange blokker?"
 
-#: memline.c:2630
+#: memline.c:2631
 msgid "E317: pointer block id wrong 4"
 msgstr "E317: Pekerblokk-id feil 4"
 
-#: memline.c:2657
+#: memline.c:2658
 msgid "deleted block 1?"
 msgstr "slettet blokk 1?"
 
-#: memline.c:2857
+#: memline.c:2858
 #, c-format
 msgid "E320: Cannot find line %ld"
 msgstr "E320: Kan ikke finne linje %ld"
 
-#: memline.c:3100
+#: memline.c:3101
 msgid "E317: pointer block id wrong"
 msgstr "E317: Pekerblokk-id feil"
 
-#: memline.c:3116
+#: memline.c:3117
 msgid "pe_line_count is zero"
 msgstr "pe_line_count er null"
 
-#: memline.c:3145
+#: memline.c:3146
 #, c-format
 msgid "E322: line number out of range: %ld past the end"
 msgstr "E322: Linjenummer utenfor område: %ld forbi slutten"
 
-#: memline.c:3149
+#: memline.c:3150
 #, c-format
 msgid "E323: line count wrong in block %ld"
 msgstr "E323: Linjeantall feil i blokk %ld"
 
-#: memline.c:3198
+#: memline.c:3199
 msgid "Stack size increases"
 msgstr "Stackstørrelse øker"
 
-#: memline.c:3244
+#: memline.c:3245
 msgid "E317: pointer block id wrong 2"
 msgstr "E317: Pekerblokk-id feil 2"
 
-#: memline.c:3674
+#: memline.c:3675
 msgid "E325: ATTENTION"
 msgstr "E325: VIKTIG"
 
-#: memline.c:3675
+#: memline.c:3676
 msgid ""
 "\n"
 "Found a swap file by the name \""
@@ -3928,17 +3938,17 @@ msgstr ""
 "\n"
 "Fant en swapfil ved navn \""
 
-#: memline.c:3679
+#: memline.c:3680
 msgid "While opening file \""
 msgstr "Under åpning av filen \""
 
-#: memline.c:3688
+#: memline.c:3689
 msgid "      NEWER than swap file!\n"
 msgstr "      NYERE enn swapfil!\n"
 
 #. Some of these messages are long to allow translation to
 #. * other languages.
-#: memline.c:3692
+#: memline.c:3693
 msgid ""
 "\n"
 "(1) Another program may be editing the same file.\n"
@@ -3950,11 +3960,11 @@ msgstr ""
 "    Hvis det er tilfelle, vær forsiktig så du ikke ender opp med to\n"
 "    forskjellige utgaver av den samme filen når du gjør forandringer.\n"
 
-#: memline.c:3693
+#: memline.c:3694
 msgid "    Quit, or continue with caution.\n"
 msgstr "    Avslutt, eller fortsett med varsomhet.\n"
 
-#: memline.c:3694
+#: memline.c:3695
 msgid ""
 "\n"
 "(2) An edit session for this file crashed.\n"
@@ -3962,11 +3972,11 @@ msgstr ""
 "\n"
 "(2) En økt for denne filen kræsjet.\n"
 
-#: memline.c:3695
+#: memline.c:3696
 msgid "    If this is the case, use \":recover\" or \"vim -r "
 msgstr "    Hvis det er tilfelle, bruk \":recover\" eller \"vim -r "
 
-#: memline.c:3697
+#: memline.c:3698
 msgid ""
 "\"\n"
 "    to recover the changes (see \":help recovery\").\n"
@@ -3974,11 +3984,11 @@ msgstr ""
 "\"\n"
 "    for å gjenopprette forandringene (se \":help recovery\").\n"
 
-#: memline.c:3698
+#: memline.c:3699
 msgid "    If you did this already, delete the swap file \""
 msgstr "    Hvis du har gjort dette allerede, slett swapfilen \""
 
-#: memline.c:3700
+#: memline.c:3701
 msgid ""
 "\"\n"
 "    to avoid this message.\n"
@@ -3986,23 +3996,23 @@ msgstr ""
 "\"\n"
 "    for å unngå denne meldingen.\n"
 
-#: memline.c:3714 memline.c:3718
+#: memline.c:3715 memline.c:3719
 msgid "Swap file \""
 msgstr "Swapfilen \""
 
-#: memline.c:3715 memline.c:3721
+#: memline.c:3716 memline.c:3722
 msgid "\" already exists!"
 msgstr "\" finnes allerede!"
 
-#: memline.c:3724
+#: memline.c:3725
 msgid "VIM - ATTENTION"
 msgstr "VIM - VIKTIG"
 
-#: memline.c:3726
+#: memline.c:3727
 msgid "Swap file already exists!"
 msgstr "Swapfilen eksisterer allerede!"
 
-#: memline.c:3730
+#: memline.c:3731
 msgid ""
 "&Open Read-Only\n"
 "&Edit anyway\n"
@@ -4016,7 +4026,7 @@ msgstr ""
 "&Avslutt\n"
 "Av&bryt"
 
-#: memline.c:3732
+#: memline.c:3733
 msgid ""
 "&Open Read-Only\n"
 "&Edit anyway\n"
@@ -4031,7 +4041,7 @@ msgstr ""
 "&Avslutt\n"
 "Av&bryt&Slette den"
 
-#: memline.c:3789
+#: memline.c:3790
 msgid "E326: Too many swap files found"
 msgstr "E326: For mange swapfiler funnet"
 
@@ -4140,11 +4150,11 @@ msgstr ""
 msgid " (RET: line, SPACE: page, d: half page, q: quit)"
 msgstr " (ENTER: Linje, MELLOMROM: Side, d: Halv side, q: Avslutt)"
 
-#: message.c:2976 message.c:2991
+#: message.c:2982 message.c:2997
 msgid "Question"
 msgstr "Spørsmål"
 
-#: message.c:2978
+#: message.c:2984
 msgid ""
 "&Yes\n"
 "&No"
@@ -4152,7 +4162,7 @@ msgstr ""
 "&Ja\n"
 "&Nei"
 
-#: message.c:3011
+#: message.c:3017
 msgid ""
 "&Yes\n"
 "&No\n"
@@ -4166,16 +4176,16 @@ msgstr ""
 "&Forkast alle\n"
 "&Avbryt"
 
-#: message.c:3052
+#: message.c:3058
 msgid "Save File dialog"
 msgstr "\"Lagre fil\"-dialogvindu"
 
-#: message.c:3054
+#: message.c:3060
 msgid "Open File dialog"
 msgstr "\"Åpne fil\"-dialogvindu"
 
 #. TODO: non-GUI file selector here
-#: message.c:3125
+#: message.c:3131
 msgid "E338: Sorry, no file browser in console mode"
 msgstr "E338: Dessverre ingen filbehandler i konsollmodus"
 
@@ -4419,40 +4429,40 @@ msgid "%ld lines indented "
 msgstr "%ld linjer rykket inn "
 
 #. must display the prompt
-#: ops.c:1675
+#: ops.c:1688
 msgid "cannot yank; delete anyway"
 msgstr "kan ikke kopiere til utklippstavle; slett likevel"
 
-#: ops.c:2261
+#: ops.c:2274
 msgid "1 line changed"
 msgstr "1 linje forandret"
 
-#: ops.c:2263
+#: ops.c:2276
 #, c-format
 msgid "%ld lines changed"
 msgstr "%ld linjer forandret"
 
-#: ops.c:2647
+#: ops.c:2660
 #, c-format
 msgid "freeing %ld lines"
 msgstr "frigjør %ld linjer"
 
-#: ops.c:2928
+#: ops.c:2941
 msgid "1 line yanked"
 msgstr "1 linje kopiert til utklippstavlen"
 
-#: ops.c:2930
+#: ops.c:2943
 #, c-format
 msgid "%ld lines yanked"
 msgstr "%ld linjer kopiert til utklippstavlen"
 
-#: ops.c:3215
+#: ops.c:3228
 #, c-format
 msgid "E353: Nothing in register %s"
 msgstr "E353: Ingenting i register %s"
 
 #. Highlight title
-#: ops.c:3766
+#: ops.c:3779
 msgid ""
 "\n"
 "--- Registers ---"
@@ -4460,11 +4470,11 @@ msgstr ""
 "\n"
 "--- Registere ---"
 
-#: ops.c:5075
+#: ops.c:5088
 msgid "Illegal register name"
 msgstr "Ulovlig registernavn"
 
-#: ops.c:5163
+#: ops.c:5176
 msgid ""
 "\n"
 "# Registers:\n"
@@ -4472,32 +4482,32 @@ msgstr ""
 "\n"
 "# Registere:\n"
 
-#: ops.c:5213
+#: ops.c:5226
 #, c-format
 msgid "E574: Unknown register type %d"
 msgstr "E574: Ukjent registertype %d"
 
-#: ops.c:5698
+#: ops.c:5711
 #, c-format
 msgid "E354: Invalid register name: '%s'"
 msgstr "E354: Ugyldig registernavn: '%s'"
 
-#: ops.c:6058
+#: ops.c:6071
 #, c-format
 msgid "%ld Cols; "
 msgstr "%ld Kol; "
 
-#: ops.c:6065
+#: ops.c:6078
 #, c-format
 msgid "Selected %s%ld of %ld Lines; %ld of %ld Words; %ld of %ld Bytes"
 msgstr "Valgte %s%ld av %ld linjer; %ld av %ld ord; %ld av %ld bytes"
 
-#: ops.c:6081
+#: ops.c:6094
 #, c-format
 msgid "Col %s of %s; Line %ld of %ld; Word %ld of %ld; Byte %ld of %ld"
 msgstr "Kol %s av %s; Linje %ld av %ld; Ord %ld av %ld; Byte %ld av %ld"
 
-#: ops.c:6092
+#: ops.c:6105
 #, c-format
 msgid "(+%ld for BOM)"
 msgstr "(+%ld for BOM)"
@@ -4622,46 +4632,46 @@ msgstr "E536: Komma nødvendig"
 msgid "E537: 'commentstring' must be empty or contain %s"
 msgstr "E537: 'commentstring' må være tom eller inneholde %s"
 
-#: option.c:5679
+#: option.c:5682
 msgid "E538: No mouse support"
 msgstr "E538: Ingen støtte for mus"
 
-#: option.c:5947
+#: option.c:5950
 msgid "E540: Unclosed expression sequence"
 msgstr "E540: Uttrykkssekvens som ikke er lukket"
 
-#: option.c:5951
+#: option.c:5954
 msgid "E541: too many items"
 msgstr "E541: For mange elementer"
 
-#: option.c:5953
+#: option.c:5956
 msgid "E542: unbalanced groups"
 msgstr "E542: Ubalanserte grupper"
 
-#: option.c:6193
+#: option.c:6196
 msgid "E590: A preview window already exists"
 msgstr "E590: Det finnes allerede et forhåndsvisningsvindu"
 
-#: option.c:6450
+#: option.c:6453
 msgid "W17: Arabic requires UTF-8, do ':set encoding=utf-8'"
 msgstr "W17: Arabisk trenger UTF-8, utfør ':set encoding=utf-8'"
 
-#: option.c:6783
+#: option.c:6786
 #, c-format
 msgid "E593: Need at least %d lines"
 msgstr "E593: Trenger minst %d linjer"
 
-#: option.c:6793
+#: option.c:6796
 #, c-format
 msgid "E594: Need at least %d columns"
 msgstr "E594: Trenger minst %d kolonner"
 
-#: option.c:7100
+#: option.c:7103
 #, c-format
 msgid "E355: Unknown option: %s"
 msgstr "E355: Ukjent valg: %s"
 
-#: option.c:7220
+#: option.c:7223
 msgid ""
 "\n"
 "--- Terminal codes ---"
@@ -4669,7 +4679,7 @@ msgstr ""
 "\n"
 "--- Terminalkoder ---"
 
-#: option.c:7222
+#: option.c:7225
 msgid ""
 "\n"
 "--- Global option values ---"
@@ -4677,7 +4687,7 @@ msgstr ""
 "\n"
 "--- Globale valgverdier ---"
 
-#: option.c:7224
+#: option.c:7227
 msgid ""
 "\n"
 "--- Local option values ---"
@@ -4685,7 +4695,7 @@ msgstr ""
 "\n"
 "--- Lokale valgverdier ---"
 
-#: option.c:7226
+#: option.c:7229
 msgid ""
 "\n"
 "--- Options ---"
@@ -4693,16 +4703,16 @@ msgstr ""
 "\n"
 "--- Valg ---"
 
-#: option.c:7932
+#: option.c:7935
 msgid "E356: get_varp ERROR"
 msgstr "E356: \"get_varp\"-FEIL"
 
-#: option.c:8903
+#: option.c:8906
 #, c-format
 msgid "E357: 'langmap': Matching character missing for %s"
 msgstr "E357: 'langmap': Samsvarende tegn mangler for %s"
 
-#: option.c:8937
+#: option.c:8940
 #, c-format
 msgid "E358: 'langmap': Extra characters after semicolon: %s"
 msgstr "E358: 'langmap': Ekstra tegn etter semikolon: %s"
@@ -4737,81 +4747,81 @@ msgstr "Kan ikke opprette "
 msgid "Vim exiting with %d\n"
 msgstr "Vim avslutter med %d\n"
 
-#: os_amiga.c:937
+#: os_amiga.c:941
 msgid "cannot change console mode ?!\n"
 msgstr "kan ikke forandre konsollmodus ?!\n"
 
-#: os_amiga.c:1003
+#: os_amiga.c:1012
 msgid "mch_get_shellsize: not a console??\n"
 msgstr "mch_get_shellsize: Ikke et konsoll??\n"
 
 #. if Vim opened a window: Executing a shell may cause crashes
-#: os_amiga.c:1152
+#: os_amiga.c:1161
 msgid "E360: Cannot execute shell with -f option"
 msgstr "E360: Kan ikke kjøre skall med \"-f\"-valg"
 
-#: os_amiga.c:1193 os_amiga.c:1283
+#: os_amiga.c:1202 os_amiga.c:1292
 msgid "Cannot execute "
 msgstr "Kan ikke utføre "
 
-#: os_amiga.c:1196 os_amiga.c:1293
+#: os_amiga.c:1205 os_amiga.c:1302
 msgid "shell "
 msgstr "skall "
 
-#: os_amiga.c:1216 os_amiga.c:1318
+#: os_amiga.c:1225 os_amiga.c:1327
 msgid " returned\n"
 msgstr " returnerte\n"
 
-#: os_amiga.c:1459
+#: os_amiga.c:1468
 msgid "ANCHOR_BUF_SIZE too small."
 msgstr "ANCHOR_BUF_SIZE for liten."
 
-#: os_amiga.c:1463
+#: os_amiga.c:1472
 msgid "I/O ERROR"
 msgstr "I/U-FEIL"
 
-#: os_mswin.c:539
+#: os_mswin.c:548
 msgid "...(truncated)"
 msgstr " ...(kuttet)"
 
-#: os_mswin.c:641
+#: os_mswin.c:650
 msgid "'columns' is not 80, cannot execute external commands"
 msgstr "'columns' er ikke 80, kan ikke utføre eksterne kommandoer"
 
-#: os_mswin.c:1973
+#: os_mswin.c:1982
 msgid "E237: Printer selection failed"
 msgstr "E237: Valg av skriver feilet"
 
-#: os_mswin.c:2013
+#: os_mswin.c:2022
 #, c-format
 msgid "to %s on %s"
 msgstr "til %s på %s"
 
-#: os_mswin.c:2028
+#: os_mswin.c:2037
 #, c-format
 msgid "E613: Unknown printer font: %s"
 msgstr "E613: Ukjent skrifttype for skriver: %s"
 
-#: os_mswin.c:2077 os_mswin.c:2087
+#: os_mswin.c:2086 os_mswin.c:2096
 #, c-format
 msgid "E238: Print error: %s"
 msgstr "E238: Feil under utskrift: %s"
 
-#: os_mswin.c:2088
+#: os_mswin.c:2097
 msgid "Unknown"
 msgstr "Ukjent"
 
-#: os_mswin.c:2115
+#: os_mswin.c:2124
 #, c-format
 msgid "Printing '%s'"
 msgstr "Skriver ut '%s'"
 
-#: os_mswin.c:3204
+#: os_mswin.c:3213
 #, c-format
 msgid "E244: Illegal charset name \"%s\" in font name \"%s\""
 msgstr "E244: Ulovlig navn på tegnsett \"%s\" i skrifttypenavn \"%s\""
 
-#: os_mswin.c:3212
+#: os_mswin.c:3221
 #, c-format
 msgid "E245: Illegal char '%c' in font name \"%s\""
 msgstr "E245: Ulovlig tegn '%c' i skrifttypenavn \"%s\""
@@ -4846,15 +4856,15 @@ msgstr ""
 "\n"
 "Vim: Mottok X-feil\n"
 
-#: os_unix.c:1334
+#: os_unix.c:1338
 msgid "Testing the X display failed"
 msgstr "Test av X-display feilet"
 
-#: os_unix.c:1473
+#: os_unix.c:1477
 msgid "Opening the X display timed out"
 msgstr "Tidsavbrudd for åpning av X-display"
 
-#: os_unix.c:3227 os_unix.c:3907
+#: os_unix.c:3234 os_unix.c:3914
 msgid ""
 "\n"
 "Cannot execute shell "
@@ -4862,7 +4872,7 @@ msgstr ""
 "\n"
 "Kan ikke kjøre skall "
 
-#: os_unix.c:3275
+#: os_unix.c:3282
 msgid ""
 "\n"
 "Cannot execute shell sh\n"
@@ -4870,7 +4880,7 @@ msgstr ""
 "\n"
 "Kan ikke kjøre skallet sh\n"
 
-#: os_unix.c:3279 os_unix.c:3913
+#: os_unix.c:3286 os_unix.c:3920
 msgid ""
 "\n"
 "shell returned "
@@ -4878,7 +4888,7 @@ msgstr ""
 "\n"
 "skallet returnerte "
 
-#: os_unix.c:3414
+#: os_unix.c:3421
 msgid ""
 "\n"
 "Cannot create pipes\n"
@@ -4886,7 +4896,7 @@ msgstr ""
 "\n"
 "Kan ikke opprette rør (\"pipe\")\n"
 
-#: os_unix.c:3429
+#: os_unix.c:3436
 msgid ""
 "\n"
 "Cannot fork\n"
@@ -4894,7 +4904,7 @@ msgstr ""
 "\n"
 "Kan ikke opprette tvillingprosess (\"fork\")\n"
 
-#: os_unix.c:3920
+#: os_unix.c:3927
 msgid ""
 "\n"
 "Command terminated\n"
@@ -4902,27 +4912,27 @@ msgstr ""
 "\n"
 "Kommando avsluttet\n"
 
-#: os_unix.c:4184 os_unix.c:4309 os_unix.c:5975
+#: os_unix.c:4191 os_unix.c:4316 os_unix.c:5982
 msgid "XSMP lost ICE connection"
 msgstr "XSMP mistet ICE-forbindelsen"
 
-#: os_unix.c:5558
+#: os_unix.c:5565
 msgid "Opening the X display failed"
 msgstr "Åpning av X-display feilet"
 
-#: os_unix.c:5880
+#: os_unix.c:5887
 msgid "XSMP handling save-yourself request"
 msgstr "XSMP håndterer \"redd-deg-selv\"-forespørsel"
 
-#: os_unix.c:5999
+#: os_unix.c:6006
 msgid "XSMP opening connection"
 msgstr "XSMP åpner forbindelse"
 
-#: os_unix.c:6018
+#: os_unix.c:6025
 msgid "XSMP ICE connection watch failed"
 msgstr "Overvåkning av XSMP ICE-forbindelse feilet"
 
-#: os_unix.c:6038
+#: os_unix.c:6045
 #, c-format
 msgid "XSMP SmcOpenConnection failed: %s"
 msgstr "XSMP SmcOpenConnection feilet: %s"
@@ -5758,7 +5768,7 @@ msgid "E440: undo line missing"
 msgstr "E440: Angrelisten mangler"
 
 #. Only MS VC 4.1 and earlier can do Win32s
-#: version.c:723
+#: version.c:741
 msgid ""
 "\n"
 "MS-Windows 16/32 bit GUI version"
@@ -5766,7 +5776,7 @@ msgstr ""
 "\n"
 "MS-Windows 16/32-bits GUI-versjon"
 
-#: version.c:725
+#: version.c:743
 msgid ""
 "\n"
 "MS-Windows 32 bit GUI version"
@@ -5774,15 +5784,15 @@ msgstr ""
 "\n"
 "MS-Windows 32-bits GUI-versjon"
 
-#: version.c:728
+#: version.c:746
 msgid " in Win32s mode"
 msgstr " i Win32s-modus"
 
-#: version.c:730
+#: version.c:748
 msgid " with OLE support"
 msgstr " med OLE-støtte"
 
-#: version.c:733
+#: version.c:751
 msgid ""
 "\n"
 "MS-Windows 32 bit console version"
@@ -5790,7 +5800,7 @@ msgstr ""
 "\n"
 "MS-Windows 32-bits konsollversjon"
 
-#: version.c:737
+#: version.c:755
 msgid ""
 "\n"
 "MS-Windows 16 bit version"
@@ -5798,7 +5808,7 @@ msgstr ""
 "\n"
 "MS-Windows 16-bits versjon"
 
-#: version.c:741
+#: version.c:759
 msgid ""
 "\n"
 "32 bit MS-DOS version"
@@ -5806,7 +5816,7 @@ msgstr ""
 "\n"
 "32-bits MS-DOS-versjon"
 
-#: version.c:743
+#: version.c:761
 msgid ""
 "\n"
 "16 bit MS-DOS version"
@@ -5814,7 +5824,7 @@ msgstr ""
 "\n"
 "16-bits MS-DOS-versjon"
 
-#: version.c:749
+#: version.c:767
 msgid ""
 "\n"
 "MacOS X (unix) version"
@@ -5822,7 +5832,7 @@ msgstr ""
 "\n"
 "MacOS X (unix)-versjon"
 
-#: version.c:751
+#: version.c:769
 msgid ""
 "\n"
 "MacOS X version"
@@ -5830,7 +5840,7 @@ msgstr ""
 "\n"
 "MacOS X-versjon"
 
-#: version.c:754
+#: version.c:772
 msgid ""
 "\n"
 "MacOS version"
@@ -5838,7 +5848,7 @@ msgstr ""
 "\n"
 "MacOS-versjon"
 
-#: version.c:759
+#: version.c:777
 msgid ""
 "\n"
 "RISC OS version"
@@ -5846,7 +5856,7 @@ msgstr ""
 "\n"
 "RISC OS-versjon"
 
-#: version.c:769
+#: version.c:787
 msgid ""
 "\n"
 "Included patches: "
@@ -5854,11 +5864,11 @@ msgstr ""
 "\n"
 "Inkluderte patcher: "
 
-#: version.c:795 version.c:1163
+#: version.c:813 version.c:1181
 msgid "Modified by "
 msgstr "Modifisert av "
 
-#: version.c:802
+#: version.c:820
 msgid ""
 "\n"
 "Compiled "
@@ -5866,11 +5876,11 @@ msgstr ""
 "\n"
 "Kompilert "
 
-#: version.c:805
+#: version.c:823
 msgid "by "
 msgstr "av "
 
-#: version.c:817
+#: version.c:835
 msgid ""
 "\n"
 "Huge version "
@@ -5878,7 +5888,7 @@ msgstr ""
 "\n"
 "Diger (\"huge\") versjon "
 
-#: version.c:820
+#: version.c:838
 msgid ""
 "\n"
 "Big version "
@@ -5886,7 +5896,7 @@ msgstr ""
 "\n"
 "Stor (\"big\") versjon "
 
-#: version.c:823
+#: version.c:841
 msgid ""
 "\n"
 "Normal version "
@@ -5894,7 +5904,7 @@ msgstr ""
 "\n"
 "Normal versjon "
 
-#: version.c:826
+#: version.c:844
 msgid ""
 "\n"
 "Small version "
@@ -5902,7 +5912,7 @@ msgstr ""
 "\n"
 "Liten (\"small\") versjon "
 
-#: version.c:828
+#: version.c:846
 msgid ""
 "\n"
 "Tiny version "
@@ -5910,231 +5920,231 @@ msgstr ""
 "\n"
 "Spinkel (\"tiny\") versjon "
 
-#: version.c:834
+#: version.c:852
 msgid "without GUI."
 msgstr "uten GUI."
 
-#: version.c:839
+#: version.c:857
 msgid "with GTK2-GNOME GUI."
 msgstr "med GTK2-GNOME GUI."
 
-#: version.c:841
+#: version.c:859
 msgid "with GTK-GNOME GUI."
 msgstr "med GTK-GNOME GUI."
 
-#: version.c:845
+#: version.c:863
 msgid "with GTK2 GUI."
 msgstr "med GTK2 GUI."
 
-#: version.c:847
+#: version.c:865
 msgid "with GTK GUI."
 msgstr "med GTK GUI."
 
-#: version.c:852
+#: version.c:870
 msgid "with X11-Motif GUI."
 msgstr "med X11-Motif GUI."
 
-#: version.c:856
+#: version.c:874
 msgid "with X11-neXtaw GUI."
 msgstr "med X11-neXtaw GUI."
 
-#: version.c:858
+#: version.c:876
 msgid "with X11-Athena GUI."
 msgstr "med X11-Athena GUI."
 
-#: version.c:862
+#: version.c:880
 msgid "with BeOS GUI."
 msgstr "med BeOS GUI."
 
-#: version.c:865
+#: version.c:883
 msgid "with Photon GUI."
 msgstr "med Photon GUI."
 
-#: version.c:868
+#: version.c:886
 msgid "with GUI."
 msgstr "med GUI."
 
-#: version.c:871
+#: version.c:889
 msgid "with Carbon GUI."
 msgstr "med Carbon GUI."
 
-#: version.c:874
+#: version.c:892
 msgid "with Cocoa GUI."
 msgstr "med Cocoa GUI."
 
-#: version.c:877
+#: version.c:895
 msgid "with (classic) GUI."
 msgstr "med (klassisk) GUI."
 
-#: version.c:888
+#: version.c:906
 msgid "  Features included (+) or not (-):\n"
 msgstr "  Funksjoner inkludert (+) eller ikke (-):\n"
 
-#: version.c:900
+#: version.c:918
 msgid "   system vimrc file: \""
 msgstr "        vimrc-fil på systemet: \""
 
-#: version.c:905
+#: version.c:923
 msgid "     user vimrc file: \""
 msgstr "        vimrc-fil for brukere: \""
 
-#: version.c:910
+#: version.c:928
 msgid " 2nd user vimrc file: \""
 msgstr "  vimrc-fil nr. 2 for brukere: \""
 
-#: version.c:915
+#: version.c:933
 msgid " 3rd user vimrc file: \""
 msgstr "  vimrc-fil nr. 3 for brukere: \""
 
-#: version.c:920
+#: version.c:938
 msgid "      user exrc file: \""
 msgstr "         exrc-fil for brukere: \""
 
-#: version.c:925
+#: version.c:943
 msgid "  2nd user exrc file: \""
 msgstr "   exrc-fil nr. 2 for brukere: \""
 
-#: version.c:931
+#: version.c:949
 msgid "  system gvimrc file: \""
 msgstr "       gvimrc-fil på systemet: \""
 
-#: version.c:935
+#: version.c:953
 msgid "    user gvimrc file: \""
 msgstr "       gvimrc-fil for brukere: \""
 
-#: version.c:939
+#: version.c:957
 msgid "2nd user gvimrc file: \""
 msgstr " gvimrc-fil nr. 2 for brukere: \""
 
-#: version.c:944
+#: version.c:962
 msgid "3rd user gvimrc file: \""
 msgstr " gvimrc-fil nr. 3 for brukere: \""
 
-#: version.c:951
+#: version.c:969
 msgid "    system menu file: \""
 msgstr "          menyfil på systemet: \""
 
-#: version.c:959
+#: version.c:977
 msgid "  fall-back for $VIM: \""
 msgstr "       $VIM faller tilbake på: \""
 
-#: version.c:965
+#: version.c:983
 msgid " f-b for $VIMRUNTIME: \""
 msgstr "$VIMRUNTIME faller tilbake på: \""
 
-#: version.c:969
+#: version.c:987
 msgid "Compilation: "
 msgstr "Kompilering: "
 
-#: version.c:975
+#: version.c:993
 msgid "Compiler: "
 msgstr "Kompilator: "
 
-#: version.c:980
+#: version.c:998
 msgid "Linking: "
 msgstr "Linking: "
 
-#: version.c:985
+#: version.c:1003
 msgid "  DEBUG BUILD"
 msgstr "  DEBUGGINGSVERSJON"
 
-#: version.c:1024
+#: version.c:1042
 msgid "VIM - Vi IMproved"
 msgstr "VIM - Vi IMproved - Forbedret Vi"
 
-#: version.c:1026
+#: version.c:1044
 msgid "version "
 msgstr "versjon "
 
-#: version.c:1027
+#: version.c:1045
 msgid "by Bram Moolenaar et al."
 msgstr "av Bram Moolenaar med flere"
 
-#: version.c:1031
+#: version.c:1049
 msgid "Vim is open source and freely distributable"
 msgstr "Vim er åpen kildekode og kan fritt distribueres"
 
-#: version.c:1033
+#: version.c:1051
 msgid "Help poor children in Uganda!"
 msgstr "Hjelp fattige barn i Uganda!"
 
-#: version.c:1034
+#: version.c:1052
 msgid "type  :help iccf<Enter>       for information "
 msgstr "skriv  :help iccf<Enter>          for informasjon  "
 
-#: version.c:1036
+#: version.c:1054
 msgid "type  :q<Enter>               to exit         "
 msgstr "skriv  :q<Enter>                  for å avslutte   "
 
-#: version.c:1037
+#: version.c:1055
 msgid "type  :help<Enter>  or  <F1>  for on-line help"
 msgstr "skriv  :help<Enter>  eller  <F1>  for on-line hjelp"
 
-#: version.c:1038
+#: version.c:1056
 msgid "type  :help version6<Enter>   for version info"
 msgstr "skriv  :help version6<Enter>      for versjonsinfo "
 
-#: version.c:1041
+#: version.c:1059
 msgid "Running in Vi compatible mode"
 msgstr "Kjører i Vi-kompatibel modus"
 
-#: version.c:1042
+#: version.c:1060
 msgid "type  :set nocp<Enter>        for Vim defaults"
 msgstr "skriv  :set nocp<Enter>           for standard Vim "
 
-#: version.c:1043
+#: version.c:1061
 msgid "type  :help cp-default<Enter> for info on this"
 msgstr "skriv  :help cp-default<Enter>    for informasjon  "
 
-#: version.c:1058
+#: version.c:1076
 msgid "menu  Help->Orphans           for information    "
 msgstr "meny:  Hjelp->Foreldreløse        for informasjon  "
 
-#: version.c:1060
+#: version.c:1078
 msgid "Running modeless, typed text is inserted"
 msgstr "Kjører uten modus, tastetrykk blir lagt inn i teksten"
 
-#: version.c:1061
+#: version.c:1079
 msgid "menu  Edit->Global Settings->Toggle Insert Mode  "
 msgstr "meny:  Rediger->Globale innstillinger->Innsettingsmodus av/på"
 
-#: version.c:1062
+#: version.c:1080
 msgid "                              for two modes      "
 msgstr "                                  for to moduser   "
 
-#: version.c:1066
+#: version.c:1084
 msgid "menu  Edit->Global Settings->Toggle Vi Compatible"
 msgstr "meny:  Rediger->Globale innstillinger->Vi-kompatibilitet av/på"
 
-#: version.c:1067
+#: version.c:1085
 msgid "                              for Vim defaults   "
 msgstr "                                  for standard Vim "
 
-#: version.c:1114
+#: version.c:1132
 msgid "Sponsor Vim development!"
 msgstr "Støtt utviklingen av Vim!"
 
-#: version.c:1115
+#: version.c:1133
 msgid "Become a registered Vim user!"
 msgstr "Bli registrert bruker av Vim!"
 
-#: version.c:1118
+#: version.c:1136
 msgid "type  :help sponsor<Enter>    for information "
 msgstr "skriv  :help sponsor<Enter>       for informasjon  "
 
-#: version.c:1119
+#: version.c:1137
 msgid "type  :help register<Enter>   for information "
 msgstr "skriv  :help register<Enter>      for informasjon  "
 
-#: version.c:1121
+#: version.c:1139
 msgid "menu  Help->Sponsor/Register  for information    "
 msgstr "meny:  Hjelp->Støtte/Registrering  for informasjon "
 
-#: version.c:1131
+#: version.c:1149
 msgid "WARNING: Windows 95/98/ME detected"
 msgstr "ADVARSEL: Windows 95/98/ME oppdaget"
 
-#: version.c:1134
+#: version.c:1152
 msgid "type  :help windows95<Enter>  for info on this"
 msgstr "skriv  :help windows95<Enter>     for informasjon  "
 
@@ -6171,7 +6181,7 @@ msgstr "E446: Ingen filnavn under markøren"
 msgid "E447: Can't find file \"%s\" in path"
 msgstr "E447: Kan ikke finne filen \"%s\" i stien"
 
-#: globals.h:1232 if_perl.xs:326
+#: globals.h:1241 if_perl.xs:326
 #, c-format
 msgid "E370: Could not load library %s"
 msgstr "E370: Klarte ikke laste bibliotek %s"
@@ -6222,7 +6232,7 @@ msgstr "Feil i gvimext.dll"
 msgid "Path length too long!"
 msgstr "Lengden på stien er for lang!"
 
-#: globals.h:1022
+#: globals.h:1031
 msgid "--No lines in buffer--"
 msgstr "--Ingen linjer i bufferen--"
 
@@ -6230,390 +6240,390 @@ msgstr "--Ingen linjer i bufferen--"
 #. * The error messages that can be shared are included here.
 #. * Excluded are errors that are only used once and debugging messages.
 #.
-#: globals.h:1185
+#: globals.h:1194
 msgid "E470: Command aborted"
 msgstr "E470: Kommandoen avbrutt"
 
-#: globals.h:1186
+#: globals.h:1195
 msgid "E471: Argument required"
 msgstr "E471: Parameter nødvendig"
 
-#: globals.h:1187
+#: globals.h:1196
 msgid "E10: \\ should be followed by /, ? or &"
 msgstr "E10: \\ skulle ha vært fulgt av /, ? eller &"
 
-#: globals.h:1189
+#: globals.h:1198
 msgid "E11: Invalid in command-line window; <CR> executes, CTRL-C quits"
 msgstr "E11: Ugyldig i kommandolinjevindu; <ENTER> utfører, CTRL-C avslutter"
 
-#: globals.h:1191
+#: globals.h:1200
 msgid "E12: Command not allowed from exrc/vimrc in current dir or tag search"
 msgstr ""
 "E12: Kommandoen er ikke tillatt fra exrc/vimrc i nåværende katalog eller "
 "tagsøk"
 
-#: globals.h:1193
+#: globals.h:1202
 msgid "E171: Missing :endif"
 msgstr "E171: Mangler :endif"
 
-#: globals.h:1194
+#: globals.h:1203
 msgid "E600: Missing :endtry"
 msgstr "E600: Mangler :endtry"
 
-#: globals.h:1195
+#: globals.h:1204
 msgid "E170: Missing :endwhile"
 msgstr "E170: Mangler :endwhile"
 
-#: globals.h:1196
+#: globals.h:1205
 msgid "E588: :endwhile without :while"
 msgstr "E588: :endwhile uten :while"
 
-#: globals.h:1198
+#: globals.h:1207
 msgid "E13: File exists (add ! to override)"
 msgstr "E13: Filen finnes (legg til ! for å overstyre)"
 
-#: globals.h:1199
+#: globals.h:1208
 msgid "E472: Command failed"
 msgstr "E472: Kommandoen feilet"
 
-#: globals.h:1201
+#: globals.h:1210
 #, c-format
 msgid "E234: Unknown fontset: %s"
 msgstr "E234: Ukjent skrifttypesett: %s"
 
-#: globals.h:1205
+#: globals.h:1214
 #, c-format
 msgid "E235: Unknown font: %s"
 msgstr "E235: Ukjent skrifttype: %s"
 
-#: globals.h:1208
+#: globals.h:1217
 #, c-format
 msgid "E236: Font \"%s\" is not fixed-width"
 msgstr "E236: Skrifttypen \"%s\" har ikke fast bredde"
 
-#: globals.h:1210
+#: globals.h:1219
 msgid "E473: Internal error"
 msgstr "E473: Intern feil"
 
-#: globals.h:1211
+#: globals.h:1220
 msgid "Interrupted"
 msgstr "Avbrutt"
 
-#: globals.h:1212
+#: globals.h:1221
 msgid "E14: Invalid address"
 msgstr "E14: Ugyldig adresse"
 
-#: globals.h:1213
+#: globals.h:1222
 msgid "E474: Invalid argument"
 msgstr "E474: Ugyldig parameter"
 
-#: globals.h:1214
+#: globals.h:1223
 #, c-format
 msgid "E475: Invalid argument: %s"
 msgstr "E475: Ugyldig paramter: %s"
 
-#: globals.h:1216
+#: globals.h:1225
 #, c-format
 msgid "E15: Invalid expression: %s"
 msgstr "E15: Ugyldig uttrykk: %s"
 
-#: globals.h:1218
+#: globals.h:1227
 msgid "E16: Invalid range"
 msgstr "E16: Ugyldig område"
 
-#: globals.h:1219
+#: globals.h:1228
 msgid "E476: Invalid command"
 msgstr "E476: Ugyldig kommando"
 
-#: globals.h:1221
+#: globals.h:1230
 #, c-format
 msgid "E17: \"%s\" is a directory"
 msgstr "E17: \"%s\" er en katalog"
 
-#: globals.h:1224
+#: globals.h:1233
 msgid "E18: Unexpected characters before '='"
 msgstr "E18: Uventede tegn før '='"
 
-#: globals.h:1227
+#: globals.h:1236
 #, c-format
 msgid "E364: Library call failed for \"%s()\""
 msgstr "E364: Bibliotek-kall feilet for \"%s()\""
 
-#: globals.h:1233
+#: globals.h:1242
 #, c-format
 msgid "E448: Could not load library function %s"
 msgstr "E448: Klarte ikke laste biblioteksfunksjon %s"
 
-#: globals.h:1235
+#: globals.h:1244
 msgid "E19: Mark has invalid line number"
 msgstr "E19: Merket har et ugyldig linjenummer"
 
-#: globals.h:1236
+#: globals.h:1245
 msgid "E20: Mark not set"
 msgstr "E20: Merket ble ikke satt"
 
-#: globals.h:1237
+#: globals.h:1246
 msgid "E21: Cannot make changes, 'modifiable' is off"
 msgstr "E21: Kan ikke gjøre forandringer, 'modifiable' er av"
 
-#: globals.h:1238
+#: globals.h:1247
 msgid "E22: Scripts nested too deep"
 msgstr "E22: Skripts nøstet for dypt"
 
-#: globals.h:1239
+#: globals.h:1248
 msgid "E23: No alternate file"
 msgstr "E23: Ingen alternativ fil"
 
-#: globals.h:1240
+#: globals.h:1249
 msgid "E24: No such abbreviation"
 msgstr "E24: Forkortelsen finnes ikke"
 
-#: globals.h:1241
+#: globals.h:1250
 msgid "E477: No ! allowed"
 msgstr "E477: Ingen ! tillatt"
 
-#: globals.h:1243
+#: globals.h:1252
 msgid "E25: GUI cannot be used: Not enabled at compile time"
 msgstr "E25: GUI kan ikke brukes: Ikke slått på under kompilering"
 
-#: globals.h:1246
+#: globals.h:1255
 msgid "E26: Hebrew cannot be used: Not enabled at compile time\n"
 msgstr "E26: Hebraisk kan ikke brukes: Ikke slått på under kompilering\n"
 
-#: globals.h:1249
+#: globals.h:1258
 msgid "E27: Farsi cannot be used: Not enabled at compile time\n"
 msgstr ""
 "E27: Persisk (Farsi) kan ikke brukes: Ikke slått på under kompilering\n"
 
-#: globals.h:1252
+#: globals.h:1261
 msgid "E800: Arabic cannot be used: Not enabled at compile time\n"
 msgstr "E800: Arabisk kan ikke brukes: Ikke slått på under kompilering\n"
 
-#: globals.h:1255
+#: globals.h:1264
 #, c-format
 msgid "E28: No such highlight group name: %s"
 msgstr "E28: Uthevingsgruppe finnes ikke: %s"
 
-#: globals.h:1257
+#: globals.h:1266
 msgid "E29: No inserted text yet"
 msgstr "E29: Ingen innlagt tekst enda"
 
-#: globals.h:1258
+#: globals.h:1267
 msgid "E30: No previous command line"
 msgstr "E30: Ingen tidligere kommandolinje"
 
-#: globals.h:1259
+#: globals.h:1268
 msgid "E31: No such mapping"
 msgstr "E31: Mappingen finnes ikke"
 
-#: globals.h:1260
+#: globals.h:1269
 msgid "E479: No match"
 msgstr "E479: Ingen treff"
 
-#: globals.h:1261
+#: globals.h:1270
 #, c-format
 msgid "E480: No match: %s"
 msgstr "E480: Ingen treff: %s"
 
-#: globals.h:1262
+#: globals.h:1271
 msgid "E32: No file name"
 msgstr "E32: Mangler filnavn"
 
-#: globals.h:1263
+#: globals.h:1272
 msgid "E33: No previous substitute regular expression"
 msgstr "E33: Ingen tidligere erstatninger med regulære uttrykk"
 
-#: globals.h:1264
+#: globals.h:1273
 msgid "E34: No previous command"
 msgstr "E34: Ingen tidligere kommando"
 
-#: globals.h:1265
+#: globals.h:1274
 msgid "E35: No previous regular expression"
 msgstr "E35: Ingen tidligere regulære uttrykk"
 
-#: globals.h:1266
+#: globals.h:1275
 msgid "E481: No range allowed"
 msgstr "E481: Område er ikke tillatt"
 
-#: globals.h:1268
+#: globals.h:1277
 msgid "E36: Not enough room"
 msgstr "E36: Ikke nok plass"
 
-#: globals.h:1271
+#: globals.h:1280
 #, c-format
 msgid "E247: no registered server named \"%s\""
 msgstr "E247: Ingen registrert tjener kalt \"%s\""
 
-#: globals.h:1273
+#: globals.h:1282
 #, c-format
 msgid "E482: Can't create file %s"
 msgstr "E482: Kan ikke opprette filen %s"
 
-#: globals.h:1274
+#: globals.h:1283
 msgid "E483: Can't get temp file name"
 msgstr "E483: Kan ikke hente navn på midlertidig fil"
 
-#: globals.h:1275
+#: globals.h:1284
 #, c-format
 msgid "E484: Can't open file %s"
 msgstr "E484: Kan ikke åpne filen %s"
 
-#: globals.h:1276
+#: globals.h:1285
 #, c-format
 msgid "E485: Can't read file %s"
 msgstr "E485: Kan ikke lese filen %s"
 
-#: globals.h:1277
+#: globals.h:1286
 msgid "E37: No write since last change (add ! to override)"
 msgstr "E37: Ikke lagret siden forrige forandring (legg til ! for å overstyre)"
 
-#: globals.h:1278
+#: globals.h:1287
 msgid "E38: Null argument"
 msgstr "E38: Nullparameter"
 
-#: globals.h:1280
+#: globals.h:1289
 msgid "E39: Number expected"
 msgstr "E39: Nummer forventet"
 
-#: globals.h:1283
+#: globals.h:1292
 #, c-format
 msgid "E40: Can't open errorfile %s"
 msgstr "E40: Kan ikke åpne feilfilen %s"
 
-#: globals.h:1286
+#: globals.h:1295
 msgid "E233: cannot open display"
 msgstr "E233: Kan ikke åpne display"
 
-#: globals.h:1288
+#: globals.h:1297
 msgid "E41: Out of memory!"
 msgstr "E41: Ikke mer ledig hukommelse!"
 
-#: globals.h:1290
+#: globals.h:1299
 msgid "Pattern not found"
 msgstr "Fant ikke søketeksten"
 
-#: globals.h:1292
+#: globals.h:1301
 #, c-format
 msgid "E486: Pattern not found: %s"
 msgstr "E486: Fant ikke søketeksten: %s"
 
-#: globals.h:1293
+#: globals.h:1302
 msgid "E487: Argument must be positive"
 msgstr "E487: Parameteret må være positivt"
 
-#: globals.h:1295
+#: globals.h:1304
 msgid "E459: Cannot go back to previous directory"
 msgstr "E459: Kan ikke gå tilbake til tidligere katalog"
 
-#: globals.h:1299
+#: globals.h:1308
 msgid "E42: No Errors"
 msgstr "E42: Ingen feil"
 
-#: globals.h:1301
+#: globals.h:1310
 msgid "E43: Damaged match string"
 msgstr "E43: Ødelagt søkestreng"
 
-#: globals.h:1302
+#: globals.h:1311
 msgid "E44: Corrupted regexp program"
 msgstr "E44: Skadet program med regulært uttrykk"
 
-#: globals.h:1303
+#: globals.h:1312
 msgid "E45: 'readonly' option is set (add ! to override)"
 msgstr "E45: 'readonly'-valget er satt (legg til ! for å overstyre)"
 
-#: globals.h:1305
+#: globals.h:1314
 #, c-format
 msgid "E46: Cannot set read-only variable \"%s\""
 msgstr "E46: Kan ikke sette skrivebeskyttet variabel \"%s\""
 
-#: globals.h:1308
+#: globals.h:1317
 msgid "E47: Error while reading errorfile"
 msgstr "E47: Feil under lesing av feilfilen"
 
-#: globals.h:1311
+#: globals.h:1320
 msgid "E48: Not allowed in sandbox"
 msgstr "E48: Ikke tillatt i sandkassen"
 
-#: globals.h:1313
+#: globals.h:1322
 msgid "E523: Not allowed here"
 msgstr "E523: Ikke tillatt her"
 
-#: globals.h:1316
+#: globals.h:1325
 msgid "E359: Screen mode setting not supported"
 msgstr "E359: Forandring av skjermmodus er ikke støttet"
 
-#: globals.h:1318
+#: globals.h:1327
 msgid "E49: Invalid scroll size"
 msgstr "E49: Ugyldig \"scroll\"-verdi"
 
-#: globals.h:1319
+#: globals.h:1328
 msgid "E91: 'shell' option is empty"
 msgstr "E91: 'shell'-valget er tomt"
 
-#: globals.h:1321
+#: globals.h:1330
 msgid "E255: Couldn't read in sign data!"
 msgstr "E255: Kunne ikke lese inn skiltdata!"
 
-#: globals.h:1323
+#: globals.h:1332
 msgid "E72: Close error on swap file"
 msgstr "E72: Feil under lukking av swapfil"
 
-#: globals.h:1324
+#: globals.h:1333
 msgid "E73: tag stack empty"
 msgstr "E73: Tag-stack tom"
 
-#: globals.h:1325
+#: globals.h:1334
 msgid "E74: Command too complex"
 msgstr "E74: Kommandoen er for kompleks"
 
-#: globals.h:1326
+#: globals.h:1335
 msgid "E75: Name too long"
 msgstr "E75: Navnet er for langt"
 
-#: globals.h:1327
+#: globals.h:1336
 msgid "E76: Too many ["
 msgstr "E76: For mange ["
 
-#: globals.h:1328
+#: globals.h:1337
 msgid "E77: Too many file names"
 msgstr "E77: For mange filnavn"
 
-#: globals.h:1329
+#: globals.h:1338
 msgid "E488: Trailing characters"
 msgstr "E488: Etterfølgende tegn"
 
-#: globals.h:1330
+#: globals.h:1339
 msgid "E78: Unknown mark"
 msgstr "E78: Ukjent merke"
 
-#: globals.h:1331
+#: globals.h:1340
 msgid "E79: Cannot expand wildcards"
 msgstr "E79: Klarte ikke utvide jokertegn"
 
-#: globals.h:1333
+#: globals.h:1342
 msgid "E591: 'winheight' cannot be smaller than 'winminheight'"
 msgstr "E591: 'winheight' kan ikke være mindre enn 'winminheight'"
 
-#: globals.h:1335
+#: globals.h:1344
 msgid "E592: 'winwidth' cannot be smaller than 'winminwidth'"
 msgstr "E592: 'winwidth' kan ikke være mindre enn 'winminwidth'"
 
-#: globals.h:1338
+#: globals.h:1347
 msgid "E80: Error while writing"
 msgstr "E80: Feil under skriving"
 
-#: globals.h:1339
+#: globals.h:1348
 msgid "Zero count"
 msgstr "Antall repeteringer er null"
 
-#: globals.h:1341
+#: globals.h:1350
 msgid "E81: Using <SID> not in a script context"
 msgstr "E81: Bruker <SID> utenom skript-kontekst"
 
-#: globals.h:1344
+#: globals.h:1353
 msgid "E449: Invalid expression received"
 msgstr "E449: Ugyldig uttrykk mottatt"
 
-#: globals.h:1347
+#: globals.h:1356
 msgid "E463: Region is guarded, cannot modify"
 msgstr "E463: Regionen er beskyttet og kan ikke modifiseres"

@@ -1,4 +1,4 @@
-*syntax.txt*	For Vim version 6.3b.  Last change: 2004 May 01
+*syntax.txt*	For Vim version 6.3.  Last change: 2004 Jun 04
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -2271,6 +2271,8 @@ number is that redrawing can become slow.
 
 TEX						*tex.vim* *tex-syntax*
 
+Run-on Comments/Math? ~
+
 The tex highlighting supports TeX, LaTeX, and some AmsTeX.  The
 highlighting supports three primary zones: normal, texZone, and texMathZone.
 Although a considerable effort has been made to have these zones terminate
@@ -2281,6 +2283,8 @@ special "TeX comment" has been provided >
 which will forcibly terminate the highlighting of either a texZone or a
 texMathZone.
 
+Slow Syntax Highlighting? ~
+
 If you have a slow computer, you may wish to reduce the values for >
 	:syn sync maxlines=200
 	:syn sync minlines=50
@@ -2288,12 +2292,16 @@ If you have a slow computer, you may wish to reduce the values for >
 increase them.	This primarily affects synchronizing (ie. just what group,
 if any, is the text at the top of the screen supposed to be in?).
 
+Excessive Error Highlighting? ~
+
 The <tex.vim> supports lexical error checking of various sorts.  Thus,
 although the error checking is ofttimes very useful, it can indicate
 errors where none actually are.  If this proves to be a problem for you,
 you may put in your <.vimrc> the following statement: >
 	let tex_no_error=1
 and all error checking by <tex.vim> will be suppressed.
+
+Need a new Math Group? ~
 
 If you want to include a new math group in your LaTeX, the following
 code shows you an example as to how you might do so: >
@@ -2312,6 +2320,19 @@ code shows you an example as to how you might do so: >
 <
 You'll need to change LOCALMATH to the name of your new math group,
 and then to put it into .vim/after/syntax/tex.vim.
+
+Starting a New Style? ~
+
+One may use "\makeatletter" in *.tex files, thereby making the use of "@" in
+commands available.  However, since the *.tex file doesn't have one of the
+following suffices: sty cls clo dtx ltx, the syntax highlighting will flag
+such use of @ as an error.  To solve this: >
+
+	:let b:tex_stylish = 1
+	:set ft=tex
+
+Putting "let g:tex_stylish=1" into your <.vimrc> will make <syntax/tex.vim>
+always accept such use of @.
 
 
 TF						*tf.vim* *tf-syntax*
@@ -2374,7 +2395,11 @@ setting a global variable: >
 The xml syntax file provides syntax |folding| (see |:syn-fold|) between
 start and end tags. This can be turned on by >
 
+	:let g:xml_syntax_folding = 1
 	:set foldmethod=syntax
+
+Note: syntax folding might slow down syntax highlighting significantly,
+especially for large files.
 
 
 X Pixmaps (XPM)					*xpm.vim* *xpm-syntax*

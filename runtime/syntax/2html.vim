@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2004 May 05
+" Last Change: 2004 May 31
 "	       (modified by David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>)
 "	       (XHTML support by Panagiotis Issaris <takis@lumumba.luc.ac.be>)
 
@@ -377,7 +377,7 @@ while s:idlist != ""
 endwhile
 
 " Add hyperlinks
-%s+\(http://\S\{-}\)\(\([.,;:]\=\(\s\|$\)\)\|[\\"'<>]\|&gt;\|&lt;\)+<A HREF="\1">\1</A>\2+ge
+%s+\(http://\S\{-}\)\(\([.,;:}]\=\(\s\|$\)\)\|[\\"'<>]\|&gt;\|&lt;\)+<A HREF="\1">\1</A>\2+ge
 
 " The DTD
 if exists("html_use_css")

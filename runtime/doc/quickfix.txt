@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.3b.  Last change: 2004 Mar 27
+*quickfix.txt*  For Vim version 6.3.  Last change: 2004 May 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -169,7 +169,9 @@ When the quickfix window has been filled, two autocommand events are
 triggered.  First the 'filetype' option is set to "qf", which triggers the
 FileType event.  Then the BufReadPost event is triggered.  This can be used to
 perform some action on the listed errors.  Example: >
-	au BufReadPost quickfix  silent g/^/s//\=line(".")." "/
+	au BufReadPost quickfix  setlocal nomodifiable
+		\ | silent g/^/s//\=line(".")." "/
+		\ | setlocal modifiable
 This prepends the line number to each line.  Note the use of "\=" in the
 substitute string of the ":s" command, which is used to evaluate an
 expression.

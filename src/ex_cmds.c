@@ -2785,11 +2785,11 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 
 #ifdef FEAT_AUTOCMD
 # ifdef FEAT_EVAL
-	    if (aborting())	    /* autocmds may abort script processing */
-	    {
-		vim_free(new_name);
-		goto theend;
-	    }
+		if (aborting())	    /* autocmds may abort script processing */
+		{
+		    vim_free(new_name);
+		    goto theend;
+		}
 # endif
 		/* Be careful again, like above. */
 		if (!buf_valid(buf))	/* new buffer has been deleted */
@@ -2801,7 +2801,6 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 		    auto_buf = TRUE;
 		else
 #endif
-
 		{
 		    curwin->w_buffer = buf;
 		    curbuf = buf;

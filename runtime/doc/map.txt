@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.3b.  Last change: 2004 Mar 26
+*map.txt*       For Vim version 6.3.  Last change: 2004 May 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -659,6 +659,9 @@ used in a |filetype-plugin| file.  Example for a C plugin file: >
 			mappings, see |map-listing|.
 
 :ab[breviate] {lhs}	list the abbreviations that start with {lhs}
+			You may need to insert a CTRL-V (type it twice) to
+			avoid that a typed {lhs} is expanded, since
+			command-line abbreviations apply here.
 
 :ab[breviate] {lhs} {rhs}
 			add abbreviation for {lhs} to {rhs}.  If {lhs} already
@@ -666,7 +669,11 @@ used in a |filetype-plugin| file.  Example for a C plugin file: >
 			contain spaces.
 
 						*:una* *:unabbreviate*
-:una[bbreviate] {lhs}	remove abbreviation for {lhs} from the list
+:una[bbreviate] {lhs}	Remove abbreviation for {lhs} from the list.  If none
+			is found, remove abbreviations in which {lhs} matches
+			with the {rhs}.  This is done so that you can even
+			remove abbreviations after expansion.  To avoid
+			expansion insert a CTRL-V (type it twice).
 
 						*:norea* *:noreabbrev*
 :norea[bbrev] [lhs] [rhs]
@@ -889,6 +896,19 @@ command can take arguments, using the -nargs attribute. Valid cases are:
 
 Arguments are considered to be separated by (unescaped) spaces or Tabs in this
 context.
+
+Note that arguments are used as text, not as expressions.  Specifically,
+"s:var" will use the script-local variable in the script where the command was
+defined, not where it is invoked!  Example:
+    script1.vim: >
+	:let s:error = "None"
+	:command -nargs=1 Error echoerr <args>
+<   script2.vim: >
+	:source script1.vim
+	:let s:error = "Wrong!"
+	:Error s:error
+Executing script2.vim will result in "None" to be echoed.  Not what you
+intended!  Calling a function may be an alternative.
 
 Completion behavior				*:command-completion*
 							*E179* *E180* *E181*

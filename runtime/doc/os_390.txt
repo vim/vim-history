@@ -1,4 +1,4 @@
-*os_390.txt*    For Vim version 6.3b.  Last change: 2003 Jun 03
+*os_390.txt*    For Vim version 6.3.  Last change: 2003 Jun 03
 
 
 		  VIM REFERENCE MANUAL	  by Ralf Schandl

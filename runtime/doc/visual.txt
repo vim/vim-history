@@ -1,4 +1,4 @@
-*visual.txt*    For Vim version 6.3b.  Last change: 2004 Apr 24
+*visual.txt*    For Vim version 6.3.  Last change: 2004 Jun 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -41,17 +41,14 @@ highlighting in Visual mode.
 The 'virtualedit' option can be used to allow positioning the cursor to
 positions where there is no actual character.
 
-The highlighted text includes the character under the cursor.  On terminals
-where it is possible to make the cursor invisible the cursor position is
-also highlighted.  On terminals where this is not possible the cursor is
-displayed normally.  If your cursor cannot be made invisible and you want Vim
-to highlight the character under the cursor anyway, you could set the 't_cv'
-and 't_ci' options to something harmless, for example: >
-	:set t_cv=^[^[ t_ci=^[^[
+The highlighted text normally includes the character under the cursor.
+However, when the 'selection' option is set to "exclusive" and the cursor is
+after the Visual area, the character under the cursor is not included.
 
 With "v" the text before the start position and after the end position will
 not be highlighted.  However, All uppercase and non-alpha operators, except
-"~", will work on whole lines anyway.  See the list of operators below.
+"~" and "U", will work on whole lines anyway.  See the list of operators
+below.
 
 							*visual-block*
 With CTRL-V (blockwise Visual mode) the highlighted text will be a rectangle
@@ -115,13 +112,13 @@ gv			Start Visual mode with the same area as the previous
 			<S-LeftMouse> has to be used instead of <RightMouse>.
 
 							*<LeftRelease>*
-<LeftRelease>		This works like a <LeftMouse>, if it is not a
-			the same position as <LeftMouse>.  In an xterm you
-			won't see the selected area until the button is
-			released, unless there is access to the display where
-			the xterm is running (via the DISPLAY environment
-			variable or the -display argument).  Only when 'mouse'
-			option contains 'n' or 'a'.
+<LeftRelease>		This works like a <LeftMouse>, if it is not at
+			the same position as <LeftMouse>.  In an older version
+			of xterm you won't see the selected area until the
+			button is released, unless there is access to the
+			display where the xterm is running (via the DISPLAY
+			environment variable or the -display argument).  Only
+			when 'mouse' option contains 'n' or 'a'.
 
 If Visual mode is not active and the "v", "V" or CTRL-V is preceded with a
 count, the size of the previously highlighted area is used for a start.  You

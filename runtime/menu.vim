@@ -2,7 +2,7 @@
 " You can also use this as a start for your own set of menus.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2004 May 14
+" Last Change:	2004 May 26
 
 " Note that ":an" (short for ":anoremenu") is often used to make a menu work
 " in all modes and avoid side effects from mappings defined by the user.
@@ -133,6 +133,7 @@ an 10.620 &File.E&xit<Tab>:qa			:confirm qa<CR>
 " Visual mode without the +virtualedit feature.  They are pasted as if they
 " were characterwise instead.  Add to that some tricks to leave the cursor in
 " the right position, also for "gi".
+" Note: the same stuff appears in mswin.vim.
 if has("virtualedit")
   nnoremap <silent> <script> <SID>Paste :call <SID>Paste()<CR>
   func! <SID>Paste()

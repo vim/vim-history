@@ -1,20 +1,21 @@
 " Vim syntax file
 " Language:	    Screen Virtual Terminal Emulator/Manager Configuration File
-" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
-" URL:		    http://www.pcppopper.org/
-" Latest Revision:  2002-10-24
+" Maintainer:	    Nikolai Weibull <source@pcppopper.org>
+" URL:		    http://www.pcppopper.org/vim/syntax/pcp/screen/
+" Latest Revision:  2004-05-22
+" arch-tag:	    6a97fb8f-fc88-497f-9c55-e946734ba034
 
 if version < 600
-    syntax clear
+  syntax clear
 elseif exists("b:current_syntax")
-    finish
+  finish
 endif
 
 " comments
 syn region  screenComment	matchgroup=screenComment start="#" end="$" contains=screenTodo
 
 " todo
-syn keyword screenTodo		contained TODO FIXME
+syn keyword screenTodo		contained TODO FIXME XXX NOTE
 
 " string (can contain variables)
 syn region  screenString	matchgroup=screenString start='"' skip='\\"' end='"\|$' contains=screenVariable,screenSpecial
@@ -68,25 +69,25 @@ exec "syn sync minlines=" . b:screen_minlines
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_screen_syn_inits")
-    if version < 508
-	let did_screen_syn_inits = 1
-	command -nargs=+ HiLink hi link <args>
-    else
-	command -nargs=+ HiLink hi def link <args>
-    endif
+  if version < 508
+    let did_screen_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-    HiLink screenComment    Comment
-    HiLink screenTodo	    Todo
-    HiLink screenString	    String
-    HiLink screenLiteral    String
-    HiLink screenVariable   Identifier
-    HiLink screenBoolean    Boolean
-    HiLink screenNumbers    Number
-    HiLink screenSpecials   Special
-    HiLink screenCommands   Keyword
-    delcommand HiLink
+  HiLink screenComment    Comment
+  HiLink screenTodo	  Todo
+  HiLink screenString	  String
+  HiLink screenLiteral    String
+  HiLink screenVariable   Identifier
+  HiLink screenBoolean    Boolean
+  HiLink screenNumbers    Number
+  HiLink screenSpecials   Special
+  HiLink screenCommands   Keyword
+  delcommand HiLink
 endif
 
 let b:current_syntax = "screen"
 
-"  vim: set sw=4 sts=4:
+" vim: set sts=2 sw=2:

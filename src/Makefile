@@ -845,7 +845,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim63b
+VIMRTDIR = /vim63
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -2342,7 +2342,7 @@ APPDIR = $(VIMNAME).app
 RESDIR = $(APPDIR)/Contents/Resources
 # FIXME: i'm sure someone else can do something clever with grep
 # sed and version.h here
-VERSION = 6.3b
+VERSION = 6.3
 
 ### Common flags
 M4FLAGSX = $(M4FLAGS) -DAPP_EXE=$(VIMNAME) -DAPP_NAME=$(VIMNAME) \

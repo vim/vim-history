@@ -1,4 +1,4 @@
-*sign.txt*      For Vim version 6.3b.  Last change: 2004 Apr 29
+*sign.txt*      For Vim version 6.3.  Last change: 2004 May 22
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -16,7 +16,7 @@ Sign Support Features				*sign-support*
 ==============================================================================
 1. Introduction					*sign-intro* *signs*
 
-When a debugger or other IPE tool is driving an editor it needs to be able
+When a debugger or other IDE tool is driving an editor it needs to be able
 to give specific highlights which quickly tell the user useful information
 about the file. One example of this would be a debugger which had an icon
 in the left-hand column denoting a breakpoint. Another example might be an

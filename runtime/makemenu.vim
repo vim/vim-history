@@ -1,6 +1,6 @@
 " Script to define the syntax menu in synmenu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2004 May 04
+" Last Change:	2004 May 22
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/synmenu.vim
@@ -229,6 +229,7 @@ SynMenu L-Ma.Latte:latte
 SynMenu L-Ma.LDAP\ LDIF:ldif
 SynMenu L-Ma.Lex:lex
 SynMenu L-Ma.LFTP\ config:lftp
+SynMenu L-Ma.Libao:libao
 SynMenu L-Ma.LifeLines\ script:lifelines
 SynMenu L-Ma.Lilo:lilo
 SynMenu L-Ma.Lisp:lisp
@@ -264,6 +265,7 @@ SynMenu Me-NO.Modsim\ III:modsim3
 SynMenu Me-NO.Modula\ 2:modula2
 SynMenu Me-NO.Modula\ 3:modula3
 SynMenu Me-NO.Monk:monk
+SynMenu Me-NO.Mplayer\ config:mplayerconf
 SynMenu Me-NO.MOO:moo
 SynMenu Me-NO.MS-DOS/Windows.4DOS\ \.bat\ file:btm
 SynMenu Me-NO.MS-DOS/Windows.\.bat\/\.cmd\ file:dosbatch
@@ -340,6 +342,7 @@ SynMenu R-Sg.Robots\.txt:robots
 SynMenu R-Sg.RockLinux\ package\ desc\.:desc
 SynMenu R-Sg.Rpcgen:rpcgen
 SynMenu R-Sg.RPL/2:rpl
+SynMenu R-Sg.ReStructuredText:rst
 SynMenu R-Sg.RTF:rtf
 SynMenu R-Sg.Ruby:ruby
 SynMenu R-Sg.S-Lang:slang

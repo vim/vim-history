@@ -5554,7 +5554,7 @@ msgstr "zadejte :help<Enter>  èi <F1> pro nápovìdu"
 
 #: version.c:945
 msgid "type  :help version6<Enter>   for version info"
-msgstr "zadejte :help version6<Enter>  pro informace o verzi 6.0"
+msgstr "zadejte :help version6<Enter>  pro informace o verzi 6"
 
 #: version.c:948
 msgid "Running in Vi compatible mode"

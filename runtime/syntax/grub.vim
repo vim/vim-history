@@ -1,20 +1,21 @@
 " Vim syntax file
 " Language:	    GRUB Configuration File
-" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
-" URL:		    http://www.pcppopper.org/
-" Latest Revision:  2002-10-24
+" Maintainer:	    Nikolai Weibull <source@pcppopper.org>
+" URL:		    http://www.pcppopper.org/vim/syntax/pcp/grub/
+" Latest Revision:  2004-05-06
+" arch-tag:	    7a56ddd0-e551-44bc-b8c0-235fedbdf3c0
 
 if version < 600
-    syntax clear
+  syntax clear
 elseif exists("b:current_syntax")
-    finish
+  finish
 endif
 
 " comments
 syn region  grubComment	    display oneline start="^#" end="$" contains=grubTodo
 
 " todo
-syn keyword grubTodo	    contained TODO FIXME XXX
+syn keyword grubTodo	    contained TODO FIXME XXX NOTE
 
 " devices
 syn match   grubDevice	    display "(\([fh]d\d\|\d\+\|0x\x\+\)\(,\d\+\)\=\(,\l\)\=)"
@@ -49,36 +50,28 @@ syn match   grubColor	    "\<\(blink-\)\=dark-gray"
 " specials
 syn keyword grubSpecial	    saved
 
-
-if exists("grub_minlines")
-    let b:grub_minlines = grub_minlines
-else
-    let b:grub_minlines = 50
-endif
-exec "syn sync minlines=" . b:grub_minlines
-
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_grub_syn_inits")
-    if version < 508
-	let did_grub_syn_inits = 1
-	command -nargs=+ HiLink hi link <args>
-    else
-	command -nargs=+ HiLink hi def link <args>
-    endif
+  if version < 508
+    let did_grub_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-    HiLink grubComment	Comment
-    HiLink grubTodo	Todo
-    HiLink grubNumbers	Number
-    HiLink grubDevice	Identifier
-    HiLink grubBlock	Identifier
-    HiLink grubCommand	Keyword
-    HiLink grubColor	Identifier
-    HiLink grubSpecial	Special
-    delcommand HiLink
+  HiLink grubComment	Comment
+  HiLink grubTodo	Todo
+  HiLink grubNumbers	Number
+  HiLink grubDevice	Identifier
+  HiLink grubBlock	Identifier
+  HiLink grubCommand	Keyword
+  HiLink grubColor	Identifier
+  HiLink grubSpecial	Special
+  delcommand HiLink
 endif
 
 let b:current_syntax = "grub"
 
-" vim: set sts=4 sw=4:
+" vim: set sts=2 sw=2:

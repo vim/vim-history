@@ -1,16 +1,18 @@
 " Vim syntax file
-" Language:		Quake[1-3] Configuration File.
-" Maintainer:		Nikolai 'pcp' Weibull <da.box@home.se>
-" Latest Revision: 2002-07-31
-" Variables:	quake_is_quake1 - the syntax is to be used for quake1 configs
-"		quake_is_quake2 - the syntax is to be used for quake2 configs
-"		quake_is_quake3 - the syntax is to be used for quake3 configs
+" Language:	    Quake[1-3] Configuration File
+" Maintainer:	    Nikolai Weibull <source@pcppopper.org>
+" URL:		    http://www.pcppopper.org/vim/syntax/pcp/quake/
+" Latest Revision:  2004-05-22
+" arch-tag:	    a95793d7-cab3-4544-a78c-1cea47b5870b
+" Variables: 	quake_is_quake1 - the syntax is to be used for quake1 configs
+" 		quake_is_quake2 - the syntax is to be used for quake2 configs
+" 		quake_is_quake3 - the syntax is to be used for quake3 configs
 
 
 if version < 600
-	syntax clear
+  syntax clear
 elseif exists("b:current_syntax")
-	finish
+  finish
 endif
 
 
@@ -18,19 +20,19 @@ endif
 " For version 5.x: Set it globally
 " For version 6.x: Set it locally
 if version >= 600
-	command -nargs=1 SetIsk setlocal iskeyword=<args>
+  command -nargs=1 SetIsk setlocal iskeyword=<args>
 else
-	command -nargs=1 SetIsk set iskeyword=<args>
+  command -nargs=1 SetIsk set iskeyword=<args>
 endif
 SetIsk 48-57,65-90,97-122,+,-,_
 delcommand SetIsk
 
 
 " comments
-syn region	quakeComment	display oneline start="//" end="$" keepend contains=quakeTodo
+syn region	quakeComment	display oneline start="//" end="$" end=";" keepend contains=quakeTodo
 
 " todo
-syn keyword	quakeTodo	contained TODO FIXME XXX
+syn keyword	quakeTodo	contained TODO FIXME XXX NOTE
 
 " string (can contain numbers (which should be hilighted as such)
 syn region	quakeString	display oneline start=+"+ skip=+\\"+ end=+"\|$+ contains=quakeNumbers,@quakeCommands
@@ -131,32 +133,30 @@ syn case match
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_screen_syn_inits")
-	if version < 508
-		let did_screen_syn_inits = 1
-		command -nargs=+ HiLink hi link <args>
-	else
-		command -nargs=+ HiLink hi def link <args>
-	endif
+  if version < 508
+    let did_screen_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-	HiLink quakeComment	Comment
-	HiLink quakeTodo	Todo
-	HiLink quakeString	String
-	HiLink quakeNumber	Number
-	HiLink quakeOctal	Number
-	HiLink quakeOctalZero	Number
-	HiLink quakeFloat	Number
-	HiLink quakeOctalError	Error
-	HiLink quakeCommand	quakeCommands
-	HiLink quake1Command	quakeCommands
-	HiLink quake12Command	quakeCommands
-	HiLink quake2Command	quakeCommands
-	HiLink quake23Command	quakeCommands
-	HiLink quake3Command	quakeCommands
-	HiLink quakeCommands	Keyword
+  HiLink quakeComment 	Comment
+  HiLink quakeTodo 	Todo
+  HiLink quakeString 	String
+  HiLink quakeNumber	Number
+  HiLink quakeOctal	Number
+  HiLink quakeOctalZero	Number
+  HiLink quakeFloat	Number
+  HiLink quakeOctalError	Error
+  HiLink quakeCommand	quakeCommands
+  HiLink quake1Command	quakeCommands
+  HiLink quake12Command	quakeCommands
+  HiLink quake2Command	quakeCommands
+  HiLink quake23Command	quakeCommands
+  HiLink quake3Command	quakeCommands
+  HiLink quakeCommands	Keyword
 
-	delcommand HiLink
+  delcommand HiLink
 endif
 
-
-
-" vim: set sts=0 sw=8 ts=8:
+" vim: set sts=2 sw=2:

@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.3b.  Last change: 2004 May 12
+*starting.txt*  For Vim version 6.3.  Last change: 2004 May 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -539,12 +539,14 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		restoring the session on login.  See |gui-gnome-session|
 		{not in Vi}
 
--P {parent-title}					*-P* *MDI*
+-P {parent-title}				*-P* *MDI* *E671* *E672*
 		Win32 only: Specify the title of the parent application.  When
 		possible, Vim will run in an MDI window inside the
 		application.
 		{parent-title} must appear in the window title of the parent
 		application.  Make sure that it is specific enough.
+		Note that the implementation is still primitive.  It won't
+		work with all applications and the menu doesn't work.
 
 -nb							*-nb*
 -nb={fname}
