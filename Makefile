@@ -431,6 +431,7 @@ SRC_DOS =	\
 		src/uninstal.c \
 		src/vim.def \
 		src/vim.rc \
+		src/gvim.exe.mnf \
 		src/vim16.def \
 		src/vim16.rc \
 		src/vimrun.c \
