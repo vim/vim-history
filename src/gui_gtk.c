@@ -170,14 +170,8 @@ typedef int GtkWidget;
 #endif /* HAVE_GTK2 */
 
 static void entry_activate_cb(GtkWidget *widget, gpointer data);
-#ifndef HAVE_GTK2 /* crack alert! */
 static void entry_changed_cb(GtkWidget *entry, GtkWidget *dialog);
-#endif
-static void find_direction_cb(GtkWidget *widget, gpointer data);
 static void find_replace_cb(GtkWidget *widget, gpointer data);
-static void wword_match_cb(GtkWidget *widget, gpointer data);
-static void mcase_match_cb(GtkWidget *widget, gpointer data);
-static void repl_dir_cb(GtkWidget *widget, gpointer data);
 
 #if defined(FEAT_TOOLBAR) && defined(HAVE_GTK2)
 /*
@@ -2514,10 +2508,8 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     sensitive = (entry_text != NULL && entry_text[0] != NUL);
     if (entry_text != NULL)
 	gtk_entry_set_text(GTK_ENTRY(frdp->what), (char *)entry_text);
-#ifndef HAVE_GTK2
     gtk_signal_connect(GTK_OBJECT(frdp->what), "changed",
 		       GTK_SIGNAL_FUNC(entry_changed_cb), frdp->dialog);
-#endif
     gtk_signal_connect_after(GTK_OBJECT(frdp->what), "key_press_event",
 				 GTK_SIGNAL_FUNC(find_key_press_event),
 				 (gpointer) frdp);
@@ -2561,8 +2553,6 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     frdp->wword = gtk_check_button_new_with_label(CONV(_("Match whole word only")));
     gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(frdp->wword),
 							(gboolean)wword);
-    gtk_signal_connect(GTK_OBJECT(frdp->wword), "clicked",
-		       GTK_SIGNAL_FUNC(wword_match_cb), NULL);
     if (do_replace)
 	gtk_table_attach(GTK_TABLE(table), frdp->wword, 0, 1023, 2, 3,
 			 GTK_FILL, GTK_EXPAND, 2, 2);
@@ -2574,8 +2564,6 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     frdp->mcase = gtk_check_button_new_with_label(CONV(_("Match case")));
     gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(frdp->mcase),
 							     (gboolean)mcase);
-    gtk_signal_connect(GTK_OBJECT(frdp->mcase), "clicked",
-		       GTK_SIGNAL_FUNC(mcase_match_cb), NULL);
     if (do_replace)
 	gtk_table_attach(GTK_TABLE(table), frdp->mcase, 0, 1023, 3, 4,
 			 GTK_FILL, GTK_EXPAND, 2, 2);
@@ -2601,10 +2589,6 @@ find_replace_dialog_create(char_u *arg, int do_replace)
 			gtk_radio_button_group(GTK_RADIO_BUTTON(frdp->up)),
 			CONV(_("Down")));
     gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(frdp->down), TRUE);
-    gtk_signal_connect(GTK_OBJECT(frdp->down), "clicked",
-		       (do_replace) ? GTK_SIGNAL_FUNC(repl_dir_cb)
-				    : GTK_SIGNAL_FUNC(find_direction_cb),
-		       NULL);
 #ifdef HAVE_GTK2
     gtk_container_set_border_width(GTK_CONTAINER(vbox), 2);
 #endif
@@ -2850,70 +2834,6 @@ entry_activate_cb(GtkWidget *widget, gpointer data)
 }
 
 /*
- * The following are used to synchronize the direction setting
- * between the search and the replace dialog.
- */
-/*ARGSUSED*/
-    static void
-find_direction_cb(GtkWidget * widget, gpointer data)
-{
-    gboolean direction_down = GTK_TOGGLE_BUTTON(widget)->active;
-
-    if (repl_widgets.dialog)
-    {
-	GtkWidget *w;
-	w = direction_down ? repl_widgets.down : repl_widgets.up;
-
-	if (!GTK_TOGGLE_BUTTON(w)->active)
-	    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(w), TRUE);
-    }
-}
-
-/*ARGSUSED*/
-    static void
-repl_dir_cb(GtkWidget *widget, gpointer data)
-{
-    gboolean direction_down = GTK_TOGGLE_BUTTON(widget)->active;
-
-    if (find_widgets.dialog)
-    {
-	GtkWidget *w;
-	w = direction_down ? find_widgets.down : find_widgets.up;
-
-	if (!GTK_TOGGLE_BUTTON(w)->active)
-	    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(w), TRUE);
-    }
-}
-
-/*ARGSUSED*/
-    static void
-wword_match_cb(GtkWidget * widget, gpointer data)
-{
-    gboolean active = GTK_TOGGLE_BUTTON(widget)->active;
-
-    if (find_widgets.dialog)
-	gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(find_widgets.wword),
-				    active);
-    if (repl_widgets.dialog)
-	gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(repl_widgets.wword),
-				    active);
-}
-
-/*ARGSUSED*/
-    static void
-mcase_match_cb(GtkWidget * widget, gpointer data)
-{
-    gboolean active = GTK_TOGGLE_BUTTON(widget)->active;
-
-    if (find_widgets.dialog)
-	gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(find_widgets.mcase),
-				    active);
-    if (repl_widgets.dialog)
-	gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(repl_widgets.mcase),
-				    active);
-}
-
-/*
  * Syncing the find/replace dialogs on the fly is utterly useless crack,
  * and causes nothing but problems.  Please tell me a use case for which
  * you'd need both a find dialog and a find/replace one at the same time,
@@ -2922,7 +2842,6 @@ mcase_match_cb(GtkWidget * widget, gpointer data)
  * particularly evil incarnation of braindeadness, whatever; I'd much rather
  * see it extinguished from this planet.  Thanks for listening.  Sorry.
  */
-#ifndef HAVE_GTK2
     static void
 entry_changed_cb(GtkWidget * entry, GtkWidget * dialog)
 {
@@ -2939,31 +2858,15 @@ entry_changed_cb(GtkWidget * entry, GtkWidget * dialog)
     if (dialog == find_widgets.dialog)
     {
 	gtk_widget_set_sensitive(find_widgets.find, nonempty);
-	if (repl_widgets.dialog)
-	{
-	    gtk_widget_set_sensitive(repl_widgets.find, nonempty);
-	    gtk_widget_set_sensitive(repl_widgets.replace, nonempty);
-	    gtk_widget_set_sensitive(repl_widgets.all, nonempty);
-	    if (strcmp(entry_text,
-		       gtk_entry_get_text(GTK_ENTRY(repl_widgets.what))))
-		gtk_entry_set_text(GTK_ENTRY(repl_widgets.what), entry_text);
-	}
     }
+
     if (dialog == repl_widgets.dialog)
     {
 	gtk_widget_set_sensitive(repl_widgets.find, nonempty);
 	gtk_widget_set_sensitive(repl_widgets.replace, nonempty);
 	gtk_widget_set_sensitive(repl_widgets.all, nonempty);
-	if (find_widgets.dialog)
-	{
-	    gtk_widget_set_sensitive(find_widgets.find, nonempty);
-	    if (strcmp(entry_text,
-		       gtk_entry_get_text(GTK_ENTRY(find_widgets.what))))
-		gtk_entry_set_text(GTK_ENTRY(find_widgets.what), entry_text);
-	}
     }
 }
-#endif
 
 /*
  * ":helpfind"
