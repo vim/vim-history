@@ -218,6 +218,7 @@
 #include <tt2def.h>
 #include <jpidef.h>
 #include <rms.h>
+#include <trmdef.h>
 #include <string.h>
 #include <starlet.h>
 #include <socket.h>

@@ -53,10 +53,9 @@ static TT_MODE	orgmode;
 static short	iochan;			/* TTY I/O channel */
 static short	iosb[4];		/* IO status block */
 
-int vms_match_num = 0;
-int vms_match_alloced = 0;
-int vms_match_free = 0;
-char_u **vms_fmatch = NULL;
+static int vms_match_num = 0;
+static int vms_match_free = 0;
+static char_u **vms_fmatch = NULL;
 static char *Fspec_Rms;		       /* rms file spec, passed implicitly between routines */
 
 
@@ -145,7 +144,7 @@ set_tty(int row, int col)
 	return;
 }
 
-static TT_MODE
+    static TT_MODE
 get_tty(void)
 {
 
@@ -299,24 +298,30 @@ vms_sys_status(int status)
     int
 vms_read(char *inbuf, size_t nbytes)
 {
-    int     status, function, len;
-    float   wait = 0.05;
-    TT_MODE tt_mode;
+    int		status, function, len;
+    TT_MODE	tt_mode;
+    ITEM	itmlst[2];
+    static long trm_mask[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
 
     /* whatever happened earlier we need an iochan here */
     if (!iochan)
-       tt_mode = get_tty();
+	tt_mode = get_tty();
 
-    function = (IO$_READLBLK | IO$M_NOECHO | IO$M_TIMED | IO$M_ESCAPE);
+    vul_item(&itmlst[0], 0, TRM$_MODIFIERS,
+	    (char *)(TRM$M_TM_ESCAPE | TRM$M_TM_NOECHO | TRM$M_TM_NOEDIT |
+	       TRM$M_TM_NOFILTR | TRM$M_TM_NORECALL | TRM$M_TM_TRMNOECHO), 0);
+    vul_item(&itmlst[1], sizeof(trm_mask), TRM$_TERM, (char *)&trm_mask, 0);
+
+    function = (IO$_READLBLK | IO$M_EXTEND);
     memset(inbuf, 0, nbytes);
 
     while (1)
     {
-	status = sys$qiow(0,iochan,function,&iosb,0,0,inbuf,nbytes-1,0,0,0,0);
+	status = sys$qiow(0, iochan, function, &iosb, 0, 0, inbuf, nbytes - 1,
+					       0, 0, &itmlst, sizeof(itmlst));
 	len = strlen(inbuf);
 	if (len > 0)
 	    break;
-	lib$wait(&wait);
     }
     return len;
 }
@@ -328,11 +333,12 @@ vms_read(char *inbuf, size_t nbytes)
  * Returns:  1 - continue finding matches
  *	     0 - stop trying to find any further mathces
  */
-static int
+    static int
 vms_wproc(char *name, int val)
 {
     int i;
     int nlen;
+    static int vms_match_alloced = 0;
 
     if (val != DECC$K_FILE) /* Directories and foreing non VMS files are not counting  */
 	return 1;
