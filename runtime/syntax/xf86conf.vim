@@ -1,89 +1,198 @@
-" Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
-" URL		: http://www.pcppopper.org/
-" Revised on	: Thu, 14 Feb 2002 20:42:46 +0100
-" Language	: XFree86 Configuration File
+" Vim syntax file
+" This is a GENERATED FILE. Please always refer to source file at the URI below.
+" Language: XF86Config (XFree86 configuration file)
+" Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
+" Last Change: 2002 Mar 24
+" URI: http://physics.muni.cz/~yeti/download/syntax/xf86conf.vim
+" Required Vim Version: 6.0
+"
+" Options: let xf86conf_xfree86_version = 3 or 4
+"              to force XFree86 3.x or 4.x XF86Config syntax
 
-if version < 600
-    syntax clear
-elseif exists("b:current_syntax")
+
+" Setup
+if version >= 600
+  " Quit when a syntax file was already loaded
+  if exists("b:current_syntax")
     finish
-endif
-
-" comments
-syn region  xf86confComment	matchgroup=xf86confComment start="#" end="$" contains=xf86confTodo
-
-" todo
-syn keyword xf86confTodo	contained TODO FIXME
-
-" strings
-syn region  xf86confString	matchgroup=xf86confString start='"' skip='\\\\\|\\"' end='"' contains=xf86confSection,xf86confBoolean,xf86confFreq
-
-" booleans
-syn case ignore
-syn keyword xf86confBoolean	contained on true yes off false no
-syn case match
-
-" frequencies
-syn keyword xf86confFreq	contained Hz k kHz M MHz
-
-" numbers
-syn case ignore
-syn match   xf86confInt		display "\<\d\+\>"
-syn match   xf86confHex		display "\<0x\x\+\>"
-syn match   xf86confOctal	display "\<0\o\+\>"
-syn match   xf86confFloat	display "\<\d\+\.\d*\>"
-syn match   xf86confOctalError	display "\<0\o*[89]\d*"
-syn case match
-
-" keywords
-syn keyword xf86confKeyword	Section EndSection Subsection EndSubsection
-
-" sections
-syn keyword xf86confSection	contained Files ServerFlags Module InputDevice
-syn keyword xf86confSection	contained Device VideoAdapter Monitor Modes
-syn keyword xf86confSection	contained Screen ServerLayout DRI Vendor Display
-
-" other
-syn keyword xf86confOption	Identifier Driver BusID Screen Chipset Ramdac Dacspeed Clocks ClockChip VideoRam BiosBase MemBase IOBase ChipID ChipRev
-syn keyword xf86confOption	TextClockFreq VendorName ModelName HorizSync VertRefresh DisplaySize Gamma UseModes Mode DotClock HTimings VTimings
-syn keyword xf86confOption	Flags HSkew VScan ModeLine Device Monitor VideoAdaptor DefaultDepth DefaultFbBpp Depth FbBpp Weight Virtual ViewPort
-syn keyword xf86confOption	Visual Black White Screen InputDevice Option Load BoardName Modes RgbPath FontPath ModulePath
-
-if exists("xf86conf_minlines")
-    let b:xf86conf_minlines = xf86conf_minlines
+  endif
 else
-    let b:xf86conf_minlines = 10
+  " Croak when an old Vim is sourcing us.
+  echo "Sorry, but this syntax file relies on Vim 6 features.  Either upgrade Vim or use a version of " . expand("<sfile>:t:r") . " syntax file appropriate for Vim " . version/100 . "." . version %100 . "."
+  finish
 endif
-exec "syn sync minlines=" . b:xf86conf_minlines
 
-" Define the default highlighting.
-" For version 5.7 and earlier: only when not done already
-" For version 5.8 and later: only when an item doesn't have highlighting yet
-if version >= 508 || !exists("did_xf86conf_syn_inits")
-    if version < 508
-	let did_xf86conf_syn_inits = 1
-	command -nargs=+ HiLink hi link <args>
-    else
-	command -nargs=+ HiLink hi def link <args>
-    endif
-
-    HiLink xf86confComment	Comment
-    HiLink xf86confTodo		Todo
-    HiLink xf86confString	String
-    HiLink xf86confBoolean	Boolean
-    HiLink xf86confFreq		Number
-    HiLink xf86confInt		Number
-    HiLink xf86confHex		Number
-    HiLink xf86confOctal	Number
-    HiLink xf86confFloat	Number
-    HiLink xf86confOctalError	Error
-    HiLink xf86confKeyword	Keyword
-    HiLink xf86confSection	Type
-    HiLink xf86confOption	Type
-    delcommand HiLink
+if !exists("b:xf86conf_xfree86_version")
+  if exists("xf86conf_xfree86_version")
+    let b:xf86conf_xfree86_version = xf86conf_xfree86_version
+  else
+    let b:xf86conf_xfree86_version = 4
+  endif
 endif
+
+syn case ignore
+
+" Comments
+syn match xf86confComment "#.*$" contains=xf86confTodo
+syn case match
+syn keyword xf86confTodo FIXME TODO XXX NOT contained
+syn case ignore
+syn match xf86confTodo "???" contained
+
+" Sectioning errors
+syn keyword xf86confSectionError Section contained
+syn keyword xf86confSectionError EndSection
+syn keyword xf86confSubSectionError SubSection
+syn keyword xf86confSubSectionError EndSubSection
+syn keyword xf86confModeSubSectionError Mode
+syn keyword xf86confModeSubSectionError EndMode
+syn cluster xf86confSectionErrors contains=xf86confSectionError,xf86confSubSectionError,xf86confModeSubSectionError
+
+" Values
+if b:xf86conf_xfree86_version >= 4
+  syn region xf86confString start=+"+ skip=+\\\\\|\\"+ end=+"+ contained contains=xf86confSpecialChar,xf86confConstant,xf86confOptionName oneline keepend nextgroup=xf86confValue skipwhite
+else
+  syn region xf86confString start=+"+ skip=+\\\\\|\\"+ end=+"+ contained contains=xf86confSpecialChar,xf86confOptionName oneline keepend
+endif
+syn match xf86confSpecialChar "\\\d\d\d\|\\." contained
+syn match xf86confDecimalNumber "\(\s\|-\)\zs\d*\.\=\d\+\>"
+syn match xf86confFrequency "\(\s\|-\)\zs\d\+\.\=\d*\(Hz\|k\|kHz\|M\|MHz\)"
+syn match xf86confOctalNumber "\<0\o\+\>"
+syn match xf86confOctalNumberError "\<0\o\+[89]\d*\>"
+syn match xf86confHexadecimalNumber "\<0x\x\+\>"
+syn match xf86confValue "\s\+.*$" contained contains=xf86confComment,xf86confString,xf86confFrequency,xf86conf\w\+Number,xf86confConstant
+syn keyword xf86confOption Option nextgroup=xf86confString skipwhite
+syn match xf86confModeLineValue "\"[^\"]\+\"\(\_s\+[0-9.]\+\)\{9}" nextgroup=xf86confSync skipwhite skipnl
+
+" Sections and subsections
+if b:xf86conf_xfree86_version >= 4
+  " sections
+  syn region xf86confSection matchgroup=xf86confSectionDelim start="^\s*Section\s\+\"\(Files\|Server[_ ]*Flags\|Input[_ ]*Device\|Device\|Video[_ ]*Adaptor\|Server[_ ]*Layout\|DRI\|Vendor\|Keyboard\|Pointer\)\"" end="^\s*EndSection\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confComment,xf86confOption,xf86confKeyword,xf86confSectionError
+  syn region xf86confSectionModule matchgroup=xf86confSectionDelim start="^\s*Section\s\+\"Module\"" end="^\s*EndSection\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confSubsectionAny,xf86confComment,xf86confOption,xf86confKeyword
+  syn region xf86confSectionMonitor matchgroup=xf86confSectionDelim start="^\s*Section\s\+\"Monitor\"" end="^\s*EndSection\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confSubsectionMode,xf86confModeLine,xf86confComment,xf86confOption,xf86confKeyword
+  syn region xf86confSectionModes matchgroup=xf86confSectionDelim start="^\s*Section\s\+\"Modes\"" end="^\s*EndSection\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confSubsectionMode,xf86confModeLine,xf86confComment
+  syn region xf86confSectionScreen matchgroup=xf86confSectionDelim start="^\s*Section\s\+\"Screen\"" end="^\s*EndSection\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confSubsectionDisplay,xf86confComment,xf86confOption,xf86confKeyword
+  " subsections
+  syn region xf86confSubSectionAny matchgroup=xf86confSectionDelim start="^\s*SubSection\s\+\"[^\"]\+\"" end="^\s*EndSubSection\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confComment,xf86confOption,xf86confKeyword,@xf86confSectionErrors
+  syn region xf86confSubSectionMode matchgroup=xf86confSectionDelim start="^\s*Mode\s\+\"[^\"]\+\"" end="^\s*EndMode\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confComment,xf86confKeyword,@xf86confSectionErrors
+  syn region xf86confSubSectionDisplay matchgroup=xf86confSectionDelim start="^\s*SubSection\s\+\"Display\"" end="^\s*EndSubSection\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confComment,xf86confOption,xf86confKeyword,@xf86confSectionErrors
+else
+  " sections
+  syn region xf86confSection matchgroup=xf86confSectionDelim start="^\s*Section\s\+\"\(Files\|Server[_ ]*Flags\|Device\|Keyboard\|Pointer\)\"" end="^\s*EndSection\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confComment,xf86confOptionName,xf86confOption,xf86confKeyword
+  syn region xf86confSectionMX matchgroup=xf86confSectionDelim start="^\s*Section\s\+\"\(Module\|Xinput\)\"" end="^\s*EndSection\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confSubsectionAny,xf86confComment,xf86confOptionName,xf86confOption,xf86confKeyword
+  syn region xf86confSectionMonitor matchgroup=xf86confSectionDelim start="^\s*Section\s\+\"Monitor\"" end="^\s*EndSection\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confSubsectionMode,xf86confModeLine,xf86confComment,xf86confOptionName,xf86confOption,xf86confKeyword
+  syn region xf86confSectionScreen matchgroup=xf86confSectionDelim start="^\s*Section\s\+\"Screen\"" end="^\s*EndSection\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confSubsectionDisplay,xf86confComment,xf86confOptionName,xf86confOption,xf86confKeyword
+  " subsections
+  syn region xf86confSubSectionAny matchgroup=xf86confSectionDelim start="^\s*SubSection\s\+\"[^\"]\+\"" end="^\s*EndSubSection\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confComment,xf86confOptionName,xf86confOption,xf86confKeyword,@xf86confSectionErrors
+  syn region xf86confSubSectionMode matchgroup=xf86confSectionDelim start="^\s*Mode\s\+\"[^\"]\+\"" end="^\s*EndMode\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confComment,xf86confOptionName,xf86confOption,xf86confKeyword,@xf86confSectionErrors
+  syn region xf86confSubSectionDisplay matchgroup=xf86confSectionDelim start="^\s*SubSection\s\+\"Display\"" end="^\s*EndSubSection\>" skip="#.*$\|\"[^\"]*\"" contains=xf86confComment,xf86confOptionName,xf86confOption,xf86confKeyword,@xf86confSectionErrors
+endif
+
+" Options
+if b:xf86conf_xfree86_version >= 4
+  command -nargs=+ Xf86confdeclopt syn keyword xf86confOptionName <args> contained
+else
+  command -nargs=+ Xf86confdeclopt syn keyword xf86confOptionName <args> contained nextgroup=xf86confValue,xf86confComment skipwhite
+endif
+
+Xf86confdeclopt 18bitBus Accel AllowMouseOpenFail AllowNonLocalModInDev AllowNonLocalXvidtune
+Xf86confdeclopt AlwaysCore AutoRepeat BaudRate BeamTimeout Beep BlankTime BlockWrite
+Xf86confdeclopt ButtonNumber Buttons ButtonThreshold CacheLines ChordMiddle ClearDTR
+Xf86confdeclopt ClearDTS ClickMode ColorKey Composite CompositeSync CoreKeyboard CorePointer
+Xf86confdeclopt CrtScreen CyberShadow Dac6Bit DacSpeed DataBits DDC Debug DeltaX DeltaY
+Xf86confdeclopt Device DeviceName DisableModInDev DisableVidModeExtension DontZap DontZoom DoubleScan
+Xf86confdeclopt DozeMode DozeScan DozeTime DPMS DualCount EarlyRasPrecharge Emulate3Buttons
+Xf86confdeclopt Emulate3Timeout EnterCount EstimateSizesAggressively ExternDisp FastDram
+Xf86confdeclopt FifoAggresive FifoConservative FifoModerate FireGL3000 FixPanelSize FlipXY
+Xf86confdeclopt FlowControl FPClock16 FPClock24 FPClock32 FPClock8 FpmVRAM FrameBufferWC
+Xf86confdeclopt HistorySize HWClocks HWCursor Interlace InternDisp LateRasPrecharge LcdCenter
+Xf86confdeclopt LCDClock Linear MaxX MaxY MGASDRAM MinX MinY MMIO MMIOCache MTTR NoAccel
+Xf86confdeclopt NoAllowMouseOpenFail NoAllowNonLocalModInDev NoAllowNonLocalXvidtune
+Xf86confdeclopt NoBlockWrite NoCompositeSync NoCrtScreen NoCyberShadow NoDac6Bit NoDDC
+Xf86confdeclopt NoDebug NoDisableModInDev NoDisableVidModeExtension NoDontZap NoDontZoom
+Xf86confdeclopt NoFireGL3000 NoFixPanelSize NoFpmVRAM NoFrameBufferWC NoHWClocks NoHWCursor
+Xf86confdeclopt NoLcdCenter NoLinear NoMGASDRAM NoMMIO NoMMIOCache NoOverClockMem NoOverlay
+Xf86confdeclopt NoPC98 NoPciBurst NoPciRetry NoPM NoProbeClock NoShadowFb NoShowCache
+Xf86confdeclopt NoSlowEDODRAM NoSTN NoStretch NoSuspendHack NoSWCursor NoTexturedVideo
+Xf86confdeclopt NoTrapSignals NoUseFBDev NoUseModeline NoUseVclk1 NoVTSysReq NvAGP OffTime
+Xf86confdeclopt Origin OverClockMem Overlay Parity PC98 PciBurst PCIBurst PciRetry Pixmap PM
+Xf86confdeclopt PressDur PressPitch PressVol ProbeClocks Protocol PWMActive PWMSleep ReleaseDur
+Xf86confdeclopt ReleasePitch ReportingMode Resolution RGBBits Rotate SampleRate ScreenNumber
+Xf86confdeclopt SendCoreEvents SendDragEvents SetLcdClk SetMClk SetRefClk ShadowFb ShowCache
+Xf86confdeclopt SleepMode SleepScan SleepTime SlowDram SlowEDODRAM StandbyTime STN StopBits
+Xf86confdeclopt Stretch SuspendHack SuspendTime SWCursor SyncOnGreen TexturedVideo Tilt TouchTime
+Xf86confdeclopt TopX TopY BottomX BottomY KeepShape Port DebugLevel Serial Threshold
+Xf86confdeclopt TrapSignals USB UseBIOS UseFBDev UseModeline UseVclk1 VideoKey Vmin VTime VTInit
+Xf86confdeclopt VTSysReq XaaNoScanlineCPUToScreenColorExpandFill XaaNoScanlineImageWriteRect
+Xf86confdeclopt XkbCompat XkbDisable XkbGeometry XkbKeycodes XkbLayout XkbModel XkbOptions
+Xf86confdeclopt XkbKeymap XkbRules XkbSymbols XkbTypes XkbVariant XLeds ZAxisMapping
+Xf86confdeclopt LeftAlt RightAlt RightCtl ScrollLock ServerNumLock
+
+delcommand Xf86confdeclopt
+
+" Keywords
+syn keyword xf86confKeyword Device Driver FontPath Group Identifier Load ModelName ModulePath Monitor RGBPath VendorName VideoAdaptor Visual nextgroup=xf86confComment,xf86confString skipwhite
+syn keyword xf86confKeyword BiosBase Black BoardName BusID ChipID ChipRev Chipset nextgroup=xf86confComment,xf86confValue
+syn keyword xf86confKeyword ClockChip Clocks DacSpeed DefaultDepth DefaultFbBpp nextgroup=xf86confComment,xf86confValue
+syn keyword xf86confKeyword DefaultColorDepth nextgroup=xf86confComment,xf86confValue
+syn keyword xf86confKeyword Depth DisplaySize DotClock FbBpp Flags Gamma HorizSync nextgroup=xf86confComment,xf86confValue
+syn keyword xf86confKeyword Hskew HTimings InputDevice IOBase MemBase Mode nextgroup=xf86confComment,xf86confValue
+syn keyword xf86confKeyword Modes Ramdac Screen TextClockFreq UseModes VendorName nextgroup=xf86confComment,xf86confValue
+syn keyword xf86confKeyword VertRefresh VideoRam ViewPort Virtual VScan VTimings nextgroup=xf86confComment,xf86confValue
+syn keyword xf86confKeyword Weight White nextgroup=xf86confComment,xf86confValue
+syn keyword xf86confModeLine ModeLine nextgroup=xf86confComment,xf86confModeLineValue skipwhite skipnl
+
+" Constants
+if b:xf86conf_xfree86_version >= 4
+  syn keyword xf86confConstant true false on off yes no contained
+else
+  syn keyword xf86confConstant Meta Compose Control
+endif
+syn keyword xf86confConstant StaticGray GrayScale StaticColor PseudoColor TrueColor DirectColor contained
+syn keyword xf86confConstant Absolute RightOf LeftOf Above Below Relative StaticGray GrayScale StaticColor PseudoColor TrueColor DirectColor contained
+syn match xf86confSync "\(\s\+[+-][CHV]_*Sync\)\+" contained
+
+" Synchronization
+if b:xf86conf_xfree86_version >= 4
+  syn sync match xf86confSyncSection grouphere xf86confSection "^\s*Section\s\+\"\(Files\|Server[_ ]*Flags\|Input[_ ]*Device\|Device\|Video[_ ]*Adaptor\|Server[_ ]*Layout\|DRI\|Vendor\|Keyboard\|Pointer\)\""
+  syn sync match xf86confSyncSectionModule grouphere xf86confSectionModule "^\s*Section\s\+\"Module\""
+  syn sync match xf86confSyncSectionModes groupthere xf86confSectionModes "^\s*Section\s\+\"Modes\""
+else
+  syn sync match xf86confSyncSection grouphere xf86confSection "^\s*Section\s\+\"\(Files\|Server[_ ]*Flags\|Device\|Keyboard\|Pointer\)\""
+  syn sync match xf86confSyncSectionMX grouphere xf86confSectionMX "^\s*Section\s\+\"\(Module\|Xinput\)\""
+endif
+syn sync match xf86confSyncSectionMonitor groupthere xf86confSectionMonitor "^\s*Section\s\+\"Monitor\""
+syn sync match xf86confSyncSectionScreen groupthere xf86confSectionScreen "^\s*Section\s\+\"Screen\""
+syn sync match xf86confSyncEndSection groupthere NONE "^\s*End_*Section\s*$"
+
+" Define the default highlighting
+hi def link xf86confComment			Comment
+hi def link xf86confTodo			Todo
+hi def link xf86confSectionDelim		Statement
+hi def link xf86confOptionName			Identifier
+
+hi def link xf86confSectionError		xf86confError
+hi def link xf86confSubSectionError		xf86confError
+hi def link xf86confModeSubSectionError		xf86confError
+hi def link xf86confOctalNumberError		xf86confError
+hi def link xf86confError			Error
+
+hi def link xf86confOption			xf86confKeyword
+hi def link xf86confModeLine			xf86confKeyword
+hi def link xf86confKeyword			Type
+
+hi def link xf86confDecimalNumber		xf86confNumber
+hi def link xf86confOctalNumber			xf86confNumber
+hi def link xf86confHexadecimalNumber		xf86confNumber
+hi def link xf86confFrequency			xf86confNumber
+hi def link xf86confModeLineValue		Constant
+hi def link xf86confNumber			Constant
+
+hi def link xf86confSync			xf86confConstant
+hi def link xf86confConstant			Special
+hi def link xf86confSpecialChar			Special
+hi def link xf86confString			String
+
+hi def link xf86confValue			Constant
 
 let b:current_syntax = "xf86conf"
-
-" vim: set sw=4 sts=4:
-

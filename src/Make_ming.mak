@@ -323,7 +323,7 @@ INCL = vim.h feature.h os_win32.h os_dos.h ascii.h keymap.h term.h macros.h \
 	structs.h regexp.h option.h ex_cmds.h proto.h globals.h farsi.h \
 	gui.h
 
-$(SRC) $(GUISRC): $(INCL)
+$(OBJ) $(GUIOBJ): $(INCL)
 
 if_ruby.c: dyn-ming.h
 

@@ -1,7 +1,7 @@
 " Vim support file to detect file types in scripts
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2002 Mar 09
+" Last change:	2002 Mar 21
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the type of file can be recognized by
@@ -200,6 +200,10 @@ else
     " CVS commit
   elseif s:line2 =~ '^CVS:'
     set ft=cvs
+
+    " Send-pr
+  elseif s:line1 =~ '^SEND-PR:'
+    set ft=sendpr
 
     " SNNS files
   elseif s:line1 =~ '^SNNS network definition file'

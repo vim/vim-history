@@ -1,6 +1,6 @@
 " Vim tutor support file
 " Author: Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:	2002 Mar 09
+" Last Change:	2002 Mar 19
 
 " This small source file is used for detecting if a translation of the
 " tutor file exist, i.e., a tutor.xx file, where xx is the language.
@@ -20,6 +20,7 @@ elseif strlen($LANG) > 0 && $LANG != "C"
 endif
 
 " The japanese tutor is available in two encodings, guess which one to use
+" The "sjis" one is actually "cp932", it doesn't matter for this text.
 if s:ext =~? '\.ja'
   if &enc =~ "euc"
     let s:ext = s:ext . ".euc"
@@ -32,11 +33,16 @@ endif
 " This segment is from the above lines and modified by
 " Mendel L Chan <beos@turbolinux.com.cn> for Chinese vim tutorial
 if s:ext =~? '\.zh'
-  if &enc =~ "euc"
-    let s:ext = s:ext . ".euc"
-  else
+  if &enc =~ 'big5\|cp950'
     let s:ext = s:ext . ".big5"
+  else
+    let s:ext = s:ext . ".euc"
   endif
+endif
+
+" The Polish tutor is available in two encodings, guess which one to use
+if s:ext =~? '\.pl' && &enc =~ 1250
+  let s:ext = s:ext . ".cp1250"
 endif
 
 if s:ext =~? '\.en'

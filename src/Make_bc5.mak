@@ -831,8 +831,8 @@ vimrun.exe: vimrun.c
 	$(CC) -WC -O1 -I$(INCLUDE) -L$(LIB) vimrun.c
 !endif
 
-
-$(OBJDIR)\bcc.cfg: Make_bc5.mak
+# The dependency on $(OBJDIR) is to have bcc.cfg generated each time.
+$(OBJDIR)\bcc.cfg: Make_bc5.mak $(OBJDIR)
   copy &&|
 	$(CFLAGS)
 	-L$(LIB)

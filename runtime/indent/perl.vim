@@ -2,10 +2,11 @@
 " Language:	Perl
 " Author:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
 " URL:		http://rgarciasuarez.free.fr/vim/indent/perl.vim
-" Last Change:	2002 Mar 09
+" Last Change:	2002 Mar 20
 
 " Suggestions and improvements by :
 "   Aaron J. Sherman (use syntax for hints)
+"   Artem Chuprina (play nice with folding)
 
 " TODO things that are not or not properly indented (yet) :
 " - Continued statements
@@ -26,6 +27,9 @@ let b:did_indent = 1
 
 " Is syntax highlighting active ?
 let b:indent_use_syntax = has("syntax") && &syntax == "perl"
+
+let s:cpo_save = &cpo
+set cpo-=C
 
 setlocal indentexpr=GetPerlIndent()
 setlocal indentkeys+=0=,0),0=or,0=and
@@ -129,6 +133,7 @@ function GetPerlIndent()
 	    \ || synid == "perlMatchStartEnd"
 	    \ || synid == "perlHereDoc"
 	    \ || synid =~ "^perlFiledescStatement"
+	    \ || synid =~ '^perl\(Sub\|BEGINEND\|If\)Fold'
 	let brace = strpart(line, bracepos, 1)
 	if brace == '(' || brace == '{'
 	  let ind = ind + &sw
@@ -141,7 +146,9 @@ function GetPerlIndent()
     let bracepos = matchend(cline, '^\s*[)}]')
     if bracepos != -1
       let synid = synIDattr(synID(v:lnum, bracepos, 0), "name")
-      if synid == "" || synid == "perlMatchStartEnd"
+      if synid == ""
+	    \ || synid == "perlMatchStartEnd"
+	    \ || synid =~ '^perl\(Sub\|BEGINEND\|If\)Fold'
 	let ind = ind - &sw
       endif
     endif
@@ -162,9 +169,12 @@ function GetPerlIndent()
   elseif line =~ '^\s*\(or\|and\)\>'
     let ind = ind - &sw
   endif
-
+  
   return ind
 
 endfunction
+
+let &cpo = s:cpo_save
+unlet s:cpo_save
 
 " vim:ts=8:sts=2:sw=2

@@ -12,7 +12,7 @@
 # comment the next line if you do not want to add Native Language Support
 !define HAVE_NLS
 
-!define VER_MINOR 1b
+!define VER_MINOR 1
 !define VER_MAJOR 6
 
 Name "Vim ${VER_MAJOR}.${VER_MINOR}"
@@ -295,7 +295,7 @@ SectionEnd
 Section Uninstall
 
 # Apparently $INSTDIR is set to the directory where the uninstaller is created.
-# Thus the "vim60" directory is included in it.
+# Thus the "vim61" directory is included in it.
 StrCpy $0 "$INSTDIR"
 
 ; If VisVim was installed, unregister the DLL

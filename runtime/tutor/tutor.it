@@ -1,5 +1,5 @@
 ===============================================================================
-=    Benvenuto  alla   G u i d a    all'Editor   V I M   -    Versione 1.4    =
+=    Benvenuto  alla   G u i d a    all'Editor   V I M   -    Versione 1.5    =
 ===============================================================================
 
      Vim è un Editor molto potente ed ha parecchi comandi, troppi per
@@ -32,7 +32,7 @@
 	     v
   1. Muovi il cursore sullo schermo finché non ti senti a tuo agio.
 
-  2. Tieni schiacciaal tasto "giù" (j) finché non ripete il movimento.
+  2. Tieni schiacciato il tasto "giù" (j) finché non si ripete il movimento.
 ---> Adesso sai come arrivare fino alla lezione successiva.
 
   3. Usando il tasto "giù" spostati alla Lezione 1.2.
@@ -61,7 +61,7 @@ NOTA: I tasti con le frecce fanno lo stesso servizio. Ma usando hjkl riesci
      qui.  Potrebbe essere:	vimtutor <INVIO>
      Normalmente  useresti:	vim tutor <INVIO>
 
----> 'vim' indica l'Editor vim, 'tutor' è il nome del file che tu vuoi editare.
+---> 'vim' indica l'Editor vim, 'tutor' è il nome del file che tu vuoi aprire.
 
   4. Se hai memorizzato questi comandi e ti senti pronto, esegui i passi
      da 1 a 3 per uscire e rientrare nell'Editor.  Poi muovi il cursore in giù
@@ -189,7 +189,7 @@ NOTA: Le lettere  dw  saranno visibili sull'ultima linea dello schermo mentre le
 
 	 [numero]   d	oggetto	    OPPURE     d [numero]   oggetto
   Dove:
-    numero - indica quante volte va eseguial comando (se omesso, vale 1).
+    numero - indica quante volte va eseguito il comando (se omesso, vale 1).
     d - è il comando di cancellazione.
     oggetto - indica dove il comando va applicato (lista qui sotto).
 
@@ -245,7 +245,7 @@ NOTA: Per amanti dell'avventura: premendo solo il tasto che indica l'oggetto
 
 ---> Correeggi gli errori ssu quuesta linea e riimpiazzali coon "undo".
 
-  8. Questi comandi sono molti utili. Ora spostati al Sommario della Lezione 2.
+  8. Questi comandi sono molto utili. Ora spostati al Sommario della Lezione 2.
 
 
 
@@ -264,7 +264,7 @@ NOTA: Per amanti dell'avventura: premendo solo il tasto che indica l'oggetto
 
        [numero]  comando  oggetto   OPPURE   comando  [numero]  oggetto
      Dove:
-       numero - indica quante volte va eseguial comando (se omesso, vale 1).
+       numero - indica quante volte va eseguito il comando (se omesso, vale 1).
        comando - è il comando da eseguire, ad es.  d  per [delete] cancellare.
        oggetto - indica dove il comando va applicato, ad es.  w [word] parola,
 		$ (fino alla fine della linea), etc.
@@ -546,7 +546,7 @@ NOTA: Questo è molto utile nel "debug" di un programma con parentesi errate!
      il file sarà una copia esatta di "tutor.it" al momento del salvataggio.
 
   5. Ora cancella il file battendo:   :!rm      TEST    [sotto Unix] oppure
-                                      :!delete  TEST    [sotto MSDOS]
+                                      :!del     TEST    [sotto MSDOS]
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -603,7 +603,7 @@ NOTA: Il file che tu richiedi è inserito a partire da dove si trova il cursore.
 
       Alcuni esempi utili sono [in MSDOS]:
 	  :!dir              -  visualizza lista directory
-	  :!delete NOMEFILE  -	cancella file NOMEFILE.
+	  :!del NOMEFILE     -	cancella file NOMEFILE.
 
   2.  :w NOMEFILE  scrive su disco il file che stai editando con nome NOMEFILE.
 
@@ -734,7 +734,8 @@ NOTA: Eviti così di battere   i   , l'ultimo carattere, il testo da aggiungere,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		       Lezione 7 : COMANDI DI AIUTO ON-LINE
+		       Lezione 7: COMANDI DI AIUTO ON-LINE
+
 
 		      ** Usa il sistema di help on-line **
 
@@ -747,36 +748,58 @@ NOTA: Eviti così di battere   i   , l'ultimo carattere, il testo da aggiungere,
   Batti   :q <INVIO>   per chiudere la finestra di help.
 
   Puoi trovare aiuto su quasi tutto, dando un argomento al comando ":help"
-  Prova questi:
+  Prova questi (non dimenticare di premere <INVIO>):
 
-  :help w <INVIO>
-  :help c_<T <INVIO>
-  :help insert-index <INVIO>
-
-
+	:help w
+	:help c_<T
+	:help insert-index
+	:help user-manual
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		       LEZIONE 8: PREPARA UNO SCRIPT INIZIALE
 
+			  ** Attiva le opzioni Vim **
+
+  Vim ha molte più opzioni di Vi, ma molte di esse sono predefinite inattive.
+  Per cominciare a usare più opzioni, devi preparare un file "vimrc".
+
+  1. Comincia a editare il file "vimrc", a seconda del tuo sistema operativo:
+	:edit ~/.vimrc			per Unix
+	:edit $VIM/_vimrc		per MS-Windows
+
+  2. Ora inserisci il file "vimrc" d'esempio:
+
+  	:read $VIMRUNTIME/vimrc_example.vim
+
+  3. Scrivi il file con:
+
+  	:write
+
+  La prossima volta che apri Vim, vedrai in uso la colorazione sintattica.
+  Puoi aggiungere a questo file "vimrc" tutte le tue impostazioni preferite.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   Qui finisce la Guida a Vim.  Il suo intento è di fornire una breve panoramica
   dell'Editor Vim, che ti consenta di usare l'Editor abbastanza facilmente.
   Questa guida è largamente incompleta poiché Vim ha moltissimi altri comandi.
+  Puoi anche leggere il manuale utente: ":help user-manual".
 
   Per ulteriore lettura e studio, raccomandiamo:
+	Vim - Vi Improved - di Steve Oualline     Editore: New Riders
+  Il primo libro completamente dedicato a Vim. Utile specie per principianti.
+  Contiene molti esempi e figure.
+  Vedi http://iccf-holland.org/click5.html
+
+  Quest'altro libro è più su Vi che su Vim, ma è pure consigliato:
 	Learning the Vi Editor - di Linda Lamb e Arnold Robbins
 	Editore: O'Reilly & Associates Inc.
   E' un buon libro per imparare quasi tutto ciò che puoi voler fare con Vi.
-  La sesta edizione inglese ha anche un capitolo dedicato al Vim.
   Ne esiste una traduzione italiana, basata su una vecchia edizione.
 
   Questa guida è stata scritta da Michael C. Pierce e Robert K. Ware,
   Colorado School of Mines, usando idee fornite da Charles Smith,
-  Colorado State University.
-  E-mail: bware@mines.colorado.edu.
-
+  Colorado State University - E-mail: bware@mines.colorado.edu
   Modificato per Vim da Bram Moolenaar.
   Segnalare refusi ad Antonio Colombo - E-mail: antonio.colombo@jrc.it
-
-
-
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

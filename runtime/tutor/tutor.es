@@ -591,7 +591,7 @@ NOTA: El fichero recuperado se sitúa a partir de la posición del cursor.
 
       Algunos ejemplos útiles son:
 	  :!dir - muestra el contenido de un directorio.
-	  :!delete NOMBRE_DE_FICHERO  -  borra el fichero NOMBRE_DE FICHERO.
+	  :!del NOMBRE_DE_FICHERO  -  borra el fichero NOMBRE_DE FICHERO.
 
   2.  :#,#w NOMBRE_DE _FICHERO  guarda desde las líneas # hasta la # en el
      fichero NOMBRE_DE_FICHERO.

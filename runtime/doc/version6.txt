@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.1b.  Last change: 2002 Mar 10
+*version6.txt*  For Vim version 6.1.  Last change: 2002 Mar 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -3498,26 +3498,33 @@ Added							*added-6.1*
 -----
 
 Syntax files:
-ampl	    AMPL (David Krief)
-ant	    Ant (Johannes Zellner)
-baan	    Baan (Her van de Vliert)
-cs	    C# (Johannes Zellner)
-lifelines   Lifelines (Patrick Texier)
-lscript	    LotusScript (Taryn East)
-moo	    MOO (Timo Frenay)
-nsis	    NSIS (Alex Jakushev)
-ppd	    Postscript Printer Description (Bjoern Jacke)
-rpl	    RPL/2 (Joel Bertrand)
-scilab	    Scilab (Benoit Hamelin)
-splint	    Splint (Ralf Wildenhues)
-sqlj	    SQLJ (Andreas Fischbach)
-wvdial	    WvDial (Prahlad Vaidyanathan)
-xf86conf    XFree86 config (Nikolai Weibull)
-xmodmap	    Xmodmap (Nikolai Weibull)
-xslt	    Xslt (Johannes Zellner)
+ampl		AMPL (David Krief)
+ant		Ant (Johannes Zellner)
+baan		Baan (Her van de Vliert)
+cs		C# (Johannes Zellner)
+lifelines	Lifelines (Patrick Texier)
+lscript		LotusScript (Taryn East)
+moo		MOO (Timo Frenay)
+nsis		NSIS (Alex Jakushev)
+ppd		Postscript Printer Description (Bjoern Jacke)
+rpl		RPL/2 (Joel Bertrand)
+scilab		Scilab (Benoit Hamelin)
+splint		Splint (Ralf Wildenhues)
+sqlj		SQLJ (Andreas Fischbach)
+wvdial		WvDial (Prahlad Vaidyanathan)
+xf86conf	XFree86 config (Nikolai Weibull)
+xmodmap		Xmodmap (Nikolai Weibull)
+xslt		Xslt (Johannes Zellner)
+monk		Monk (Mike Litherland)
+xsd		Xsd (Johannes Zellner)
+cdl		CDL (Raul Segura Acevedo)
+sendpr		Send-pr (Hendrik Scholz)
 
 Added indent file for Scheme. (Dorai Sitaram)
-Added indent script for Prolog. (Kontra Gergely)
+Added indent file for Prolog. (Kontra Gergely)
+Added indent file for Povray (David Necas)
+Added indent file for IDL (Aleksandar Jelenak)
+Added C# indent and ftplugin scripts.
 
 Added Ukrainian menu translations. (Bohdan Vlasyuk)
 Added ASCII version of the Czech menus. (Jiri Brezina)
@@ -3526,7 +3533,11 @@ Added Simplified Chinese translation of the tutor. (Mendel L Chan)
 
 Added Russian keymap for yawerty keyboard.
 
+Added an explanation of using the vimrc file in the tutor.
+Changed tutor.vim to get the right encoding for the Taiwainese tutor.
+
 Added Russian tutor. (Andrey Kiselev)
+Added Polish tutor. (Mikolaj Machowski)
 
 Added darkblue color scheme. (Bohdan Vlasyuk)
 
@@ -3621,6 +3632,35 @@ invalid.
 
 DJGPP: Shift-Del and Del both produce \316\123.  Default mapping for Del is
 wrong.  Disabled it.
+
+Dependencies on header files in MingW makefile was wrong.
+
+Win32: Don't use ACL stuff for MSVC 4.2, it's not supported. (Walter Briscoe)
+
+Win32 with Borland: bcc.cfg was caching the value for $(BOR), but providing a
+different argument to make didn't regenerate it.
+
+Win32 with MSVC: Make_ivc.mak generates a new if_ole.h in a different
+directory, the if_ole.h in the src directory may be used instead.  Delete the
+distributed file.
+
+When a window is vertically split and then ":ball" is used, the window layout
+is messed up, can cause a crash. (Muraoka Taro)
+
+When 'insertmode' is set, using File/New menu and then double clicking, "i" is
+soon inserted. (Merlin Hansen)
+
+When Select mode is active and using the Buffers menu to switch to another
+buffer, an old selection comes back.  Reset VIsual_reselect for a ":buffer"
+command.
+
+When Select mode is active and 'insertmode' is set, using the Buffers menu to
+switch to another buffer, did not return to Insert mode.  Make sure
+"restart_edit" is set.
+
+When double clicking on the first character of a word while 'selection' is
+"exclusive" didn't select that word.
+
 
 Patch 6.0.001
 Problem:    Loading the sh.vim syntax file causes error messages . (Corinna
@@ -5693,5 +5733,231 @@ Problem:    When merging files, ":diffput" and ":diffget" are used a lot, but
 	    they require a lot of typing.
 Solution:   Add "dp" for ":diffput" and "do" for ":diffget".
 Files:	    runtime/doc/diff.txt, src/diff.c, src/normal.c, src/proto/diff.pro
+
+
+Patch 6.1b.001 (extra)
+Problem:    Checking for wildcards in a path does not handle multi-byte
+	    characters with a trail byte which is a wildcard.
+Solution:   Handle multi-byte characters correctly. (Muraoka Taro)
+Files:	    src/os_amiga.c, src/os_mac.c, src/os_msdos.c, src/os_mswin.c,
+	    src/os_unix.c
+
+Patch 6.1b.002
+Problem:    A regexp that ends in "\{" is not flagged as an error.  May cause
+	    a stack overflow when 'incsearch' is set. (Gerhard Hochholzer)
+Solution:   Handle a missing "}" as an error.
+Files:	    src/regexp.c
+
+Patch 6.1b.003 (extra)
+Problem:    The RISC OS GUI doesn't compile.
+Solution:   Include changes since Vim 5.7. (Andy Wingate)
+Files:	    src/Make_ro.mak, src/gui_riscos.c, src/os_riscos.c,
+	    src/os_riscos.h, src/proto/gui_riscos.pro
+
+Patch 6.1b.004
+Problem:    col("'>") returns a negative number for linewise selection. (Neil
+	    Bird)
+Solution:   Don't add one to MAXCOL.
+Files:	    src/eval.c
+
+Patch 6.1b.005
+Problem:    Using a search pattern that causes an out-of-stack error while
+	    'hlsearch' is set keeps giving the hit-Enter prompt.
+	    A search pattern that takes a long time delays typing when
+	    'incsearch' is set.
+Solution:   Stop 'hlsearch' highlighting when the regexp causes an error.
+	    Stop searching for 'incsearch' when a character is typed.
+Files:	    src/globals.h, src/message.c, src/screen.c, src/search.c,
+	    src/vim.h
+
+Patch 6.1b.006
+Problem:    When entering a composing character on the command line with
+	    CTRL-V, the text isn't redrawn correctly.
+Solution:   Redraw the text under and after the cursor.
+Files:	    src/ex_getln.c
+
+Patch 6.1b.007
+Problem:    When the cursor is in the white space between two sentences, "dis"
+	    deletes the first character of the following sentence, "das"
+	    deletes a space after the sentence.
+Solution:   Backup the cursor one character in these situations.
+Files:	    src/search.c
+
+Patch 6.1b.008
+Problem:    *.xsl files are not recognized as xslt but xml.
+	    Monk files are not recognized.
+Solution:   Delete the duplicate line for *.xsl. (Johannes Zellner)
+	    Recognize monk files.
+Files:	    runtime/filetype.vim
+
+Patch 6.1b.009
+Problem:    Can't always compile small features and then adding eval feature,
+	    "sandbox" is undefined. (Axel Kielhorn)
+Solution:   Always define "sandbox" when the eval feature is used.
+Files:	    src/globals.h
+
+Patch 6.1b.010 (extra)
+Problem:    When compiling gvimext.cpp with MSVC 4.2 get a number of warnings.
+Solution:   Change "true" to "TRUE". (Walter Briscoe)
+Files:	    GvimExt/gvimext.cpp
+
+Patch 6.1b.011
+Problem:    When using a very long string for confirm(), can't quit the
+	    displaying at the more prompt. (Hari Krishna Dara)
+Solution:   Jump to the end of the message to show the choices.
+Files:	    src/message.c
+
+Patch 6.1b.012
+Problem:    Multi-byte: When 'showbreak' is set and a double-wide character
+	    doesn't fit at the right window edge the cursor gets stuck there.
+	    Using cursor-left gets stuck when 'virtualedit' is set.  (Eric
+	    Long)
+Solution:   Fix the way the extra ">" character is counted when 'showbreak' is
+	    set.  Don't correct cursor for virtual editing on a double-wide
+	    character.
+Files:	    src/charset.c, src/edit.c
+
+Patch 6.1b.013
+Problem:    A user command that partly matches with a buffer-local user
+	    command and matches full with a global user command unecessarily
+	    gives an 'ambiguous command' error.
+Solution:   Find the full global match even after a partly local match.
+Files:	    src/ex_docmd.c
+
+Patch 6.1b.014
+Problem:    EBCDIC: switching mouse events off causes garbage on screen.
+	    Positioning the cursor in the GUI causes garbage.
+Solution:   Insert an ESC in the terminal code. (Ralf Schandl)
+	    Use "\b" instead of "\010" for KS_LE.
+Files:	    src/os_unix.c, src/term.c
+
+Patch 6.1b.015
+Problem:    Vimtutor has a typo.  Get a warning for "tempfile" if it
+	    doesn't exist.
+Solution:   Move a quote to the end of a line. (Max Ischenko)
+	    Use "mktemp" first, more systems have it.
+Files:	    src/vimtutor
+
+Patch 6.1b.016
+Problem:    GTK: loading a fontset that works partly, Vim might hang or crash.
+Solution:   Avoid that char_width becomes zero. (Yasuhiro Matsumoto)
+Files:	    src/gui_gtk_x11.c
+
+Patch 6.1b.017
+Problem:    GUI: When using ":shell" and there is a beep, nothing happens.
+Solution:   Call vim_beep() to produce the beep from the shell. (Yasuhiro
+	    Matsumoto)
+Files:	    src/message.c
+
+Patch 6.1b.018 (depends on 6.1b.006)
+Problem:    When entering the encryption key, special keys may still reveal
+	    the typed characters.
+Solution:   Make sure stars are used or nothing is shown in all cases.
+Files:	    src/digraph.c, src/getchar.c, src/ex_getln.c
+
+Patch 6.1b.019 (depends on 6.1b.005)
+Problem:    A search pattern that takes a long time slows down typing when
+	    'incsearch' is set.
+Solution:   Pass SEARCH_PEEK to dosearch().
+Files:	    src/ex_getln.c
+
+Patch 6.1b.020
+Problem:    When using the matchit plugin, "%" finds a match on the "end" of a
+	    ":syntax region" command in Vim scripts.
+Solution:   Skip over ":syntax region" commands by setting b:match_skip.
+Files:	    runtime/ftplugin/vim.vim
+
+Patch 6.1b.021
+Problem:    when 'mousefocus' is set, CTRL-W CTRL-] sometimes doesn't warp the
+	    pointer to the new window. (Robert Webb)
+Solution:   Don't reset need_mouse_correct when checking the timestamp of a
+	    file.
+Files:	    src/fileio.c
+
+Patch 6.1b.022
+Problem:    With lots of folds "j" does not obey 'scrolloff' properly.
+	    (Srinath Avadhanula)
+Solution:   Go to end of the fold before counting context lines.
+Files:	    src/move.c
+
+Patch 6.1b.023
+Problem:    On MS-Windows system() may cause checking timestamps, because Vim
+	    looses and gains input focus, while this doesn't happen on Unix.
+Solution:   Don't check timestamps while system() is busy.
+Files:	    src/ex_cmds2.c, src/fileio.c, src/globals.h, src/misc1.c
+
+Patch 6.1b.024 (extra)
+Problem:    Gettext 0.11 complains that "sjis" is not a standard name.
+Solution:   Use "cp932" instead.
+Files:	    src/po/sjiscorr.c
+
+Patch 6.1b.025 (extra)
+Problem:    Win32: When closing gvim while it is minimized  and has a changed
+	    file, the file-changed dialog pops up in a corner of the screen.
+Solution:   Put the dialog in the middle of the screen.
+Files:	    src/gui_w48.c
+
+Patch 6.1b.026
+Problem:    When 'diffopt' contains 'iwhite' but not 'icase': differences in
+	    case are not highlighted properly. (Gerhard Hochholzer)
+Solution:   Don't ignore case when ignoring white space differences.
+Files:	    src/diff.c
+
+Patch 6.1b.027
+Problem:    "vim --remote +" may cause a crash.
+Solution:   Check for missing file name argument. (Martin Kahlert)
+Files:	    src/main.c
+
+Patch 6.1b.028 (extra)
+Problem:    Win16: Can't compile after patch 6.1b.025.
+Solution:   Add code specifically for Win16. (Vince Negri)
+Files:	    src/gui_w48.c
+
+Patch 6.1b.029
+Problem:    Win32: When a directory on an NTFS partition is read/execute (no
+	    delete,modify,write) and the file has modify rights, trying to
+	    write the file deletes it.  Making the file read/write/execute
+	    (not delete) solves it. (Mark Canup)
+Solution:   Use the Unix code to check for a writable directory.  If not, then
+	    make a backup copy and overwrite the file.
+Files:	    src/fileio.c
+
+Patch 6.1b.030 (extra)
+Problem:    Mac: small mistake in the build script and prototypes.
+Solution:   Fix the build script and add the prototypes. (Axel Kielhorn)
+Files:	    src/os_mac.build, src/gui_mac.c
+
+Patch 6.1b.031 (extra)
+Problem:    Win32 GUI: ":set guifont=*" doesn't set 'guifont' to the resulting
+	    font name. (Vlad Sandrini)
+Solution:   Put the code back in gui_mch_init_font() to form the font name out
+	    of the logfont.
+Files:	    src/gui_w48.c
+
+Patch 6.1b.032
+Problem:    Athena: Setting a color scheme before the GUI has started causes a
+	    crash. (Todd Blumer)
+Solution:   Don't try using color names that haven't been set yet.
+Files:	    src/gui_athena.c
+
+Patch 6.1b.033
+Problem:    When using a count after a ":s" command may get ml_get errors.
+	    (Dietmar Lang)
+Solution:   Check that the resulting range does not go past the end of the
+	    buffer.
+Files:	    src/ex_cmds.c
+
+Patch 6.1b.034
+Problem:    After sourcing mswin.vim, when using <C-S-Right> after
+	    auto-indenting and then <Del>, get warning for allocating
+	    rediculous amount of memory. (Dave Delgreco)
+Solution:   Adjust the start of the Visual area when deleting the auto-indent.
+Files:	    src/edit.c
+
+Patch 6.1b.035
+Problem:    When using evim, dropping a file on Vim and then double clicking
+	    on a word, it is changed to "i". (Merlin Hansen)
+Solution:   Reset need_start_insertmode after editing the file.
+Files:	    src/ex_docmd.c
 
  vim:tw=78:ts=8:ft=help:norl:

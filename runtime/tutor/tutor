@@ -1,5 +1,5 @@
 ===============================================================================
-=    W e l c o m e   t o   t h e   V I M   T u t o r    -    Version 1.4      =
+=    W e l c o m e   t o   t h e   V I M   T u t o r    -    Version 1.5      =
 ===============================================================================
 
      Vim is a very powerful editor that has many commands, too many to
@@ -545,7 +545,7 @@ Note: This is very useful in debugging a program with unmatched parentheses!
 ---> Note that if you were to exit Vim and enter again with the filename TEST,
      the file would be an exact copy of the tutor when you saved it.
 
-  5. Now remove the file by typing:     :!delete TEST
+  5. Now remove the file by typing (MS-DOS):    :!del TEST
 
 
 
@@ -601,9 +601,9 @@ NOTE:  The file you retrieve is placed starting where the cursor is located.
 
   1.  :!command  executes an external command.
 
-      Some useful examples are:
-	  :!dir  -  shows a directory listing.
-	  :!delete FILENAME  -	removes file FILENAME.
+      Some useful examples are (MS-DOS):
+	  :!dir			-  shows a directory listing.
+	  :!del FILENAME	-  removes file FILENAME.
 
   2.  :w FILENAME  writes the current Vim file to disk with name FILENAME.
 
@@ -734,7 +734,8 @@ Note: This avoids typing  i , the last character, the text to insert, <ESC>,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		       LESSON 7 : ON-LINE HELP COMMANDS
+		       LESSON 7: ON-LINE HELP COMMANDS
+
 
 		      ** Use the on-line help system **
 
@@ -747,27 +748,50 @@ Note: This avoids typing  i , the last character, the text to insert, <ESC>,
   Type   :q <ENTER>   to close the help window.
 
   You can find help on just about any subject, by giving an argument to the
-  ":help" command.  Try these:
+  ":help" command.  Try these (don't forget pressing <ENTER>):
 
-  :help w <ENTER>
-  :help c_<T <ENTER>
-  :help insert-index <ENTER>
+	:help w
+	:help c_<T
+	:help insert-index
+	:help user-manual
 
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		       LESSON 8: CREATE A STARTUP SCRIPT
 
+			  ** Switch on Vim features **
+
+  Vim has many more features than Vi, but most of them are disabled by default.
+  To start using more features you have to create a "vimrc" file.
+
+  1. Start editing the "vimrc" file, this depends on your system:
+	:edit ~/.vimrc			for Unix
+	:edit $VIM/_vimrc		for MS-Windows
+
+  2. Now read the example "vimrc" file text:
+
+	:read $VIMRUNTIME/vimrc_example.vim
+
+  3. Write the file with:
+
+	:write
+
+  The next time you start Vim it will use syntax highlighting.
+  You can add all your preferred settings to this "vimrc" file.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   This concludes the Vim Tutor.  It was intended to give a brief overview of
   the Vim editor, just enough to allow you to use the editor fairly easily.
-  It is far from complete as Vim has many many more commands.
+  It is far from complete as Vim has many many more commands.  Read the user
+  manual next: ":help user-manual".
 
   For further reading and studying, this book is recommended:
 	Vim - Vi Improved - by Steve Oualline
 	Publisher: New Riders
   The first book completely dedicated to Vim.  Especially useful for beginners.
   There are many examples and pictures.
-  See http://www.iccf.nl/click5.html
+  See http://iccf-holland.org/click5.html
 
   This book is older and more about Vi than Vim, but also recommended:
 	Learning the Vi Editor - by Linda Lamb
@@ -777,8 +801,7 @@ Note: This avoids typing  i , the last character, the text to insert, <ESC>,
 
   This tutorial was written by Michael C. Pierce and Robert K. Ware,
   Colorado School of Mines using ideas supplied by Charles Smith,
-  Colorado State University.
-  E-mail: bware@mines.colorado.edu.
+  Colorado State University.  E-mail: bware@mines.colorado.edu.
 
   Modified for Vim by Bram Moolenaar.
 

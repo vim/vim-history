@@ -1,4 +1,4 @@
-*if_pyth.txt*   For Vim version 6.1b.  Last change: 2002 Feb 24
+*if_pyth.txt*   For Vim version 6.1.  Last change: 2002 Mar 11
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -117,7 +117,7 @@ Methods
 	evaluator (see |expression|). Returns the expression result as a
 	string.
 	Examples: >
-		text_width = vim.eval("'tw'")
+		text_width = vim.eval("&tw")
 		str = vim.eval("12+12")		# NB result is a string! Use
 						# string.atoi() to convert to
 						# a number.

@@ -5864,6 +5864,8 @@ x-resources	version5.txt	/*x-resources*
 x11-clientserver	remote.txt	/*x11-clientserver*
 x11-cut-buffer	gui_x11.txt	/*x11-cut-buffer*
 x11-selection	gui_x11.txt	/*x11-selection*
+xf86conf-syntax	syntax.txt	/*xf86conf-syntax*
+xf86conf.vim	syntax.txt	/*xf86conf.vim*
 xfontset	mbyte.txt	/*xfontset*
 xfree-xterm	syntax.txt	/*xfree-xterm*
 xim	mbyte.txt	/*xim*

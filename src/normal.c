@@ -2707,6 +2707,13 @@ do_mouse(oap, c, dir, count, fixindent)
 		else
 		{
 		    find_start_of_word(&VIsual);
+		    if (*p_sel == 'e' && *ml_get_cursor() != NUL)
+#ifdef FEAT_MBYTE
+			curwin->w_cursor.col +=
+					 (*mb_ptr2len_check)(ml_get_cursor());
+#else
+			++curwin->w_cursor.col;
+#endif
 		    find_end_of_word(&curwin->w_cursor);
 		}
 	    }
@@ -7561,7 +7568,14 @@ nv_esc(cap)
 	    && !p_im)
 	vim_beep();
     clearop(cap->oap);
-    if (restart_edit == 0 && goto_im())
+
+    /* A CTRL-C is often used at the start of a menu.  When 'insertmode' is
+     * set return to Insert mode afterwards. */
+    if (restart_edit == 0 && p_im
+#ifdef FEAT_EX_EXTRA
+	    && ex_normal_busy == 0
+#endif
+	    )
 	restart_edit = 'a';
 }
 

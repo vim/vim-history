@@ -1101,6 +1101,11 @@ set_curbuf(buf, action)
     curwin->w_alt_fnum = curbuf->b_fnum; /* remember alternate file */
     buflist_altfpos();			 /* remember curpos */
 
+#ifdef FEAT_VISUAL
+    /* Don't restart Select mode after switching to another buffer. */
+    VIsual_reselect = FALSE;
+#endif
+
     /* close_windows() or apply_autocmds() may change curbuf */
     prevbuf = curbuf;
 
@@ -3791,9 +3796,9 @@ ex_buffer_all(eap)
 	wpnext = wp->w_next;
 	if (wp->w_buffer->b_nwindows > 1
 #ifdef FEAT_VERTSPLIT
-		|| (cmdmod.split & WSP_VERT)
+		|| ((cmdmod.split & WSP_VERT)
 			  ? wp->w_height + wp->w_status_height < Rows - p_ch
-			  : wp->w_width != Columns
+			  : wp->w_width != Columns)
 #endif
 		)
 	{

@@ -4313,12 +4313,12 @@ stop_insert(end_insert_pos)
 	    ++curwin->w_cursor.col;	/* put cursor back on the NUL */
 
 #ifdef FEAT_VISUAL
-	/* <C-S-Right> may start Visual mode, adjust the position for deleted
-	 * characters. */
+	/* <C-S-Right> may have started Visual mode, adjust the position for
+	 * deleted characters. */
 	if (VIsual_active && VIsual.lnum == curwin->w_cursor.lnum)
 	{
 	    cc = STRLEN(ml_get_curline());
-	    if (VIsual.col > cc)
+	    if (VIsual.col > (colnr_T)cc)
 	    {
 		VIsual.col = cc;
 # ifdef FEAT_VIRTUALEDIT
