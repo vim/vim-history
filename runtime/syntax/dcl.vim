@@ -1,14 +1,14 @@
 " Vim syntax file
 " Language:	DCL (Digital Command Language - vms)
-" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	September 19, 2000
+" Maintainer:	Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
+" Last Change:	April 16, 2001
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
   finish
 endif
 
-set iskeyword=$,@,48-57,_
+setlocal iskeyword=$,@,48-57,_
 
 syn case ignore
 syn keyword dclInstr	accounting	del[ete]	gen[cat]	mou[nt]	run
@@ -99,10 +99,12 @@ syn match   dclGotoLabel	"^\$\s*\I\i*:\s*$"	contains=dclStart
 syn match   dclParam	"'\I[a-zA-Z0-9_$]*'\="
 
 " () matching (the clusters are commented out until a vim/vms comes out for v5.2+)
-"syn cluster dclNextGroups	contains=dclCmdDirPath,dclCmdProc,dclCmdProc,dclDirPath,dclFilename,dclFilename,dclMdfySet,dclMdfySetString,delCmdProc,dclExe,dclTodo
-"syn region  dclFuncList	matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=ALLBUT,@dclNextGroups
-syn region  dclFuncList	matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=ALLBUT,dclCmdDirPath,dclCmdProc,dclCmdProc,dclDirPath,dclFilename,dclFilename,dclMdfySet,dclMdfySetString,delCmdProc,dclExe,dclTodo
-syn match   dclError	")"
+if version >= 520
+  syn cluster dclNextGroups	contains=dclCmdDirPath,dclCmdProc,dclCmdProc,dclDirPath,dclFilename,dclFilename,dclMdfySet,dclMdfySetString,delCmdProc,dclExe,dclTodo
+  syn region  dclFuncList	matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=ALLBUT,@dclNextGroups
+else
+  syn region  dclFuncList	matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=ALLBUT,dclCmdDirPath,dclCmdProc,dclCmdProc,dclDirPath,dclFilename,dclFilename,dclMdfySet,dclMdfySetString,delCmdProc,dclExe,dclTodo syn match   dclError	")"
+endif
 
 " The default highlighting.
 hi def link dclLogOper	dclError

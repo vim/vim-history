@@ -1,4 +1,4 @@
-*sign.txt*     For Vim version 6.0ab.  Last change: 2000 Aug 16
+*sign.txt*     For Vim version 6.0ac.  Last change: 2000 Aug 16
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -62,7 +62,7 @@ debugger may stop at a breakpoint often, it makes sense to allow the sign
 type to change rather than to have to remove the sign and create a new one
 at the same location with a different sign type (index).
 
-The jump to sign is usefull in many situations. In Sun's Visual WorkShop we
+The jump to sign is useful in many situations. In Sun's Visual WorkShop we
 use this feature when stepping up and down the stack, for jumping to the
 source of a breakpoint, and for various other uses.
 

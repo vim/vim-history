@@ -2972,7 +2972,7 @@ do_set(arg, opt_flags)
 		{
 		    /* Only give an error message when requesting the value of
 		     * a hidden option, ignore setting it. */
-		    if (vim_strchr((char_u *)"=:!&", nextchar) == NULL
+		    if (vim_strchr((char_u *)"=:!&<", nextchar) == NULL
 			    && (!(options[opt_idx].flags & P_BOOL)
 				|| nextchar == '?'))
 			errmsg = (char_u *)N_("Option not supported");
@@ -3004,7 +3004,7 @@ do_set(arg, opt_flags)
 		goto skip;
 	    }
 
-	    if (vim_strchr((char_u *)"?=:!&", nextchar) != NULL)
+	    if (vim_strchr((char_u *)"?=:!&<", nextchar) != NULL)
 	    {
 		arg += len;
 		cp_val = p_cp;
@@ -3021,7 +3021,7 @@ do_set(arg, opt_flags)
 			arg += 2;
 		    }
 		}
-		if (vim_strchr((char_u *)"?!&", nextchar) != NULL
+		if (vim_strchr((char_u *)"?!&<", nextchar) != NULL
 			&& arg[1] != NUL && !vim_iswhite(arg[1]))
 		{
 		    errmsg = e_trailing;
@@ -3035,7 +3035,7 @@ do_set(arg, opt_flags)
 	     */
 	    if (nextchar == '?'
 		    || (prefix == 1
-			&& vim_strchr((char_u *)"=:&", nextchar) == NULL
+			&& vim_strchr((char_u *)"=:&<", nextchar) == NULL
 			&& !(flags & P_BOOL)))
 	    {
 		/*
@@ -3092,6 +3092,7 @@ do_set(arg, opt_flags)
 		    /*
 		     * ":set opt!": invert
 		     * ":set opt&": reset to default value
+		     * ":set opt<": reset to global value
 		     */
 		    if (nextchar == '!')
 			value = *(int *)(varp) ^ 1;
@@ -3099,6 +3100,9 @@ do_set(arg, opt_flags)
 			value = (int)(long)options[opt_idx].def_val[
 						((flags & P_VI_DEF) || cp_val)
 						 ?  VI_DEFAULT : VIM_DEFAULT];
+		    else if (nextchar == '<')
+			value = *(int *)get_varp_scope(&(options[opt_idx]),
+								  OPT_GLOBAL);
 		    else
 		    {
 			/*
@@ -3121,7 +3125,7 @@ do_set(arg, opt_flags)
 		}
 		else				    /* numeric or string */
 		{
-		    if (vim_strchr((char_u *)"=:&", nextchar) == NULL
+		    if (vim_strchr((char_u *)"=:&<", nextchar) == NULL
 							       || prefix != 1)
 		    {
 			errmsg = e_invarg;
@@ -3133,6 +3137,7 @@ do_set(arg, opt_flags)
 			/*
 			 * Different ways to set a number option:
 			 * &	    set to default value
+			 * <	    set to global value
 			 * <xx>	    accept special key codes for 'wildchar'
 			 * c	    accept any non-digit for 'wildchar'
 			 * [-]0-9   set number
@@ -3143,6 +3148,9 @@ do_set(arg, opt_flags)
 			    value = (long)options[opt_idx].def_val[
 						((flags & P_VI_DEF) || cp_val)
 						 ?  VI_DEFAULT : VIM_DEFAULT];
+			else if (nextchar == '^')
+			    value = *(long *)get_varp_scope(&(options[opt_idx]),
+								  OPT_GLOBAL);
 			else if (((long *)varp == &p_wc
 				    || (long *)varp == &p_wcm)
 				&& (*arg == '<'
@@ -3216,7 +3224,7 @@ do_set(arg, opt_flags)
 			/* The old value is kept until we are sure that the
 			 * new value is valid. */
 			oldval = *(char_u **)varp;
-			if (nextchar == '&')	    /* set to default val */
+			if (nextchar == '&')	/* set to default val */
 			{
 			    newval = options[opt_idx].def_val[
 						((flags & P_VI_DEF) || cp_val)
@@ -3236,6 +3244,12 @@ do_set(arg, opt_flags)
 				newval = s;
 			    }
 			    new_value_alloced = TRUE;
+			}
+			else if (nextchar == '<')	/* set to global val */
+			{
+			    newval = *(char_u **)get_varp_scope(
+					     &(options[opt_idx]), OPT_GLOBAL);
+			    new_value_alloced = FALSE;
 			}
 			else
 			{
@@ -4034,6 +4048,11 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     char_u	*errmsg = NULL;
     char_u	*s, *p;
     int		did_chartab = FALSE;
+    char_u	**gvarp;
+
+    /* Get the global option to compare with, otherwise we would have to check
+     * two values for all local options. */
+    gvarp = (char_u **)get_varp_scope(&(options[opt_idx]), OPT_GLOBAL);
 
     /* Disallow changing some options from secure mode */
     if ((secure
@@ -4119,9 +4138,9 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     }
 
     /* 'nrformats' */
-    else if (varp == &(curbuf->b_p_nf))
+    else if (gvarp == &p_nf)
     {
-	if (check_opt_strings(curbuf->b_p_nf, p_nf_values, TRUE) != OK)
+	if (check_opt_strings(*varp, p_nf_values, TRUE) != OK)
 	    errmsg = e_invarg;
     }
 
@@ -4203,7 +4222,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 
 #ifdef FEAT_MBYTE
     /* 'encoding' and 'fileencoding' */
-    else if (varp == &p_enc || varp == &curbuf->b_p_fenc || varp == &p_tenc)
+    else if (varp == &p_enc || gvarp == &p_fenc || varp == &p_tenc)
     {
 	if (varp == &curbuf->b_p_fenc && !curbuf->b_p_ma)
 	    errmsg = e_modifiable;
@@ -4242,7 +4261,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 #endif
 
 #ifdef FEAT_KEYMAP
-    else if (varp == &(curbuf->b_p_keymap))
+    else if (varp == &curbuf->b_p_keymap)
     {
 	/* load or unload key mapping tables */
 	errmsg = keymap_init();
@@ -4250,15 +4269,15 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 #endif
 
     /* 'fileformat' */
-    else if (varp == &(curbuf->b_p_ff))
+    else if (gvarp == &p_ff)
     {
-	if (!curbuf->b_p_ma)
+	if (!curbuf->b_p_ma && (opt_flags & OPT_LOCAL))
 	    errmsg = e_modifiable;
-	else if (check_opt_strings(curbuf->b_p_ff, p_ff_values, FALSE) != OK)
+	else if (check_opt_strings(*varp, p_ff_values, FALSE) != OK)
 	    errmsg = e_invarg;
 	else
 	{
-	    /* also change 'textmode' */
+	    /* may also change 'textmode' */
 	    if (get_fileformat(curbuf) == EOL_DOS)
 		curbuf->b_p_tx = TRUE;
 	    else
@@ -4283,7 +4302,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 
 #if defined(FEAT_CRYPT) && defined(FEAT_CMDHIST)
     /* 'cryptkey' */
-    else if (varp == &(curbuf->b_p_key))
+    else if (gvarp == &p_key)
     {
 	/* Make sure the ":set" command doesn't show the new value in the
 	 * history. */
@@ -4292,10 +4311,10 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 #endif
 
     /* 'matchpairs' */
-    else if (varp == &(curbuf->b_p_mps))
+    else if (gvarp == &p_mps)
     {
 	/* Check for "x:y,x:y" */
-	for (p = curbuf->b_p_mps; *p; p += 4)
+	for (p = *varp; *p; p += 4)
 	{
 	    if (!p[0] || p[1] != ':' || !p[2] || (p[3] && p[3] != ','))
 	    {
@@ -4309,9 +4328,9 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 
 #ifdef FEAT_COMMENTS
     /* 'comments' */
-    else if (varp == &(curbuf->b_p_com))
+    else if (gvarp == &p_com)
     {
-	for (s = curbuf->b_p_com; *s; )
+	for (s = *varp; *s; )
 	{
 	    while (*s && *s != ':')
 	    {
@@ -4364,7 +4383,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 
 #ifdef FEAT_VIMINFO
     /* 'viminfo' */
-    else if (varp == &(p_viminfo))
+    else if (varp == &p_viminfo)
     {
 	for (s = p_viminfo; *s;)
 	{
@@ -4704,14 +4723,14 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 
 #ifdef FEAT_QUICKFIX
     /* When 'bufhidden' is set, check for valid value. */
-    else if (varp == &(curbuf->b_p_bh))
+    else if (gvarp == &p_bh)
     {
 	if (check_opt_strings(curbuf->b_p_bh, p_bufhidden_values, FALSE) != OK)
 	    errmsg = e_invarg;
     }
 
     /* When 'buftype' is set, check for valid value. */
-    else if (varp == &(curbuf->b_p_bt))
+    else if (gvarp == &p_bt)
     {
 	if (check_opt_strings(curbuf->b_p_bt, p_buftype_values, FALSE) != OK)
 	    errmsg = e_invarg;
@@ -4757,9 +4776,9 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 
 #ifdef FEAT_INS_EXPAND
     /* check if it is a valid value for 'complete' -- Acevedo */
-    else if (varp == &(curbuf->b_p_cpt))
+    else if (gvarp == &p_cpt)
     {
-	for (s = curbuf->b_p_cpt; *s;)
+	for (s = *varp; *s;)
 	{
 	    while(*s == ',' || *s == ' ')
 		s++;
@@ -4850,9 +4869,9 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 
 #ifdef FEAT_FOLDING
     /* 'foldmethod' */
-    else if (varp == &curwin->w_p_fdm)
+    else if (gvarp == &curwin->w_allbuf_opt.wo_fdm)
     {
-	if (check_opt_strings(curwin->w_p_fdm, p_fdm_values, FALSE) != OK
+	if (check_opt_strings(*varp, p_fdm_values, FALSE) != OK
 		|| *curwin->w_p_fdm == NUL)
 	    errmsg = e_invarg;
 	else
@@ -4865,18 +4884,18 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	    foldUpdateAll(curwin);
     }
     /* 'foldmarker' */
-    else if (varp == &curwin->w_p_fmr)
+    else if (gvarp == &curwin->w_allbuf_opt.wo_fmr)
     {
-	if (vim_strchr(curwin->w_p_fmr, ',') == NULL)
+	if (vim_strchr(*varp, ',') == NULL)
 	    errmsg = (char_u *)N_("comma required");
 	else if (foldmethodIsMarker(curwin))
 	    foldUpdateAll(curwin);
     }
     /* 'commentstring' */
-    else if (varp == &curbuf->b_p_cms)
+    else if (gvarp == &p_cms)
     {
-	if (*curbuf->b_p_cms != NUL
-		&& strstr((char *)curbuf->b_p_cms, "%s") == NULL)
+	if (**varp != NUL
+		&& strstr((char *)*varp, "%s") == NULL)
 	    errmsg = (char_u *)N_("'commentstring' must be empty or contain %s");
     }
     /* 'foldopen' */
@@ -4983,7 +5002,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	}
 
 	/* May set global value for local option. */
-	else if (!(opt_flags & OPT_LOCAL))
+	else if (!(opt_flags & OPT_LOCAL) && opt_flags != OPT_GLOBAL)
 	    set_string_option_global(opt_idx, varp);
     }
 
@@ -5535,12 +5554,13 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
     long	old_value = *(long *)varp;
     long	old_Rows = Rows;	/* remember old Rows */
     long	old_Columns = Columns;	/* remember old Columns */
+    long	*pp = (long *)varp;
 
 #ifdef FEAT_GUI
     need_mouse_correct = TRUE;
 #endif
 
-    *(long *)varp = value;
+    *pp = value;
 #ifdef FEAT_EVAL
     /* Remember where the option was set. */
     options[opt_idx].scriptID = current_SID;
@@ -5556,7 +5576,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
      * Number options that need some action when changed
      */
 #ifdef FEAT_WINDOWS
-    if ((long *)varp == &p_wh || (long *)varp == &p_hh)
+    if (pp == &p_wh || pp == &p_hh)
     {
 	if (p_wh < 1)
 	{
@@ -5577,16 +5597,15 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	/* Change window height NOW */
 	if (lastwin != firstwin)
 	{
-	    if ((long *)varp == &p_wh && curwin->w_height < p_wh)
+	    if (pp == &p_wh && curwin->w_height < p_wh)
 		win_setheight((int)p_wh);
-	    if ((long *)varp == &p_hh && curbuf->b_help
-						   && curwin->w_height < p_hh)
+	    if (pp == &p_hh && curbuf->b_help && curwin->w_height < p_hh)
 		win_setheight((int)p_hh);
 	}
     }
 
     /* 'winminheight' */
-    else if ((long *)varp == &p_wmh)
+    else if (pp == &p_wmh)
     {
 	if (p_wmh < 0)
 	{
@@ -5602,7 +5621,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
     }
 
 # ifdef FEAT_VERTSPLIT
-    if ((long *)varp == &p_wiw)
+    if (pp == &p_wiw)
     {
 	if (p_wiw < 1)
 	{
@@ -5621,7 +5640,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
     }
 
     /* 'winminwidth' */
-    else if ((long *)varp == &p_wmw)
+    else if (pp == &p_wmw)
     {
 	if (p_wmw < 0)
 	{
@@ -5641,14 +5660,14 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 
 #ifdef FEAT_WINDOWS
     /* (re)set last window status line */
-    else if ((long *)varp == &p_ls)
+    else if (pp == &p_ls)
     {
 	last_status(FALSE);
     }
 #endif
 
 #ifdef FEAT_GUI
-    else if ((long *)varp == &p_linespace)
+    else if (pp == &p_linespace)
     {
 	if (gui.in_use && gui_mch_adjust_charsize() == OK)
 	    gui_set_shellsize(FALSE);
@@ -5657,7 +5676,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 
 #ifdef FEAT_FOLDING
     /* 'foldlevel' */
-    else if ((long *)varp == &curwin->w_p_fdl)
+    else if (pp == &curwin->w_p_fdl)
     {
 	if (curwin->w_p_fdl < 0)
 	    curwin->w_p_fdl = 0;
@@ -5665,20 +5684,20 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
     }
 
     /* 'foldminlevel' */
-    else if ((long *)varp == &curwin->w_p_fml)
+    else if (pp == &curwin->w_p_fml)
     {
 	foldUpdateAll(curwin);
     }
 
     /* 'foldnestmax' */
-    else if ((long *)varp == &curwin->w_p_fdn)
+    else if (pp == &curwin->w_p_fdn)
     {
 	if (foldmethodIsSyntax(curwin) || foldmethodIsIndent(curwin))
 	    foldUpdateAll(curwin);
     }
 
     /* 'foldcolumn' */
-    else if ((long *)varp == &curwin->w_p_fdc)
+    else if (pp == &curwin->w_p_fdc)
     {
 	if (curwin->w_p_fdc < 0)
 	{
@@ -5693,7 +5712,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
     }
 
     /* 'shiftwidth' */
-    else if ((long *)varp == &curbuf->b_p_sw)
+    else if (pp == &curbuf->b_p_sw)
     {
 	if (foldmethodIsIndent(curwin))
 	    foldUpdateAll(curwin);
@@ -5702,7 +5721,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 
 #ifdef FEAT_TITLE
     /* if 'titlelen' has changed, redraw the title */
-    else if ((long *)varp == &p_titlelen)
+    else if (pp == &p_titlelen)
     {
 	if (p_titlelen < 0)
 	{
@@ -5715,7 +5734,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 #endif
 
     /* if p_ch changed value, change the command line height */
-    else if ((long *)varp == &p_ch)
+    else if (pp == &p_ch)
     {
 	if (p_ch < 1)
 	{
@@ -5727,7 +5746,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
     }
 
     /* when 'updatecount' changes from zero to non-zero, open swap files */
-    else if ((long *)varp == &p_uc)
+    else if (pp == &p_uc)
     {
 	if (p_uc < 0)
 	{
@@ -5798,7 +5817,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 		    && curwin->w_height > 0))
 	    && full_screen)
     {
-	if ((long *)varp == &(curwin->w_p_scr))
+	if (pp == &(curwin->w_p_scr))
 	{
 	    if (curwin->w_p_scr != 0)
 		errmsg = e_scroll;
@@ -5851,8 +5870,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 
     /* May set global value for local option. */
     if ((opt_flags & (OPT_LOCAL | OPT_GLOBAL)) == 0)
-	*(long *)get_varp_scope(&(options[opt_idx]), OPT_GLOBAL) =
-								*(long *)varp;
+	*(long *)get_varp_scope(&(options[opt_idx]), OPT_GLOBAL) = *pp;
 
     options[opt_idx].flags |= P_WAS_SET;
 
@@ -5976,8 +5994,8 @@ get_option_value(name, numval, stringval, opt_flags)
     char_u	**stringval;	    /* NULL when only checking existance */
     int		opt_flags;
 {
-    int	    opt_idx;
-    char_u  *varp;
+    int		opt_idx;
+    char_u	*varp;
 
     opt_idx = findoption(name);
     if (opt_idx < 0)		    /* unknown option */

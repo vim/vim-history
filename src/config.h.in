@@ -82,6 +82,9 @@
 /* Define to `long' if <sys/types.h> doesn't define.  */
 #undef ino_t
 
+/* Define to `unsigned' if <sys/types.h> doesn't define.  */
+#undef dev_t
+
 /* Define to `struct sigaltstack' if <signal.h> doesn't define.  */
 #undef stack_t
 

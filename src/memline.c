@@ -3659,7 +3659,7 @@ findswapname(buf, dirp, old_fname)
 				    process_still_running
 					? (char_u *)_("&Open Read-Only\n&Edit anyway\n&Recover\n&Quit") :
 # endif
-					(char_u *)_("&Open Read-Only\n&Edit anyway\n&Recover\n&Quit\n&Delete it"), 1))
+					(char_u *)_("&Open Read-Only\n&Edit anyway\n&Recover\n&Quit\n&Delete it"), 1, NULL))
 			{
 			    case 1:
 				buf->b_p_ro = TRUE;

@@ -1,4 +1,4 @@
-*os_mint.txt*   For Vim version 6.0ab.  Last change: 2000 Jul 07
+*os_mint.txt*   For Vim version 6.0ac.  Last change: 2001 Apr 18
 
 
 		  VIM REFERENCE MANUAL    by Jens M. Felderhoff
@@ -22,7 +22,7 @@ The MiNT version of vim needs the termcap file /etc/termcap with the
 terminal capabilities of your terminal. Builtin termcaps are
 supported for the vt52 terminal. Termcap entries for the TOSWIN window
 manager and the virtual console terminals have been appended to the
-termcap file that comes with the Vim disrribution.
+termcap file that comes with the Vim distribution.
 
 If you should encounter problems with swapped <BS> and <Del> keys, see
 |:fixdel|.

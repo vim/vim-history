@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0ab.  Last change: 2001 Apr 16
+*syntax.txt*    For Vim version 6.0ac.  Last change: 2001 Apr 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1460,7 +1460,7 @@ keywords, which is probably a good idea, use: >
 	:let SDL_no_96=1
 
 
-The indentation is probably also imcomplete, but right now I am very
+The indentation is probably also incomplete, but right now I am very
 satisfied with it for my own projects.
 
 The last thing is a little PO-editing helper. It adds a couple of menu
@@ -1901,7 +1901,7 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
    :syn region htmlScript start=+<script+ end=+</script[^>]*>+ contained extend
 
 <	Here the htmlItem item does not make the htmlRef item continue
-	furthere, it is only used to highlight the <> items.  The htmlScript
+	further, it is only used to highlight the <> items.  The htmlScript
 	item does extend the htmlRef item.
 
 	Another example: >

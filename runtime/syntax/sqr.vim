@@ -4,7 +4,7 @@
 " Last Change: November 8, 2000
 "     Version: 6.0-1
 
-set isk=@,48-57,_,-
+setlocal isk=@,48-57,_,-
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")

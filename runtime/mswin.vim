@@ -1,7 +1,7 @@
 " Set options and add mapping such that Vim behaves a lot like MS-Windows
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Apr 10
+" Last change:	2001 Apr 17
 
 " set the 'cpoptions' to its Vim default
 if 1	" only do this when compiled with expression evaluation
@@ -28,35 +28,20 @@ vnoremap <C-Insert> "+y
 
 " CTRL-V and SHIFT-Insert are Paste
 nnoremap <SID>Paste "=@+.'xy'<CR>gPFx"_2x:echo<CR>
-map <C-V>				<SID>Paste
-map <S-Insert>				<SID>Paste
-if has("gui")
-  nmenu 20.360 &Edit.&Paste		<SID>Paste
-  nmenu  1.40  PopUp.&Paste		<SID>Paste
-  nmenu        ToolBar.Paste		<SID>Paste
-endif
+map <C-V>		<SID>Paste
+map <S-Insert>		<SID>Paste
 
-imap <C-V>				x<Esc><SID>Paste"_s
-imap <S-Insert>				x<Esc><SID>Paste"_s
-if has("gui")
-  imenu 20.360 &Edit.&Paste		x<Esc><SID>Paste"_s
-  imenu  1.40  PopUp.&Paste		x<Esc><SID>Paste"_s
-  imenu        ToolBar.Paste		x<Esc><SID>Paste"_s
-endif
+imap <C-V>		x<Esc><SID>Paste"_s
+imap <S-Insert>		x<Esc><SID>Paste"_s
 
-cmap <C-V>      <C-R>+
-cmap <S-Insert> <C-R>+
+cmap <C-V>		<C-R>+
+cmap <S-Insert>		<C-R>+
 
-vmap <C-V>				"-cx<Esc><SID>Paste"_x
-vmap <S-Insert>				"-cx<Esc><SID>Paste"_x
-if has("gui")
-  vmenu 20.360 &Edit.&Paste		"-cx<Esc><SID>Paste"_x
-  vmenu  1.40  PopUp.&Paste		"-cx<Esc><SID>Paste"_x
-  vmenu        ToolBar.Paste		"-cx<Esc><SID>Paste"_x
-endif
+vmap <C-V>		"-cx<Esc><SID>Paste"_x
+vmap <S-Insert>		"-cx<Esc><SID>Paste"_x
 
 " Use CTRL-Q to do what CTRL-V used to do
-noremap <C-Q> <C-V>
+noremap <C-Q>		<C-V>
 
 " For CTRL-V to work autoselect must be off.
 " On Unix we have two selections, autoselect can be used.

@@ -8,9 +8,12 @@ POFILES = af.po cs.po de.po es.po fr.po it.po ja.po ko.po pl.po tr.po zh_TW.po
 PACKAGE = vim
 SHELL = /bin/sh
 
-MSGFMT = msgfmt
-XGETTEXT = xgettext
-MSGMERGE = msgmerge
+# The OLD_PO_FILE_INPUT and OLD_PO_FILE_OUTPUT are for the new GNU gettext
+# tools, which use a slightly different .po file format that is not compatible
+# with Solaris (and old gettext implementations) unless these are set.
+MSGFMT = OLD_PO_FILE_INPUT=yes msgfmt
+XGETTEXT = OLD_PO_FILE_INPUT=yes OLD_PO_FILE_OUTPUT=yes xgettext
+MSGMERGE = OLD_PO_FILE_INPUT=yes OLD_PO_FILE_OUTPUT=yes msgmerge
 
 .SUFFIXES:
 .SUFFIXES: .po .mo .pot

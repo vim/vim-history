@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0ab.  Last change: 2001 Apr 16
+*version6.txt*  For Vim version 6.0ac.  Last change: 2001 Apr 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -322,6 +322,10 @@ the screen.  Now it pretends an <Esc> was typed.
 Bitmaps for the toolbar are no longer searched for in "$VIM/bitmaps" bit in
 the "bitmaps" directories in 'runtimepath.
 
+Now use the Cmdline-mode menus for the hit-enter prompt instead of the Normal
+mode menus.  This generally works better and allows using the "Copy" menu to
+produce CTRL-Y to copy the modeless selection.
+
 ==============================================================================
 NEW FEATURES
 
@@ -562,6 +566,7 @@ Many new items for Multi-byte support:
 - XIM: enable XIM when typing a language character (Insert mode, Search
   pattern, "f" or "r" command).  Disable XIM when typing a Normal mode
   command.
+- When the XIM is active, show "XIM" in the 'showmode' message. (Nam SungHyun)
 - Added 'm' flag to 'formatoptions': When wrapping words, allow splitting at
   each multibyte character, not only at a space.
 - Patterns should now work properly with all kinds of multi-byte characters.
@@ -694,8 +699,8 @@ To be able to make this work, several features were added:
   modeline or filetype setting is not carried over to another buffer.
   ":set" sets both the local and the global value.
   ":setlocal" sets the local option value only.
-  ":setglobal" displays the global value for a local option.  Setting only
-  the global value isn't implemented yet.
+  ":setglobal" sets or displays the global value for a local option.
+  ":setlocal name<" sets a local option to its global value.
 - Added the buffer-local value for some global options: 'equalprg', 'makeprg',
   'grepprg', 'path', 'dictionary', 'thesaurus', 'tags' and 'define'.  This
   allows setting a local value for these global options, without making it
@@ -974,6 +979,8 @@ Ex commands: ~
 		didn't wait for <Enter> afterwards.  Can use ":silent !cmd"
 		now.
 
+:checktime	Check for changed buffers.
+
 :verbose {cmd}  Set 'verbose' for one command.
 
 :echomsg {expr}
@@ -1056,6 +1063,10 @@ globpath()	Find matching files in a list of directories.
 hasmapto()	Detect if a mapping to a string is already present.
 iconv()		Convert a string from one encoding to another.
 indent()	gets the indent of a line (Ron Aaron)
+inputdialog()	Like input() but use a GUI dialog when possible.  Currently
+		only works for Motif, Athena and GTK.
+		Use inputdialog() for the Edit/Settings/Text Width menu.  Also
+		for the Help/Find.. and Toolbar FindHelp items.
 inputsecret()	Ask the user to type a string without showing the typed keys.
 		(Charles Campbell)
 libcall()	for Unix (Neil Bird, Johannes Zellner, Stephen Wall)
@@ -1274,6 +1285,11 @@ Modeless selection:
 - Make double-right-click in modeless selection select a whole word.  Single
   right click doesn't use the word selection started by a double-left-click.
   Makes it work like in Visual mode.
+- The modeless selection no longer has an implied automatic copy to the
+  clipboard.  It now obeys the 'a' flag in 'guioptions' or "autoselect" in
+  'clipboard'.
+- Added the CTRL-Y command in Cmdline-mode to copy the modeless selection to
+  the clipboard.  Also works at the hit-enter prompt and the more prompt.
 
 Win32 console version:
 - Includes the user and system name in the ":version" message, when available.
@@ -1322,6 +1338,10 @@ GUI:
 - Motif and Athena: Added "menuFont" to be able to specify a font or fontset
   for the menus.  Useful when the locale is different from 'encoding'. (David
   Harrison)
+- The Cmdline-mode menus can be used at the more-prompt.  This mostly works
+  fine, because they start with a CTRL-C.  The "Copy" menu works to copy the
+  modeless selection.  Allows copying the output of ":set all" or ":intro"
+  without auto-selection.
 
 X11:
 - Support for the clipboard selection as register "+.  When exiting or
@@ -1428,6 +1448,8 @@ Internal changes:
 - Don't include the CRC table for encryption, generate it.  Saves quite a bit
   of space in the source code. (Matthias Kramm)
 - Renamed multibyte.c to mbyte.c to avoid a problem with 8.3 filesystems.
+- Removed the GTK implementation of ":findhelp", it now uses the
+  ToolBar.FindHelp  menu entry.
 
 Support for xterm with 88 or 256 colors.  The right color numbers will be used
 for the name used in a ":highlight" command. (Steve Wall)
@@ -1444,6 +1466,9 @@ also used.
 
 ":browse set" now also works in the console mode.  ":browse edit" will give an
 error message.
+
+b:browsefilter and g:browsefilter can be set to the filters used for the file
+dialog.  Supported for Win32 and Motif GUI. (Dan Sharp)
 
 ":bdelete" and ":bunload" only report the number of deleted/unloaded buffers
 when more than 'report'.  The message was annoying when deleting a buffer in a
@@ -1560,6 +1585,11 @@ And also used in the console, when compiled with dialog support.
 Mapping <M-A> when 'encoding' is "latin1" and then setting 'encoding' to
 "utf-8" causes the first byte of a multi-byte to be mapped.  Can cause very
 hard to find problems.  Disallow mapping part of a multi-byte character.
+
+No longer warn for a changed directory.  This avoids that the file explorer
+produces warnings.
+Checking timestamps is only done for buffers that are not hidden.  These will
+be checked when they become unhidden.
 
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
@@ -2283,13 +2313,34 @@ work.
 
 "make test" didn't use the name of the generated Vim executable.
 
-'cindent' problem: Aligned with an "else" inside a do-while loop for a line
-below that loop. (Meikel Brandmeyer)
+'cindent' problems:
+- Aligned with an "else" inside a do-while loop for a line below that loop.
+  (Meikel Brandmeyer)
+- A line before a function would be indented even when terminated with a
+  semicolon. (Meikel Brandmeyer)
+- 'cindent' gave too much indent to a line after a "};" that ends an array
+  init.
 
 Win32 GUI: mouseshape didn't return to normal after a ":set" command.
 It stayed at "no entry".  Was only visible with ":set nomousehide".
 
 When 'list' is set, 'hlsearch' didn't highlight a match at the end of the
 line.  Now highlight the '$'.
+
+The Paste menu item in the menu bar, the popup menu and the toolbar were all
+different.  Now made them all equal to how it was done in mswin.vim.
+
+st_dev can be smaller than "unsigned".  The compiler may give an overflow
+warning.  Added a configure check for dev_t.
+
+Athena: closing a confirm() dialog killed Vim.
+
+Various typos in the documentation. (Matt Dunford)
+
+Python interface: The definition of _DEBUG could cause trouble, undefine it.
+The error message for not being able to load the shared library wasn't
+translated.  (Muraoka Taro)
+
+A few fixes for the Mac port. (Axel Kielhorn)
 
  vim:tw=78:

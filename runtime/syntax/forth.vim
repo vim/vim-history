@@ -25,7 +25,7 @@ syn match forthTodo contained 'Free\sSoftware\sFoundation\(,\sInc[.]\=\)\='
 
 " Characters allowed in keywords
 " I don't know if 128-255 are allowed in ANS-FORHT
-set iskeyword=!,@,33-64,A-Z,91-96,a-z,123-126,128-255
+setlocal iskeyword=!,@,33-64,A-Z,91-96,a-z,123-126,128-255
 
 " Keywords
 

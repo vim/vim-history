@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0ab.  Last change: 2001 Apr 13
+*various.txt*   For Vim version 6.0ac.  Last change: 2001 Apr 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -188,7 +188,7 @@ g8			Print the hex values of the bytes used in the
 			   B	big
 			   H	huge
 			   m	manually enabled
-			 (none) system dependend
+			 (none) system dependent
 			Thus if a feature is marked with "N", it is included
 			in the normal, big and huge versions of Vim.
 
@@ -397,7 +397,7 @@ K			Run a program to lookup the keyword under the
 			sleep for [N] milliseconds. >
   :sleep	  "sleep for one second
   :5sleep	  "sleep for five seconds
-  :sleep 100m     "sleep for hunderd millisonds
+  :sleep 100m     "sleep for a hundred milliseconds
 <			Can be interrupted with CTRL-C (CTRL-Break on MS-DOS).
 			"gs" stands for "goto sleep".  While sleeping the
 			cursor is positioned in the text (if visible).  {not
@@ -510,7 +510,9 @@ command:
 
 			*:helpfind* *:helpf*
 :helpf[ind]		Like |:help|, but use a dialog to enter the argument.
-			{only when compiled with |+GUI_GTK|}
+			Only for backwards compatibilty.  It now executes the
+			ToolBar.HelpFind menu entry instead of using a builtin
+			dialog.  {only when compiled with |+GUI_GTK|}
 
 							*:helpt* *:helptags*
 :helpt[ags] {dir}	Generate the help tags file for directory {dir}.  All

@@ -15,7 +15,7 @@ syn case match
 
 " Synchronization
 syn sync lines=1000
-set iskeyword=@,48-57,.,@-@,_,192-255
+setlocal iskeyword=@,48-57,.,@-@,_,192-255
 
 " Some special keywords
 syn keyword loutTodo contained TODO lout Lout LOUT

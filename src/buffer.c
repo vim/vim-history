@@ -50,6 +50,12 @@ static void	free_buffer __ARGS((buf_T *));
 static void	free_buffer_stuff __ARGS((buf_T *));
 static void	clear_wininfo __ARGS((buf_T *buf));
 
+#ifdef UNIX
+# define dev_T dev_t
+#else
+# define dev_T unsigned
+#endif
+
 /*
  * Open current buffer, that is: open the memfile and read the file into memory
  * return FAIL for failure, OK otherwise
@@ -1183,7 +1189,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf, listed)
     /* On Unix we can use inode numbers when the file exists.  Works better
      * for hard links. */
     if (sfname == NULL || mch_stat((char *)sfname, &st) < 0)
-	st.st_dev = (unsigned)-1;
+	st.st_dev = (dev_T)-1;
 #endif
     if (ffname != NULL && (buf =
 #ifdef UNIX
@@ -1313,7 +1319,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf, listed)
 
     buf->b_fname = buf->b_sfname;
 #ifdef UNIX
-    if (st.st_dev == (unsigned)-1)
+    if (st.st_dev == (dev_T)-1)
 	buf->b_dev = -1;
     else
     {
@@ -1539,7 +1545,7 @@ buflist_findname(ffname)
     struct stat st;
 
     if (mch_stat((char *)ffname, &st) < 0)
-	st.st_dev = (unsigned)-1;
+	st.st_dev = (dev_T)-1;
     return buflist_findname_stat(ffname, &st);
 }
 
@@ -2110,7 +2116,7 @@ setfname(ffname, sfname, message)
 	curbuf->b_ffname = NULL;
 	curbuf->b_sfname = NULL;
 #ifdef UNIX
-	st.st_dev = (unsigned)-1;
+	st.st_dev = (dev_T)-1;
 #endif
     }
     else
@@ -2126,7 +2132,7 @@ setfname(ffname, sfname, message)
 	 */
 #ifdef UNIX
 	if (mch_stat((char *)ffname, &st) < 0)
-	    st.st_dev = (unsigned)-1;
+	    st.st_dev = (dev_T)-1;
 	buf = buflist_findname_stat(ffname, &st);
 #else
 	buf = buflist_findname(ffname);
@@ -2162,7 +2168,7 @@ setfname(ffname, sfname, message)
     }
     curbuf->b_fname = curbuf->b_sfname;
 #ifdef UNIX
-    if (st.st_dev == (unsigned)-1)
+    if (st.st_dev == (dev_T)-1)
 	curbuf->b_dev = -1;
     else
     {
@@ -2333,7 +2339,7 @@ otherfile_buf(buf, ffname
 	if (stp == NULL)
 	{
 	    if (buf->b_dev < 0 || mch_stat((char *)ffname, &st) < 0)
-		st.st_dev = (unsigned)-1;
+		st.st_dev = (dev_T)-1;
 	    stp = &st;
 	}
 	/* Use dev/ino to check if the files are the same, even when the names

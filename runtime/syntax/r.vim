@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	R
 " Maintainer:	Tom Payne <tom@tompayne.org>
-" Last change:  2001 Jan 15
+" Last change:  2001 Apr 20
 " Filenames:	*.r
 " URL:		http://www.tompayne.org/vim/syntax/r.vim
 
@@ -11,7 +11,7 @@ if exists("b:current_syntax")
 endif
 
 syn case match
-set iskeyword=@,48-57,.
+setlocal iskeyword=@,48-57,.
 
 " Comment
 syn match rComment /\#.*/

@@ -586,6 +586,7 @@ EXTERN XIC		xic INIT(= NULL);
 # endif
 EXTERN guicolor_T	xim_fg_color INIT(= -1);
 EXTERN guicolor_T	xim_bg_color INIT(= -1);
+EXTERN int		xim_preediting INIT(= FALSE);	/* XIM in showmode() */
 #endif
 
 #ifdef FEAT_HANGULIN
@@ -949,9 +950,6 @@ EXTERN char_u e_letunexp[]	INIT(=N_("Unexpected characters before '='"));
 EXTERN char_u e_markinval[]	INIT(=N_("Mark has invalid line number"));
 EXTERN char_u e_marknotset[]	INIT(=N_("Mark not set"));
 EXTERN char_u e_modifiable[]	INIT(=N_("Cannot make changes, 'modifiable' is off"));
-#ifdef FEAT_GUI_GTK
-EXTERN char_u e_needgui[]	INIT(=N_("GUI is not running"));
-#endif
 EXTERN char_u e_nesting[]	INIT(=N_("Scripts nested too deep"));
 EXTERN char_u e_noalt[]		INIT(=N_("No alternate file"));
 EXTERN char_u e_noabbr[]	INIT(=N_("No such abbreviation"));

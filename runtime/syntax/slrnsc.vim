@@ -12,7 +12,7 @@ syn match slrnscComment		"%.*$"
 syn match slrnscSectionCom	".].*"lc=2
 
 " characters in newsgroup names
-set isk=@,48-57,.,-,_,+
+setlocal isk=@,48-57,.,-,_,+
 
 syn match slrnscGroup		contained "\(\k\|\*\)\+"
 syn match slrnscNumber		contained "\d\+"

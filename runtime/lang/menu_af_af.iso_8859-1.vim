@@ -1,6 +1,6 @@
 " Menu Translations:	Afrikaas
 " Maintainer:	        Danie Roux <droux@tuks.co.za>
-" Last Change:	        2001 Apr 01
+" Last Change:	        2001 Apr 18
 
 menutrans clear
 let did_menu_trans = 1
@@ -76,7 +76,7 @@ menutrans &Close<Tab>^Wc		&Maak\ toe<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	Maak\ &Ander\ Toe<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			Volgende<Tab>^Ww
 menutrans P&revious<Tab>^WW		&Vorige<Tab>^WW
-menutrans &Equal\ Height<Tab>^W=	&Gelyke\ hoogte<Tab>^W=
+menutrans &Equal\ Size<Tab>^W=		&Gelyke\ hoogte<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		&Maksimale\ hoogte<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		Mi&nimale\ hoogte<Tab>^W1_
 menutrans Max\ Width<Tab>^W\|		Maksimale\ breedte<Tab>^W\|

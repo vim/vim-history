@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0ab.  Last change: 2001 Apr 15
+*starting.txt*  For Vim version 6.0ac.  Last change: 2001 Apr 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -292,7 +292,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		in a gvimrc file.  See |startup|.  {not in Vi}
 		When you want to reduce accesses to the disk (e.g., for a
 		laptop), don't use "-n", but set 'updatetime' and
-		'udpatecount' to very big numbers, and type ":preserve" when
+		'updatecount' to very big numbers, and type ":preserve" when
 		you want to save your work.  This way you keep the possibility
 		for crash recovery.
 
@@ -617,7 +617,7 @@ accordingly.  Vim proceeds in this order:
 		:runtime plugin/*.vim
 <	The result is that all directories in the 'runtimepath' option will be
 	searched for the "plugin" sub-directory and all files ending in ".vim"
-	will be sourced (in alphabetial order per directory).
+	will be sourced (in alphabetical order per directory).
 	Loading plugins won't be done when:
 	- The 'loadplugins' option was reset in a vimrc file.
 	- The |--noplugin| command line argument is used.

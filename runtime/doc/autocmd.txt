@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0ab.  Last change: 2001 Apr 13
+*autocmd.txt*   For Vim version 6.0ac.  Last change: 2001 Apr 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -253,18 +253,23 @@ FilterWritePost			After writing a file for a filter command.
 				Vim checks the pattern against the name of
 				the current buffer as with FilterWritePre.
 							*FileChangedShell*
-FileChangedShell		After Vim runs a shell command and notices
-				that the modification time of a file has
-				changed since editing started.  This
-				autocommand is triggered for each changed
-				file.  Run in place of the 'has been changed'
-				message.  See |timestamp|.  Useful for
-				reloading related buffers which are affected
-				by a single command.
+FileChangedShell		When Vim notices that the modification time of
+				a file has changed since editing started.
+				|timestamp|
+				Mostly triggered after executing a shell
+				command, but also with a |:checktime| command
+				or when Vim regains input focus.
+				This autocommand is triggered for each changed
+				file.  It is not used when 'autoread' is set
+				and the buffer was not changed.  If a
+				FileChangedShell autocommand is present the
+				warning message and prompt is not given.
+				This is useful for reloading related buffers
+				which are affected by a single command.
 				NOTE: When this autocommand is executed, the
 				current buffer "%" may be different from the
 				buffer that was changed "<afile>".
-				NOTE: This even never nests, to avoid an
+				NOTE: This event never nests, to avoid an
 				endless loop.
 							*FileChangedRO*
 FileChangedRO			Before making the first change to a read-only

@@ -2115,3 +2115,24 @@ source_finished(cookie)
     return ((struct source_cookie *)cookie)->finished == TRUE;
 }
 #endif
+
+#if defined(FEAT_LISTCMDS) || defined(PROTO)
+/*
+ * ":checktime [buffer]"
+ */
+    void
+ex_checktime(eap)
+    exarg_T	*eap;
+{
+    buf_T	*buf;
+
+    if (eap->addr_count == 0)	/* default is all buffers */
+	check_timestamps(FALSE);
+    else
+    {
+	buf = buflist_findnr((int)eap->line2);
+	if (buf != NULL)	/* cannot happen? */
+	    (void)buf_check_timestamp(buf, FALSE);
+    }
+}
+#endif

@@ -52,7 +52,7 @@
 # include <gnome.h>
 #endif
 
-#if defined(FEAT_GUI_DIALOG) && !defined(FEAT_GUI_GNOME)
+#if defined(FEAT_GUI_DIALOG)
 # include "../pixmaps/alert.xpm"
 # include "../pixmaps/error.xpm"
 # include "../pixmaps/generic.xpm"
@@ -940,8 +940,8 @@ gui_mch_browse(int saving,
 
 # ifdef FEAT_GUI_GNOME
 /* ARGSUSED */
-    int
-gui_mch_dialog( int	type,
+    static int
+gui_gnome_dialog( int	type,
 		char_u	*title,
 		char_u	*message,
 		char_u	*buttons,
@@ -1012,13 +1012,13 @@ gui_mch_dialog( int	type,
 	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_CLOSE);
 	else if (g_strcasecmp((char *)p, "Help") == 0)
 	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_HELP);
+	else if (g_strcasecmp((char *)p, "Apply") == 0)
+	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_APPLY);
 #if 0
 	/*
 	 * these aren't really used that often anyway, but are listed here as
 	 * placeholders in case we need them.
 	 */
-	else if (g_strcasecmp((char *)p, "Apply") == 0)
-	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_APPLY);
 	else if (g_strcasecmp((char *)p, "Next") == 0)
 	    buttons_list[cur] = g_strdup(GNOME_STOCK_BUTTON_NEXT);
 	else if (g_strcasecmp((char *)p, "Prev") == 0)
@@ -1052,7 +1052,7 @@ gui_mch_dialog( int	type,
     return (1 + gnome_dialog_run_and_close(GNOME_DIALOG(dlg)));
 } /* gui_mch_dialog */
 
-# else /* FEAT_GUI_GNOME */
+# endif /* FEAT_GUI_GNOME */
 
 typedef struct _ButtonData
 {
@@ -1067,28 +1067,48 @@ typedef struct _CancelData
     GtkWidget	*dialog;
 } CancelData;
 
+static char_u *dialog_textfield = NULL;
+static GtkWidget *dialog_textentry;
+
+    static void
+dlg_destroy(GtkWidget *dlg)
+{
+    gchar *p;
+
+    if (dialog_textfield!= NULL)
+    {
+	/* Get the text from the textentry widget. */
+	p = gtk_editable_get_chars(GTK_EDITABLE(dialog_textentry),
+							       0, IOSIZE - 1);
+	STRCPY(dialog_textfield, p);
+	g_free(p);
+    }
+    /* Destroy the dialog, will break the waiting loop. */
+    gtk_widget_destroy(dlg);
+}
+
 /* ARGSUSED */
     static void
 dlg_button_clicked(GtkWidget * widget, ButtonData *data)
 {
     *(data->status) = data->index + 1;
-    gtk_widget_destroy(data->dialog);
+    dlg_destroy(data->dialog);
 }
 
 /*
  * This makes the Escape key equivalent to the cancel button.
  */
-
 /*ARGSUSED*/
     static int
 dlg_key_press_event(GtkWidget * widget, GdkEventKey * event, CancelData *data)
 {
-    if (event->keyval != GDK_Escape)
+    if (event->keyval != GDK_Escape && event->keyval != GDK_Return)
 	return FALSE;
 
-    /* The result value of 0 from a dialog is signaling cancelation. */
-    *(data->status) = 0;
-    gtk_widget_destroy(data->dialog);
+    /* The result value of 0 from a dialog is signaling cancelation.
+     * 1 means OK. */
+    *(data->status) = (event->keyval == GDK_Return);
+    dlg_destroy(data->dialog);
 
     return TRUE;
 }
@@ -1099,7 +1119,8 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 		char_u	*title,		/* title of dialog */
 		char_u	*message,	/* message text */
 		char_u	*buttons,	/* names of buttons */
-		int	def_but)	/* default button */
+		int	def_but,	/* default button */
+		char_u	*textfield)	/* text for textfield or NULL */
 {
     char_u	*names;
     char_u	*p;
@@ -1126,6 +1147,12 @@ gui_mch_dialog(	int	type,		/* type of dialog */
     GtkWidget		**button;
     ButtonData		*data;
     CancelData		cancel_data;
+
+# ifdef FEAT_GUI_GNOME
+    /* If Gnome is available, use it for the simple button dialog. */
+    if (textfield == NULL)
+	return gui_gnome_dialog(type, title, message, buttons, def_but);
+# endif
 
     if (title == NULL)
 	title = (char_u *)_("Vim dialog...");
@@ -1207,6 +1234,21 @@ gui_mch_dialog(	int	type,		/* type of dialog */
     gtk_table_attach_defaults(GTK_TABLE(table), dialogmessage, 1, 2, 0, 1);
     gtk_widget_show(dialogmessage);
 
+    dialog_textfield = textfield;
+    if (textfield != NULL)
+    {
+	/* Add text entry field */
+	dialog_textentry = gtk_entry_new();
+	gtk_widget_set_usize(dialog_textentry, 400, -2);
+	gtk_box_pack_start(GTK_BOX(vbox), dialog_textentry, TRUE, TRUE, 0);
+	gtk_entry_set_text(GTK_ENTRY(dialog_textentry), (const gchar *)textfield);
+	gtk_entry_select_region(GTK_ENTRY(dialog_textentry), 0, STRLEN(textfield));
+	gtk_entry_set_max_length(GTK_ENTRY(dialog_textentry), IOSIZE - 1);
+	gtk_entry_set_position(GTK_ENTRY(dialog_textentry), STRLEN(textfield));
+	gtk_widget_show(dialog_textentry);
+    }
+
+    /* Add box for buttons */
     action_area = gtk_hbox_new(FALSE, 0);
     gtk_container_border_width(GTK_CONTAINER(action_area), 4);
     gtk_box_pack_end(GTK_BOX(vbox), action_area, FALSE, TRUE, 0);
@@ -1336,6 +1378,8 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 
     gtk_widget_grab_focus(button[def_but]);
     gtk_widget_grab_default(button[def_but]);
+    if (textfield != NULL)
+	gtk_window_set_focus(GTK_WINDOW(dialog), dialog_textentry);
 
     separator = gtk_hseparator_new();
     gtk_box_pack_end(GTK_BOX(vbox), separator, FALSE, TRUE, 0);
@@ -1354,6 +1398,8 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 
     if (dialog_status < 0)
 	dialog_status = 0;
+    if (dialog_status != 1 && textfield != NULL)
+	*textfield = NUL;	/* dialog was cancelled */
 
     /* let the garbage collector know that we don't need it anylonger */
     gtk_accel_group_unref(accel_group);
@@ -1363,8 +1409,6 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 
     return dialog_status;
 }
-
-# endif	/* FEAT_GUI_GNOME */
 
 
 #endif	/* FEAT_GUI_DIALOG */
@@ -1773,35 +1817,6 @@ gui_gtk_synch_fonts(void)
 
 
 /*
- * Convenience function.
- * Creates a button with a label, and packs it into the box specified by the
- * parameter 'parent'.
- */
-    GtkWidget *
-gui_gtk_button_new_with_label(
-	char		*labelname,
-	GtkSignalFunc	cbfunc,
-	gpointer	cbdata,
-	GtkWidget	*parent,
-	int		connect_object,
-	gboolean	expand,
-	gboolean	fill)
-{
-    GtkWidget *tmp;
-
-    tmp = gtk_button_new_with_label(labelname);
-    if (connect_object)
-	gtk_signal_connect_object(GTK_OBJECT(tmp), "clicked",
-				  GTK_SIGNAL_FUNC(cbfunc), GTK_OBJECT(cbdata));
-    else
-	gtk_signal_connect(GTK_OBJECT(tmp), "clicked",
-			   GTK_SIGNAL_FUNC(cbfunc), cbdata);
-    gtk_box_pack_end(GTK_BOX(parent), tmp, expand, fill, 0);
-    return tmp;
-}
-
-
-/*
  * Callback for actions of the find and replace dialogs
  */
 /*ARGSUSED*/
@@ -2041,103 +2056,6 @@ entry_changed_cb(GtkWidget * entry, GtkWidget * dialog)
 }
 
 /*
- * Handling of the nice additional asynchronous little help topic requester.
- */
-
-static GtkWidget *helpfind = NULL;
-static GtkWidget *help_entry = NULL;
-static int	 help_ok_sensitive = FALSE;
-
-    static void
-helpfind_entry_changed(GtkWidget *entry, gpointer cbdata)
-{
-    GtkWidget *ok = (GtkWidget *)cbdata;
-    char *txt = gtk_entry_get_text(GTK_ENTRY(entry));
-
-    if (txt == NULL || *txt == NUL)
-	return;
-
-    gtk_widget_set_sensitive(ok, strlen(txt));
-    gtk_widget_grab_default(ok);
-    help_ok_sensitive = TRUE;
-}
-
-/*ARGSUSED*/
-    static void
-helpfind_ok(GtkWidget *wgt, gpointer cbdata)
-{
-    char	*txt, *cmd;
-    GtkEntry	*entry = GTK_ENTRY(cbdata);
-
-    if ((txt = gtk_entry_get_text(entry)) == NULL)
-	return;
-
-    /* When the OK button isn't sensitive, hitting CR means cancel. */
-    if (help_ok_sensitive)
-    {
-	if ((cmd = (char *)alloc(strlen(txt) + 8)) == NULL)
-	    return;
-
-	/* use CTRL-\ CTRL-N to get Vim into Normal mode first */
-	g_snprintf(cmd, (gulong)(strlen(txt) + 7), "\034\016:h %s\r", txt);
-	add_to_input_buf((char_u *)cmd, STRLEN(cmd));
-	vim_free(cmd);
-    }
-
-    /* Don't destroy this dialogue just hide it from the users view.
-     * Reuse it later */
-    gtk_widget_hide(helpfind);
-
-    if (gtk_main_level() > 0)
-	gtk_main_quit();
-}
-
-/*ARGSUSED*/
-    static void
-helpfind_cancel(GtkWidget *wgt, gpointer data)
-{
-    if (helpfind == NULL)
-	return;
-
-    /* Don't destroy this dialogue just hide it from the users view.
-     * Reuse it later */
-    gtk_widget_hide(helpfind);
-
-    if (gtk_main_level() > 0)
-	gtk_main_quit();
-}
-
-/* ARGSUSED */
-    static int
-helpfind_key_press_event(GtkWidget *widget, GdkEventKey *event)
-{
-    /* If the user is holding one of the key modifiers we will just bail out,
-     * thus preserving the possibility of normal focus traversal.
-     */
-    if (event->state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK))
-	return FALSE;
-
-    /* the escape key synthesizes a cancellation action */
-    if (event->keyval == GDK_Escape)
-    {
-	helpfind_cancel(NULL, NULL);
-	return TRUE;
-    }
-
-    /* block traversal resulting from those keys */
-    if (event->keyval == GDK_Left
-	    || event->keyval == GDK_Right
-	    || event->keyval == GDK_space)
-	return TRUE;
-
-    /* It would be delightfull if it where possible to do search history
-     * operations on the K_UP and K_DOWN keys here.
-     */
-
-    return FALSE;
-}
-
-/*
  * ":helpfind"
  */
 /*ARGSUSED*/
@@ -2145,104 +2063,10 @@ helpfind_key_press_event(GtkWidget *widget, GdkEventKey *event)
 ex_helpfind(eap)
     exarg_T	*eap;
 {
-    GtkWidget *frame;
-    GtkWidget *vbox;
-    GtkWidget *hbox;
-    GtkWidget *tmp;
-    GtkWidget *action_area;
-    GtkWidget *sub_area;
-
-    if (!gui.in_use)
-    {
-	EMSG(_(e_needgui));
-	return;
-    }
-
-    if (helpfind)
-    {
-	gui_gtk_position_in_parent(GTK_WIDGET(gui.mainwin),
-					  GTK_WIDGET(helpfind), VW_POS_MOUSE);
-	if (!GTK_WIDGET_VISIBLE(helpfind))
-	{
-	    gtk_widget_grab_focus(help_entry);
-	    gtk_widget_show(helpfind);
-	}
-
-	gdk_window_raise(helpfind->window);
-	return;
-    }
-
-    helpfind = gtk_window_new(GTK_WINDOW_DIALOG);
-    gtk_window_set_transient_for(GTK_WINDOW(helpfind), GTK_WINDOW(gui.mainwin));
-    gtk_window_set_title(GTK_WINDOW(helpfind), _("VIM - Help on..."));
-
-    gtk_widget_realize(helpfind);
-    gdk_window_set_decorations(helpfind->window,
-		    GDK_DECOR_BORDER | GDK_DECOR_TITLE);
-    gdk_window_set_functions(helpfind->window, GDK_FUNC_MOVE);
-
-    gtk_signal_connect(GTK_OBJECT(helpfind), "destroy",
-		       GTK_SIGNAL_FUNC(gtk_widget_destroyed), &helpfind);
-
-    /* this makes it look beter on Motif style window managers */
-    frame = gtk_frame_new(NULL);
-    gtk_container_add(GTK_CONTAINER(helpfind), frame);
-    gtk_widget_show(frame);
-
-    vbox = gtk_vbox_new(FALSE, 0);
-    gtk_container_add(GTK_CONTAINER(frame), vbox);
-
-    hbox = gtk_hbox_new(FALSE, 6);
-    gtk_box_pack_start(GTK_BOX(vbox), hbox, TRUE, TRUE, 0);
-    gtk_container_border_width(GTK_CONTAINER(hbox), 6);
-
-    tmp = gtk_label_new(_("Topic:"));
-    gtk_box_pack_start(GTK_BOX(hbox), tmp, TRUE, TRUE, 0);
-
-    help_entry = gtk_entry_new();
-    gtk_box_pack_start(GTK_BOX(hbox), help_entry, TRUE, TRUE, 0);
-    gtk_signal_connect_after(GTK_OBJECT(help_entry), "key_press_event",
-				 GTK_SIGNAL_FUNC(helpfind_key_press_event),
-				 (gpointer) helpfind);
-
-    action_area = gtk_hbox_new(FALSE, 0);
-    gtk_container_set_border_width(GTK_CONTAINER(action_area), 4);
-    gtk_box_pack_end(GTK_BOX(vbox), action_area, FALSE, TRUE, 0);
-
-    sub_area = gtk_hbox_new(TRUE, 0);
-    gtk_container_set_border_width(GTK_CONTAINER(sub_area), 0);
-    gtk_box_pack_end(GTK_BOX(action_area), sub_area, FALSE, TRUE, 0);
-
-    tmp = gui_gtk_button_new_with_label(_("Cancel"),
-	    GTK_SIGNAL_FUNC(helpfind_cancel),
-	    help_entry, sub_area, TRUE, TRUE, TRUE);
-    GTK_WIDGET_SET_FLAGS(tmp, GTK_CAN_DEFAULT);
-    gtk_widget_grab_default(tmp);
-
-    tmp = gui_gtk_button_new_with_label(_("OK"),
-	    GTK_SIGNAL_FUNC(helpfind_ok),
-	    help_entry, sub_area, FALSE, TRUE, TRUE);
-    gtk_signal_connect(GTK_OBJECT(help_entry), "changed",
-		       GTK_SIGNAL_FUNC(helpfind_entry_changed), tmp);
-    gtk_signal_connect(GTK_OBJECT(help_entry), "activate",
-		       GTK_SIGNAL_FUNC(helpfind_ok), help_entry);
-    gtk_widget_set_sensitive(tmp, FALSE);
-    help_ok_sensitive = FALSE;
-    GTK_WIDGET_SET_FLAGS(tmp, GTK_CAN_DEFAULT);
-
-    tmp = gtk_hseparator_new();
-    gtk_box_pack_end(GTK_BOX(vbox), tmp, FALSE, TRUE, 0);
-
-    /* show the frame so we can know its window size request that we'll use to
-     * position it -- dbv */
-    gtk_widget_show_all(frame);
-    gui_gtk_position_in_parent(GTK_WIDGET(gui.mainwin),
-					  GTK_WIDGET(helpfind), VW_POS_MOUSE);
-
-    gtk_widget_grab_focus(help_entry);
-    gtk_widget_show_all(helpfind);
+    /* This will fail when menus are not loaded.  Well, it's only for
+     * backwards compatibility anyway. */
+    do_cmdline_cmd((char_u *)"emenu ToolBar.FindHelp");
 }
-
 
 /*  gui_gtk_position_in_parent
  *

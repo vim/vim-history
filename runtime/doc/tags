@@ -1386,6 +1386,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :chdir	editing.txt	/*:chdir*
 :che	tagsearch.txt	/*:che*
 :checkpath	tagsearch.txt	/*:checkpath*
+:checkt	editing.txt	/*:checkt*
+:checktime	editing.txt	/*:checktime*
 :cl	quickfix.txt	/*:cl*
 :cla	quickfix.txt	/*:cla*
 :clast	quickfix.txt	/*:clast*
@@ -2884,6 +2886,7 @@ blockwise-register	change.txt	/*blockwise-register*
 blockwise-visual	visual.txt	/*blockwise-visual*
 boolean	options.txt	/*boolean*
 browse()	eval.txt	/*browse()*
+browsefilter	editing.txt	/*browsefilter*
 bufexists()	eval.txt	/*bufexists()*
 buffer-hidden	windows.txt	/*buffer-hidden*
 buffer-list	windows.txt	/*buffer-list*
@@ -3775,6 +3778,7 @@ indentkeys-format	change.txt	/*indentkeys-format*
 index.txt	index.txt	/*index.txt*
 initialization	starting.txt	/*initialization*
 input()	eval.txt	/*input()*
+inputdialog()	eval.txt	/*inputdialog()*
 inputsecret()	eval.txt	/*inputsecret()*
 ins-completion	insert.txt	/*ins-completion*
 ins-expandtab	insert.txt	/*ins-expandtab*
@@ -4675,6 +4679,7 @@ tf-syntax	syntax.txt	/*tf-syntax*
 tf.vim	syntax.txt	/*tf.vim*
 this_session-variable	eval.txt	/*this_session-variable*
 timestamp	editing.txt	/*timestamp*
+timestamps	editing.txt	/*timestamps*
 tips	tips.txt	/*tips*
 tips.txt	tips.txt	/*tips.txt*
 todo	todo.txt	/*todo*
@@ -4729,6 +4734,7 @@ utf-8-in-others	multibyte.txt	/*utf-8-in-others*
 utf-8-in-xterm	multibyte.txt	/*utf-8-in-xterm*
 utf-8-in-xwindows	multibyte.txt	/*utf-8-in-xwindows*
 utf-8-typing	multibyte.txt	/*utf-8-typing*
+utf8	multibyte.txt	/*utf8*
 v	visual.txt	/*v*
 v:charconvert_from	eval.txt	/*v:charconvert_from*
 v:charconvert_to	eval.txt	/*v:charconvert_to*
@@ -5077,9 +5083,11 @@ zz	scroll.txt	/*zz*
 {Visual}	intro.txt	/*{Visual}*
 {char1-char2}	intro.txt	/*{char1-char2}*
 {event}	autocmd.txt	/*{event}*
+{lhs}	map.txt	/*{lhs}*
 {motion}	intro.txt	/*{motion}*
 {move-around}	visual.txt	/*{move-around}*
 {offset}	pattern.txt	/*{offset}*
+{rhs}	map.txt	/*{rhs}*
 {subject}	various.txt	/*{subject}*
 {}	intro.txt	/*{}*
 }	motion.txt	/*}*

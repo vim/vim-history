@@ -24,6 +24,7 @@ void clip_may_redraw_selection __ARGS((int row, int col, int len));
 void clip_clear_selection __ARGS((void));
 void clip_may_clear_selection __ARGS((int row1, int row2));
 void clip_scroll_selection __ARGS((int rows));
+void clip_copy_modeless_selection __ARGS((int both));
 int clip_gen_own_selection __ARGS((VimClipboard *cbd));
 void clip_gen_lose_selection __ARGS((VimClipboard *cbd));
 void clip_gen_set_selection __ARGS((VimClipboard *cbd));

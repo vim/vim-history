@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Fvwm{1,2} configuration file
 " Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Apr 20
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -11,7 +11,7 @@ endif
 " Fvwm configuration files are case insensitive
 syn case ignore
 
-set iskeyword=_,-,+,.,a-z,A-Z,48-57
+setlocal iskeyword=_,-,+,.,a-z,A-Z,48-57
 
 " Read system colors from the color database (rgb.txt)
 if exists("rgb_file")

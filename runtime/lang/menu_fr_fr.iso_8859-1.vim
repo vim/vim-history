@@ -1,6 +1,6 @@
 " Menu Translations:	Français
 " Maintainer:		François Thunus (thunus@systran.fr)
-" Last Change:	2001 Apr 01
+" Last Change:	2001 Apr 18
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -81,7 +81,7 @@ menutrans &Close<Tab>^Wc		&Fermer<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	Fermer\ &Autre(s)<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			Suivant<Tab>^Ww
 menutrans P&revious<Tab>^WW		&Précedent<Tab>^WW
-menutrans &Equal\ Height<Tab>^W=	&Même\ hauteur<Tab>^W=
+menutrans &Equal\ Size<Tab>^W=		&Même\ hauteur<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		&hauteur\ maximale<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		hauteur\ Mi&nimale<Tab>^W1_
 menutrans Max\ Width<Tab>^W\|		largeur\ maximale<Tab>^W\|

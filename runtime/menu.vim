@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Apr 16
+" Last Change:	2001 Apr 22
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -18,7 +18,11 @@ let did_install_default_menus = 1
 if exists("v:lang") || &langmenu != ""
   " Try to find a menu translation file for the current language.
   if &langmenu != ""
-    let s:lang = &langmenu
+    if &langmenu =~ "none"
+      let s:lang = ""
+    else
+      let s:lang = &langmenu
+    endif
   else
     let s:lang = v:lang
   endif
@@ -43,12 +47,21 @@ amenu 9999.20 &Help.&How-to\ links		:help how-to<CR>
 amenu 9999.30 &Help.&GUI			:help gui<CR>
 amenu 9999.40 &Help.&Credits			:help credits<CR>
 amenu 9999.50 &Help.Co&pying			:help uganda<CR>
-if has("gui_gtk")
-  amenu 9999.60 &Help.&Find\.\.\.		:helpfind<CR>
-endif
+amenu 9999.60 &Help.&Find\.\.\.			:call <SID>Helpfind()<CR>
 amenu 9999.65 &Help.-sep-			<nul>
 amenu 9999.70 &Help.&Version			:version<CR>
 amenu 9999.80 &Help.&About			:intro<CR>
+
+fun! s:Helpfind()
+  let h = inputdialog("Enter a command or word to find help on:\n\nPrepend i_ for Input mode commands (Ex: i_CTRL-X)\nPrepend c_ for command-line editing commands (Ex: c_<Del>)\nPrepend ' for an option name (Ex: 'shiftwidth')")
+  if h != ""
+    let v:errmsg = ""
+    silent! exe "help " . h
+    if v:errmsg != ""
+      echo v:errmsg
+    endif
+  endif
+endfun
 
 " File menu
 amenu 10.310 &File.&Open\.\.\.<Tab>:e		:browse confirm e<CR>
@@ -111,6 +124,9 @@ amenu 10.610 &File.Sa&ve-Exit<Tab>:wqa		:confirm wqa<CR>
 amenu 10.620 &File.E&xit<Tab>:qa		:confirm qa<CR>
 
 
+" Tricky stuff to make pasting work as expected.
+nnoremap <SID>Paste "=@+.'xy'<CR>gPFx"_2x:echo<CR>
+
 " Edit menu
 amenu 20.310 &Edit.&Undo<Tab>u			u
 amenu 20.320 &Edit.&Redo<Tab>^R			<C-R>
@@ -118,10 +134,11 @@ amenu 20.330 &Edit.Rep&eat<Tab>\.		.
 amenu 20.335 &Edit.-SEP1-			:
 vmenu 20.340 &Edit.Cu&t<Tab>"+x			"+x
 vmenu 20.350 &Edit.&Copy<Tab>"+y		"+y
-nmenu 20.360 &Edit.&Paste<Tab>"+p		"+p
-vmenu	     &Edit.&Paste<Tab>"+p		"+P`]:if col(".")!=1<Bar>exe "norm l"<Bar>endif<CR>
-imenu	     &Edit.&Paste<Tab>"+p		<Esc>:if col(".")!=1<Bar>exe 'norm "+p'<Bar>else<Bar>exe 'norm "+P'<Bar>endif<CR>`]a
-cmenu	     &Edit.&Paste<Tab>"+p		<C-R>+
+cmenu 20.350 &Edit.&Copy<Tab>"+y		<C-Y>
+nmenu 20.360 &Edit.&Paste<Tab>"+P		<SID>Paste
+vmenu	     &Edit.&Paste<Tab>"+P		"-cx<Esc><SID>Paste"_x
+imenu	     &Edit.&Paste<Tab>"+P		x<Esc><SID>Paste"_s
+cmenu	     &Edit.&Paste<Tab>"+P		<C-R>+
 nmenu 20.370 &Edit.Put\ &Before<Tab>[p		[p
 imenu	     &Edit.Put\ &Before<Tab>[p		<C-O>[p
 nmenu 20.380 &Edit.Put\ &After<Tab>]p		]p
@@ -156,29 +173,35 @@ fun <SID>ToggleGuiOption(option)
 endfun
 
 " Build boolean options
-amenu 20.440 &Edit.Se&ttings.Toggle\ Line\ Numbering<TAB>:set\ number!	:set number!<CR>
-amenu 20.450 &Edit.Se&ttings.Toggle\ Line\ Wrap<TAB>:set\ wrap!		:set wrap!<CR>
-amenu 20.460 &Edit.Se&ttings.Toggle\ hlsearch<TAB>:set\ hlsearch!	:set hlsearch!<CR>
-amenu 20.470 &Edit.Se&ttings.Toggle\ expandtab<TAB>:set\ expandtab!	:set expandtab!<CR>
+amenu 20.440.100 &Edit.Se&ttings.Toggle\ Line\ Numbering<Tab>:set\ nu!	:set nu!<CR>
+amenu 20.440.110 &Edit.Se&ttings.Toggle\ Line\ Wrap<Tab>:set\ wrap!		:set wrap!<CR>
+amenu 20.440.120 &Edit.Se&ttings.Toggle\ Search\ Patn\ Highl<Tab>:set\ hls!	:set hls!<CR>
+amenu 20.440.130 &Edit.Se&ttings.Toggle\ expand-tab<Tab>:set\ et!	:set et!<CR>
+amenu 20.440.140 &Edit.Se&ttings.Toggle\ auto-indent<Tab>:set\ ai!	:set ai!<CR>
 
 " Build GUI options
-amenu 20.475 &Edit.Se&ttings.-SEP1-	    :
-amenu 20.480 &Edit.Se&ttings.Toggle\ Toolbar		:call <SID>ToggleGuiOption("T")<CR>
-amenu 20.490 &Edit.Se&ttings.Toggle\ Bottom\ Scrollbar	:call <SID>ToggleGuiOption("b")<CR>
-amenu 20.500 &Edit.Se&ttings.Toggle\ Left\ Scrollbar	:call <SID>ToggleGuiOption("l")<CR>
-amenu 20.510 &Edit.Se&ttings.Toggle\ Right\ Scrolbar	:call <SID>ToggleGuiOption("r")<CR>
+amenu 20.440.300 &Edit.Se&ttings.-SEP1-	    :
+amenu 20.440.310 &Edit.Se&ttings.Toggle\ Toolbar		:call <SID>ToggleGuiOption("T")<CR>
+amenu 20.440.320 &Edit.Se&ttings.Toggle\ Bottom\ Scrollbar	:call <SID>ToggleGuiOption("b")<CR>
+amenu 20.440.330 &Edit.Se&ttings.Toggle\ Left\ Scrollbar	:call <SID>ToggleGuiOption("l")<CR>
+amenu 20.440.340 &Edit.Se&ttings.Toggle\ Right\ Scrolbar	:call <SID>ToggleGuiOption("r")<CR>
 
 " Build variable options
-amenu 20.515 &Edit.Se&ttings.-SEP2-	    :
-amenu 20.520 &Edit.Se&ttings.Shiftwidth.2   :set shiftwidth=2<CR>
-amenu 20.530 &Edit.Se&ttings.Shiftwidth.3   :set shiftwidth=3<CR>
-amenu 20.540 &Edit.Se&ttings.Shiftwidth.4   :set shiftwidth=4<CR>
-amenu 20.550 &Edit.Se&ttings.Shiftwidth.5   :set shiftwidth=5<CR>
-amenu 20.560 &Edit.Se&ttings.Shiftwidth.6   :set shiftwidth=6<CR>
-amenu 20.570 &Edit.Se&ttings.Shiftwidth.8   :set shiftwidth=8<CR>
-amenu 20.580 &Edit.Se&ttings.Text\ Width\.\.\.    :let &tw=
-		\ input("Enter new text width (0 to disable formatting): ")<CR>
-
+amenu 20.440.600 &Edit.Se&ttings.-SEP2-	    :
+amenu 20.440.610.20 &Edit.Se&ttings.Shiftwidth.2   :set shiftwidth=2<CR>
+amenu 20.440.610.30 &Edit.Se&ttings.Shiftwidth.3   :set shiftwidth=3<CR>
+amenu 20.440.610.40 &Edit.Se&ttings.Shiftwidth.4   :set shiftwidth=4<CR>
+amenu 20.440.610.50 &Edit.Se&ttings.Shiftwidth.5   :set shiftwidth=5<CR>
+amenu 20.440.610.60 &Edit.Se&ttings.Shiftwidth.6   :set shiftwidth=6<CR>
+amenu 20.440.610.80 &Edit.Se&ttings.Shiftwidth.8   :set shiftwidth=8<CR>
+amenu 20.440.620 &Edit.Se&ttings.Text\ Width\.\.\.  :call <SID>TextWidth()<CR>
+fun! s:TextWidth()
+  let n = inputdialog("Enter new text width (0 to disable formatting): ", &tw)
+  if n != ""
+    " remove leading zeros to avoid it being used as an octal number
+    let &tw = substitute(n, "^0*", "", "")
+  endif
+endfun
 
 " Programming menu
 amenu 40.300 &Tools.&Jump\ to\ this\ tag<Tab>g^] g<C-]>
@@ -195,9 +218,9 @@ endif
 if has("folding")
   amenu 40.330 &Tools.-SEP1-			:
   " open close folds 
-  amenu 40.340.110 &Tools.&Folding.&Enable/Disable\ folds<TAB>zi	zi
-  amenu 40.340.120 &Tools.&Folding.&View\ Cursor\ Line<TAB>zv	zv
-  amenu 40.340.120 &Tools.&Folding.Vie&w\ Cursor\ Line\ only<TAB>zMzx	zMzx
+  amenu 40.340.110 &Tools.&Folding.&Enable/Disable\ folds<Tab>zi	zi
+  amenu 40.340.120 &Tools.&Folding.&View\ Cursor\ Line<Tab>zv	zv
+  amenu 40.340.120 &Tools.&Folding.Vie&w\ Cursor\ Line\ only<Tab>zMzx	zMzx
   amenu 40.340.130 &Tools.&Folding.C&lose\ more\ folds<Tab>zm	zm
   amenu 40.340.140 &Tools.&Folding.&Close\ all\ folds<Tab>zM	zM
   amenu 40.340.150 &Tools.&Folding.O&pen\ more\ folds<Tab>zr	zr
@@ -211,9 +234,9 @@ if has("folding")
   amenu 40.340.210 &Tools.&Folding.Fold\ Met&hod.&Diff		:set fdm=diff<CR>
   amenu 40.340.210 &Tools.&Folding.Fold\ Met&hod.Ma&rker	:set fdm=marker<CR>
   " create and delete folds
-  vmenu 40.340.220 &Tools.&Folding.Create\ &Fold<TAB>zf		zf
-  amenu 40.340.230 &Tools.&Folding.&Delete\ Fold<TAB>zd		zd
-  amenu 40.340.240 &Tools.&Folding.Delete\ &All\ Folds<TAB>zD	zD
+  vmenu 40.340.220 &Tools.&Folding.Create\ &Fold<Tab>zf		zf
+  amenu 40.340.230 &Tools.&Folding.&Delete\ Fold<Tab>zd		zd
+  amenu 40.340.240 &Tools.&Folding.Delete\ &All\ Folds<Tab>zD	zD
   " moving around in folds
   amenu 40.340.300 &Tools.&Folding.-SEP2-			:
   amenu 40.340.310.10 &Tools.&Folding.Fold\ column\ &width.0	:set fdc=0<CR>
@@ -474,7 +497,7 @@ amenu 70.355 &Window.Move\ &To.&Right\ side<Tab>^WL	<C-W>L
 amenu 70.360 &Window.Rotate\ &Up<Tab>^WR	<C-W>R
 amenu 70.362 &Window.Rotate\ &Down<Tab>^Wr	<C-W>r
 amenu 70.365 &Window.-SEP3-			:
-amenu 70.370 &Window.&Equal\ Height<Tab>^W=	<C-W>=
+amenu 70.370 &Window.&Equal\ Size<Tab>^W=	<C-W>=
 amenu 70.380 &Window.&Max\ Height<Tab>^W_	<C-W>_
 amenu 70.390 &Window.M&in\ Height<Tab>^W1_	<C-W>1_
 amenu 70.400 &Window.Max\ Width<Tab>^W\|	<C-W>\|
@@ -487,12 +510,13 @@ endif
 " The popup menu
 amenu 1.10 PopUp.&Undo		u
 amenu 1.15 PopUp.-SEP1-		:
-vmenu 1.20 PopUp.Cu&t		"*x
-vmenu 1.30 PopUp.&Copy		"*y
-nmenu 1.40 PopUp.&Paste		"*P`]:if col(".")!=1<Bar>exe "norm l"<Bar>endif<CR>
-vmenu 1.40 PopUp.&Paste		"-x"*P`]
-imenu 1.40 PopUp.&Paste		<Esc>:if col(".")!=1<Bar>exe 'norm "*p'<Bar>else<Bar>exe 'norm "*P'<Bar>endif<CR>`]a
-cmenu 1.40 PopUp.&Paste		<C-R>*
+vmenu 1.20 PopUp.Cu&t		"+x
+vmenu 1.30 PopUp.&Copy		"+y
+cmenu 1.30 PopUp.&Copy		<C-Y>
+nmenu 1.40 PopUp.&Paste		<SID>Paste
+vmenu 1.40 PopUp.&Paste		"-cx<Esc><SID>Paste"_x
+imenu 1.40 PopUp.&Paste		x<Esc><SID>Paste"_s
+cmenu 1.40 PopUp.&Paste		<C-R>+
 vmenu 1.50 PopUp.&Delete	x
 amenu 1.55 PopUp.-SEP2-		:
 vmenu 1.60 PopUp.Select\ Blockwise <C-Q>
@@ -526,11 +550,13 @@ if has("win32") || has("win16") || has("gui_gtk") || has("gui_motif") || has("gu
   amenu 1.60 ToolBar.Redo	<C-R>
 
   amenu 1.65 ToolBar.-sep2-	<nul>
-  vmenu 1.70 ToolBar.Cut	"*x
-  vmenu 1.80 ToolBar.Copy	"*y
-  nmenu 1.90 ToolBar.Paste	i<C-R>*<Esc>
-  vmenu ToolBar.Paste		"-xi<C-R>*<Esc>
-  menu! ToolBar.Paste		<C-R>*
+  vmenu 1.70 ToolBar.Cut	"+x
+  vmenu 1.80 ToolBar.Copy	"+y
+  cmenu 1.80 ToolBar.Copy	<C-Y>
+  nmenu 1.90 ToolBar.Paste	<SID>Paste
+  vmenu      ToolBar.Paste	"-cx<Esc><SID>Paste"_x
+  imenu      ToolBar.Paste	x<Esc><SID>Paste"_s
+  cmenu      ToolBar.Paste	<C-R>+
 
   amenu 1.95 ToolBar.-sep3-	<nul>
   amenu 1.100 ToolBar.Find	:promptfind<CR>
@@ -565,11 +591,7 @@ endif
 
   amenu 1.295 ToolBar.-sep7-	<nul>
   amenu 1.300 ToolBar.Help	:help<CR>
-  if has("gui_gtk")
-    amenu 1.310 ToolBar.FindHelp :helpfind<CR>
-  else
-    amenu 1.310 ToolBar.FindHelp :help 
-  endif
+  amenu 1.310 ToolBar.FindHelp  :call <SID>Helpfind()<CR>
 
 " Only set the tooltips here if not done in a language menu file
 if exists("*Do_toolbar_tmenu")

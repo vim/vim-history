@@ -91,7 +91,7 @@ syn region  sdlString		start=+'+  skip=+''+  end=+'+
 syn case ignore
 syn case match
 
-set iskeyword=@,48-57,_,192-255,-
+setlocal iskeyword=@,48-57,_,192-255,-
 
 syn region sdlComment		start="/\*"  end="\*/"
 syn region sdlComment		start="comment"  end=";"

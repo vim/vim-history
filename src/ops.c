@@ -100,6 +100,9 @@ static void	mb_adjust_opend __ARGS((oparg_T *oap));
 #endif
 static void	free_yank __ARGS((long));
 static void	free_yank_all __ARGS((void));
+#ifdef FEAT_CLIPBOARD
+static void	copy_yank_reg __ARGS((struct yankreg *reg));
+#endif
 static void	block_prep __ARGS((oparg_T *oap, struct block_def *, linenr_T, int));
 #if defined(FEAT_CLIPBOARD) || defined(FEAT_EVAL)
 static void	str_to_reg __ARGS((struct yankreg *y_ptr, int type, char_u *str, long len));
@@ -2511,47 +2514,65 @@ success:
 		|| (!deleting && oap->regname == 0 && clip_unnamed)))
     {
 	if (curr != &(y_regs[STAR_REGISTER]))
-	{
 	    /* Copy the text from register 0 to the clipboard register. */
-	    curr = y_current;
-	    y_current = &(y_regs[STAR_REGISTER]);
-	    free_yank_all();
-	    *y_current = *curr;
-	    y_current->y_array = (char_u **)lalloc_clear(
-			(long_u)(sizeof(char_u *) * y_current->y_size), TRUE);
-	    if (y_current->y_array == NULL)
-		y_current->y_size = 0;
-	    else
-	    {
-		for (j = 0; j < y_current->y_size; ++j)
-		    if ((y_current->y_array[j] = vim_strsave(curr->y_array[j]))
-								      == NULL)
-		    {
-			free_yank(j);
-			y_current->y_size = 0;
-			break;
-		    }
-	    }
-	    y_current = curr;
-	}
+	    copy_yank_reg(&(y_regs[STAR_REGISTER]));
 
 	clip_own_selection(&clip_star);
 	clip_gen_set_selection(&clip_star);
     }
 
+# ifdef FEAT_X11
     /*
      * If we were yanking to the '+' register, send result to selection.
+     * Also copy to the '*' register, in case auto-select is off.
      */
     else if (clip_plus.available && curr == &(y_regs[PLUS_REGISTER]))
     {
 	/* No need to copy to * register upon 'unnamed' now - see below */
 	clip_own_selection(&clip_plus);
 	clip_gen_set_selection(&clip_plus);
+	if (!clip_isautosel())
+	{
+	    copy_yank_reg(&(y_regs[STAR_REGISTER]));
+	    clip_own_selection(&clip_star);
+	    clip_gen_set_selection(&clip_star);
+	}
     }
+# endif
 #endif
 
     return OK;
 }
+
+#ifdef FEAT_CLIPBOARD
+/*
+ * Make a copy of the y_current register to register "reg".
+ */
+    static void
+copy_yank_reg(reg)
+    struct yankreg *reg;
+{
+    struct yankreg	*curr = y_current;
+    long		j;
+
+    y_current = reg;
+    free_yank_all();
+    *y_current = *curr;
+    y_current->y_array = (char_u **)lalloc_clear(
+			(long_u)(sizeof(char_u *) * y_current->y_size), TRUE);
+    if (y_current->y_array == NULL)
+	y_current->y_size = 0;
+    else
+	for (j = 0; j < y_current->y_size; ++j)
+	    if ((y_current->y_array[j] = vim_strsave(curr->y_array[j])) == NULL)
+	    {
+		free_yank(j);
+		y_current->y_size = 0;
+		break;
+	    }
+    y_current = curr;
+}
+#endif
 
 /*
  * put contents of register "regname" into the text

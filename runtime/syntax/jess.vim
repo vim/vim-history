@@ -9,7 +9,7 @@ if exists("b:current_syntax")
   finish
 endif
 
-set iskeyword=42,43,45,47-58,60-62,64-90,97-122,_
+setlocal iskeyword=42,43,45,47-58,60-62,64-90,97-122,_
 
 " Lists
 syn match	jessSymbol	![^()'`,"; \t]\+!	contained

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	SiCAD (procedure language)
 " Maintainer:	Zsolt Branyiczky <zbranyiczky@lmark.mgx.hu>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Apr 20
 " URL:		http://lmark.mgx.hu/download/vim/syntax/sicad.vim
 
 " Quit when a syntax file was already loaded
@@ -10,7 +10,7 @@ if exists("b:current_syntax")
 endif
 
 " spaces are used in (auto)indents since sicad hates tabulator characters
-set expandtab
+setlocal expandtab
 
 " used syntax highlighting in a sql command
 syn include @SQL <sfile>:p:h/sql.vim

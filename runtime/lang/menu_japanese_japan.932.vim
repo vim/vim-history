@@ -1,6 +1,6 @@
 " Menu Translations:	Japanese (for Windows)
 " Translated By: 	Muraoka Taro  <koron@tka.att.ne.jp>
-" Last Change:		08:50:30 25-Mar-2001.
+" Last Change:		19:29:17 18-Apr-2001.
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -26,7 +26,9 @@ menutrans Sp&lit-Open\.\.\.<Tab>:sp	分割して開く(&L)\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		新規作成(&N)<Tab>:enew
 menutrans &Close<Tab>:q			閉じる(&C)<Tab>:q
 menutrans &Save<Tab>:w			保存(&S)<Tab>:w
-menutrans Save\ &As\.\.\.<Tab>:w	名前を付けて保存(&A)\.\.\.<Tab>:w
+menutrans Save\ &As\.\.\.<Tab>:sav	名前を付けて保存(&A)\.\.\.<Tab>:sav
+menutrans Show\ &Diff\ with\.\.\.	差分表示(&D)\.\.\.
+menutrans Show\ &Patched\ by\.\.\.	パッチ結果を表示(&P)\.\.\.
 menutrans &Print			印刷(&P)
 menutrans Sa&ve-Exit<Tab>:wqa		保存して終了(&V)<Tab>:wqa
 menutrans E&xit<Tab>:qa			終了(&X)<Tab>:qa
@@ -45,7 +47,31 @@ menutrans &Delete<Tab>x			消す(&D)<Tab>x
 menutrans &Select\ all<Tab>ggVG		全て選択(&S)<Tab>ggvG
 menutrans &Find\.\.\.			検索(&F)\.\.\.
 menutrans Find\ and\ Rep&lace\.\.\.	置換(&E)\.\.\.
-menutrans Options\.\.\.			オプション(&O)\.\.\.
+"menutrans Options\.\.\.			オプション(&O)\.\.\.
+menutrans Settings\ &Window		設定ウィンドウ(&W)
+
+" Edit/Settings
+menutrans Se&ttings			設定
+
+" Build boolean options
+menutrans Toggle\ Line\ Numbering<TAB>:set\ number!
+	\	行番号表示切替<TAB>:set\ number!
+menutrans Toggle\ Line\ Wrap<TAB>:set\ wrap!		
+	\	行折返し切替<TAB>:set\ wrap!
+menutrans Toggle\ hlsearch<TAB>:set\ hlsearch!
+	\	強調検索切替<TAB>:set\ hlsearch!
+menutrans Toggle\ expandtab<TAB>:set\ expandtab!
+	\	タブ展開切替<TAB>:set\ expandtab!
+
+" Build GUI options
+menutrans Toggle\ Toolbar		ツールバー表示切替
+menutrans Toggle\ Bottom\ Scrollbar	スクロールバー(下)表示切替
+menutrans Toggle\ Left\ Scrollbar	スクロールバー(左)表示切替
+menutrans Toggle\ Right\ Scrolbar	スクロールバー(右)表示切替
+
+" Build variable options
+menutrans Shiftwidth			シフト幅
+menutrans Text\ Width\.\.\.		テキスト幅\.\.\.
 
 " Programming menu
 menutrans &Tools			ツール(&T)
@@ -63,12 +89,39 @@ menutrans Error\ &Window<Tab>:cwin	エラーウィンドウ表示(&W)<Tab>:cwin
 menutrans Convert\ to\ HEX<Tab>:%!xxd	HEXへ変換<Tab>:%!xxd
 menutrans Convert\ back<Tab>:%!xxd\ -r	HEXから逆変換<Tab>%!xxd\ -r
 
+" Tools.Fold Menu
+menutrans &Folding			折畳み(&F)
+" open close folds 
+menutrans &Enable/Disable\ folds<TAB>zi	有効/無効切替(&E)<TAB>zi
+menutrans &View\ Cursor\ Line<TAB>zv	カーソル行を表示(&V)<TAB>zv
+menutrans Vie&w\ Cursor\ Line\ only<TAB>zMzx	カーソル行だけを表示(&W)<TAB>zMzx
+menutrans C&lose\ more\ folds<Tab>zm	折畳みを閉じる(&L)<Tab>zm
+menutrans &Close\ all\ folds<Tab>zM	全折畳みを閉じる(&C)<Tab>zM
+menutrans O&pen\ more\ folds<Tab>zr	折畳みを開く(&P)<Tab>zr
+menutrans &Open\ all\ folds<Tab>zR	全折畳みを開く(&O)<Tab>zR
+" fold method
+menutrans Fold\ Met&hod			折畳み方法(&H)
+menutrans M&anual			手動
+menutrans I&ndent			インデント
+menutrans E&xpression			式評価
+menutrans S&yntax			シンタックス
+menutrans &Diff				差分
+menutrans Ma&rker			マーカー
+" create and delete folds
+menutrans Create\ &Fold<TAB>zf		折畳み作成(&F)<TAB>zf
+menutrans &Delete\ Fold<TAB>zd		折畳み削除(&D)<TAB>zd
+menutrans Delete\ &All\ Folds<TAB>zD	全折畳み削除(&A)<TAB>zD
+" moving around in folds
+menutrans Fold\ column\ &width		折畳みカラム幅
+
 " Names for buffer menu.
-menutrans &Buffers	バッファ(&B)
-menutrans Refresh	再読込
-menutrans Delete	削除
-menutrans Alternate	裏へ切替
-menutrans [No\ File]	[新規ファイル]
+menutrans &Buffers		バッファ(&B)
+menutrans &Refresh\ menu	メニュー再読込(&R)
+menutrans &Delete		削除(&D)
+menutrans A&lternate		裏へ切替(&L)
+menutrans &Next			次のバッファ(&N)
+menutrans &Previous		前のバッファ(&P)
+menutrans [No\ File]		[新規ファイル]
 
 " Window menu
 menutrans &Window			ウィンドウ(&W)
@@ -76,8 +129,14 @@ menutrans &New<Tab>^Wn			新規作成(&N)<Tab>^Wn
 menutrans S&plit<Tab>^Ws		分割(&P)<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	裏バッファへ分割(&L)<Tab>^W^^
 menutrans Split\ &Vertically<Tab>^Wv	垂直分割(&P)<Tab>^Wv
-menutrans File\ E&xplorer		ファイルエクスプローラ(&x)
+menutrans Split\ File\ E&xplorer	ファイルエクスプローラ(&x)
+"menutrans File\ E&xplorer		ファイルエクスプローラ(&x)
 menutrans &Close<Tab>^Wc		閉じる(&C)<Tab>^Wc
+menutrans Move\ &To			移動(&T)
+menutrans &Top<Tab>^WK			先頭(&T)
+menutrans &Bottom<Tab>^WJ		末尾(&B)
+menutrans &Left\ side<Tab>^WH		左(&L)
+menutrans &Right\ side<Tab>^WL		右(&R)
 menutrans Close\ &Other(s)<Tab>^Wo	他を閉じる(&O)<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			次へ(&X)<Tab>^Ww
 menutrans P&revious<Tab>^WW		前へ(&R)<Tab>^WW

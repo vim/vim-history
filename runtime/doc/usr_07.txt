@@ -1,4 +1,4 @@
-*usr_07.txt*	For Vim version 6.0ab.  Last change: 2001 Mar 14
+*usr_07.txt*	For Vim version 6.0ac.  Last change: 2001 Mar 14
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -73,7 +73,7 @@ There can be a number of reasons why you don't see colors:
 <	If you are clever, you might be able to detect the file type yourself.
 	See |new-filetype| for how to tell Vim to detect that file type.
 
-- There is no highlighing for your file type.
+- There is no highlighting for your file type.
 	You could try using a similar file type by manually setting it as
 	mentioned above.  If that isn't good enouh, you can write your own
 	syntax file, see |mysyntaxfile|.
@@ -117,7 +117,7 @@ this always, put the ":highlight" commands in your "vimrc" file.
 *07.4*  With colors or without colors
 
 Displaying text in color takes a lot of effort.  If you find the displaying
-too slow, you might want to disable syntax highlighthig for a moment: >
+too slow, you might want to disable syntax highlighting for a moment: >
 	:syntax clear
 When editing another file (or the same one) the colors will come back.
 							*:syn-off*

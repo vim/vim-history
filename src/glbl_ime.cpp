@@ -24,7 +24,7 @@
  * RUNTIME REQUIREMENTS:
  * - Internet Exproler 5.01 or higher.
  * - Global IME (with language pack?).
- * - Of corse Vim for Windows.
+ * - Of course Vim for Windows.
  *
  * URLS:
  * - Where you can probably get "dimm.idl".
@@ -59,7 +59,7 @@ global_ime_init(ATOM atom, HWND hWnd)
     IUnknown *pI;
     HRESULT hr;
 
-    if (pIApp || pIMsg)
+    if (pIApp != NULL || pIMsg != NULL)
 	return;
     OleInitialize(NULL);
 
@@ -75,22 +75,22 @@ global_ime_init(ATOM atom, HWND hWnd)
      * Get interface IActiveIMMApp
      */
     hr = pI->QueryInterface(IID_IActiveIMMApp, (void**)&pIApp);
-    if (FAILED(hr) || !pIApp)
+    if (FAILED(hr))
 	pIApp = NULL;
 
     /*
      * Get interface IActiveIMMMessagePumpOwner
      */
     hr = pI->QueryInterface(IID_IActiveIMMMessagePumpOwner, (void**)&pIMsg);
-    if (FAILED(hr) || !pIMsg)
+    if (FAILED(hr))
 	pIMsg = NULL;
 
-    if (pIApp)
+    if (pIApp != NULL)
     {
 	pIApp->Activate(TRUE);
 	pIApp->FilterClientWindows(&atom, 1);
     }
-    if (pIMsg)
+    if (pIMsg != NULL)
 	pIMsg->Start();
 
     pI->Release();
@@ -103,7 +103,7 @@ global_ime_init(ATOM atom, HWND hWnd)
     void
 global_ime_end()
 {
-    if (pIApp)
+    if (pIApp != NULL)
     {
 	IActiveIMMApp *p = pIApp;
 
@@ -112,7 +112,7 @@ global_ime_end()
 	p->Deactivate();
 	p->Release();
     }
-    if (pIMsg)
+    if (pIMsg != NULL)
     {
 	IActiveIMMMessagePumpOwner *p = pIMsg;
 
@@ -131,8 +131,8 @@ global_ime_DefWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT lResult;
 
-    if (!pIApp || pIApp->OnDefWindowProc(hWnd, Msg,
-		wParam, lParam, &lResult) != S_OK)
+    if (pIApp == NULL || pIApp->OnDefWindowProc(hWnd, Msg,
+					    wParam, lParam, &lResult) != S_OK)
 	lResult = DefWindowProc(hWnd, Msg, wParam, lParam);
     return lResult;
 }
@@ -143,8 +143,7 @@ global_ime_DefWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
     BOOL WINAPI
 global_ime_TranslateMessage(CONST MSG *lpMsg)
 {
-    if (!pIMsg ||
-	    pIMsg->OnTranslateMessage(lpMsg) == S_FALSE)
+    if (pIMsg == NULL || pIMsg->OnTranslateMessage(lpMsg) == S_FALSE)
 	return TranslateMessage(lpMsg);
     return TRUE;
 }
@@ -160,7 +159,8 @@ global_ime_TranslateMessage(CONST MSG *lpMsg)
 global_ime_set_position(POINT *pPoint)
 {
     HIMC hImc = NULL;
-    if (!pIApp || !pPoint)
+
+    if (pIApp == NULL || pPoint == NULL)
 	return;
 
     if (SUCCEEDED(pIApp->GetContext(s_hWnd, &hImc)))
@@ -182,7 +182,8 @@ global_ime_set_position(POINT *pPoint)
 global_ime_set_font(LOGFONT *pFont)
 {
     HIMC hImc = NULL;
-    if (!pIApp || !pFont)
+
+    if (pIApp == NULL || pFont == NULL)
 	return;
 
     if (SUCCEEDED(pIApp->GetContext(s_hWnd, &hImc)))
@@ -201,7 +202,7 @@ global_ime_status_evacuate()
 {
     HIMC    hImc;
 
-    if (!pIApp)
+    if (pIApp == NULL)
 	return;
     if (SUCCEEDED(pIApp->GetContext(s_hWnd, &hImc)))
     {
@@ -219,7 +220,7 @@ global_ime_status_restore()
 {
     HIMC    hImc;
 
-    if (!pIApp)
+    if (pIApp == NULL)
 	return;
     if (SUCCEEDED(pIApp->GetContext(s_hWnd, &hImc)))
     {

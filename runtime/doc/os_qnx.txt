@@ -1,4 +1,4 @@
-*os_qnx.txt*  For Vim version 6.0ab.  Last change: 2001 Apr 04
+*os_qnx.txt*  For Vim version 6.0ac.  Last change: 2001 Apr 18
 
 
 		  VIM REFERENCE MANUAL    by Julian Kinraid
@@ -86,7 +86,7 @@ escaped with a '\'.  The default font used is PC Terminal, size 8.  Using
 select a font.
 
 Following the name, you can include optional settings to control the size and
-style of the font, each setting seperated by a ':'.  Not all fonts support the
+style of the font, each setting separated by a ':'.  Not all fonts support the
 various styles.
 
 The options are,

@@ -17,7 +17,7 @@ syn match latteOther "\\{"
 syn match latteOther "\\}"
 syn match latteOther "\\\\"
 
-set iskeyword=33,43,45,48-57,63,65-90,95,97-122,_
+setlocal iskeyword=33,43,45,48-57,63,65-90,95,97-122,_
 
 syn region latteVar matchgroup=SpecialChar start=!\\[A-Za-z_]!rs=s+1 end=![^A-Za-z0-9?!+_-]!me=e-1 contains=ALLBUT,latteNumber,latteOther
 syn region latteVar matchgroup=SpecialChar start=!\\[=\&][A-Za-z_]!rs=s+2 end=![^A-Za-z0-9?!+_-]!me=e-1 contains=ALLBUT,latteNumber,latteOther

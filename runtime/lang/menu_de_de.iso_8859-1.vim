@@ -84,7 +84,7 @@ menutrans &Close<Tab>^Wc		&Schliessen<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	&Andere\ Schliessen<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			N&ächstes<Tab>^Ww
 menutrans P&revious<Tab>^WW		Vor&heriges<Tab>^WW
-menutrans &Equal\ Height<Tab>^W=	&Gleiche\ Höhen<Tab>^W=
+menutrans &Equal\ Size<Tab>^W=		&Gleiche\ Höhen<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		&Maximale\ Höhe<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		Mi&nimale\ Höhe<Tab>^W1_
 menutrans Max\ Width<Tab>^W\|		Maximale\ Breite<Tab>^W\|

@@ -1,4 +1,4 @@
-*usr_01.txt*	For Vim version 6.0ab.  Last change: 2001 Jan 20
+*usr_01.txt*	For Vim version 6.0ac.  Last change: 2001 Jan 20
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -122,7 +122,7 @@ On non-Unix systems, you have to do a little work:
 
 The Vim user manual and reference manual are copyrighted by Bram Moolenaar.
 
-Permission is granted to copy and distribute the manuals in unmodifed
+Permission is granted to copy and distribute the manuals in unmodified
 electronic form in any way (on a CD-ROM, on the WWW, etc.).  This can be done
 for free or not.
 

@@ -3857,7 +3857,13 @@ regmatch(scan)
 				return FALSE;
 			}
 			else
+			{
 			    --reginput;
+#ifdef FEAT_MBYTE
+			    if (has_mbyte)
+				reginput -= (*mb_head_off)(regline, reginput);
+#endif
+			}
 		    }
 		}
 		else
@@ -5411,7 +5417,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 
 	    /* Write to buffer, if copy is set. */
 #ifdef FEAT_MBYTE
-	    if (has_mbyte && (len = (*mb_ptr2len_check)(src - 1)) > 0)
+	    if (has_mbyte && (len = (*mb_ptr2len_check)(src - 1)) > 1)
 	    {
 		if (copy)
 		    mch_memmove(dst, src - 1, len);

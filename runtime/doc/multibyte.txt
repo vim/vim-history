@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0ab.  Last change: 2001 Apr 12
+*multibyte.txt* For Vim version 6.0ac.  Last change: 2001 Apr 19
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -640,8 +640,12 @@ WHAT IS GLOBAL IME					*global-ime*
 
     Support Global IME is a experimental feature.
 
+NOTE: For IME to work you must make sure in the "Language settings for the
+system" the default locale is set to your language.  The exact location of
+this depends on the version of Windows you use.
+
 ==============================================================================
-7. UTF-8						*UTF-8* *utf-8*
+7. UTF-8						*UTF-8* *utf-8* *utf8*
 
 Vim has comprehensive UTF-8 support.  It appears to work in:
 - xterm with utf-8 support enabled
@@ -730,6 +734,11 @@ USING UTF-8 IN MS-WINDOWS				*utf-8-in-mswindows*
 Sorry, I don't know how to select Unicode fonts for MS-Windows.  It probably
 works a lot better on MS-Windows NT and 2000, compared to 95/98/ME.
 
+You can find the "Courier New" font, which is supposed to be usable for
+Unicode, here:
+
+	http://www.microsoft.com/typography/fontpack/default.htm
+
 
 USING UTF-8 IN A NON-UNICODE TERMINAL			*utf-8-in-others*
 
@@ -761,7 +770,7 @@ If your system does not provide support for typing utf-8, you can use the
 'keymap' feature.  This allows writing a keymap file, which defines a utf-8
 character as a sequence of ASCII characters.  See |multilang-typing|.
 
-If everyting else fails, you can type any character as four hex bytes: >
+If everything else fails, you can type any character as four hex bytes: >
 
 	CTRL-V u 1234
 
@@ -959,7 +968,7 @@ Get the libintl.dll file if you don't have it yet:
 This also contains tools xgettext, msgformat and others.
 
 libintl.dll should be placed in same directory with (g)vim.exe, or some
-place where PATH environement value describe.  Message file (vim.mo)
+place where PATH environment value describe.  Message file (vim.mo)
 have to  be placed $VIMRUNTIME/lang/*/LC_MESSAGES as like as UNIX.
 Method of generate message file is same with UNIX.  Ex: >
    cd vim60aa

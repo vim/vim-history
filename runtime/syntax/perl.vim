@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Perl
 " Maintainer:	Nick Hibma <n_hibma@webweaving.org>
-" Last Change:	2001 Feb 04
+" Last Change:	2001 Apr 20
 " Location:	http://www.etla.net/~n_hibma/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing
@@ -316,7 +316,7 @@ syntax region perlDATA		start="^__\(DATA\|END\)__$" skip="." end="." contains=pe
 if version >= 600 && exists("perl_fold")
   syn region myFold start="\s*sub\>" end="^}" transparent fold
   syn sync fromstart
-  set foldmethod=syntax
+  setlocal foldmethod=syntax
 endif
 
 

@@ -1,4 +1,4 @@
-*farsi.txt*     For Vim version 6.0ab.  Last change: 2000 Aug 16
+*farsi.txt*     For Vim version 6.0ac.  Last change: 2001 Apr 18
 
 
 		  VIM REFERENCE MANUAL    by Mortaza Ghassab Shiran
@@ -130,7 +130,7 @@ o  Setting the Farsi fonts
       Under the X Window environment, you can also start the VIM with
       '-fn far-a01' option.
 
-   +  For thr VIM within a xterm, start a xterm with the Farsi fonts (e.g.
+   +  For the VIM within a xterm, start a xterm with the Farsi fonts (e.g.
       kterm -fn far-a01). Then start the VIM inside the kterm.
 
    +  For VIM under DOS, prior to the first usage of VIM, upload the Farsi

@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0ab.  Last change: 2001 Mar 31
+*fold.txt*      For Vim version 6.0ac.  Last change: 2001 Apr 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -454,7 +454,7 @@ Note the use of backslashes to avoid some characters to be interpreted by the
     :  return v:folddashes . sub
     :endfunction
 
-Evaluationg 'foldtext' is done in the |sandbox|.  The current window is set to
+Evaluating 'foldtext' is done in the |sandbox|.  The current window is set to
 the window that displays the line.  Errors are ignored.
 
 The default value is |foldtext()|.  This returns a reasonable text for most

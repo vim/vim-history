@@ -48,6 +48,7 @@ void gui_mch_exit __ARGS((int rc));
 int gui_mch_init_font __ARGS((char_u *font_name, int fontset));
 void gui_mch_settitle __ARGS((char_u *title, char_u *icon));
 void mch_set_mouse_shape __ARGS((int shape));
+char_u *gui_mch_browse __ARGS((int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter));
 void gui_mch_prepare __ARGS((int *argc, char **argv));
 int gui_mch_init __ARGS((void));
 void gui_mch_set_shellsize __ARGS((int width, int height, int min_width, int min_height, int base_width, int base_height));
@@ -63,6 +64,5 @@ void gui_make_popup __ARGS((char_u *path_name));
 void gui_mch_add_menu_item __ARGS((vimmenu_T *menu, int idx));
 void gui_mch_destroy_menu __ARGS((vimmenu_T *menu));
 void gui_mch_menu_grey __ARGS((vimmenu_T *menu, int grey));
-char_u *gui_mch_browse __ARGS((int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter));
-int gui_mch_dialog __ARGS((int type, char_u *title, char_u *message, char_u *buttons, int dfltbutton));
+int gui_mch_dialog __ARGS((int type, char_u *title, char_u *message, char_u *buttons, int dfltbutton, char_u *textfield));
 /* vim: set ft=c : */

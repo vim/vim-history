@@ -2981,3 +2981,105 @@ mch_set_mouse_shape(int shape)
 }
 #endif
 
+#ifdef FEAT_BROWSE
+/*
+ * Convert the string s to the proper format for a filter string by replacing
+ * the \t and \n delimeters with \0.
+ * Returns the converted string in allocated memory.
+ */
+    static char_u *
+convert_filter(char_u *s)
+{
+    char_u	*res;
+    int_u	s_len = (unsigned)(STRLEN(s) + 3);
+    int_u	i;
+
+    res = alloc(s_len);
+    if (res != NULL)
+    {
+	STRCPY(res, s);
+	for (i = 0; i < s_len; ++i)
+	    if ((res[i] == '\t') || (res[i] == '\n'))
+		res[i] = '\0';
+	/* Add two extra NULs to make sure it's properly terminated. */
+	res[s_len + 1] = NUL;
+	res[s_len + 2] = NUL;
+    }
+    return res;
+}
+
+/*
+ * Pop open a file browser and return the file selected, in allocated memory,
+ * or NULL if Cancel is hit.
+ *  saving  - TRUE if the file will be saved to, FALSE if it will be opened.
+ *  title   - Title message for the file browser dialog.
+ *  dflt    - Default name of file.
+ *  ext     - Default extension to be added to files without extensions.
+ *  initdir - directory in which to open the browser (NULL = current dir)
+ *  filter  - Filter for matched files to choose from.
+ */
+    char_u *
+gui_mch_browse(
+	int saving,
+	char_u *title,
+	char_u *dflt,
+	char_u *ext,
+	char_u *initdir,
+	char_u *filter)
+{
+    OPENFILENAME	fileStruct;
+    char_u		fileBuf[MAXPATHL], *p;
+
+    if (dflt == NULL)
+	fileBuf[0] = '\0';
+    else
+    {
+	STRNCPY(fileBuf, dflt, MAXPATHL - 1);
+	fileBuf[MAXPATHL - 1] = NUL;
+    }
+
+    /* Convert the filter to Windows format. */
+    filter = convert_filter(filter);
+
+    memset(&fileStruct, 0, sizeof(OPENFILENAME));
+    fileStruct.lStructSize = sizeof(OPENFILENAME);
+    fileStruct.lpstrFilter = filter;
+    fileStruct.lpstrFile = fileBuf;
+    fileStruct.nMaxFile = MAXPATHL;
+    fileStruct.lpstrTitle = title;
+    fileStruct.lpstrDefExt = ext;
+    fileStruct.hwndOwner = s_hwnd;		/* main Vim window is owner*/
+    /* has an initial dir been specified? */
+    if (initdir != NULL && *initdir != NUL)
+	fileStruct.lpstrInitialDir = initdir;
+
+    /*
+     * TODO: Allow selection of multiple files.  Needs another arg to this
+     * function to ask for it, and need to use OFN_ALLOWMULTISELECT below.
+     * Also, should we use OFN_FILEMUSTEXIST when opening?  Vim can edit on
+     * files that don't exist yet, so I haven't put it in.  What about
+     * OFN_PATHMUSTEXIST?
+     * Don't use OFN_OVERWRITEPROMPT, Vim has its own ":confirm" dialog.
+     */
+    fileStruct.Flags = (OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY);
+    if (saving)
+    {
+	if (!GetSaveFileName(&fileStruct))
+	    return NULL;
+    }
+    else
+    {
+	if (!GetOpenFileName(&fileStruct))
+	    return NULL;
+    }
+
+    vim_free(filter);
+
+    /* Shorten the file name if possible */
+    mch_dirname(IObuff, IOSIZE);
+    p = shorten_fname(fileBuf, IObuff);
+    if (p == NULL)
+	p = fileBuf;
+    return vim_strsave(p);
+}
+#endif /* FEAT_BROWSE */

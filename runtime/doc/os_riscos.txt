@@ -1,4 +1,4 @@
-*os_riscos.txt* For Vim version 6.0ab.  Last change: 2000 Oct 29
+*os_riscos.txt* For Vim version 6.0ac.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Thomas Leonard
@@ -240,7 +240,7 @@ types. The filetype is given in the form &xxx, when xxx is the filetype.
 
 Filetypes must be specified by number (eg &fff for Text).
 
-The system has changed from verson 5.3. The new sequence of events is:
+The system has changed from version 5.3. The new sequence of events is:
 
 - A file is loaded. |'osfiletype'| is set to the RISC OS filetype.
 - Based on the filetype and pathname, Vim will try to set |'filetype'| to the

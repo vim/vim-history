@@ -792,7 +792,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60ab
+VIMRTDIR = /vim60ac
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -1589,8 +1589,8 @@ installmacros: $(MACROSOURCE) $(VIMLOC) $(VIMRTLOC) $(MACROSUBLOC)
 
 # install the tutor files
 installtutor: $(TUTORSOURCE) $(VIMLOC) $(VIMRTLOC) $(TUTORSUBLOC)
-	$(INSTALL_DATA) vimtutor $(BINDIR)
-	chmod $(SCRIPTMOD) $(BINDIR)/vimtutor
+	$(INSTALL_DATA) vimtutor $(BINDIR)/$(VIMNAME)tutor
+	chmod $(SCRIPTMOD) $(BINDIR)/$(VIMNAME)tutor
 	-$(INSTALL_DATA) $(TUTORSOURCE)/* $(TUTORSUBLOC)
 	chmod $(HELPMOD) $(TUTORSUBLOC)/*
 
@@ -2229,9 +2229,11 @@ objects/gui.o: gui.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
 objects/gui_gtk.o: gui_gtk.c gui_gtk_f.h vim.h auto/config.h feature.h \
  os_unix.h auto/osdef.h ascii.h keymap.h term.h macros.h structs.h \
  regexp.h gui.h option.h ex_cmds.h proto.h globals.h farsi.h \
- ../pixmaps/tb_new.xpm ../pixmaps/tb_open.xpm ../pixmaps/tb_close.xpm \
- ../pixmaps/tb_save.xpm ../pixmaps/tb_print.xpm ../pixmaps/tb_cut.xpm \
- ../pixmaps/tb_copy.xpm ../pixmaps/tb_paste.xpm ../pixmaps/tb_find.xpm \
+ ../pixmaps/alert.xpm ../pixmaps/error.xpm ../pixmaps/generic.xpm \
+ ../pixmaps/info.xpm ../pixmaps/quest.xpm ../pixmaps/tb_new.xpm \
+ ../pixmaps/tb_open.xpm ../pixmaps/tb_close.xpm ../pixmaps/tb_save.xpm \
+ ../pixmaps/tb_print.xpm ../pixmaps/tb_cut.xpm ../pixmaps/tb_copy.xpm \
+ ../pixmaps/tb_paste.xpm ../pixmaps/tb_find.xpm \
  ../pixmaps/tb_find_next.xpm ../pixmaps/tb_find_prev.xpm \
  ../pixmaps/tb_find_help.xpm ../pixmaps/tb_exit.xpm \
  ../pixmaps/tb_undo.xpm ../pixmaps/tb_redo.xpm ../pixmaps/tb_help.xpm \
@@ -2309,7 +2311,8 @@ objects/if_sniff.o: if_sniff.c vim.h auto/config.h feature.h os_unix.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h os_unixx.h
 objects/gui_beval.o: gui_beval.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h option.h ex_cmds.h proto.h globals.h farsi.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_beval.h \
+ proto/gui_beval.pro
 objects/workshop.o: workshop.c auto/config.h integration.h vim.h feature.h \
  os_unix.h auto/osdef.h ascii.h keymap.h term.h macros.h structs.h \
  regexp.h gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h \

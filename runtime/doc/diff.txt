@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0ab.  Last change: 2001 Apr 12
+*diff.txt*      For Vim version 6.0ac.  Last change: 2001 Apr 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -64,7 +64,7 @@ While already in Vim you can start diff mode in two ways.
 
 :diffsplit {filename}					*:diffs* *:diffsplit*
 		Open a new window on the file {filename}.  The options are set
-		as for "vimdiff" for the current and the newly opended window.
+		as for "vimdiff" for the current and the newly opened window.
 		Also see 'diffexpr'.
 
 :diffpatch {patchfile}					*:diffp* *:diffpatch*
@@ -224,8 +224,8 @@ format mentioned.  These variables are set to the file names used:
 	v:fname_new		new version of the same file
 	v:fname_out		resulting diff file
 
-Additionally, 'diffexpr' should take care of "icase", "itrail" and "iwhite" in
-the 'diffopt' option.
+Additionally, 'diffexpr' should take care of "icase" and "iwhite" in the
+'diffopt' option.
 
 Example (this does the same as 'diffexpr' being empty): >
 

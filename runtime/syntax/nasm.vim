@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	NASM - The Netwide Assembler (v0.98)
 " Maintainer:	Manuel M.H. Stol	<mmh.stol@gmx.net>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Apr 20
 " Vim URL:	http://www.vim.org/lang.html
 " NASM Home:	http://www.cryogen.com/Nasm/
 " Orig. Maint.:	C. Laurence Gonsalves	<clgonsal@kami.com>
@@ -19,9 +19,9 @@ syn case ignore
 
 " Vim search and movement commands on identifers
 "  Comments at start of a line inside which to skip search for indentifiers
-set comments=:;
+setlocal comments=:;
 "  Identifier Keyword characters (defines \k)
-set iskeyword=@,48-57,#,$,.,?,@-@,_,~
+setlocal iskeyword=@,48-57,#,$,.,?,@-@,_,~
 "	  alpha, 0- 9,#,$,.,?,	@,_,~
 
 

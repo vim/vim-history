@@ -1,4 +1,4 @@
-*os_390.txt*    For Vim version 6.0ab.  Last change: 2001 Jan 01
+*os_390.txt*    For Vim version 6.0ac.  Last change: 2001 Apr 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -133,9 +133,9 @@ Here is what you do, if you want Motif:
 							*OS390-xterm*
 3) XTerm problems
 
-At least on  problem seems to exist with XTerm on OS390 Unix.  The terminal
+At least one problem seems to exist with XTerm on OS390 Unix.  The terminal
 code for moving the cursor to the left is wrong in the termlib database.
-Perhapse not wrong, but it doesn't work with VIM syntax highlighting and
+Perhaps not wrong, but it doesn't work with VIM syntax highlighting and
 command line cursor movement.
 
 If the highlighting is messed up while you type, but is ok after you refreshed
@@ -389,7 +389,7 @@ This are the chars Ctrl-V and 'x'. This kind of strings have be replaced by:
 
     CTRL_V_STR "x"
 
-Remeber that consecutive strings in the code are concatenated by the
+Remember that consecutive strings in the code are concatenated by the
 compiler.
 
 The same procedure was used for the often used character ESCAPE.
@@ -421,7 +421,7 @@ these needs some rework.
 The format for c89 error messages has been added to the 'errorformat' option.
 
 Regular Expressions
-As in EBCDIC the ranges a-z and A-Z containes nonalphabetic characters, the
+As in EBCDIC the ranges a-z and A-Z contains nonalphabetic characters, the
 code for this ranges was fixed to ignore the nonalphabetic characters.
 
 Tests

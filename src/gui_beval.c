@@ -10,8 +10,8 @@
 
 #include "vim.h"
 
-#if defined(FEAT_BEVAL) || defined(PROTO) && \
-    (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA))
+#if (defined(FEAT_BEVAL) && \
+    (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA))) || defined(PROTO)
 
 #include <X11/keysym.h>
 #ifdef FEAT_GUI_MOTIF

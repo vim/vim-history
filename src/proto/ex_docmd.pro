@@ -36,4 +36,5 @@ int cmd_runtime __ARGS((char_u *name, int all));
 int do_in_runtimepath __ARGS((char_u *name, int all, void (*callback)(char_u *fname)));
 void dialog_msg __ARGS((char_u *buff, char *format, char_u *fname));
 void set_lang_var __ARGS((void));
+char_u *get_lang_arg __ARGS((expand_T *xp, int idx));
 /* vim: set ft=c : */

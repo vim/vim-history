@@ -1,7 +1,7 @@
 # Makefile for Vim on Win32 (Windows NT and Windows 95), using the
-# Microsoft Visual C++ 2.x and MSVC 4.x compilers.  It builds on Windows 95
-# and all four NT platforms: i386, Alpha, MIPS, and PowerPC.  The NT/i386
-# binary and the Windows 95 binary are identical.
+# Microsoft Visual C++ 2.x and MSVC 4.x compilers (or newer).
+# It builds on Windows 95 and all four NT platforms: i386, Alpha, MIPS, and
+# PowerPC.  The NT/i386 binary and the Windows 95 binary are identical.
 #
 # This makefile can build the console, GUI, OLE-enable, Perl-enabled and
 # Python-enabled versions of vim for Win32 platforms.

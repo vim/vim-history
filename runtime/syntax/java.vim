@@ -2,7 +2,7 @@
 " Language:     Java
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:  2001 April 03
+" Last Change:  2001 April 19
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -207,7 +207,7 @@ if exists("java_highlight_debug")
   syn match   javaDebugNumber           contained "\<\d\+\([eE][-+]\=\d\+\)\=[fFdD]\>"
   syn keyword javaDebugBoolean          contained true false
   syn keyword javaDebugType             contained null this super
-  syn region javaDebugParen  start=+(+ end=+)+ contained contains=javaDebug.* 
+  syn region javaDebugParen  start=+(+ end=+)+ contained contains=javaDebug.*,javaDebugParen
 
   " to make this work you must define the highlighting for these groups
   syn match javaDebug "System\.\(out\|err\)\.print\(ln\)*\s*("me=e-1 contains=javaDebug.* nextgroup=javaDebugParen

@@ -1,6 +1,6 @@
 " Menu Translations:	Czech
 " Translated By: 	Jiøí Pavlovský <pavlovsk@ff.cuni.cz>
-" Last Change:		2001 Apr 01
+" Last Change:		2001 Apr 18
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -81,7 +81,7 @@ menutrans &Close<Tab>^Wc		Zavøí&t<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	Zavøít\ &jiná<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			&Dal¹í<Tab>^Ww
 menutrans P&revious<Tab>^WW		&Pøedchozí<Tab>^WW
-menutrans &Equal\ Height<Tab>^W=	&Stejná\ vý¹ka<Tab>^W=
+menutrans &Equal\ Size<Tab>^W=		&Stejná\ vý¹ka<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		Maximální\ vý¹ka<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		Minimální\ vý¹ka<Tab>^W1_
 menutrans Max\ Width<Tab>^W\| Maximální\ ¹íøka<Tab>^W\|

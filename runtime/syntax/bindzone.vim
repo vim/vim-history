@@ -12,7 +12,7 @@ if exists("b:current_syntax")
 endif
 
 syn case match
-set iskeyword=.,-,48-58,A-Z,a-z,_
+setlocal iskeyword=.,-,48-58,A-Z,a-z,_
 
 " Master File Format (rfc 1035)
 

@@ -1902,12 +1902,13 @@ gui_mch_draw_string(
 	    while (i < len)
 	    {
 		cells = 0;
-		for (clen = 0; i < len; ++clen)
+		for (clen = 0; i < len; )
 		{
 		    unicodebuf[clen] = utfc_ptr2char(text + i, &c1, &c2);
 		    cw = utf_char2cells(unicodebuf[clen]);
 		    cells += cw;
 		    i += utfc_ptr2len_check(text + i);
+		    ++clen;
 		    if (c1 != 0)
 			break;	    /* break at composing char */
 		}
@@ -2282,100 +2283,6 @@ gui_mch_menu_grey(
 #endif /* FEAT_MENU */
 
 
-#ifdef FEAT_BROWSE
-
-/*
- * Pop open a file browser and return the file selected, in allocated memory,
- * or NULL if Cancel is hit.
- *  saving  - TRUE if the file will be saved to, FALSE if it will be opened.
- *  title   - Title message for the file browser dialog.
- *  dflt    - Default name of file.
- *  ext     - Default extension to be added to files without extensions.
- *  initdir - directory in which to open the browser (NULL = current dir)
- *  filter  - Filter for matched files to choose from.
- *	Has a format like this:
- *	"C Files (*.c)\0*.c\0"
- *	"All Files\0*.*\0\0"
- *	If these two strings were concatenated, then a choice of two file
- *	filters will be selectable to the user.  Then only matching files will
- *	be shown in the browser.  If NULL, the default allows all files.
- *
- *	*NOTE* - the filter string must be terminated with TWO nulls.
- */
-    char_u *
-gui_mch_browse(
-	int saving,
-	char_u *title,
-	char_u *dflt,
-	char_u *ext,
-	char_u *initdir,
-	char_u *filter)
-{
-    OPENFILENAME    fileStruct;
-    char_u	    fileBuf[MAX_PATH], *p;
-
-    if (dflt == NULL)
-	fileBuf[0] = '\0';
-    else
-    {
-	STRNCPY(fileBuf, dflt, MAX_PATH - 1);
-	fileBuf[MAX_PATH - 1] = NUL;
-    }
-
-    /*
-     * The default filter. NOTE: should we perhaps put this in
-     * feature.h?
-     */
-    if (filter == NULL)
-	filter =
-	    "All Files (*.*)\0*.*\0"
-	    "C source (*.c, *.h)\0*.c;*.h\0"
-	    "C++ source (*.cpp, *.hpp)\0*.cpp;*.hpp\0"
-	    "VB code (*.bas, *.frm)\0*.bas;*.frm\0"
-	    "Vim files (*.vim, _vimrc, _gvimrc)\0*.vim;_vimrc;_gvimrc\0\0";
-
-    memset(&fileStruct, 0, sizeof(OPENFILENAME));
-    fileStruct.lStructSize = sizeof(OPENFILENAME);
-    fileStruct.lpstrFilter = filter;
-    fileStruct.lpstrFile = fileBuf;
-    fileStruct.nMaxFile = MAX_PATH;
-    fileStruct.lpstrTitle = title;
-    fileStruct.lpstrDefExt = ext;
-    fileStruct.hwndOwner = s_hwnd;		/* main Vim window is owner*/
-    /* has an initial dir been specified? */
-    if (initdir != NULL && *initdir != NUL)
-	fileStruct.lpstrInitialDir = initdir;
-
-    /*
-     * TODO: Allow selection of multiple files.  Needs another arg to this
-     * function to ask for it, and need to use OFN_ALLOWMULTISELECT below.
-     * Also, should we use OFN_FILEMUSTEXIST when opening?  Vim can edit on
-     * files that don't exist yet, so I haven't put it in.  What about
-     * OFN_PATHMUSTEXIST?
-     * Don't use OFN_OVERWRITEPROMPT, Vim has its own ":confirm" dialog.
-     */
-    fileStruct.Flags = (OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY);
-    if (saving)
-    {
-	if (!GetSaveFileName(&fileStruct))
-	    return NULL;
-    }
-    else
-    {
-	if (!GetOpenFileName(&fileStruct))
-	    return NULL;
-    }
-
-    /* Shorten the file name if possible */
-    mch_dirname(IObuff, IOSIZE);
-    p = shorten_fname(fileBuf, IObuff);
-    if (p == NULL)
-	p = fileBuf;
-    return vim_strsave(p);
-}
-
-#endif /* FEAT_BROWSE */
-
 /* define some macros used to make the dialogue creation more readable */
 
 #define add_string(s) strcpy((LPSTR)p, s); (LPSTR)p += (strlen((LPSTR)p) + 1)
@@ -2489,7 +2396,8 @@ gui_mch_dialog(
     char_u	*title,
     char_u	*message,
     char_u	*buttons,
-    int		 dfltbutton)
+    int		 dfltbutton,
+    char_u	*textfield)
 {
     WORD	*p, *pdlgtemplate, *pnumitems;
     int		numButtons;

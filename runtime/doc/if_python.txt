@@ -1,4 +1,4 @@
-*if_python.txt* For Vim version 6.0ab.  Last change: 2000 Sep 30
+*if_python.txt* For Vim version 6.0ac.  Last change: 2001 Apr 18
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -118,7 +118,7 @@ Constants
 <
 	vim.windows					*python-windows*
 	A sequence object providing access to the list of vim windows. The
-	object supprts the following operations: >
+	object supports the following operations: >
 		w = vim.windows[i]	# Indexing (read-only)
 		w in vim.windows	# Membership test
 		n = len(vim.windows)	# Number of elements

@@ -91,7 +91,7 @@ static void highlight_clear __ARGS((int idx));
 
 #ifdef FEAT_GUI
 static void gui_do_one_color __ARGS((int idx, int do_menu));
-static int  set_group_colors __ARGS((char_u *name, guicolor_T *fgp, guicolor_T *bgp, int do_menu));
+static int  set_group_colors __ARGS((char_u *name, guicolor_T *fgp, guicolor_T *bgp, int do_menu, int use_norm));
 static guicolor_T color_name2handle __ARGS((char_u *name));
 static GuiFont font_name2handle __ARGS((char_u *name));
 # ifdef FEAT_XFONTSET
@@ -6623,14 +6623,14 @@ highlight_clear(idx)
 set_normal_colors()
 {
     if (set_group_colors((char_u *)"Normal",
-				     &gui.norm_pixel, &gui.back_pixel, FALSE))
+			       &gui.norm_pixel, &gui.back_pixel, FALSE, TRUE))
     {
 	gui_mch_new_colors();
 	must_redraw = CLEAR;
     }
 #ifdef FEAT_GUI_X11
     if (set_group_colors((char_u *)"Menu",
-				&gui.menu_fg_pixel, &gui.menu_bg_pixel, TRUE))
+			 &gui.menu_fg_pixel, &gui.menu_bg_pixel, TRUE, FALSE))
     {
 # ifdef FEAT_MENU
 	gui_mch_new_menu_colors();
@@ -6638,7 +6638,7 @@ set_normal_colors()
 	must_redraw = CLEAR;
     }
     if (set_group_colors((char_u *)"Scrollbar",
-			   &gui.scroll_fg_pixel, &gui.scroll_bg_pixel, FALSE))
+		    &gui.scroll_fg_pixel, &gui.scroll_bg_pixel, FALSE, FALSE))
     {
 	gui_new_scrollbar_colors();
 	must_redraw = CLEAR;
@@ -6650,11 +6650,12 @@ set_normal_colors()
  * Set the colors for "Normal", "Menu" or "Scrollbar".
  */
     static int
-set_group_colors(name, fgp, bgp, do_menu)
+set_group_colors(name, fgp, bgp, do_menu, use_norm)
     char_u	*name;
     guicolor_T	*fgp;
     guicolor_T	*bgp;
     int		do_menu;
+    int		use_norm;
 {
     int		idx;
 
@@ -6665,11 +6666,11 @@ set_group_colors(name, fgp, bgp, do_menu)
 
 	if (HL_TABLE()[idx].sg_gui_fg > 0)
 	    *fgp = HL_TABLE()[idx].sg_gui_fg - 1;
-	else
+	else if (use_norm)
 	    *fgp = gui.def_norm_pixel;
 	if (HL_TABLE()[idx].sg_gui_bg > 0)
 	    *bgp = HL_TABLE()[idx].sg_gui_bg - 1;
-	else
+	else if (use_norm)
 	    *bgp = gui.def_back_pixel;
 	return TRUE;
     }

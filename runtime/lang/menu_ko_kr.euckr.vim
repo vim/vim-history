@@ -1,6 +1,6 @@
 " Menu Translations:	Korean
 " Maintainer:		Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:		2001 Apr 01
+" Last Change:		2001 Apr 18
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -81,7 +81,7 @@ menutrans &Close<Tab>^Wc		닫기(&C)<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	다른\ 창\ 닫기(&O)<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			다음(&x)<Tab>^Ww
 menutrans P&revious<Tab>^WW		이전(&r)<Tab>^WW
-menutrans &Equal\ Height<Tab>^W=	같은\ 높이로(&E)<Tab>^W=
+menutrans &Equal\ Size<Tab>^W=		같은\ 높이로(&E)<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		최대\ 높이로(&M)<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		최소\ 높이로(&i)<Tab>^W1_
 menutrans Max\ Width<Tab>^W\|		최대\ 넓이로<Tab>^W\|

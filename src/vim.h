@@ -505,6 +505,7 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define EXPAND_USER_NARGS	24
 #define EXPAND_USER_COMPLETE	25
 #define EXPAND_ENV_VARS		26
+#define EXPAND_LANGUAGE		27
 
 /* Values for exmode_active (0 is no exmode) */
 #define EXMODE_NORMAL		1
@@ -1390,20 +1391,25 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 #endif
 
 /*
- * The filters used in file browsers are too machine specific to
- * be defined usefully in a generic fashion.
- * So instead the filter strings are defined here for each architecture
- * that supports gui_mch_browse()
+ * Default filters for gui_mch_browse().
+ * The filters are almost system independent.  Except for the difference
+ * between "*" and "*.*" for MSDOS-like systems.
+ * NOTE: Motif only uses the very first pattern.  Therefore
+ * BROWSE_FILTER_DEFAULT should start with a "*" pattern.
  */
 #ifdef FEAT_BROWSE
-# ifdef FEAT_GUI_W32
+# ifdef BACKSLASH_IN_FILENAME
 #  define BROWSE_FILTER_MACROS \
-		(char_u *)"Vim macro files (*.vim)\0*.vim\0All Files (*.*)\0*.*\0\0"
-#  define BROWSE_FILTER_ALL_FILES (char_u *)"All Files (*.*)\0*.*\0\0"
+	(char_u *)"Vim macro files (*.vim)\t*.vim\nAll Files (*.*)\t*.*\n"
+#  define BROWSE_FILTER_ALL_FILES (char_u *)"All Files (*.*)\t*.*\n"
+#  define BROWSE_FILTER_DEFAULT \
+	(char_u *)"All Files (*.*)\t*.*\nC source (*.c, *.h)\t*.c;*.h\nC++ source (*.cpp, *.hpp)\t*.cpp;*.hpp\nVB code (*.bas, *.frm)\t*.bas;*.frm\nVim files (*.vim, _vimrc, _gvimrc)\t*.vim;_vimrc;_gvimrc\n"
 # else
 #  define BROWSE_FILTER_MACROS \
-		(char_u *)"Vim macro files (*.vim)\0*.vim\0All Files (*)\0*\0\0"
-#  define BROWSE_FILTER_ALL_FILES (char_u *)"All Files (*)\0*\0\0"
+	(char_u *)"Vim macro files (*.vim)\t*.vim\nAll Files (*)\t*\n"
+#  define BROWSE_FILTER_ALL_FILES (char_u *)"All Files (*)\t*\n"
+#  define BROWSE_FILTER_DEFAULT \
+	(char_u *)"All Files (*)\t*\nC source (*.c, *.h)\t*.c;*.h\nC++ source (*.cpp, *.hpp)\t*.cpp;*.hpp\nVim files (*.vim, _vimrc, _gvimrc)\t*.vim;_vimrc;_gvimrc\n"
 # endif
 #endif
 

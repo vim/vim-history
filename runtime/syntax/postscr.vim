@@ -23,7 +23,7 @@ endif
 syn case match
 
 " Keyword characters - all 7-bit ASCII bar PS delimiters and ws
-set iskeyword=33-127,^(,^),^<,^>,^[,^],^{,^},^/,^%
+setlocal iskeyword=33-127,^(,^),^<,^>,^[,^],^{,^},^/,^%
 
 " Yer trusty old TODO highlghter!
 syn keyword postscrTodo contained  TODO
