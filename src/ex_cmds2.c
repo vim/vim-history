@@ -3136,7 +3136,12 @@ hardcopy_line(psettings, page_line, ppos)
 	else
 	{
 	    need_break = mch_print_text_out(line + col, outputlen);
-	    print_pos++;
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		print_pos += (*mb_ptr2cells)(line + col);
+	    else
+#endif
+		print_pos++;
 	}
     }
 
