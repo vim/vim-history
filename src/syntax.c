@@ -197,8 +197,10 @@ struct buf_state
  * The attributes of the syntax item that has been recognized.
  */
 static int current_attr = 0;	    /* attr of current syntax word */
+#ifdef WANT_EVAL
 static int current_id = 0;	    /* ID of current char for syn_get_id() */
 static int current_trans_id = 0;    /* idem, transparancy removed */
+#endif
 
 struct syn_cluster
 {
@@ -1521,8 +1523,10 @@ syn_current_attr(syncing, line)
      * If not, use attributes from the current-but-one state, etc.
      */
     current_attr = 0;
+#ifdef WANT_EVAL
     current_id = 0;
     current_trans_id = 0;
+#endif
     if (cur_si != NULL)
     {
 	for (idx = current_state.ga_len - 1; idx >= 0; --idx)
@@ -1532,8 +1536,10 @@ syn_current_attr(syncing, line)
 				      && (int)current_col <= sip->si_h_endcol)
 	    {
 		current_attr = sip->si_attr;
+#ifdef WANT_EVAL
 		current_id = sip->si_id;
 		current_trans_id = sip->si_trans_id;
+#endif
 		break;
 	    }
 	}

@@ -3045,11 +3045,12 @@ linewhite(lnum)
  * Find identifiers or defines in included files.
  * if p_ic && (continue_status & CONT_SOL) then ptr must be in lowercase.
  */
+/*ARGSUSED*/
     void
 find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 				    type, count, action, start_lnum, end_lnum)
     char_u	*ptr;		/* pointer to search pattern */
-    int		dir;		/* direction of expantion */
+    int		dir;		/* direction of expansion */
     int		len;		/* length of search pattern */
     int		whole;		/* match whole words only */
     int		skip_comments;	/* don't match inside comments */
@@ -3723,7 +3724,9 @@ read_viminfo_search_pattern(line, fp, force)
     int		off_end = FALSE;
     long	off = 0;
     int		setlast = FALSE;
+#ifdef EXTRA_SEARCH
     static int	hlsearch_on = FALSE;
+#endif
     char_u	*val;
 
     /*

@@ -2509,7 +2509,7 @@ set_one_cmd_context(buff)
     int			i = 0;
     CMDIDX		cmdidx;
     long		argt = 0;
-#ifdef USER_COMMANDS
+#if defined(USER_COMMANDS) && defined(CMDLINE_COMPL)
     int			compl = EXPAND_NOTHING;
 #endif
     char_u		delim;
@@ -2672,7 +2672,9 @@ set_one_cmd_context(buff)
 
 			cmdidx = CMD_USER;
 			argt = c->uc_argt;
+#ifdef CMDLINE_COMPL
 			compl = c->uc_compl;
+#endif
 
 			matchlen = k;
 
@@ -2866,7 +2868,18 @@ set_one_cmd_context(buff)
 	    expand_context = EXPAND_HELP;
 	    expand_pattern = arg;
 	    break;
-#ifdef USER_COMMANDS
+#ifdef USE_BROWSE
+	case CMD_browse:
+#endif
+	case CMD_confirm:
+	    return arg;
+
+#ifdef CMDLINE_COMPL
+/*
+ * All completion for the +cmdline_compl feature goes here.
+ */
+
+# ifdef USER_COMMANDS
 	case CMD_command:
 	    /* Check for attributes */
 	    while (*arg == '-')
@@ -2921,15 +2934,8 @@ set_one_cmd_context(buff)
 	    expand_context = EXPAND_USER_COMMANDS;
 	    expand_pattern = arg;
 	    break;
-#endif
+# endif
 
-#ifdef USE_BROWSE
-	case CMD_browse:
-#endif
-	case CMD_confirm:
-	    return arg;
-
-#ifdef CMDLINE_COMPL
 	case CMD_global:
 	case CMD_vglobal:
 	    delim = *arg;	    /* get the delimiter */

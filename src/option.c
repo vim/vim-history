@@ -3428,7 +3428,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf)
     else if (varp == &p_titlestring
 	         || varp == &p_iconstring)
     {
-#ifdef STATUSLINE
+# ifdef STATUSLINE
 	int	flagval = (varp == &p_titlestring) ? STL_IN_TITLE : STL_IN_ICON;
 
 	/* NULL => statusline syntax */
@@ -3436,7 +3436,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf)
 	    stl_syntax |= flagval;
 	else
 	    stl_syntax &= ~flagval;
-#endif
+# endif
 	did_set_title(varp == &p_iconstring);
 
     }
