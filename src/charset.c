@@ -1005,6 +1005,7 @@ win_lbr_chartabsize(wp, s, col, headp)
     int		numberextra;
     char_u	*ps;
     int		tab_corr = (*s == TAB);
+    int		n;
 
     /*
      * No 'linebreak' and 'showbreak': return quickly.
@@ -1048,9 +1049,12 @@ win_lbr_chartabsize(wp, s, col, headp)
 	col2 = col;
 	colmax = W_WIDTH(wp) - numberextra;
 	if (col >= colmax)
-	    colmax += (((col - colmax)
-			/ (colmax + win_col_off2(wp))) + 1)
-			* (colmax + win_col_off2(wp));
+	{
+	    n = colmax + win_col_off2(wp);
+	    if (n > 0)
+		colmax += (((col - colmax) / n) + 1) * n;
+	}
+
 	for (;;)
 	{
 	    ps = s;
