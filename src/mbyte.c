@@ -3039,7 +3039,14 @@ iconv_string(vcp, str, slen, unconvlenp)
 	    *to++ = '?';
 	    if ((*mb_ptr2cells)((char_u *)from) > 1)
 		*to++ = '?';
-	    l = (*mb_ptr2len_check)((char_u *)from);
+	    if (enc_utf8)
+		l = utfc_ptr2len_check_len((char_u *)from, fromlen);
+	    else
+	    {
+		l = (*mb_ptr2len_check)((char_u *)from);
+		if (l > fromlen)
+		    l = fromlen;
+	    }
 	    from += l;
 	    fromlen -= l;
 	}
