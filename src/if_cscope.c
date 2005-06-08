@@ -1,7 +1,7 @@
 /* vi:set ts=8 sts=4 sw=4:
  *
  * CSCOPE support for Vim added by Andy Kahn <kahn@zk3.dec.com>
- * Ported to Win32 by Sergey Khorev <khorev@softlab.ru>
+ * Ported to Win32 by Sergey Khorev <sergey.khorev@gmail.com>
  *
  * The basic idea/structure of cscope for Vim was borrowed from Nvi.  There
  * might be a few lines of code that look similar to what Nvi has.
@@ -1130,7 +1130,7 @@ cs_find_common(opt, pat, forceit, verbose)
 	if (matches == NULL)
 	    return FALSE;
 
-	(void)cs_manage_matches(matches, contexts, totmatches, Store);
+	(void)cs_manage_matches(matches, contexts, matched, Store);
 
 	return do_tag((char_u *)pat, DT_CSCOPE, 0, forceit, verbose);
     }
@@ -1726,6 +1726,7 @@ cs_file_results(f, nummatches_a)
  *
  * get parsed cscope output and calls cs_make_vim_style_matches to convert
  * into ctags format
+ * When there are no matches sets "*matches_p" to NULL.
  */
     static void
 cs_fill_results(tagstr, totmatches, nummatches_a, matches_p, cntxts_p, matched)
@@ -1790,6 +1791,14 @@ cs_fill_results(tagstr, totmatches, nummatches_a, matches_p, cntxts_p, matched)
     } /* for all cscope connections */
 
 parse_out:
+    if (totsofar == 0)
+    {
+	/* No matches, free the arrays and return NULL in "*matches_p". */
+	vim_free(matches);
+	matches = NULL;
+	vim_free(cntxts);
+	cntxts = NULL;
+    }
     *matched = totsofar;
     *matches_p = matches;
     *cntxts_p = cntxts;
@@ -2125,7 +2134,7 @@ cs_reset(eap)
 {
     char	**dblist = NULL, **pplist = NULL, **fllist = NULL;
     int	i;
-    char buf[8]; /* for sprintf " (#%d)" */
+    char buf[20]; /* for sprintf " (#%d)" */
 
     /* malloc our db and ppath list */
     dblist = (char **)alloc(CSCOPE_MAX_CONNECTIONS * sizeof(char *));
