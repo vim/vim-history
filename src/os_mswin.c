@@ -367,19 +367,55 @@ mch_FullName(
 	nResult = mch_dirname(buf, len);
     else
 #endif
-	if (_fullpath(buf, fname, len - 1) == NULL)
     {
-	STRNCPY(buf, fname, len);   /* failed, use the relative path name */
-	buf[len - 1] = NUL;
-#ifndef USE_FNAME_CASE
-	slash_adjust(buf);
+#ifdef FEAT_MBYTE
+	if (enc_codepage >= 0 && (int)GetACP() != enc_codepage
+# ifdef __BORLANDC__
+		/* Wide functions of Borland C 5.5 do not work on Windows 98. */
+		&& g_PlatformId == VER_PLATFORM_WIN32_NT
+# endif
+	   )
+	{
+	    WCHAR	*wname;
+	    WCHAR	wbuf[MAX_PATH];
+	    char_u	*cname = NULL;
+
+	    /* Use the wide function:
+	     * - convert the fname from 'encoding' to UCS2.
+	     * - invoke _wfullpath()
+	     * - convert the result from UCS2 to 'encoding'.
+	     */
+	    wname = enc_to_ucs2(fname, NULL);
+	    if (wname != NULL && _wfullpath(wbuf, wname, MAX_PATH - 1) != NULL)
+	    {
+		cname = ucs2_to_enc((short_u *)wbuf, NULL);
+		if (cname != NULL)
+		{
+		    STRNCPY(buf, cname, len);
+		    buf[len - 1] = NUL;
+		    nResult = OK;
+		}
+	    }
+	    vim_free(wname);
+	    vim_free(cname);
+	}
+	if (nResult == FAIL)	    /* fall back to non-wide function */
 #endif
+	{
+	    if (_fullpath(buf, fname, len - 1) == NULL)
+	    {
+		STRNCPY(buf, fname, len);   /* failed, use relative path name */
+		buf[len - 1] = NUL;
+	    }
+	    else
+		nResult = OK;
+	}
     }
-    else
-	nResult = OK;
 
 #ifdef USE_FNAME_CASE
     fname_case(buf, len);
+#else
+    slash_adjust(buf);
 #endif
 
     return nResult;
