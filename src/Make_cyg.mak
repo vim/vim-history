@@ -1,6 +1,7 @@
 #
 # Makefile for VIM on Win32, using Cygnus gcc
-# Last updated by Dan Sharp.  Last Change: 2004 Apr 23
+# Updated by Dan Sharp and Bram Moolenaar.
+# Last Change: 2005 Jul 21
 #
 # This compiles Vim as a Windows application.  If you want Vim to run as a
 # Cygwin application use the Makefile (just like on Unix).
@@ -298,7 +299,7 @@ DEFINES += -DFEAT_NETBEANS_INTG
 EXTRA_OBJS += $(OUTDIR)/netbeans.o $(OUTDIR)/gui_beval.o
 EXTRA_LIBS += -lwsock32
 
-ifeq (yes, $(DEBUG))
+ifeq (yes, $(NBDEBUG))
 DEFINES += -DNBDEBUG
 NBDEBUG_DEP = nbdebug.h nbdebug.c
 endif
@@ -336,9 +337,11 @@ endif
 ##############################
 ifneq (sh.exe, $(SHELL))
 DEL = rm
+MKDIR = mkdir -p
 DIRSLASH = /
 else
 DEL = del
+MKDIR = mkdir
 DIRSLASH = \\
 endif
 
@@ -421,7 +424,7 @@ uninstal.exe: uninstal.c
 	$(CC) $(CFLAGS) -o uninstal.exe uninstal.c $(LIBS)
 
 $(OUTDIR):
-	mkdir $(OUTDIR)
+	$(MKDIR) $(OUTDIR)
 
 tags:
 	command /c ctags *.c $(INCL)
@@ -429,7 +432,7 @@ tags:
 clean:
 	-$(DEL) $(OUTDIR)$(DIRSLASH)*.o
 	-rmdir $(OUTDIR)
-	-$(DEL) *.exe
+	-$(DEL) $(EXE) vimrun.exe install.exe uninstal.exe
 ifdef PERL
 	-$(DEL) if_perl.c
 endif
@@ -455,8 +458,9 @@ $(OUTDIR)/if_ole.o:	if_ole.cpp $(INCL)
 	$(CC) -c $(CFLAGS) -D__IID_DEFINED__ if_ole.cpp -o $(OUTDIR)/if_ole.o
 
 if_perl.c: if_perl.xs typemap
-	perl $(PERL)/lib/ExtUtils/xsubpp -prototypes -typemap \
-	     $(PERL)/lib/ExtUtils/typemap if_perl.xs > $@
+	$(PERL)/bin/perl `cygpath -d $(PERL)/lib/ExtUtils/xsubpp` \
+		-prototypes -typemap \
+		`cygpath -d $(PERL)/lib/ExtUtils/typemap` if_perl.xs > $@
 
 $(OUTDIR)/if_perl.o:	if_perl.c $(INCL)
 ifeq (yes, $(USEDLL))
