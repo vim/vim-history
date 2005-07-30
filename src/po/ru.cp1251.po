@@ -9,10 +9,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Vim 6.3a\n"
+"Project-Id-Version: Vim 6.3.15\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-05-10 21:37+0400\n"
-"PO-Revision-Date: 2004-05-10 21:37+0400\n"
+"POT-Creation-Date: 2004-08-06 09:06+0400\n"
+"PO-Revision-Date: 2004-08-06 09:06+0400\n"
 "Last-Translator: vassily ragosin <vrr@users.sourceforge.net>\n"
 "Language-Team: vassily ragosin <vrr@users.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -880,10 +880,10 @@ msgstr "E153: Невозможно открыть %s для чтения"
 msgid "E670: Mix of help file encodings within a language: %s"
 msgstr "E670: Файлы справки используют разные кодировки для одного языка: %s"
 
-#: ex_cmds.c:5445
+#: ex_cmds.c:5492
 #, c-format
-msgid "E154: Duplicate tag \"%s\" in file %s"
-msgstr "E154: Повторяющаяся метка \"%s\" в файле %s"
+msgid "E154: Duplicate tag \"%s\" in file %s/%s"
+msgstr "E154: Повторяющаяся метка \"%s\" в файле %s/%s"
 
 #: ex_cmds.c:5557
 #, c-format
@@ -1236,10 +1236,10 @@ msgstr "Есть неотредактированные файлы (%d). Выйти?"
 msgid "E173: 1 more file to edit"
 msgstr "E173: 1 файл ожидает редактирования."
 
-#: ex_docmd.c:4581
+#: ex_docmd.c:4584
 #, c-format
 msgid "E173: %ld more files to edit"
-msgstr "E173: Есть неотредактированные файлы (%d)."
+msgstr "E173: Есть неотредактированные файлы (%ld)."
 
 #: ex_docmd.c:4676
 msgid "E174: Command already exists: add ! to replace it"
@@ -2303,12 +2303,21 @@ msgstr ""
 "\n"
 "Отправка сообщения для уничтожения процесса-потомка.\n"
 
-#: gui_w32.c:829
+#: gui_w32.c:839
+#, c-format
+msgid "E671: Cannot find window title \"%s\""
+msgstr "E671: Невозможно найти заголовок окна \"%s\""
+
+#: gui_w32.c:847
 #, c-format
 msgid "E243: Argument not supported: \"-%s\"; Use the OLE version."
 msgstr "E243: Параметр не поддерживается: \"-%s\"; используйте версию OLE."
 
-#: gui_w48.c:2090
+#: gui_w32.c:1100
+msgid "E672: Unable to open window inside MDI application"
+msgstr "E672: Невозможно открыть окно внутри приложения MDI"
+
+#: gui_w48.c:2163
 msgid "Find string (use '\\\\' to find  a '\\')"
 msgstr "Поиск строки (используйте '\\\\' для поиска '\\')"
 
@@ -2353,6 +2362,7 @@ msgid "Font1: %s\n"
 msgstr "Font1: %s\n"
 
 #: gui_x11.c:2184
+#, c-format
 msgid "Font%ld width is not twice that of font0\n"
 msgstr "Ширина шрифта font%ld должна быть вдвое больше ширины шрифта font0\n"
 
@@ -2437,7 +2447,7 @@ msgstr "Добавлена база данных cscope %s"
 #: if_cscope.c:589
 #, c-format
 msgid "E262: error reading cscope connection %ld"
-msgstr "E262: ошибка получения информации от соединения cscope %d"
+msgstr "E262: ошибка получения информации от соединения cscope %ld"
 
 #: if_cscope.c:694
 msgid "E561: unknown cscope search type"
@@ -2515,7 +2525,7 @@ msgstr "E261: соединение с cscope %s не обнаружено"
 #: if_cscope.c:1458
 #, c-format
 msgid "cscope connection %s closed"
-msgstr "соединение с cscope закрыто"
+msgstr "соединение %s с cscope закрыто"
 
 #. should not reach here
 #: if_cscope.c:1598
@@ -6654,5 +6664,3 @@ msgstr "E449: Получено недопустимое выражение"
 msgid "E463: Region is guarded, cannot modify"
 msgstr "E463: Невозможно изменить охраняемую область"
 
-#~ msgid "\"\n"
-#~ msgstr "\"\n"
