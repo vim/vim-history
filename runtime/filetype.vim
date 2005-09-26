@@ -16,7 +16,7 @@ set cpo&vim
 augroup filetypedetect
 
 " Ignored extensions
-au BufNewFile,BufRead *.orig,*.bak,*.old,*.new,*.rpmsave,*.rpmnew
+au BufNewFile,BufRead ?\+.orig,?\+.bak,?\+.old,?\+.new,?\+.rpmsave,?\+.rpmnew
 	\ exe "doau filetypedetect BufRead " . expand("<afile>:r")
 au BufNewFile,BufRead *~
 	\ let s:name = expand("<afile>") |
@@ -26,7 +26,7 @@ au BufNewFile,BufRead *~
 	\ endif |
 	\ unlet s:name |
 	\ unlet s:short
-au BufNewFile,BufRead *.in
+au BufNewFile,BufRead ?\+.in
 	\ if expand("<afile>:t") != "configure.in" |
 	\   exe "doau filetypedetect BufRead " . expand("<afile>:r") |
 	\ endif
