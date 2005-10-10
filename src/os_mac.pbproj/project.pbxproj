@@ -424,13 +424,13 @@
 	<key>CFBundleIdentifier</key>
 	<string></string>
 	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.3</string>
+	<string>6.4a</string>
 	<key>CFBundleName</key>
 	<string>Vim</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>Vim 6.3</string>
+	<string>Vim 6.4a</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>

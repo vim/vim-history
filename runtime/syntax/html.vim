@@ -2,7 +2,7 @@
 " Language:	HTML
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/html.vim
-" Last Change:  2004 May 16
+" Last Change:  2005 Jul 28
 
 " Please check :help html.vim for some comments and a description of the options
 

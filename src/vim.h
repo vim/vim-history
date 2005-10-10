@@ -19,9 +19,9 @@
     defined(DYNAMIC_ICONV) || \
     defined(DYNAMIC_IME) || \
     defined(XPM)
-#  pragma option -pc
+  #pragma option -pc
 # else
-#  pragma option -pr
+  #pragma option -pr
 # endif
 #endif
 
@@ -1628,7 +1628,7 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 
 /* stop using fastcall for Borland */
 #if defined(__BORLANDC__) && defined(WIN32) && !defined(DEBUG)
-# pragma option -p.
+ #pragma option -p.
 #endif
 
 #if defined(MEM_PROFILE)

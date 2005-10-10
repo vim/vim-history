@@ -9201,7 +9201,7 @@ compatible_set()
 
 # if defined(__BORLANDC__) && (__BORLANDC__ < 0x500)
    /* Borland C++ screws up loop optimisation here (negri) */
-#  pragma option -O-l
+  #pragma option -O-l
 # endif
 
 /*
@@ -9222,7 +9222,7 @@ fill_breakat_flags()
 }
 
 # if defined(__BORLANDC__) && (__BORLANDC__ < 0x500)
-#  pragma option -O.l
+  #pragma option -O.l
 # endif
 
 #endif

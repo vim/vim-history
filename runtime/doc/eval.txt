@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.3.  Last change: 2004 Sep 13
+*eval.txt*      For Vim version 6.4a.  Last change: 2005 Jan 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1501,7 +1501,7 @@ getcmdline()						*getcmdline()*
 			:cmap <F7> <C-\>eescape(getcmdline(), ' \')<CR>
 <		Also see |getcmdpos()| and |setcmdpos()|.
 
-getcmdpos({pos})					*getcmdpos()*
+getcmdpos()						*getcmdpos()*
 		Return the position of the cursor in the command line as a
 		byte count.  The first column is 1.
 		Only works when editing the command line, thus requires use of

@@ -3891,6 +3891,7 @@ added-5.8	version5.txt	/*added-5.8*
 added-6.1	version6.txt	/*added-6.1*
 added-6.2	version6.txt	/*added-6.2*
 added-6.3	version6.txt	/*added-6.3*
+added-6.4	version6.txt	/*added-6.4*
 added-BeOS	version5.txt	/*added-BeOS*
 added-Mac	version5.txt	/*added-Mac*
 added-VMS	version5.txt	/*added-VMS*
@@ -4114,6 +4115,7 @@ changed-5.8	version5.txt	/*changed-5.8*
 changed-6.1	version6.txt	/*changed-6.1*
 changed-6.2	version6.txt	/*changed-6.2*
 changed-6.3	version6.txt	/*changed-6.3*
+changed-6.4	version6.txt	/*changed-6.4*
 changelist	motion.txt	/*changelist*
 changelog-plugin	filetype.txt	/*changelog-plugin*
 changelog-syntax	syntax.txt	/*changelog-syntax*
@@ -4356,6 +4358,7 @@ diff-options	diff.txt	/*diff-options*
 diff-patchexpr	diff.txt	/*diff-patchexpr*
 diff.txt	diff.txt	/*diff.txt*
 digraph-arg	change.txt	/*digraph-arg*
+digraph-encoding	digraph.txt	/*digraph-encoding*
 digraph-table	digraph.txt	/*digraph-table*
 digraph.txt	digraph.txt	/*digraph.txt*
 digraphs	digraph.txt	/*digraphs*
@@ -4593,6 +4596,7 @@ fixed-5.8	version5.txt	/*fixed-5.8*
 fixed-6.1	version6.txt	/*fixed-6.1*
 fixed-6.2	version6.txt	/*fixed-6.2*
 fixed-6.3	version6.txt	/*fixed-6.3*
+fixed-6.4	version6.txt	/*fixed-6.4*
 fname_diff-variable	eval.txt	/*fname_diff-variable*
 fname_in-variable	eval.txt	/*fname_in-variable*
 fname_new-variable	eval.txt	/*fname_new-variable*
@@ -5253,6 +5257,7 @@ match-highlight	pattern.txt	/*match-highlight*
 matchend()	eval.txt	/*matchend()*
 matchit-install	usr_05.txt	/*matchit-install*
 matchstr()	eval.txt	/*matchstr()*
+mathematica-syntax	syntax.txt	/*mathematica-syntax*
 mbyte-IME	mbyte.txt	/*mbyte-IME*
 mbyte-XIM	mbyte.txt	/*mbyte-XIM*
 mbyte-conversion	mbyte.txt	/*mbyte-conversion*
@@ -5280,6 +5285,8 @@ minimal-features	os_msdos.txt	/*minimal-features*
 missing-commands	vi_diff.txt	/*missing-commands*
 missing-options	vi_diff.txt	/*missing-options*
 mlang.txt	mlang.txt	/*mlang.txt*
+mma-syntax	syntax.txt	/*mma-syntax*
+mma.vim	syntax.txt	/*mma.vim*
 mode()	eval.txt	/*mode()*
 mode-Ex	intro.txt	/*mode-Ex*
 mode-cmdline	cmdline.txt	/*mode-cmdline*
@@ -5884,6 +5891,7 @@ swap-file	recover.txt	/*swap-file*
 swapfile-changed	version4.txt	/*swapfile-changed*
 syn-sync-grouphere	syntax.txt	/*syn-sync-grouphere*
 syn-sync-groupthere	syntax.txt	/*syn-sync-groupthere*
+syn-sync-linecont	syntax.txt	/*syn-sync-linecont*
 synID()	eval.txt	/*synID()*
 synIDattr()	eval.txt	/*synIDattr()*
 synIDtrans()	eval.txt	/*synIDtrans()*
@@ -6141,6 +6149,12 @@ terminal-info	term.txt	/*terminal-info*
 terminal-options	term.txt	/*terminal-options*
 terminfo	term.txt	/*terminfo*
 termresponse-variable	eval.txt	/*termresponse-variable*
+tex-error	syntax.txt	/*tex-error*
+tex-folding	syntax.txt	/*tex-folding*
+tex-math	syntax.txt	/*tex-math*
+tex-runon	syntax.txt	/*tex-runon*
+tex-slow	syntax.txt	/*tex-slow*
+tex-style	syntax.txt	/*tex-style*
 tex-syntax	syntax.txt	/*tex-syntax*
 tex.vim	syntax.txt	/*tex.vim*
 text-objects	motion.txt	/*text-objects*
@@ -6388,6 +6402,7 @@ version-5.8	version5.txt	/*version-5.8*
 version-6.1	version6.txt	/*version-6.1*
 version-6.2	version6.txt	/*version-6.2*
 version-6.3	version6.txt	/*version-6.3*
+version-6.4	version6.txt	/*version-6.4*
 version-variable	eval.txt	/*version-variable*
 version4.txt	version4.txt	/*version4.txt*
 version5.txt	version5.txt	/*version5.txt*

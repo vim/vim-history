@@ -120,7 +120,6 @@ remove_popup(void)
 remove_openwith(void)
 {
     int		fail = 0;
-    HKEY	kh;
 
     if (RegDeleteKey(HKEY_CLASSES_ROOT, "Applications\\gvim.exe\\shell\\edit\\command") != ERROR_SUCCESS)
 	++fail;

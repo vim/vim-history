@@ -74,6 +74,11 @@ static void win_new_height __ARGS((win_T *, int));
 
 #define NOWIN		(win_T *)-1	/* non-exisiting window */
 
+#ifdef FEAT_WINDOWS
+static long p_ch_used = 1L;		/* value of 'cmdheight' when frame
+					   size was set */
+#endif
+
 #if defined(FEAT_WINDOWS) || defined(PROTO)
 /*
  * all CTRL-W window commands are handled here, called from normal_cmd().
@@ -2676,6 +2681,9 @@ win_alloc_first()
     topframe->fr_width = Columns;
 #endif
     topframe->fr_height = Rows - p_ch;
+#ifdef FEAT_WINDOWS
+    p_ch_used = p_ch;
+#endif
     topframe->fr_win = curwin;
     curwin->w_frame = topframe;
 }
@@ -3299,6 +3307,10 @@ shell_new_rows()
     win_new_height(firstwin, h);
 #endif
     compute_cmdrow();
+#ifdef FEAT_WINDOWS
+    p_ch_used = p_ch;
+#endif
+
 #if 0
     /* Disabled: don't want making the screen smaller make a window larger. */
     if (p_ea)
@@ -4266,6 +4278,13 @@ command_height(old_p_ch)
 #ifdef FEAT_WINDOWS
     int		h;
     frame_T	*frp;
+
+    /* When passed a negative value use the value of p_ch that we remembered.
+     * This is needed for when the GUI starts up, we can't be sure in what
+     * order things happen. */
+    if (old_p_ch < 0)
+	old_p_ch = p_ch_used;
+    p_ch_used = p_ch;
 
     /* Find bottom frame with width of screen. */
     frp = lastwin->w_frame;

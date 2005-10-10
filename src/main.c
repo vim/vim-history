@@ -1244,7 +1244,7 @@ scripterror:
 	TIME_MSG("Warning delay");
     }
 
-    if (want_full_screen)
+    if (want_full_screen && !silent_mode)
     {
 	termcapinit(term);	/* set terminal name and get terminal
 				   capabilities (will set full_screen) */

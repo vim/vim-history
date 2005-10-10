@@ -2,7 +2,7 @@
 "
 " Language:	Logtalk
 " Maintainer:	Paulo Moura <pmoura@logtalk.org>
-" Last Change:	2004 July 7
+" Last Change:	May 30, 2005
 
 
 " Quit when a syntax file was already loaded:
@@ -69,13 +69,15 @@ syn region	logtalkEntityRel	matchgroup=logtalkEntityRelTag	start="implements("	m
 
 " Logtalk directives
 
+syn region	logtalkDir		matchgroup=logtalkDirTag	start=":- alias("		matchgroup=logtalkDirTag	end=")\."	contains=ALL
+syn region	logtalkDir		matchgroup=logtalkDirTag	start=":- encoding("	matchgroup=logtalkDirTag	end=")\."	contains=ALL
 syn region	logtalkDir		matchgroup=logtalkDirTag	start=":- initialization("	matchgroup=logtalkDirTag	end=")\."	contains=ALL
 syn region	logtalkDir		matchgroup=logtalkDirTag	start=":- info("		matchgroup=logtalkDirTag	end=")\."	contains=ALL
-syn region	logtalkDir		matchgroup=logtalkDirTag	start=":- mode("		matchgroup=logtalkDirTag	end=")\."	contains=logtalkOperator,logtalkAtom
+syn region	logtalkDir		matchgroup=logtalkDirTag	start=":- mode("		matchgroup=logtalkDirTag	end=")\."	contains=logtalkOperator, logtalkAtom
 syn region	logtalkDir		matchgroup=logtalkDirTag	start=":- dynamic("		matchgroup=logtalkDirTag	end=")\."	contains=ALL
 syn match	logtalkDirTag		":- dynamic\."
 syn region	logtalkDir		matchgroup=logtalkDirTag	start=":- discontiguous("	matchgroup=logtalkDirTag	end=")\."	contains=ALL
-syn region	logtalkDir		matchgroup=logtalkDirTag	start=":- multifile("	matchgroup=logtalkDirTag	end=")\."	contains=ALL
+syn region	logtalkDir		matchgroup=logtalkDirTag	start=":- multifile("		matchgroup=logtalkDirTag	end=")\."	contains=ALL
 syn region	logtalkDir		matchgroup=logtalkDirTag	start=":- public("		matchgroup=logtalkDirTag	end=")\."	contains=ALL
 syn region	logtalkDir		matchgroup=logtalkDirTag	start=":- protected("		matchgroup=logtalkDirTag	end=")\."	contains=ALL
 syn region	logtalkDir		matchgroup=logtalkDirTag	start=":- private("		matchgroup=logtalkDirTag	end=")\."	contains=ALL
@@ -87,13 +89,9 @@ syn region	logtalkDir		matchgroup=logtalkDirTag	start=":- uses("		matchgroup=log
 
 " Logtalk built-in predicates
 
-syn match	logtalkBuiltIn		"\<current_\(object\|protocol\|category\)\ze("
-
-syn match	logtalkBuiltIn		"\<create_\(object\|protocol\|category\)\ze("
+syn match	logtalkBuiltIn		"\<\(abolish\|c\(reate\|urrent\)\)_\(object\|protocol\|category\)\ze("
 
 syn match	logtalkBuiltIn		"\<\(object\|protocol\|category\)_property\ze("
-
-syn match	logtalkBuiltIn		"\<abolish_\(object\|protocol\|category\)\ze("
 
 syn match	logtalkBuiltIn		"\<extends_\(object\|protocol\)\ze("
 syn match	logtalkBuiltIn		"\<imp\(orts_category\|lements_protocol\)\ze("
@@ -104,10 +102,9 @@ syn match	logtalkBuiltIn		"\<current_event\ze("
 
 syn match	logtalkBuiltIn		"\<\(current\|set\)_logtalk_flag\ze("
 
-syn match	logtalkBuiltIn		"\<logtalk_\(compile\|load\)\ze("
+syn match	logtalkBuiltIn		"\<logtalk_\(compile\|l\(ibrary_path\|oad\)\)\ze("
 
-syn match	logtalkBuiltIn		"\<forall\ze("
-syn match	logtalkBuiltIn		"\<retractall\ze("
+syn match	logtalkBuiltIn		"\<\(for\|retract\)all\ze("
 
 
 " Logtalk built-in methods
@@ -119,11 +116,9 @@ syn match	logtalkBuiltInMethod	"\<this\ze("
 syn match	logtalkBuiltInMethod	"\<current_predicate\ze("
 syn match	logtalkBuiltInMethod	"\<predicate_property\ze("
 
-syn match	logtalkBuiltInMethod	"\<abolish\ze("
-syn match	logtalkBuiltInMethod	"\<assert\(a\|z\)\ze("
+syn match	logtalkBuiltInMethod	"\<a\(bolish\|ssert\(a\|z\)\)\ze("
 syn match	logtalkBuiltInMethod	"\<clause\ze("
-syn match	logtalkBuiltInMethod	"\<retract\ze("
-syn match	logtalkBuiltInMethod	"\<retractall\ze("
+syn match	logtalkBuiltInMethod	"\<retract\(all\)\?\ze("
 
 syn match	logtalkBuiltInMethod	"\<\(bag\|set\)of\ze("
 syn match	logtalkBuiltInMethod	"\<f\(ind\|or\)all\ze("
@@ -131,6 +126,7 @@ syn match	logtalkBuiltInMethod	"\<f\(ind\|or\)all\ze("
 syn match	logtalkBuiltInMethod	"\<before\ze("
 syn match	logtalkBuiltInMethod	"\<after\ze("
 
+syn match	logtalkBuiltInMethod	"\<expand_term\ze("
 syn match	logtalkBuiltInMethod	"\<phrase\ze("
 
 
@@ -163,10 +159,9 @@ syn match	logtalkOperator		"\\="
 " Term testing
 
 syn match	logtalkKeyword		"\<var\ze("
-syn match	logtalkKeyword		"\<atom\ze("
+syn match	logtalkKeyword		"\<atom\(ic\)\?\ze("
 syn match	logtalkKeyword		"\<integer\ze("
 syn match	logtalkKeyword		"\<float\ze("
-syn match	logtalkKeyword		"\<atomic\ze("
 syn match	logtalkKeyword		"\<compound\ze("
 syn match	logtalkKeyword		"\<n\(onvar\|umber\)\ze("
 
@@ -191,7 +186,7 @@ syn match	logtalkKeyword		"\<copy_term\ze("
 
 " Arithemtic evaluation
 
-syn keyword	logtalkOperator		is
+syn match	logtalkOperator		"\<is\>"
 
 
 " Arithemtic comparison
@@ -206,8 +201,7 @@ syn match	logtalkOperator		">="
 
 " Stream selection and control
 
-syn match	logtalkKeyword		"\<current_\(input\|output\)\ze("
-syn match	logtalkKeyword		"\<set_\(input\|output\)\ze("
+syn match	logtalkKeyword		"\<\(current\|set\)_\(in\|out\)put\ze("
 syn match	logtalkKeyword		"\<open\ze("
 syn match	logtalkKeyword		"\<close\ze("
 syn match	logtalkKeyword		"\<flush_output\ze("
@@ -220,22 +214,17 @@ syn match	logtalkKeyword		"\<set_stream_position\ze("
 
 " Character and byte input/output
 
-syn match	logtalkKeyword		"\<\(get\|peek\|put\)_\(char\|code\|byte\)\ze("
+syn match	logtalkKeyword		"\<\(get\|p\(eek\|ut\)\)_\(c\(har\|ode\)\|byte\)\ze("
 syn match	logtalkKeyword		"\<nl\ze("
 syn match	logtalkKeyword		"\<nl\>"
 
 
 " Term input/output
 
-syn match	logtalkKeyword		"\<read_term\ze("
-syn match	logtalkKeyword		"\<read\ze("
-syn match	logtalkKeyword		"\<write\ze("
-syn match	logtalkKeyword		"\<writeq\ze("
-syn match	logtalkKeyword		"\<write_\(canonical\|term\)\ze("
-syn match	logtalkKeyword		"\<op\ze("
-syn match	logtalkKeyword		"\<current_op\ze("
-syn match	logtalkKeyword		"\<char_conversion\ze("
-syn match	logtalkKeyword		"\<current_char_conversion\ze("
+syn match	logtalkKeyword		"\<read\(_term\)\?\ze("
+syn match	logtalkKeyword		"\<write\(q\|_\(canonical\|term\)\)\?\ze("
+syn match	logtalkKeyword		"\<\(current_\)\?op\ze("
+syn match	logtalkKeyword		"\<\(current\)\?char_conversion\ze("
 
 
 " Logic and control
@@ -247,10 +236,10 @@ syn match	logtalkKeyword		"\<repeat\>"
 
 " Atomic term processing
 
-syn match	logtalkKeyword		"\<atom_\(length\|concat\|chars\|codes\)\ze("
+syn match	logtalkKeyword		"\<atom_\(length\|c\(hars\|o\(ncat\|des\)\)\)\ze("
 syn match	logtalkKeyword		"\<sub_atom\ze("
 syn match	logtalkKeyword		"\<char_code\ze("
-syn match	logtalkKeyword		"\<number_\(chars\|codes\)\ze("
+syn match	logtalkKeyword		"\<number_\(c\(hars\|odes\)\)\ze("
 
 
 " Implementation defined hooks functions
@@ -267,17 +256,14 @@ syn match	logtalkOperator		"-"
 syn match	logtalkOperator		"\*"
 syn match	logtalkOperator		"//"
 syn match	logtalkOperator		"/"
-syn match	logtalkKeyword		"\<rem(?=[(])"
+syn match	logtalkKeyword		"\<r\(ound\|em\)\ze("
 syn match	logtalkKeyword		"\<rem\>"
 syn match	logtalkKeyword		"\<mod\ze("
 syn match	logtalkKeyword		"\<mod\>"
 syn match	logtalkKeyword		"\<abs\ze("
 syn match	logtalkKeyword		"\<sign\ze("
-syn match	logtalkKeyword		"\<float_\(integer\|fractional\)_part\ze("
-syn match	logtalkKeyword		"\<float\ze("
-syn match	logtalkKeyword		"\<floor\ze("
+syn match	logtalkKeyword		"\<flo\(or\|at\(_\(integer\|fractional\)_part\)\?\)\ze("
 syn match	logtalkKeyword		"\<truncate\ze("
-syn match	logtalkKeyword		"\<round\ze("
 syn match	logtalkKeyword		"\<ceiling\ze("
 
 
@@ -300,14 +286,26 @@ syn match	logtalkOperator		"\\/"
 syn match	logtalkOperator		"\\"
 
 
-" Logtalk end-of-clause
-
-syn match	logtalkOperator		"\."
-
-
 " Logtalk list operator
 
 syn match	logtalkOperator		"|"
+
+
+" Logtalk numbers 
+
+syn match	logtalkNumber		"\<\d\+\>"
+syn match	logtalkNumber		"\<\d\+\.\d\+\>"
+syn match	logtalkNumber		"\<\d\+[eE][-+]\=\d\+\>"
+syn match	logtalkNumber		"\<\d\+\.\d\+[eE][-+]\=\d\+\>"
+syn match	logtalkNumber		"\<0'[0-9a-zA-Z]\>"
+syn match	logtalkNumber		"\<0b[0-1]\+\>"
+syn match	logtalkNumber		"\<0o[0-7]\+\>"
+syn match	logtalkNumber		"\<0x\x\+\>"
+
+
+" Logtalk end-of-clause
+
+syn match	logtalkOperator		"\."
 
 
 " Logtalk comments
@@ -316,18 +314,7 @@ syn region	logtalkBlockComment	start="/\*"	end="\*/"
 syn match	logtalkLineComment	"%.*"
 
 
-" Logtalk numbers
-
-syn match	logtalkNumber		"\<[0-9]\+\>"
-syn match	logtalkNumber		"\<[0-9]\+\.[0-9]\+\>"
-syn match	logtalkNumber		"\<[0-9]\+\.[0-9]\+[eE][-+][0-9]+\>"
-syn match	logtalkNumber		"\<0'[0-9a-zA-Z]\>"
-syn match	logtalkNumber		"\<0b[0-1]\+\>"
-syn match	logtalkNumber		"\<0o[0-7]\+\>"
-syn match	logtalkNumber		"\<0x[0-9a-fA-F]\+\>"
-
-
-syn sync ccomment maxlines=50
+syn sync ccomment logtalkBlockComment maxlines=50
 
 
 " Define the default highlighting.
@@ -341,7 +328,7 @@ if version >= 508 || !exists("did_logtalk_syn_inits")
 	else
 		command -nargs=+ HiLink hi def link <args>
 	endif
-
+	
 	HiLink	logtalkBlockComment	Comment
 	HiLink	logtalkLineComment	Comment
 

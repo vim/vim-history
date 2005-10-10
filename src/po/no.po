@@ -1,7 +1,7 @@
 # Norwegian (Bokmål) translation of Vim.
 # Copyright (C) 2003-2004 Free Software Foundation, Inc.
 # FIRST AUTHOR Øyvind A. Holm <sunny@sunbase.org>, 2003-2004.
-# no.po 299 2004-06-01 20:50:09Z sunny
+# no.po 317 2004-06-11 12:54:59Z sunny
 #
 # Comments and error reports appreciated.
 #
@@ -25,7 +25,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Vim 6.x\n"
-"POT-Creation-Date: 2004-05-31 15:46+0200\n"
+"POT-Creation-Date: 2004-06-11 14:38+0200\n"
 "PO-Revision-Date: 2003-05-13 08:19+0200\n"
 "Last-Translator: Øyvind A. Holm <sunny@sunbase.org>\n"
 "Language-Team: Norwegian <vim.in.norwegian@sunbase.org>\n"
@@ -42,171 +42,171 @@ msgstr "E82: Kan ikke reservere plass til noen buffere, avslutter ..."
 msgid "E83: Cannot allocate buffer, using other one..."
 msgstr "E83: Kan ikke reservere plass til buffer, bruker en annen ..."
 
-#: buffer.c:805
+#: buffer.c:808
 msgid "E515: No buffers were unloaded"
 msgstr "E515: Ingen buffere ble lastet ut"
 
-#: buffer.c:807
+#: buffer.c:810
 msgid "E516: No buffers were deleted"
 msgstr "E516: Ingen buffere ble slettet"
 
-#: buffer.c:809
+#: buffer.c:812
 msgid "E517: No buffers were wiped out"
 msgstr "E517: Ingen buffere ble visket ut"
 
-#: buffer.c:817
+#: buffer.c:820
 msgid "1 buffer unloaded"
 msgstr "1 buffer ble lastet ut"
 
-#: buffer.c:819
+#: buffer.c:822
 #, c-format
 msgid "%d buffers unloaded"
 msgstr "%d buffere ble lastet ut"
 
-#: buffer.c:824
+#: buffer.c:827
 msgid "1 buffer deleted"
 msgstr "1 buffer ble slettet"
 
-#: buffer.c:826
+#: buffer.c:829
 #, c-format
 msgid "%d buffers deleted"
 msgstr "%d buffere ble slettet"
 
-#: buffer.c:831
+#: buffer.c:834
 msgid "1 buffer wiped out"
 msgstr "1 buffer ble visket ut"
 
-#: buffer.c:833
+#: buffer.c:836
 #, c-format
 msgid "%d buffers wiped out"
 msgstr "%d buffere ble visket ut"
 
-#: buffer.c:894
+#: buffer.c:897
 msgid "E84: No modified buffer found"
 msgstr "E84: Fant ingen modifisert buffer"
 
 #. back where we started, didn't find anything.
-#: buffer.c:933
+#: buffer.c:936
 msgid "E85: There is no listed buffer"
 msgstr "E85: Det finnes ingen listede buffere"
 
-#: buffer.c:945
+#: buffer.c:948
 #, c-format
 msgid "E86: Buffer %ld does not exist"
 msgstr "E86: Bufferen %ld finnes ikke"
 
-#: buffer.c:948
+#: buffer.c:951
 msgid "E87: Cannot go beyond last buffer"
 msgstr "E87: Kan ikke gå forbi siste buffer"
 
-#: buffer.c:950
+#: buffer.c:953
 msgid "E88: Cannot go before first buffer"
 msgstr "E88: Kan ikke gå forbi første buffer"
 
-#: buffer.c:988
+#: buffer.c:991
 #, c-format
 msgid "E89: No write since last change for buffer %ld (add ! to override)"
 msgstr ""
 "E89: Ikke lagret siden forrige forandring av bufferen %ld (legg til ! for å "
 "overstyre)"
 
-#: buffer.c:1005
+#: buffer.c:1008
 msgid "E90: Cannot unload last buffer"
 msgstr "E90: Kan ikke laste ut siste buffer"
 
-#: buffer.c:1538
+#: buffer.c:1544
 msgid "W14: Warning: List of file names overflow"
 msgstr "W14: Advarsel: Listen med filnavn er overfylt"
 
-#: buffer.c:1709
+#: buffer.c:1716
 #, c-format
 msgid "E92: Buffer %ld not found"
 msgstr "E92: Fant ikke bufferen %ld"
 
-#: buffer.c:1940
+#: buffer.c:1947
 #, c-format
 msgid "E93: More than one match for %s"
 msgstr "E93: Mer enn ett treff for %s"
 
-#: buffer.c:1942
+#: buffer.c:1949
 #, c-format
 msgid "E94: No matching buffer for %s"
 msgstr "E94: Ingen samsvarende buffer for %s"
 
-#: buffer.c:2337
+#: buffer.c:2344
 #, c-format
 msgid "line %ld"
 msgstr "linje %ld"
 
-#: buffer.c:2422
+#: buffer.c:2429
 msgid "E95: Buffer with this name already exists"
 msgstr "E95: En buffer med dette navnet finnes allerede"
 
-#: buffer.c:2717
+#: buffer.c:2724
 msgid " [Modified]"
 msgstr " [Modifisert]"
 
-#: buffer.c:2722
+#: buffer.c:2729
 msgid "[Not edited]"
 msgstr "[Uredigert]"
 
-#: buffer.c:2727
+#: buffer.c:2734
 msgid "[New file]"
 msgstr "[Ny fil]"
 
-#: buffer.c:2728
+#: buffer.c:2735
 msgid "[Read errors]"
 msgstr "[Lesefeil]"
 
-#: buffer.c:2730 fileio.c:2112
+#: buffer.c:2737 fileio.c:2124
 msgid "[readonly]"
 msgstr "[skrivebeskyttet]"
 
-#: buffer.c:2751
+#: buffer.c:2758
 #, c-format
 msgid "1 line --%d%%--"
 msgstr "1 linje --%d%%--"
 
-#: buffer.c:2753
+#: buffer.c:2760
 #, c-format
 msgid "%ld lines --%d%%--"
 msgstr "%ld linjer --%d%%--"
 
-#: buffer.c:2760
+#: buffer.c:2767
 #, c-format
 msgid "line %ld of %ld --%d%%-- col "
 msgstr "linje %ld av %ld --%d%%-- kol "
 
-#: buffer.c:2868
+#: buffer.c:2875
 msgid "[No file]"
 msgstr "[Uten navn]"
 
 #. must be a help buffer
-#: buffer.c:2908
+#: buffer.c:2915
 msgid "help"
 msgstr "hjelp"
 
-#: buffer.c:3467 screen.c:5075
+#: buffer.c:3474 screen.c:5079
 msgid "[help]"
 msgstr "[hjelp]"
 
-#: buffer.c:3499 screen.c:5081
+#: buffer.c:3506 screen.c:5085
 msgid "[Preview]"
 msgstr "[Forhåndsvisning]"
 
-#: buffer.c:3779
+#: buffer.c:3786
 msgid "All"
 msgstr "Alt"
 
-#: buffer.c:3779
+#: buffer.c:3786
 msgid "Bot"
 msgstr "Bunn"
 
-#: buffer.c:3781
+#: buffer.c:3788
 msgid "Top"
 msgstr "Topp"
 
-#: buffer.c:4529
+#: buffer.c:4536
 msgid ""
 "\n"
 "# Buffer list:\n"
@@ -214,15 +214,15 @@ msgstr ""
 "\n"
 "# Bufferliste:\n"
 
-#: buffer.c:4562
+#: buffer.c:4569
 msgid "[Error List]"
 msgstr "[Feilliste]"
 
-#: buffer.c:4575 memline.c:1521
+#: buffer.c:4582 memline.c:1521
 msgid "[No File]"
 msgstr "[Uten navn]"
 
-#: buffer.c:4888
+#: buffer.c:4895
 msgid ""
 "\n"
 "--- Signs ---"
@@ -230,12 +230,12 @@ msgstr ""
 "\n"
 "--- Skilt ---"
 
-#: buffer.c:4907
+#: buffer.c:4914
 #, c-format
 msgid "Signs for %s:"
 msgstr "Skilt for %s:"
 
-#: buffer.c:4913
+#: buffer.c:4920
 #, c-format
 msgid "    line=%ld  id=%d  name=%s"
 msgstr "    linje=%ld  id=%d  navn=%s"
@@ -249,33 +249,33 @@ msgstr "E96: Kan ikke sammenligne flere enn %ld buffere"
 msgid "E97: Cannot create diffs"
 msgstr "E97: Kan ikke lage differansefiler"
 
-#: diff.c:818
+#: diff.c:819
 msgid "Patch file"
 msgstr "Patch fil"
 
-#: diff.c:1069
+#: diff.c:1072
 msgid "E98: Cannot read diff output"
 msgstr "E98: Kan ikke lese differanse-utdata"
 
-#: diff.c:1819
+#: diff.c:1822
 msgid "E99: Current buffer is not in diff mode"
 msgstr "E99: Nåværende buffer er ikke i differansemodus"
 
-#: diff.c:1831
+#: diff.c:1834
 msgid "E100: No other buffer in diff mode"
 msgstr "E100: Ingen annen buffer i differansemodus"
 
-#: diff.c:1839
+#: diff.c:1842
 msgid "E101: More than two buffers in diff mode, don't know which one to use"
 msgstr ""
 "E101: Mer enn to buffere i differansemodus, vet ikke hvilken som skal brukes"
 
-#: diff.c:1862
+#: diff.c:1865
 #, c-format
 msgid "E102: Can't find buffer \"%s\""
 msgstr "E102: Kan ikke finne buffer \"%s\""
 
-#: diff.c:1868
+#: diff.c:1871
 #, c-format
 msgid "E103: Buffer \"%s\" is not in diff mode"
 msgstr "E103: Bufferen \"%s\" er ikke i differansemodus"
@@ -486,7 +486,7 @@ msgstr "E120: Bruk av \"<SID>\" utenfor skript-sammenheng: %s"
 #. * this way has the compelling advantage that translations need not to
 #. * be touched at all.  See below what 'ok' and 'ync' are used for.
 #.
-#: eval.c:3687 gui.c:4382 gui_gtk.c:2059
+#: eval.c:3687 gui.c:4385 gui_gtk.c:2059
 msgid "&Ok"
 msgstr "&Ok"
 
@@ -782,64 +782,64 @@ msgstr ""
 msgid "Edit File"
 msgstr "Rediger fil"
 
-#: ex_cmds.c:3207
+#: ex_cmds.c:3206
 #, c-format
 msgid "E143: Autocommands unexpectedly deleted new buffer %s"
 msgstr "E143: Autokommandoer slettet uventet den nye bufferen %s"
 
-#: ex_cmds.c:3341
+#: ex_cmds.c:3340
 msgid "E144: non-numeric argument to :z"
 msgstr "E144: Ikke-numerisk parameter til :z"
 
-#: ex_cmds.c:3426
+#: ex_cmds.c:3425
 msgid "E145: Shell commands not allowed in rvim"
 msgstr "E145: Skallkommandoer er ikke tillatt i rvim"
 
-#: ex_cmds.c:3533
+#: ex_cmds.c:3532
 msgid "E146: Regular expressions can't be delimited by letters"
 msgstr "E146: Regulære uttrykk kan ikke bli adskilt av bokstaver"
 
-#: ex_cmds.c:3879
+#: ex_cmds.c:3878
 #, c-format
 msgid "replace with %s (y/n/a/q/l/^E/^Y)?"
 msgstr "Erstatt med %s (y/n/a/q/l/^E/^Y)?"
 
-#: ex_cmds.c:4272
+#: ex_cmds.c:4271
 msgid "(Interrupted) "
 msgstr "(Avbrutt) "
 
-#: ex_cmds.c:4276
+#: ex_cmds.c:4275
 msgid "1 substitution"
 msgstr "1 erstatning"
 
-#: ex_cmds.c:4278
+#: ex_cmds.c:4277
 #, c-format
 msgid "%ld substitutions"
 msgstr "%ld erstatninger"
 
-#: ex_cmds.c:4281
+#: ex_cmds.c:4280
 msgid " on 1 line"
 msgstr " i 1 linje"
 
-#: ex_cmds.c:4283
+#: ex_cmds.c:4282
 #, c-format
 msgid " on %ld lines"
 msgstr " i %ld linjer"
 
-#: ex_cmds.c:4334
+#: ex_cmds.c:4333
 msgid "E147: Cannot do :global recursive"
 msgstr "E147: Kan ikke gjøre :global rekursiv"
 
-#: ex_cmds.c:4369
+#: ex_cmds.c:4368
 msgid "E148: Regular expression missing from global"
 msgstr "E148: Regulært uttrykk mangler i global kommando"
 
-#: ex_cmds.c:4418
+#: ex_cmds.c:4417
 #, c-format
 msgid "Pattern found in every line: %s"
 msgstr "Søkestreng funnet i alle linjene: %s"
 
-#: ex_cmds.c:4499
+#: ex_cmds.c:4498
 msgid ""
 "\n"
 "# Last Substitute String:\n"
@@ -849,96 +849,96 @@ msgstr ""
 "# Siste erstatningstekst:\n"
 "$"
 
-#: ex_cmds.c:4600
+#: ex_cmds.c:4599
 msgid "E478: Don't panic!"
 msgstr "E478: Ingen panikk!"
 
-#: ex_cmds.c:4652
+#: ex_cmds.c:4651
 #, c-format
 msgid "E661: Sorry, no '%s' help for %s"
 msgstr "E661: Dessverre ingen '%s' hjelp for %s"
 
-#: ex_cmds.c:4655
+#: ex_cmds.c:4654
 #, c-format
 msgid "E149: Sorry, no help for %s"
 msgstr "E149: Dessverre ingen hjelp for %s"
 
-#: ex_cmds.c:4689
+#: ex_cmds.c:4688
 #, c-format
 msgid "Sorry, help file \"%s\" not found"
 msgstr "Fant ikke hjelpefilen \"%s\""
 
-#: ex_cmds.c:5172
+#: ex_cmds.c:5191
 #, c-format
 msgid "E150: Not a directory: %s"
 msgstr "E150: Er ikke en katalog: %s"
 
-#: ex_cmds.c:5311
+#: ex_cmds.c:5332
 #, c-format
 msgid "E152: Cannot open %s for writing"
 msgstr "E152: Kan ikke åpne %s for skriving"
 
-#: ex_cmds.c:5347
+#: ex_cmds.c:5368
 #, c-format
 msgid "E153: Unable to open %s for reading"
 msgstr "E153: Kan ikke åpne %s for lesing"
 
-#: ex_cmds.c:5369
+#: ex_cmds.c:5404
 #, c-format
 msgid "E670: Mix of help file encodings within a language: %s"
 msgstr "E670: Tegnsettblanding i hjelpefilen innenfor samme språk: %s"
 
-#: ex_cmds.c:5447
+#: ex_cmds.c:5483
 #, c-format
-msgid "E154: Duplicate tag \"%s\" in file %s"
-msgstr "E154: Duplisert tag \"%s\" i filen %s"
+msgid "E154: Duplicate tag \"%s\" in file %s/%s"
+msgstr "E154: Duplikat-tag \"%s\" i filen %s/%s"
 
-#: ex_cmds.c:5559
+#: ex_cmds.c:5599
 #, c-format
 msgid "E160: Unknown sign command: %s"
 msgstr "E160: Ukjent skiltkommando: %s"
 
-#: ex_cmds.c:5579
+#: ex_cmds.c:5619
 msgid "E156: Missing sign name"
 msgstr "E156: Mangler skiltnavn"
 
-#: ex_cmds.c:5625
+#: ex_cmds.c:5665
 msgid "E612: Too many signs defined"
 msgstr "E612: For mange skilt definert"
 
-#: ex_cmds.c:5693
+#: ex_cmds.c:5733
 #, c-format
 msgid "E239: Invalid sign text: %s"
 msgstr "E239: Ugyldig skilttekst: %s"
 
-#: ex_cmds.c:5724 ex_cmds.c:5915
+#: ex_cmds.c:5764 ex_cmds.c:5955
 #, c-format
 msgid "E155: Unknown sign: %s"
 msgstr "E155: Ukjent skilt: %s"
 
-#: ex_cmds.c:5773
+#: ex_cmds.c:5813
 msgid "E159: Missing sign number"
 msgstr "E159: Mangler skiltnummer"
 
-#: ex_cmds.c:5855
+#: ex_cmds.c:5895
 #, c-format
 msgid "E158: Invalid buffer name: %s"
 msgstr "E158: Ugyldig buffernavn: %s"
 
-#: ex_cmds.c:5894
+#: ex_cmds.c:5934
 #, c-format
 msgid "E157: Invalid sign ID: %ld"
 msgstr "E157: Ulovlig skilt-ID: %ld"
 
-#: ex_cmds.c:5964
+#: ex_cmds.c:6004
 msgid " (NOT FOUND)"
 msgstr " (IKKE FUNNET)"
 
-#: ex_cmds.c:5966
+#: ex_cmds.c:6006
 msgid " (not supported)"
 msgstr " (ikke støttet)"
 
-#: ex_cmds.c:6065
+#: ex_cmds.c:6105
 msgid "[Deleted]"
 msgstr "[Slettet]"
 
@@ -980,7 +980,7 @@ msgstr "%3d  %s %s  linje %ld"
 msgid "Save changes to \"%.*s\"?"
 msgstr "Lagre forandringer til \"%.*s\"?"
 
-#: ex_cmds2.c:788 ex_docmd.c:9398
+#: ex_cmds2.c:788 ex_docmd.c:9407
 msgid "Untitled"
 msgstr "Uten navn"
 
@@ -1321,118 +1321,118 @@ msgstr "E185: Kan ikke finne fargeoppsettet %s"
 msgid "Greetings, Vim user!"
 msgstr "Vær hilset, Vim-bruker!"
 
-#: ex_docmd.c:6393
+#: ex_docmd.c:6396
 msgid "Edit File in new window"
 msgstr "Rediger fil i nytt vindu"
 
-#: ex_docmd.c:6688
+#: ex_docmd.c:6697
 msgid "No swap file"
 msgstr "Ingen swapfil"
 
-#: ex_docmd.c:6792
+#: ex_docmd.c:6801
 msgid "Append File"
 msgstr "Legg til fil"
 
-#: ex_docmd.c:6856
+#: ex_docmd.c:6865
 msgid "E186: No previous directory"
 msgstr "E186: Ingen tidligere katalog"
 
-#: ex_docmd.c:6938
+#: ex_docmd.c:6947
 msgid "E187: Unknown"
 msgstr "E187: Ukjent"
 
-#: ex_docmd.c:7023
+#: ex_docmd.c:7032
 msgid "E465: :winsize requires two number arguments"
 msgstr "E465: :winsize trenger to numeriske parametere"
 
-#: ex_docmd.c:7079
+#: ex_docmd.c:7088
 #, c-format
 msgid "Window position: X %d, Y %d"
 msgstr "Vindusposisjon: X %d, Y %d"
 
-#: ex_docmd.c:7084
+#: ex_docmd.c:7093
 msgid "E188: Obtaining window position not implemented for this platform"
 msgstr ""
 "E188: Lesing av vindusposisjon er ikke implementert på denne plattformen"
 
-#: ex_docmd.c:7094
+#: ex_docmd.c:7103
 msgid "E466: :winpos requires two number arguments"
 msgstr "E466: :winpos trenger to numeriske parametere"
 
-#: ex_docmd.c:7372
+#: ex_docmd.c:7381
 msgid "Save Redirection"
 msgstr "Lagre omdirigering"
 
-#: ex_docmd.c:7562
+#: ex_docmd.c:7571
 msgid "Save View"
 msgstr "Lagre utseende"
 
-#: ex_docmd.c:7563
+#: ex_docmd.c:7572
 msgid "Save Session"
 msgstr "Lagre økt"
 
-#: ex_docmd.c:7565
+#: ex_docmd.c:7574
 msgid "Save Setup"
 msgstr "Lagre oppsett"
 
-#: ex_docmd.c:7717
+#: ex_docmd.c:7726
 #, c-format
 msgid "E189: \"%s\" exists (add ! to override)"
 msgstr "E189: \"%s\" finnes (legg til ! for å overstyre)"
 
-#: ex_docmd.c:7722
+#: ex_docmd.c:7731
 #, c-format
 msgid "E190: Cannot open \"%s\" for writing"
 msgstr "E190: Kan ikke åpne \"%s\" for skriving"
 
 #. set mark
-#: ex_docmd.c:7746
+#: ex_docmd.c:7755
 msgid "E191: Argument must be a letter or forward/backward quote"
 msgstr "E191: Parameter må være en bokstav eller vanlig/baklengs apostrof"
 
-#: ex_docmd.c:7788
+#: ex_docmd.c:7797
 msgid "E192: Recursive use of :normal too deep"
 msgstr "E192: Rekursiv bruk av :normal er for dyp"
 
-#: ex_docmd.c:8306
+#: ex_docmd.c:8315
 msgid "E194: No alternate file name to substitute for '#'"
 msgstr "E194: Ingen alternative filnavn tilgjengelig som erstatning for '#'"
 
-#: ex_docmd.c:8337
+#: ex_docmd.c:8346
 msgid "E495: no autocommand file name to substitute for \"<afile>\""
 msgstr ""
 "E495: Ingen autokommandofilnavn tilgjengelig som erstatning for \"<afile>\""
 
-#: ex_docmd.c:8345
+#: ex_docmd.c:8354
 msgid "E496: no autocommand buffer number to substitute for \"<abuf>\""
 msgstr ""
 "E496: Ingen buffernummer tilgjengelig som erstatning for \"<abuf>\" i "
 "autokommando"
 
-#: ex_docmd.c:8356
+#: ex_docmd.c:8365
 msgid "E497: no autocommand match name to substitute for \"<amatch>\""
 msgstr ""
 "E497: Ingen autokommandonavn tilgjengelig som erstatning for \"<amatch>\""
 
-#: ex_docmd.c:8366
+#: ex_docmd.c:8375
 msgid "E498: no :source file name to substitute for \"<sfile>\""
 msgstr ""
 "E498: Ingen ':source'-filnavn tilgjengelig som erstatning for \"<sfile>\""
 
-#: ex_docmd.c:8407
+#: ex_docmd.c:8416
 #, no-c-format
 msgid "E499: Empty file name for '%' or '#', only works with \":p:h\""
 msgstr "E499: Tomt filnavn for '%' eller '#', virker bare med \":p:h\""
 
-#: ex_docmd.c:8409
+#: ex_docmd.c:8418
 msgid "E500: Evaluates to an empty string"
 msgstr "E500: Resulterer i en tom streng"
 
-#: ex_docmd.c:9380
+#: ex_docmd.c:9389
 msgid "E195: Cannot open viminfo file for reading"
 msgstr "E195: Kan ikke åpne viminfo-fil for lesing"
 
-#: ex_docmd.c:9553
+#: ex_docmd.c:9562
 msgid "E196: No digraphs in this version"
 msgstr "E196: Ingen spesialtegn i denne versjonen"
 
@@ -1490,7 +1490,7 @@ msgstr "Unntak"
 msgid "Error and interrupt"
 msgstr "Feil og avbrudd"
 
-#: ex_eval.c:754 gui.c:4381
+#: ex_eval.c:754 gui.c:4384
 msgid "Error"
 msgstr "Feil"
 
@@ -1566,19 +1566,19 @@ msgstr "E602: :endtry uten :try"
 msgid "E193: :endfunction not inside a function"
 msgstr "E193: :endfunction er ikke innenfor en funksjon"
 
-#: ex_getln.c:3295
+#: ex_getln.c:3299
 msgid "tagname"
 msgstr "navn på tag"
 
-#: ex_getln.c:3298
+#: ex_getln.c:3302
 #~ msgid " kind file\n"
 #~ msgstr ""
 
-#: ex_getln.c:4764
+#: ex_getln.c:4768
 msgid "'history' option is zero"
 msgstr "'history'-valget er null"
 
-#: ex_getln.c:5035
+#: ex_getln.c:5039
 #, c-format
 msgid ""
 "\n"
@@ -1587,257 +1587,257 @@ msgstr ""
 "\n"
 "# %s-historie (nyeste til eldste):\n"
 
-#: ex_getln.c:5036
+#: ex_getln.c:5040
 msgid "Command Line"
 msgstr "Kommandolinje"
 
-#: ex_getln.c:5037
+#: ex_getln.c:5041
 msgid "Search String"
 msgstr "Søkestreng"
 
-#: ex_getln.c:5038
+#: ex_getln.c:5042
 msgid "Expression"
 msgstr "Uttrykk"
 
-#: ex_getln.c:5039
+#: ex_getln.c:5043
 msgid "Input Line"
 msgstr "Inndatalinje"
 
-#: ex_getln.c:5077
+#: ex_getln.c:5081
 msgid "E198: cmd_pchar beyond the command length"
 msgstr "E198: cmd_pchar utenfor kommandolengden"
 
-#: ex_getln.c:5254
+#: ex_getln.c:5258
 msgid "E199: Active window or buffer deleted"
 msgstr "E199: Aktivt vindu eller buffer slettet"
 
-#: fileio.c:377
+#: fileio.c:378
 msgid "Illegal file name"
 msgstr "Ulovlig filnavn"
 
-#: fileio.c:401 fileio.c:535 fileio.c:2913 fileio.c:2954
+#: fileio.c:402 fileio.c:540 fileio.c:2925 fileio.c:2966
 msgid "is a directory"
 msgstr "er en katalog"
 
-#: fileio.c:403
+#: fileio.c:404
 msgid "is not a file"
 msgstr "er ikke en fil"
 
-#: fileio.c:557 fileio.c:4131
+#: fileio.c:562 fileio.c:4143
 msgid "[New File]"
 msgstr "[Ny fil]"
 
-#: fileio.c:590
+#: fileio.c:595
 msgid "[Permission Denied]"
 msgstr "[Tilgang nektet]"
 
-#: fileio.c:694
+#: fileio.c:706
 msgid "E200: *ReadPre autocommands made the file unreadable"
 msgstr "E200: \"*ReadPre\"-autokommandoer gjorde filen uleselig"
 
-#: fileio.c:696
+#: fileio.c:708
 msgid "E201: *ReadPre autocommands must not change current buffer"
 msgstr "E201: \"*ReadPre\"-autokommandoer må ikke forandre nåværende buffer"
 
-#: fileio.c:717
+#: fileio.c:729
 msgid "Vim: Reading from stdin...\n"
 msgstr "Vim: Leser fra stdin ...\n"
 
-#: fileio.c:723
+#: fileio.c:735
 msgid "Reading from stdin..."
 msgstr "Leser fra stdin ..."
 
 #. Re-opening the original file failed!
-#: fileio.c:1000
+#: fileio.c:1012
 msgid "E202: Conversion made file unreadable!"
 msgstr "E202: Konverteringen gjorde filen uleselig!"
 
-#: fileio.c:2090
+#: fileio.c:2102
 msgid "[fifo/socket]"
 msgstr "[fifo/socket]"
 
-#: fileio.c:2097
+#: fileio.c:2109
 msgid "[fifo]"
 msgstr "[fifo]"
 
-#: fileio.c:2104
+#: fileio.c:2116
 msgid "[socket]"
 msgstr "[socket]"
 
-#: fileio.c:2112
+#: fileio.c:2124
 msgid "[RO]"
 msgstr "[SB]"
 
-#: fileio.c:2122
+#: fileio.c:2134
 msgid "[CR missing]"
 msgstr "[CR mangler]"
 
-#: fileio.c:2127
+#: fileio.c:2139
 msgid "[NL found]"
 msgstr "[NL funnet]"
 
-#: fileio.c:2132
+#: fileio.c:2144
 msgid "[long lines split]"
 msgstr "[lange linjer splittes]"
 
-#: fileio.c:2138 fileio.c:4115
+#: fileio.c:2150 fileio.c:4127
 msgid "[NOT converted]"
 msgstr "[IKKE konvertert]"
 
-#: fileio.c:2143 fileio.c:4120
+#: fileio.c:2155 fileio.c:4132
 msgid "[converted]"
 msgstr "[konvertert]"
 
-#: fileio.c:2150 fileio.c:4145
+#: fileio.c:2162 fileio.c:4157
 msgid "[crypted]"
 msgstr "[kryptert]"
 
-#: fileio.c:2157
+#: fileio.c:2169
 msgid "[CONVERSION ERROR]"
 msgstr "[KONVERTERINGSFEIL]"
 
-#: fileio.c:2163
+#: fileio.c:2175
 #, c-format
 msgid "[ILLEGAL BYTE in line %ld]"
 msgstr "[ULOVLIG BYTE i linje %ld]"
 
-#: fileio.c:2170
+#: fileio.c:2182
 msgid "[READ ERRORS]"
 msgstr "[LESEFEIL]"
 
-#: fileio.c:2386
+#: fileio.c:2398
 msgid "Can't find temp file for conversion"
 msgstr "Kan ikke finne midlertidig fil for konvertering"
 
-#: fileio.c:2393
+#: fileio.c:2405
 msgid "Conversion with 'charconvert' failed"
 msgstr "Konvertering med 'charconvert' feilet"
 
-#: fileio.c:2396
+#: fileio.c:2408
 msgid "can't read output of 'charconvert'"
 msgstr "Kan ikke lese utdata fra 'charconvert'"
 
-#: fileio.c:2796
+#: fileio.c:2808
 msgid "E203: Autocommands deleted or unloaded buffer to be written"
 msgstr "E203: Autokommandoer slettet eller lastet ut buffer som skulle lagres"
 
-#: fileio.c:2819
+#: fileio.c:2831
 msgid "E204: Autocommand changed number of lines in unexpected way"
 msgstr "E204: Autokommando forandret linjeantall på en uventet måte"
 
-#: fileio.c:2857
+#: fileio.c:2869
 msgid "NetBeans dissallows writes of unmodified buffers"
 msgstr "NetBeans forbyr lagring av buffere som ikke er forandret"
 
-#: fileio.c:2865
+#: fileio.c:2877
 msgid "Partial writes disallowed for NetBeans buffers"
 msgstr "Delvis lagring ikke tillatt for NetBeans-buffere"
 
-#: fileio.c:2919 fileio.c:2937
+#: fileio.c:2931 fileio.c:2949
 msgid "is not a file or writable device"
 msgstr "er ikke en fil eller skrivbar enhet"
 
-#: fileio.c:2989
+#: fileio.c:3001
 msgid "is read-only (add ! to override)"
 msgstr "er skrivebeskyttet (legg til ! for å overstyre)"
 
-#: fileio.c:3335
+#: fileio.c:3347
 msgid "E506: Can't write to backup file (add ! to override)"
 msgstr "E506: Kan ikke skrive til backupfil (legg til ! for å overstyre)"
 
-#: fileio.c:3347
+#: fileio.c:3359
 msgid "E507: Close error for backup file (add ! to override)"
 msgstr "E507: Feil under lukking av backupfil (legg til ! for å overstyre)"
 
-#: fileio.c:3349
+#: fileio.c:3361
 msgid "E508: Can't read file for backup (add ! to override)"
 msgstr "E508: Kan ikke lese fil for backup (legg til ! for å overstyre)"
 
-#: fileio.c:3365
+#: fileio.c:3377
 msgid "E509: Cannot create backup file (add ! to override)"
 msgstr "E509: Kan ikke lese backupfil (legg til ! for å overstyre)"
 
-#: fileio.c:3468
+#: fileio.c:3480
 msgid "E510: Can't make backup file (add ! to override)"
 msgstr "E510: Kan ikke lage backupfil (legg til ! for å overstyre)"
 
-#: fileio.c:3530
+#: fileio.c:3542
 msgid "E460: The resource fork would be lost (add ! to override)"
 msgstr "E460: Ressursforgreningen ville gått tapt (legg til ! for å overstyre)"
 
-#: fileio.c:3640
+#: fileio.c:3652
 msgid "E214: Can't find temp file for writing"
 msgstr "E214: Kan ikke finne midlertidig fil for skriving"
 
-#: fileio.c:3658
+#: fileio.c:3670
 msgid "E213: Cannot convert (add ! to write without conversion)"
 msgstr "E213: Kan ikke konvertere (legg til ! for å lagre uten konvertering)"
 
-#: fileio.c:3693
+#: fileio.c:3705
 msgid "E166: Can't open linked file for writing"
 msgstr "E166: Kan ikke åpne lenket fil for skriving"
 
-#: fileio.c:3697
+#: fileio.c:3709
 msgid "E212: Can't open file for writing"
 msgstr "E212: Kan ikke åpne fil for skriving"
 
-#: fileio.c:3959
+#: fileio.c:3971
 msgid "E667: Fsync failed"
 msgstr "E667: Fsync feilet"
 
-#: fileio.c:3966
+#: fileio.c:3978
 msgid "E512: Close failed"
 msgstr "E512: Lukking feilet"
 
-#: fileio.c:4037
+#: fileio.c:4049
 msgid "E513: write error, conversion failed"
 msgstr "E513: Feil under skriving, konvertering feilet"
 
-#: fileio.c:4043
+#: fileio.c:4055
 msgid "E514: write error (file system full?)"
 msgstr "E514: Feil under lagring (full disk?)"
 
-#: fileio.c:4110
+#: fileio.c:4122
 msgid " CONVERSION ERROR"
 msgstr " KONVERTERINGSFEIL"
 
-#: fileio.c:4126
+#: fileio.c:4138
 msgid "[Device]"
 msgstr "[Enhet]"
 
-#: fileio.c:4131
+#: fileio.c:4143
 msgid "[New]"
 msgstr "[Ny]"
 
-#: fileio.c:4153
+#: fileio.c:4165
 msgid " [a]"
 msgstr " [l]"
 
-#: fileio.c:4153
+#: fileio.c:4165
 msgid " appended"
 msgstr " lagt til"
 
-#: fileio.c:4155
+#: fileio.c:4167
 msgid " [w]"
 msgstr " [s]"
 
-#: fileio.c:4155
+#: fileio.c:4167
 msgid " written"
 msgstr " skrevet"
 
-#: fileio.c:4205
+#: fileio.c:4217
 msgid "E205: Patchmode: can't save original file"
 msgstr "E205: Patchmode: Kan ikke lagre originalfil"
 
-#: fileio.c:4227
+#: fileio.c:4239
 msgid "E206: patchmode: can't touch empty original file"
 msgstr "E206: patchmode: Kan ikke oppdatere tom originalfil"
 
-#: fileio.c:4242
+#: fileio.c:4254
 msgid "E207: Can't delete backup file"
 msgstr "E207: Kan ikke slette backupfil"
 
-#: fileio.c:4306
+#: fileio.c:4318
 msgid ""
 "\n"
 "WARNING: Original file may be lost or damaged\n"
@@ -1845,96 +1845,96 @@ msgstr ""
 "\n"
 "ADVARSEL: Originalfilen kan bli tapt eller ødelagt\n"
 
-#: fileio.c:4308
+#: fileio.c:4320
 msgid "don't quit the editor until the file is successfully written!"
 msgstr "ikke avslutt editoren før filen er skikkelig lagret!"
 
-#: fileio.c:4397
+#: fileio.c:4409
 msgid "[dos]"
 msgstr "[dos]"
 
-#: fileio.c:4397
+#: fileio.c:4409
 msgid "[dos format]"
 msgstr "[dos-format]"
 
-#: fileio.c:4404
+#: fileio.c:4416
 msgid "[mac]"
 msgstr "[mac]"
 
-#: fileio.c:4404
+#: fileio.c:4416
 msgid "[mac format]"
 msgstr "[mac-format]"
 
-#: fileio.c:4411
+#: fileio.c:4423
 msgid "[unix]"
 msgstr "[unix]"
 
-#: fileio.c:4411
+#: fileio.c:4423
 msgid "[unix format]"
 msgstr "[unix-format]"
 
-#: fileio.c:4438
+#: fileio.c:4450
 msgid "1 line, "
 msgstr "1 linje, "
 
-#: fileio.c:4440
+#: fileio.c:4452
 #, c-format
 msgid "%ld lines, "
 msgstr "%ld linjer, "
 
-#: fileio.c:4443
+#: fileio.c:4455
 msgid "1 character"
 msgstr "1 tegn"
 
-#: fileio.c:4445
+#: fileio.c:4457
 #, c-format
 msgid "%ld characters"
 msgstr "%ld tegn"
 
-#: fileio.c:4455
+#: fileio.c:4467
 msgid "[noeol]"
 msgstr "[ingenlinjeslutt]"
 
-#: fileio.c:4455
+#: fileio.c:4467
 msgid "[Incomplete last line]"
 msgstr "[Ufullstendig sistelinje]"
 
 #. don't overwrite messages here
 #. must give this prompt
 #. don't use emsg() here, don't want to flush the buffers
-#: fileio.c:4474
+#: fileio.c:4486
 msgid "WARNING: The file has been changed since reading it!!!"
 msgstr "ADVARSEL: Filen er blitt forandret siden den ble lest!!!"
 
-#: fileio.c:4476
+#: fileio.c:4488
 msgid "Do you really want to write to it"
 msgstr "Vil du virkelig skrive til den"
 
-#: fileio.c:5726
+#: fileio.c:5738
 #, c-format
 msgid "E208: Error writing to \"%s\""
 msgstr "E208: Feil under skriving til \"%s\""
 
-#: fileio.c:5733
+#: fileio.c:5745
 #, c-format
 msgid "E209: Error closing \"%s\""
 msgstr "E209: Feil under lukking av \"%s\""
 
-#: fileio.c:5736
+#: fileio.c:5748
 #, c-format
 msgid "E210: Error reading \"%s\""
 msgstr "E210: Feil under lesing av \"%s\""
 
-#: fileio.c:5970
+#: fileio.c:5982
 msgid "E246: FileChangedShell autocommand deleted buffer"
 msgstr "E246: Autokommandoen \"FileChangedShell\" slettet buffer"
 
-#: fileio.c:5977
+#: fileio.c:5989
 #, c-format
 msgid "E211: Warning: File \"%s\" no longer available"
 msgstr "E211: Advarsel: Filen \"%s\" er ikke lenger tilgjengelig"
 
-#: fileio.c:5991
+#: fileio.c:6003
 #, c-format
 msgid ""
 "W12: Warning: File \"%s\" has changed and the buffer was changed in Vim as "
@@ -1942,33 +1942,33 @@ msgid ""
 msgstr ""
 "W12: Advarsel: Filen \"%s\" er forandret og bufferen var også forandret i Vim"
 
-#: fileio.c:5994
+#: fileio.c:6006
 #, c-format
 msgid "W11: Warning: File \"%s\" has changed since editing started"
 msgstr "W11: Advarsel: Filen \"%s\" er forandret siden redigeringen startet"
 
-#: fileio.c:5996
+#: fileio.c:6008
 #, c-format
 msgid "W16: Warning: Mode of file \"%s\" has changed since editing started"
 msgstr ""
 "W16: Advarsel: Rettighetene til filen \"%s\" er forandret siden redigeringen "
 "startet"
 
-#: fileio.c:6006
+#: fileio.c:6018
 #, c-format
 msgid "W13: Warning: File \"%s\" has been created after editing started"
 msgstr ""
 "W13: Advarsel: Filen \"%s\" er blitt opprettet etter at redigeringen startet"
 
-#: fileio.c:6019
+#: fileio.c:6031
 msgid "See \":help W11\" for more info."
 msgstr "Se \":help W11\" for mer informasjon."
 
-#: fileio.c:6033
+#: fileio.c:6045
 msgid "Warning"
 msgstr "Advarsel"
 
-#: fileio.c:6034
+#: fileio.c:6046
 msgid ""
 "&OK\n"
 "&Load File"
@@ -1976,43 +1976,43 @@ msgstr ""
 "&OK\n"
 "&Åpne fil"
 
-#: fileio.c:6140
+#: fileio.c:6152
 #, c-format
 msgid "E462: Could not prepare for reloading \"%s\""
 msgstr "E462: Kunne ikke forberede for relasting \"%s\""
 
-#: fileio.c:6159
+#: fileio.c:6171
 #, c-format
 msgid "E321: Could not reload \"%s\""
 msgstr "E321: Kunne ikke laste \"%s\" på nytt"
 
-#: fileio.c:6740
+#: fileio.c:6752
 msgid "--Deleted--"
 msgstr "--Slettet--"
 
 #. the group doesn't exist
-#: fileio.c:6900
+#: fileio.c:6912
 #, c-format
 msgid "E367: No such group: \"%s\""
 msgstr "E367: Gruppen finnes ikke: \"%s\""
 
-#: fileio.c:7026
+#: fileio.c:7038
 #, c-format
 msgid "E215: Illegal character after *: %s"
 msgstr "E215: Ulovlig tegn etter *: %s"
 
-#: fileio.c:7038
+#: fileio.c:7050
 #, c-format
 msgid "E216: No such event: %s"
 msgstr "E216: Handlingen finnes ikke: %s"
 
-#: fileio.c:7040
+#: fileio.c:7052
 #, c-format
 msgid "E216: No such group or event: %s"
 msgstr "E216: Gruppen eller handlingen finnes ikke: %s"
 
 #. Highlight title
-#: fileio.c:7198
+#: fileio.c:7210
 msgid ""
 "\n"
 "--- Auto-Commands ---"
@@ -2020,39 +2020,39 @@ msgstr ""
 "\n"
 "--- Autokommandoer ---"
 
-#: fileio.c:7469
+#: fileio.c:7481
 msgid "E217: Can't execute autocommands for ALL events"
 msgstr "E217: Kan ikke utføre autokommandoer for ALLE hendelser"
 
-#: fileio.c:7492
+#: fileio.c:7504
 msgid "No matching autocommands"
 msgstr "Ingen samsvarende autokommandoer"
 
-#: fileio.c:7813
+#: fileio.c:7825
 msgid "E218: autocommand nesting too deep"
 msgstr "E218: Nøsting av autokommandoer for dyp"
 
-#: fileio.c:8088
+#: fileio.c:8100
 #, c-format
 msgid "%s Auto commands for \"%s\""
 msgstr "%s Autokommandoer for \"%s\""
 
-#: fileio.c:8096
+#: fileio.c:8108
 #, c-format
 msgid "Executing %s"
 msgstr "Utfører %s"
 
 #. always scroll up, don't overwrite
-#: fileio.c:8164
+#: fileio.c:8176
 #, c-format
 msgid "autocommand %s"
 msgstr "autokommando %s"
 
-#: fileio.c:8731
+#: fileio.c:8743
 msgid "E219: Missing {."
 msgstr "E219: Mangler {."
 
-#: fileio.c:8733
+#: fileio.c:8745
 msgid "E220: Missing }."
 msgstr "E220: Mangler }."
 
@@ -2130,7 +2130,7 @@ msgstr "E231: 'guifontwide' ugyldig"
 msgid "E599: Value of 'imactivatekey' is invalid"
 msgstr "E599: Verdien for 'imactivatekey' er ugyldig"
 
-#: gui.c:4061
+#: gui.c:4064
 #, c-format
 msgid "E254: Cannot allocate color %s"
 msgstr "E254: Kan ikke reservere farge %s"
@@ -4039,7 +4039,8 @@ msgstr ""
 "&Rediger likevel\n"
 "&Gjenopprett\n"
 "&Avslutt\n"
-"Av&bryt&Slette den"
+"Av&bryt\n"
+"&Slette den"
 
 #: memline.c:3790
 msgid "E326: Too many swap files found"
@@ -4362,35 +4363,35 @@ msgstr "les fra Netbeans-socket"
 msgid "E658: NetBeans connection lost for buffer %ld"
 msgstr "E658: Mistet NetBeans-forbindelse for buffer %ld"
 
-#: normal.c:2980
+#: normal.c:2983
 msgid "Warning: terminal cannot highlight"
 msgstr "Advarsel: Terminalen kan ikke utheve"
 
-#: normal.c:3276
+#: normal.c:3279
 msgid "E348: No string under cursor"
 msgstr "E348: Ingen streng under markør"
 
-#: normal.c:3278
+#: normal.c:3281
 msgid "E349: No identifier under cursor"
 msgstr "E349: Ingen identifikator under markør"
 
-#: normal.c:4519
+#: normal.c:4522
 msgid "E352: Cannot erase folds with current 'foldmethod'"
 msgstr "E352: Kan ikke slette folder med nåværende 'foldmethod'"
 
-#: normal.c:6740
+#: normal.c:6743
 msgid "E664: changelist is empty"
 msgstr "E664: Forandringslisten er tom"
 
-#: normal.c:6742
+#: normal.c:6745
 msgid "E662: At start of changelist"
 msgstr "E662: Ved starten av forandringsliste"
 
-#: normal.c:6744
+#: normal.c:6747
 msgid "E663: At end of changelist"
 msgstr "E663: Ved slutten av forandringsliste"
 
-#: normal.c:8005
+#: normal.c:8009
 msgid "Type  :quit<Enter>  to exit Vim"
 msgstr "Skriv  :quit<Enter>  for å avslutte Vim"
 
@@ -5198,75 +5199,75 @@ msgstr "Eksterne deltreff:\n"
 msgid "+--%3ld lines folded "
 msgstr "+--%3ld linjer foldet "
 
-#: screen.c:7996
+#: screen.c:8000
 msgid " VREPLACE"
 msgstr " V-ERSTATT"
 
-#: screen.c:8000
+#: screen.c:8004
 msgid " REPLACE"
 msgstr " ERSTATT"
 
-#: screen.c:8005
+#: screen.c:8009
 msgid " REVERSE"
 msgstr " OMVENDT"
 
-#: screen.c:8007
+#: screen.c:8011
 msgid " INSERT"
 msgstr " SETT INN"
 
-#: screen.c:8010
+#: screen.c:8014
 msgid " (insert)"
 msgstr " (sett inn)"
 
-#: screen.c:8012
+#: screen.c:8016
 msgid " (replace)"
 msgstr " (erstatt)"
 
-#: screen.c:8014
+#: screen.c:8018
 msgid " (vreplace)"
 msgstr " (v-erstatt)"
 
-#: screen.c:8017
+#: screen.c:8021
 msgid " Hebrew"
 msgstr " hebraisk"
 
-#: screen.c:8028
+#: screen.c:8032
 msgid " Arabic"
 msgstr " arabisk"
 
-#: screen.c:8031
+#: screen.c:8035
 msgid " (lang)"
 msgstr " (lang)"
 
-#: screen.c:8035
+#: screen.c:8039
 msgid " (paste)"
 msgstr " (lim inn)"
 
-#: screen.c:8048
+#: screen.c:8052
 msgid " VISUAL"
 msgstr " VISUELL"
 
-#: screen.c:8049
+#: screen.c:8053
 msgid " VISUAL LINE"
 msgstr " VISUELL LINJE"
 
-#: screen.c:8050
+#: screen.c:8054
 msgid " VISUAL BLOCK"
 msgstr " VISUELL BLOKK"
 
-#: screen.c:8051
+#: screen.c:8055
 msgid " SELECT"
 msgstr " VELG"
 
-#: screen.c:8052
+#: screen.c:8056
 msgid " SELECT LINE"
 msgstr " VELG LINJE"
 
-#: screen.c:8053
+#: screen.c:8057
 msgid " SELECT BLOCK"
 msgstr " VELG BLOKK"
 
-#: screen.c:8068 screen.c:8131
+#: screen.c:8072 screen.c:8135
 msgid "recording"
 msgstr "spiller inn"
 
@@ -5297,53 +5298,53 @@ msgstr "E385: Søket kom til BUNNEN uten treff på: %s"
 msgid "E386: Expected '?' or '/'  after ';'"
 msgstr "E386: Forventet '?' eller '/' etter ';'"
 
-#: search.c:3759
+#: search.c:3768
 msgid " (includes previously listed match)"
 msgstr " (inkluderer tidligere utlistede treff)"
 
 #. cursor at status line
-#: search.c:3779
+#: search.c:3788
 msgid "--- Included files "
 msgstr "--- Inkluderte filer "
 
-#: search.c:3781
+#: search.c:3790
 msgid "not found "
 msgstr "ikke funnet "
 
-#: search.c:3782
+#: search.c:3791
 msgid "in path ---\n"
 msgstr "i sti ---\n"
 
-#: search.c:3839
+#: search.c:3848
 msgid "  (Already listed)"
 msgstr "  (Allerede listet)"
 
-#: search.c:3841
+#: search.c:3850
 msgid "  NOT FOUND"
 msgstr "  IKKE FUNNET"
 
-#: search.c:3893
+#: search.c:3902
 #, c-format
 msgid "Scanning included file: %s"
 msgstr "Leter gjennom inkludert fil: %s"
 
-#: search.c:4111
+#: search.c:4120
 msgid "E387: Match is on current line"
 msgstr "E387: Treffet er på nåværende linje"
 
-#: search.c:4254
+#: search.c:4263
 msgid "All included files were found"
 msgstr "Alle inkluderte filer ble funnet"
 
-#: search.c:4256
+#: search.c:4265
 msgid "No included files"
 msgstr "Ingen inkluderte filer"
 
-#: search.c:4272
+#: search.c:4281
 msgid "E388: Couldn't find definition"
 msgstr "E388: Fant ikke definisjonen"
 
-#: search.c:4274
+#: search.c:4283
 msgid "E389: Couldn't find pattern"
 msgstr "E389: Fant ikke søketeksten"
 
@@ -5768,7 +5769,7 @@ msgid "E440: undo line missing"
 msgstr "E440: Angrelisten mangler"
 
 #. Only MS VC 4.1 and earlier can do Win32s
-#: version.c:741
+#: version.c:711
 msgid ""
 "\n"
 "MS-Windows 16/32 bit GUI version"
@@ -5776,7 +5777,7 @@ msgstr ""
 "\n"
 "MS-Windows 16/32-bits GUI-versjon"
 
-#: version.c:743
+#: version.c:713
 msgid ""
 "\n"
 "MS-Windows 32 bit GUI version"
@@ -5784,15 +5785,15 @@ msgstr ""
 "\n"
 "MS-Windows 32-bits GUI-versjon"
 
-#: version.c:746
+#: version.c:716
 msgid " in Win32s mode"
 msgstr " i Win32s-modus"
 
-#: version.c:748
+#: version.c:718
 msgid " with OLE support"
 msgstr " med OLE-støtte"
 
-#: version.c:751
+#: version.c:721
 msgid ""
 "\n"
 "MS-Windows 32 bit console version"
@@ -5800,7 +5801,7 @@ msgstr ""
 "\n"
 "MS-Windows 32-bits konsollversjon"
 
-#: version.c:755
+#: version.c:725
 msgid ""
 "\n"
 "MS-Windows 16 bit version"
@@ -5808,7 +5809,7 @@ msgstr ""
 "\n"
 "MS-Windows 16-bits versjon"
 
-#: version.c:759
+#: version.c:729
 msgid ""
 "\n"
 "32 bit MS-DOS version"
@@ -5816,7 +5817,7 @@ msgstr ""
 "\n"
 "32-bits MS-DOS-versjon"
 
-#: version.c:761
+#: version.c:731
 msgid ""
 "\n"
 "16 bit MS-DOS version"
@@ -5824,7 +5825,7 @@ msgstr ""
 "\n"
 "16-bits MS-DOS-versjon"
 
-#: version.c:767
+#: version.c:737
 msgid ""
 "\n"
 "MacOS X (unix) version"
@@ -5832,7 +5833,7 @@ msgstr ""
 "\n"
 "MacOS X (unix)-versjon"
 
-#: version.c:769
+#: version.c:739
 msgid ""
 "\n"
 "MacOS X version"
@@ -5840,7 +5841,7 @@ msgstr ""
 "\n"
 "MacOS X-versjon"
 
-#: version.c:772
+#: version.c:742
 msgid ""
 "\n"
 "MacOS version"
@@ -5848,7 +5849,7 @@ msgstr ""
 "\n"
 "MacOS-versjon"
 
-#: version.c:777
+#: version.c:747
 msgid ""
 "\n"
 "RISC OS version"
@@ -5856,7 +5857,7 @@ msgstr ""
 "\n"
 "RISC OS-versjon"
 
-#: version.c:787
+#: version.c:757
 msgid ""
 "\n"
 "Included patches: "
@@ -5864,11 +5865,11 @@ msgstr ""
 "\n"
 "Inkluderte patcher: "
 
-#: version.c:813 version.c:1181
+#: version.c:783 version.c:1151
 msgid "Modified by "
 msgstr "Modifisert av "
 
-#: version.c:820
+#: version.c:790
 msgid ""
 "\n"
 "Compiled "
@@ -5876,11 +5877,11 @@ msgstr ""
 "\n"
 "Kompilert "
 
-#: version.c:823
+#: version.c:793
 msgid "by "
 msgstr "av "
 
-#: version.c:835
+#: version.c:805
 msgid ""
 "\n"
 "Huge version "
@@ -5888,7 +5889,7 @@ msgstr ""
 "\n"
 "Diger (\"huge\") versjon "
 
-#: version.c:838
+#: version.c:808
 msgid ""
 "\n"
 "Big version "
@@ -5896,7 +5897,7 @@ msgstr ""
 "\n"
 "Stor (\"big\") versjon "
 
-#: version.c:841
+#: version.c:811
 msgid ""
 "\n"
 "Normal version "
@@ -5904,7 +5905,7 @@ msgstr ""
 "\n"
 "Normal versjon "
 
-#: version.c:844
+#: version.c:814
 msgid ""
 "\n"
 "Small version "
@@ -5912,7 +5913,7 @@ msgstr ""
 "\n"
 "Liten (\"small\") versjon "
 
-#: version.c:846
+#: version.c:816
 msgid ""
 "\n"
 "Tiny version "
@@ -5920,231 +5921,231 @@ msgstr ""
 "\n"
 "Spinkel (\"tiny\") versjon "
 
-#: version.c:852
+#: version.c:822
 msgid "without GUI."
 msgstr "uten GUI."
 
-#: version.c:857
+#: version.c:827
 msgid "with GTK2-GNOME GUI."
 msgstr "med GTK2-GNOME GUI."
 
-#: version.c:859
+#: version.c:829
 msgid "with GTK-GNOME GUI."
 msgstr "med GTK-GNOME GUI."
 
-#: version.c:863
+#: version.c:833
 msgid "with GTK2 GUI."
 msgstr "med GTK2 GUI."
 
-#: version.c:865
+#: version.c:835
 msgid "with GTK GUI."
 msgstr "med GTK GUI."
 
-#: version.c:870
+#: version.c:840
 msgid "with X11-Motif GUI."
 msgstr "med X11-Motif GUI."
 
-#: version.c:874
+#: version.c:844
 msgid "with X11-neXtaw GUI."
 msgstr "med X11-neXtaw GUI."
 
-#: version.c:876
+#: version.c:846
 msgid "with X11-Athena GUI."
 msgstr "med X11-Athena GUI."
 
-#: version.c:880
+#: version.c:850
 msgid "with BeOS GUI."
 msgstr "med BeOS GUI."
 
-#: version.c:883
+#: version.c:853
 msgid "with Photon GUI."
 msgstr "med Photon GUI."
 
-#: version.c:886
+#: version.c:856
 msgid "with GUI."
 msgstr "med GUI."
 
-#: version.c:889
+#: version.c:859
 msgid "with Carbon GUI."
 msgstr "med Carbon GUI."
 
-#: version.c:892
+#: version.c:862
 msgid "with Cocoa GUI."
 msgstr "med Cocoa GUI."
 
-#: version.c:895
+#: version.c:865
 msgid "with (classic) GUI."
 msgstr "med (klassisk) GUI."
 
-#: version.c:906
+#: version.c:876
 msgid "  Features included (+) or not (-):\n"
 msgstr "  Funksjoner inkludert (+) eller ikke (-):\n"
 
-#: version.c:918
+#: version.c:888
 msgid "   system vimrc file: \""
 msgstr "        vimrc-fil på systemet: \""
 
-#: version.c:923
+#: version.c:893
 msgid "     user vimrc file: \""
 msgstr "        vimrc-fil for brukere: \""
 
-#: version.c:928
+#: version.c:898
 msgid " 2nd user vimrc file: \""
 msgstr "  vimrc-fil nr. 2 for brukere: \""
 
-#: version.c:933
+#: version.c:903
 msgid " 3rd user vimrc file: \""
 msgstr "  vimrc-fil nr. 3 for brukere: \""
 
-#: version.c:938
+#: version.c:908
 msgid "      user exrc file: \""
 msgstr "         exrc-fil for brukere: \""
 
-#: version.c:943
+#: version.c:913
 msgid "  2nd user exrc file: \""
 msgstr "   exrc-fil nr. 2 for brukere: \""
 
-#: version.c:949
+#: version.c:919
 msgid "  system gvimrc file: \""
 msgstr "       gvimrc-fil på systemet: \""
 
-#: version.c:953
+#: version.c:923
 msgid "    user gvimrc file: \""
 msgstr "       gvimrc-fil for brukere: \""
 
-#: version.c:957
+#: version.c:927
 msgid "2nd user gvimrc file: \""
 msgstr " gvimrc-fil nr. 2 for brukere: \""
 
-#: version.c:962
+#: version.c:932
 msgid "3rd user gvimrc file: \""
 msgstr " gvimrc-fil nr. 3 for brukere: \""
 
-#: version.c:969
+#: version.c:939
 msgid "    system menu file: \""
 msgstr "          menyfil på systemet: \""
 
-#: version.c:977
+#: version.c:947
 msgid "  fall-back for $VIM: \""
 msgstr "       $VIM faller tilbake på: \""
 
-#: version.c:983
+#: version.c:953
 msgid " f-b for $VIMRUNTIME: \""
 msgstr "$VIMRUNTIME faller tilbake på: \""
 
-#: version.c:987
+#: version.c:957
 msgid "Compilation: "
 msgstr "Kompilering: "
 
-#: version.c:993
+#: version.c:963
 msgid "Compiler: "
 msgstr "Kompilator: "
 
-#: version.c:998
+#: version.c:968
 msgid "Linking: "
 msgstr "Linking: "
 
-#: version.c:1003
+#: version.c:973
 msgid "  DEBUG BUILD"
 msgstr "  DEBUGGINGSVERSJON"
 
-#: version.c:1042
+#: version.c:1012
 msgid "VIM - Vi IMproved"
 msgstr "VIM - Vi IMproved - Forbedret Vi"
 
-#: version.c:1044
+#: version.c:1014
 msgid "version "
 msgstr "versjon "
 
-#: version.c:1045
+#: version.c:1015
 msgid "by Bram Moolenaar et al."
 msgstr "av Bram Moolenaar med flere"
 
-#: version.c:1049
+#: version.c:1019
 msgid "Vim is open source and freely distributable"
 msgstr "Vim er åpen kildekode og kan fritt distribueres"
 
-#: version.c:1051
+#: version.c:1021
 msgid "Help poor children in Uganda!"
 msgstr "Hjelp fattige barn i Uganda!"
 
-#: version.c:1052
+#: version.c:1022
 msgid "type  :help iccf<Enter>       for information "
 msgstr "skriv  :help iccf<Enter>          for informasjon  "
 
-#: version.c:1054
+#: version.c:1024
 msgid "type  :q<Enter>               to exit         "
 msgstr "skriv  :q<Enter>                  for å avslutte   "
 
-#: version.c:1055
+#: version.c:1025
 msgid "type  :help<Enter>  or  <F1>  for on-line help"
 msgstr "skriv  :help<Enter>  eller  <F1>  for on-line hjelp"
 
-#: version.c:1056
+#: version.c:1026
 msgid "type  :help version6<Enter>   for version info"
 msgstr "skriv  :help version6<Enter>      for versjonsinfo "
 
-#: version.c:1059
+#: version.c:1029
 msgid "Running in Vi compatible mode"
 msgstr "Kjører i Vi-kompatibel modus"
 
-#: version.c:1060
+#: version.c:1030
 msgid "type  :set nocp<Enter>        for Vim defaults"
 msgstr "skriv  :set nocp<Enter>           for standard Vim "
 
-#: version.c:1061
+#: version.c:1031
 msgid "type  :help cp-default<Enter> for info on this"
 msgstr "skriv  :help cp-default<Enter>    for informasjon  "
 
-#: version.c:1076
+#: version.c:1046
 msgid "menu  Help->Orphans           for information    "
 msgstr "meny:  Hjelp->Foreldreløse        for informasjon  "
 
-#: version.c:1078
+#: version.c:1048
 msgid "Running modeless, typed text is inserted"
 msgstr "Kjører uten modus, tastetrykk blir lagt inn i teksten"
 
-#: version.c:1079
+#: version.c:1049
 msgid "menu  Edit->Global Settings->Toggle Insert Mode  "
 msgstr "meny:  Rediger->Globale innstillinger->Innsettingsmodus av/på"
 
-#: version.c:1080
+#: version.c:1050
 msgid "                              for two modes      "
 msgstr "                                  for to moduser   "
 
-#: version.c:1084
+#: version.c:1054
 msgid "menu  Edit->Global Settings->Toggle Vi Compatible"
 msgstr "meny:  Rediger->Globale innstillinger->Vi-kompatibilitet av/på"
 
-#: version.c:1085
+#: version.c:1055
 msgid "                              for Vim defaults   "
 msgstr "                                  for standard Vim "
 
-#: version.c:1132
+#: version.c:1102
 msgid "Sponsor Vim development!"
 msgstr "Støtt utviklingen av Vim!"
 
-#: version.c:1133
+#: version.c:1103
 msgid "Become a registered Vim user!"
 msgstr "Bli registrert bruker av Vim!"
 
-#: version.c:1136
+#: version.c:1106
 msgid "type  :help sponsor<Enter>    for information "
 msgstr "skriv  :help sponsor<Enter>       for informasjon  "
 
-#: version.c:1137
+#: version.c:1107
 msgid "type  :help register<Enter>   for information "
 msgstr "skriv  :help register<Enter>      for informasjon  "
 
-#: version.c:1139
+#: version.c:1109
 msgid "menu  Help->Sponsor/Register  for information    "
 msgstr "meny:  Hjelp->Støtte/Registrering  for informasjon "
 
-#: version.c:1149
+#: version.c:1119
 msgid "WARNING: Windows 95/98/ME detected"
 msgstr "ADVARSEL: Windows 95/98/ME oppdaget"
 
-#: version.c:1152
+#: version.c:1122
 msgid "type  :help windows95<Enter>  for info on this"
 msgstr "skriv  :help windows95<Enter>     for informasjon  "
 

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2004 Sep 11
+" Last Change:	2005 Sep 25
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -502,8 +502,14 @@ au BufNewFile,BufRead *.erl			setf erlang
 " Elm Filter Rules file
 au BufNewFile,BufRead filter-rules		setf elmfilt
 
+" ESMTP rc file
+au BufNewFile,BufRead *esmtprc			setf esmtprc
+
 " ESQL-C
 au BufNewFile,BufRead *.ec,*.EC			setf esqlc
+
+" Esterel
+au BufNewFile,BufRead *.strl			setf esterel
 
 " Essbase script
 au BufNewFile,BufRead *.csc			setf csc
@@ -601,6 +607,8 @@ fun! <SID>FTCheck_html()
   setf html
 endfun
 
+" HTML with Ruby - eRuby
+au BufNewFile,BufRead *.rhtml			setf eruby
 
 " HTML with M4
 au BufNewFile,BufRead *.html.m4			setf htmlm4
@@ -795,7 +803,11 @@ fun! FTCheck_m()
     endif
     let n = n + 1
   endwhile
-  setf matlab
+  if exists("g:filetype_m")
+    exe "setf " . g:filetype_m
+  else
+    setf matlab
+  endif
 endfun
 
 " Maya Extension Language
@@ -879,6 +891,9 @@ au BufNewFile,BufRead .muttrc*,~/.mutt/muttrc*,Muttrc	setf muttrc
 
 " Natural
 au BufNewFile,BufRead *.NS[ACGLMNPS]		setf natural
+
+" Netrc
+au BufNewFile,BufRead .netrc			setf netrc
 
 " Novell netware batch files
 au BufNewFile,BufRead *.ncf			setf ncf
@@ -1360,14 +1375,20 @@ au BufNewFile,BufRead *.sim			setf simula
 au BufNewFile,BufRead *.sin,*.s85		setf sinda
 
 " SKILL
-au BufNewFile,BufRead *.il			setf skill
+au BufNewFile,BufRead *.il,*.ils,*.cdf		setf skill
 
 " SLRN
 au BufNewFile,BufRead .slrnrc			setf slrnrc
 au BufNewFile,BufRead *.score			setf slrnsc
 
-" Smalltalk
-au BufNewFile,BufRead *.st,*.cls		setf st
+" Smalltalk (and TeX)
+au BufNewFile,BufRead *.st			setf st
+au BufNewFile,BufRead *.cls
+	\ if getline(1) =~ '^%' |
+	\  setf tex |
+	\ else |
+	\  setf st |
+	\ endif
 
 " Smarty templates
 au BufNewFile,BufRead *.tpl			setf smarty
@@ -1439,6 +1460,9 @@ au BufNewFile,BufRead *.stp			setf stp
 " Standard ML
 au BufNewFile,BufRead *.sml			setf sml
 
+" Sudoers
+au BufNewFile,BufRead /etc/sudoers,sudoers.tmp	setf sudoers
+
 " Tads (or Nroff)
 au BufNewFile,BufRead *.t
 	\ if !<SID>FTnroff() | setf tads | endif
@@ -1476,6 +1500,9 @@ au BufNewFile,BufRead .tidyrc,tidyrc		setf tidy
 " TF mud client
 au BufNewFile,BufRead *.tf,.tfrc,tfrc		setf tf
 
+" TPP - Text Presentation Program
+au BufNewFile,BufReadPost *.tpp			setf tpp
+
 " TSS - Geometry
 au BufNewFile,BufReadPost *.tssgm		setf tssgm
 
@@ -1493,6 +1520,9 @@ au BufNewFile,BufRead *.uc			setf uc
 
 " Verilog HDL
 au BufNewFile,BufRead *.v			setf verilog
+
+" Verilog-AMS HDL
+au BufNewFile,BufRead *.va,*.vams		setf verilogams
 
 " VHDL
 au BufNewFile,BufRead *.hdl,*.vhd,*.vhdl,*.vhdl_[0-9]*,*.vbe,*.vst  setf vhdl
@@ -1692,7 +1722,7 @@ au BufNewFile,BufRead *termcap*
 au BufNewFile,BufRead *vimrc*			setf vim
 
 " Subversion commit file
-au BufNewFile,BufRead svn-commit.*.tmp		setf svn
+au BufNewFile,BufRead svn-commit*.tmp		setf svn
 
 " X resources file
 au BufNewFile,BufRead Xresources*,*/app-defaults/*,*/Xresources/* setf xdefaults
