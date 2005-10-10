@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.3.  Last change: 2004 Jun 17
+*motion.txt*    For Vim version 6.4a.  Last change: 2004 Nov 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1197,7 +1197,7 @@ L			To line [count] from bottom of window (default: Last
 			Cursor is adjusted for 'scrolloff' option.
 
 <LeftMouse>		Moves to the position on the screen where the mouse
-			click is |inclusive|.  See also |<LeftMouse>|.  If the
+			click is |exclusive|.  See also |<LeftMouse>|.  If the
 			position is in a status line, that window is made the
 			active window and the cursor is not moved.  {not in Vi}
 

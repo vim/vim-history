@@ -4444,7 +4444,7 @@ msgstr "E354: Niew³a¶ciwa nazwa rejestru: '%s'"
 #: ops.c:6056
 #, c-format
 msgid "%ld Cols; "
-msgstr "%ld Wierszy; "
+msgstr "%ld Kolumn; "
 
 #: ops.c:6063
 #, c-format
@@ -6018,7 +6018,7 @@ msgstr "Pomó¿ biednym dzieciom w Ugandzie!"
 
 #: version.c:2080
 msgid "type  :help iccf<Enter>       for information "
-msgstr "wprowad¼ :help iccf<Enter>        dla informacji to tym  "
+msgstr "wprowad¼ :help iccf<Enter>        dla informacji o tym  "
 
 #: version.c:2082
 msgid "type  :q<Enter>               to exit         "

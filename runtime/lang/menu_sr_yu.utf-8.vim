@@ -258,4 +258,4 @@ let g:menutrans_fileformat_dialog = "Изаберите врсту датоте�
 
 let menutrans_no_file = "[Нема датотеке]"
 
-" vim: tw=0 keymap=serbcyril-US
+" vim: tw=0

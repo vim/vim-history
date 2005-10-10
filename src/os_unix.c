@@ -1668,9 +1668,10 @@ set_x11_title(title)
 					     NULL, NULL, 0, NULL, NULL, NULL);
 # else
 	XTextProperty	text_prop;
+	char		*c_title = (char *)title;
 
 	/* directly from example 3-18 "basicwin" of Xlib Programming Manual */
-	(void)XStringListToTextProperty((char **)&title, 1, &text_prop);
+	(void)XStringListToTextProperty(&c_title, 1, &text_prop);
 	XSetWMProperties(x11_display, x11_window, &text_prop,
 					     NULL, NULL, 0, NULL, NULL, NULL);
 # endif
@@ -1704,8 +1705,9 @@ set_x11_icon(icon)
 						   NULL, 0, NULL, NULL, NULL);
 # else
 	XTextProperty	text_prop;
+	char		*c_icon = (char *)icon;
 
-	(void)XStringListToTextProperty((char **)&icon, 1, &text_prop);
+	(void)XStringListToTextProperty(&c_icon, 1, &text_prop);
 	XSetWMProperties(x11_display, x11_window, NULL, &text_prop,
 						   NULL, 0, NULL, NULL, NULL);
 # endif

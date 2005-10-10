@@ -5651,10 +5651,6 @@ nv_csearch(cap)
 	t_cmd = FALSE;
 
     cap->oap->motion_type = MCHAR;
-    if (cap->arg == BACKWARD)
-	cap->oap->inclusive = FALSE;
-    else
-	cap->oap->inclusive = TRUE;
     if (IS_SPECIAL(cap->nchar) || searchc(cap, t_cmd) == FAIL)
 	clearopbeep(cap->oap);
     else

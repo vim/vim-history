@@ -1,6 +1,6 @@
 " Script to define the syntax menu in synmenu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2004 Sep 11
+" Last Change:	2005 Oct 08
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/synmenu.vim
@@ -154,8 +154,10 @@ SynMenu DE.Elinks\ config:elinks
 SynMenu DE.Elm\ filter\ rules:elmfilt
 SynMenu DE.Embedix\ Component\ Description:ecd
 SynMenu DE.ERicsson\ LANGuage:erlang
+SynMenu DE.ESMTP\ rc:esmtprc
 SynMenu DE.ESQL-C:esqlc
 SynMenu DE.Essbase\ script:csc
+SynMenu DE.Esterel:esterel
 SynMenu DE.Eterm\ config:eterm
 SynMenu DE.Exim\ conf:exim
 SynMenu DE.Expect:expect
@@ -194,6 +196,7 @@ SynMenu HIJK.Hex\ dump.XXD:xxd
 SynMenu HIJK.Hex\ dump.Intel\ MCS51:hex
 SynMenu HIJK.HTML.HTML:html
 SynMenu HIJK.HTML.HTML\ with\ M4:htmlm4
+SynMenu HIJK.HTML.HTML\ with\ Ruby\ (eRuby):eruby
 SynMenu HIJK.HTML.Cheetah\ HTML\ template:htmlcheetah
 SynMenu HIJK.HTML.HTML/OS:htmlos
 SynMenu HIJK.HTML.XHTML:xhtml
@@ -279,6 +282,7 @@ SynMenu Me-NO.MUSHcode:mush
 SynMenu Me-NO.Muttrc:muttrc
 SynMenu Me-NO.Nastran\ input/DMAP:nastran
 SynMenu Me-NO.Natural:natural
+SynMenu Me-NO.Netrc:netrc
 SynMenu Me-NO.Novell\ NCF\ batch:ncf
 SynMenu Me-NO.Not\ Quite\ C\ (LEGO):nqc
 SynMenu Me-NO.Nroff:nroff
@@ -315,6 +319,7 @@ SynMenu PQ.PostScript.PostScript:postscr
 SynMenu PQ.PostScript.PostScript\ Printer\ Description:ppd
 SynMenu PQ.Povray.Povray\ scene\ descr:pov
 SynMenu PQ.Povray.Povray\ configuration:povini
+SynMenu PQ.Prescribe\ (Kyocera):prescribe
 SynMenu PQ.Printcap:pcap
 SynMenu PQ.Procmail:procmail
 SynMenu PQ.Product\ Spec\ File:psf
@@ -404,6 +409,7 @@ SynMenu Sh-S.Standard\ ML:sml
 SynMenu Sh-S.Stored\ Procedures:stp
 SynMenu Sh-S.Strace:strace
 SynMenu Sh-S.Subversion\ commit:svn
+SynMenu Sh-S.Sudoers:sudoers
 
 SynMenu TUV.TADS:tads
 SynMenu TUV.Tags:tags
@@ -421,6 +427,7 @@ SynMenu TUV.TeX.Texinfo:texinfo
 SynMenu TUV.TF\ mud\ client:tf
 SynMenu TUV.Tidy\ configuration:tidy
 SynMenu TUV.Tilde:tilde
+SynMenu TUV.TPP:tpp
 SynMenu TUV.Trasys\ input:trasys
 SynMenu TUV.TSS.Command\ Line:tsscl
 SynMenu TUV.TSS.Geometry:tssgm
@@ -428,6 +435,7 @@ SynMenu TUV.TSS.Optics:tssop
 SynMenu TUV.UIT/UIL:uil
 SynMenu TUV.UnrealScript:uc
 SynMenu TUV.Valgrind:valgrind
+SynMenu TUV.Verilog-AMS\ HDL:verilogams
 SynMenu TUV.Verilog\ HDL:verilog
 SynMenu TUV.Vgrindefs:vgrindefs
 SynMenu TUV.VHDL:vhdl

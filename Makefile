@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 3
+MINOR = 4a
 
 # Uncomment this line if the Win32s version is to be included.
 #DOSBIN_S =  dosbin_s
@@ -125,7 +125,7 @@ MINOR = 3
 #   "uninstald16.exe".
 # 32 bit DOS version:
 # - Set environment for compiling with DJGPP; "gmake -f Make_djg.mak".
-# - "rm testdir/*.out", "make -f Make_djg.mak test" and check the output.
+# - "rm testdir/*.out", "gmake -f Make_djg.mak test" and check the output.
 # - Rename the executables to "vimd32.exe", "xxdd32.exe", "installd32.exe" and
 #   "uninstald32.exe".
 # Win32 console version:
@@ -828,6 +828,7 @@ LANG_SRC = \
 		src/po/README_mvc.txt \
 		src/po/cleanup.vim \
 		src/po/Makefile \
+		src/po/Make_cyg.mak \
 		src/po/Make_ming.mak \
 		src/po/Make_mvc.mak \
 		src/po/sjiscorr.c \

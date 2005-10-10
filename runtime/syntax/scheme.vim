@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Scheme (R5RS)
-" Last Change:	July 14, 2004
-" Maintainer:	Sergey Khorev <iamphet@nm.ru>
+" Last Change:	Nov 28, 2004
+" Maintainer:	Sergey Khorev <sergey.khorev@gmail.com>
 " Original author:	Dirk van Deun <dirk@igwe.vub.ac.be>
 
 " This script incorrectly recognizes some junk input as numerals:
@@ -143,7 +143,7 @@ syn region schemeStruc matchgroup=Delimiter start="\[" matchgroup=Delimiter end=
 syn region schemeStruc matchgroup=Delimiter start="#\[" matchgroup=Delimiter end="\]" contains=ALL
 
 " Simple literals:
-syn region	schemeString	start=+"+  skip=+\\[\\"]+ end=+"+
+syn region schemeString start=+\%(\\\)\@<!"+ skip=+\\[\\"]+ end=+"+
 
 " Comments:
 
@@ -172,15 +172,16 @@ syn match	schemeChar	oneline    "#\\newline"
 syn match	schemeError	oneline    !#\\newline[^ \t\[\]()";]\+!
 
 if exists("b:is_mzscheme") || exists("is_mzscheme")
-    " MzScheme extensions added by Sergey Khorev
+    " MzScheme extensions
     " multiline comment
-    syntax region schemeMultilineComment start=/#|/ end=/|#/
+    syn region	schemeComment start="#|" end="|#"
+
     " #%xxx are the special MzScheme identifiers
     syn match schemeOther oneline    "#%[-a-z!$%&*/:<=>?^_~0-9+.@#%]\+"
     " anything limited by |'s is identifier
     syn match schemeOther oneline    "|[^|]\+|"
 
-    syn match	schemeChar	oneline    "#\\return"
+    syn match	schemeChar	oneline    "#\\\%(return\|tab\)"
 
     " Modules require stmt
     syn keyword schemeExtSyntax module require dynamic-require lib prefix all-except prefix-all-except rename
@@ -194,7 +195,6 @@ if exists("b:is_mzscheme") || exists("is_mzscheme")
     syn keyword schemeExtSyntax error raise opt-lambda define-values unit unit/sig define-signature 
     syn keyword schemeExtSyntax invoke-unit/sig define-values/invoke-unit/sig compound-unit/sig import export
     syn keyword schemeExtSyntax link syntax quasisyntax unsyntax with-syntax
-    hi def link schemeExtSyntax Type
 
     syn keyword schemeExtFunc format system-type current-extension-compiler current-extension-linker
     syn keyword schemeExtFunc use-standard-linker use-standard-compiler
@@ -217,7 +217,6 @@ if exists("b:is_mzscheme") || exists("is_mzscheme")
     syn keyword schemeExtFunc exn:special-comment? exn:syntax? exn:thread? exn:user? exn:variable? exn:application:mismatch?
     " Command-line parsing
     syn keyword schemeExtFunc command-line current-command-line-arguments once-any help-labels multi once-each 
-    hi def link schemeExtFunc PreProc
 
     " syntax quoting, unquoting and quasiquotation
     syn region schemeUnquote matchgroup=Delimiter start="#," end=![ \t\[\]()";]!me=e-1 contains=ALL
@@ -228,6 +227,44 @@ if exists("b:is_mzscheme") || exists("is_mzscheme")
     syn region schemeUnquote matchgroup=Delimiter start="#,@\[" end="\]" contains=ALL
     syn region schemeQuoted matchgroup=Delimiter start="#['`]" end=![ \t()\[\]";]!me=e-1 contains=ALL
     syn region schemeQuoted matchgroup=Delimiter start="#['`](" matchgroup=Delimiter end=")" contains=ALL
+endif
+
+
+if exists("b:is_chicken") || exists("is_chicken")
+    " multiline comment
+    syntax region schemeMultilineComment start=/#|/ end=/|#/ contains=schemeMultilineComment
+
+    syn match schemeOther oneline    "##[-a-z!$%&*/:<=>?^_~0-9+.@#%]\+"
+    syn match schemeExtSyntax oneline    "#:[-a-z!$%&*/:<=>?^_~0-9+.@#%]\+"
+
+    syn keyword schemeExtSyntax unit uses declare hide foreign-declare foreign-parse foreign-parse/spec
+    syn keyword schemeExtSyntax foreign-lambda foreign-lambda* define-external define-macro load-library
+    syn keyword schemeExtSyntax let-values let*-values letrec-values ->string require-extension
+    syn keyword schemeExtSyntax let-optionals let-optionals* define-foreign-variable define-record
+    syn keyword schemeExtSyntax pointer tag-pointer tagged-pointer? define-foreign-type
+    syn keyword schemeExtSyntax require require-for-syntax cond-expand and-let* receive argc+argv
+    syn keyword schemeExtSyntax fixnum? fx= fx> fx< fx>= fx<= fxmin fxmax
+    syn keyword schemeExtFunc ##core#inline ##sys#error ##sys#update-errno
+
+    " here-string
+    syn region schemeString start=+#<<\s*\z(.*\)+ end=+^\z1$+
+ 
+    if filereadable(expand("<sfile>:p:h")."/cpp.vim")
+	unlet! b:current_syntax
+	syn include @ChickenC <sfile>:p:h/cpp.vim
+	syn region ChickenC matchgroup=schemeOther start=+(\@<=foreign-declare "+ end=+")\@=+ contains=@ChickenC
+	syn region ChickenC matchgroup=schemeComment start=+foreign-declare\s*#<<\z(.*\)$+hs=s+15 end=+^\z1$+ contains=@ChickenC
+	syn region ChickenC matchgroup=schemeOther start=+(\@<=foreign-parse "+ end=+")\@=+ contains=@ChickenC
+	syn region ChickenC matchgroup=schemeComment start=+foreign-parse\s*#<<\z(.*\)$+hs=s+13 end=+^\z1$+ contains=@ChickenC
+	syn region ChickenC matchgroup=schemeOther start=+(\@<=foreign-parse/spec "+ end=+")\@=+ contains=@ChickenC
+	syn region ChickenC matchgroup=schemeComment start=+foreign-parse/spec\s*#<<\z(.*\)$+hs=s+18 end=+^\z1$+ contains=@ChickenC
+	syn region ChickenC matchgroup=schemeComment start=+#>+ end=+<#+ contains=@ChickenC
+	syn region ChickenC matchgroup=schemeComment start=+#>?+ end=+<#+ contains=@ChickenC
+	syn region ChickenC matchgroup=schemeComment start=+#>!+ end=+<#+ contains=@ChickenC
+	syn region ChickenC matchgroup=schemeComment start=+#>\$+ end=+<#+ contains=@ChickenC
+	syn region ChickenC matchgroup=schemeComment start=+#>%+ end=+<#+ contains=@ChickenC
+    endif
+
 endif
 
 " Synchronization and the wrapping up...
@@ -255,12 +292,14 @@ if version >= 508 || !exists("did_scheme_syntax_inits")
   HiLink schemeBoolean		Boolean
 
   HiLink schemeDelimiter	Delimiter
-  HiLink schemeConstant	Constant
+  HiLink schemeConstant		Constant
 
   HiLink schemeComment		Comment
   HiLink schemeMultilineComment	Comment
   HiLink schemeError		Error
 
+  HiLink schemeExtSyntax	Type
+  HiLink schemeExtFunc		PreProc
   delcommand HiLink
 endif
 

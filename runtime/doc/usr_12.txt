@@ -1,4 +1,4 @@
-*usr_12.txt*	For Vim version 6.3.  Last change: 2004 May 01
+*usr_12.txt*	For Vim version 6.4a.  Last change: 2004 May 01
 
 		     VIM USER MANUAL - by Bram Moolenaar
 

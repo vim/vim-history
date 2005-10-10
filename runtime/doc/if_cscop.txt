@@ -1,4 +1,4 @@
-*if_cscop.txt*  For Vim version 6.3.  Last change: 2004 Jul 23
+*if_cscop.txt*  For Vim version 6.4a.  Last change: 2004 Jul 23
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn

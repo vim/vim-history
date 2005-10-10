@@ -2,8 +2,8 @@
 " Language:	PHP
 " Author:	Miles Lott <milos@groupwhere.org>
 " URL:		http://milosch.dyndns.org/php.vim
-" Last Change:	2004 May 18
-" Version:	0.5
+" Last Change:	2005 Mar 21
+" Version:	0.6
 " Notes:  Close all switches with default:\nbreak; and it will look better.
 "         Also, open and close brackets should be alone on a line.
 "         This is my preference, and the only way this will look nice.
@@ -11,8 +11,8 @@
 "         switch/case.  It is nearly perfect for anyone regardless of your
 "         stance on brackets.
 "
-" Changes: 0.5 - fix duplicate indent on open tag, and empty bracketed
-"          statements.
+" Changes: 0.6 - fix indention for closing bracket (patch from pierre.habouzit@m4x.org)
+"          0.5 - fix duplicate indent on open tag, and empty bracketed statements.
 "          0.4 - Fixes for closing php tag, switch statement closure, and php_indent_shortopentags
 "          option from Steffen Bruentjen <vim@kontraphon.de>
 "
@@ -79,9 +79,7 @@ function GetPhpIndent()
 		" to the indent of the matching line.
 		if cline =~ '^\s*}'
 			call cursor(line('.'), 1)
-			let ind = indent(searchpair('{', '', '}',
-			'bW', 'synIDattr(synID(line("."), col("."),
-			0), "name") =~? "string"'))
+			let ind = indent(searchpair('{', '', '}','bW', 'synIDattr(synID(line("."), col("."), 0), "name") =~? "string"'))
 			return ind
 		endif
 		" Try to indent switch/case statements as well

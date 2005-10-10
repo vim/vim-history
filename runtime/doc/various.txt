@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.3.  Last change: 2004 Jun 16
+*various.txt*   For Vim version 6.4a.  Last change: 2005 Feb 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -111,8 +111,8 @@ g8			Print the hex values of the bytes used in the
 			+      current line  1 scr forward  1 scr forward
 			-      1 scr back    current line   current line
 			^      2 scr back    1 scr back     1 scr back
-			.      1/2 scr back  1/2 scr fwd    1/2 src fwd
-			=      1/2 src back  1/2 scr fwd    current line
+			.      1/2 scr back  1/2 scr fwd    1/2 scr fwd
+			=      1/2 scr back  1/2 scr fwd    current line
 
 			Specifying no mark at all is the same as "+".
 			If the mark is "=", a line of dashes is printed

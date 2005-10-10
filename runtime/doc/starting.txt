@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.3.  Last change: 2004 Jun 18
+*starting.txt*  For Vim version 6.4a.  Last change: 2005 Apr 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -768,8 +768,6 @@ accordingly.  Vim proceeds in this order:
 		    ".vimrc" (for MS-DOS and Win32) (*)
 	-  The file ".exrc"  (for Unix, Amiga and OS/2)
 		    "_exrc"  (for MS-DOS and Win32)
-	-  The file "_exrc"  (for Unix, Amiga and OS/2)
-		    ".exrc"  (for MS-DOS and Win32)
 
      (*) Using this file or environment variable will cause 'compatible' to be
 	 off by default.  See |compatible-default|.
