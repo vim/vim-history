@@ -48,7 +48,8 @@ if test "$cross_compiling" = yes; then
   (cross compiling doesn't work)])
 fi
 
-dnl gcc-cpp has the wonderful -MM option to produce nicer dependencies
+dnl gcc-cpp has the wonderful -MM option to produce nicer dependencies.
+dnl But gcc 3.1 changed the meaning!  See near the end.
 test "$GCC" = yes && CPP_MM=M; AC_SUBST(CPP_MM)
 
 if test -f ./toolcheck; then
@@ -593,17 +594,21 @@ AC_MSG_RESULT($enable_tclinterp)
 
 if test "$enable_tclinterp" = "yes"; then
 
-  dnl on FreeBSD tclsh is a silly script, look for tclsh8.0 or tclsh8.2
+  dnl on FreeBSD tclsh is a silly script, look for tclsh8.[420]
   AC_MSG_CHECKING(--with-tclsh argument)
-  AC_ARG_WITH(tclsh, [  --with-tclsh=PATH       which tclsh to use (default: tclsh8.0)],
+  AC_ARG_WITH(tclsh, [  --with-tclsh=PATH       which tclsh to use (default: tclsh8.4)],
 	tclsh_name="$withval"; AC_MSG_RESULT($tclsh_name),
-	tclsh_name="tclsh8.0"; AC_MSG_RESULT(no))
+	tclsh_name="tclsh8.4"; AC_MSG_RESULT(no))
   AC_PATH_PROG(vi_cv_path_tcl, $tclsh_name)
   AC_SUBST(vi_cv_path_tcl)
 
-  dnl when no specific version specified, also try 8.2
-  if test "X$vi_cv_path_tcl" = "X" -a $tclsh_name = "tclsh8.0"; then
+  dnl when no specific version specified, also try 8.2 and 8.0
+  if test "X$vi_cv_path_tcl" = "X" -a $tclsh_name = "tclsh8.4"; then
     tclsh_name="tclsh8.2"
+    AC_PATH_PROG(vi_cv_path_tcl, $tclsh_name)
+  fi
+  if test "X$vi_cv_path_tcl" = "X" -a $tclsh_name = "tclsh8.2"; then
+    tclsh_name="tclsh8.0"
     AC_PATH_PROG(vi_cv_path_tcl, $tclsh_name)
   fi
   dnl still didn't find it, try without version number
@@ -651,8 +656,8 @@ if test "$enable_tclinterp" = "yes"; then
 	    dnl use eval, because tcl 8.2 includes ${TCL_DBGX}
 	    TCL_LIBS=`eval echo "$TCL_LIB_SPEC $TCL_LIBS"`
 	    dnl Use $TCL_DEFS for -D_THREAD_SAFE et al.  But only use the
-	    dnl "-D_ABC" items.
-	    TCL_DEFS=`echo $TCL_DEFS | tr ' ' '\012' | sed -e '/^-[[^D]]/d' -e '/-D[[^_]]/d' -e 's/-D_/ -D_/' | tr -d '\012'`
+	    dnl "-D_ABC" items.  Watch out for -DFOO=long\ long.
+	    TCL_DEFS=`echo $TCL_DEFS | sed -e 's/\ /\X/' | tr ' ' '\012' | sed -e '/^-[[^D]]/d' -e '/-D[[^_]]/d' -e 's/-D_/ -D_/' | tr -d '\012'`
 	    break
 	  fi
 	done
@@ -2652,6 +2657,18 @@ if test "x$MACOSX" = "xyes" && test "x$CARBON" = "xyes" \
     AC_MSG_RESULT(no)
   fi
 fi
+
+dnl gcc 3.1 changed the meaning of -MM.  The only solution appears to be to
+dnl use "-isystem" instead of "-I" for all non-Vim include dirs.
+dnl But only when making dependencies, cproto and lint don't take "-isystem".
+DEPEND_CFLAGS_FILTER=
+if test "$GCC" = yes; then
+  gccmajor=`"$CC" --version | sed -e '2,$d;s/^[[^0-9]]*\([[3-9]]\)\.[[0-9.]]*.*$/\1/g'`
+  if test "$gccmajor" != ""; then
+    DEPEND_CFLAGS_FILTER="| sed 's+-I */+-isystem /+g'"
+  fi
+fi
+AC_SUBST(DEPEND_CFLAGS_FILTER)
 
 
 dnl write output files

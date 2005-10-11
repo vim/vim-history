@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.4a.  Last change: 2004 Jun 14
+*fold.txt*      For Vim version 6.4b.  Last change: 2004 Jun 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

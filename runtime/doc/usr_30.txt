@@ -1,4 +1,4 @@
-*usr_30.txt*	For Vim version 6.4a.  Last change: 2004 Jan 17
+*usr_30.txt*	For Vim version 6.4b.  Last change: 2004 Jan 17
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
