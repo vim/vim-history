@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 6.4a.  Last change: 2005 Apr 19
+*tips.txt*      For Vim version 6.4b.  Last change: 2005 Apr 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

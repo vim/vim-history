@@ -1,4 +1,4 @@
-*os_risc.txt*   For Vim version 6.4a.  Last change: 2004 May 01
+*os_risc.txt*   For Vim version 6.4b.  Last change: 2004 May 01
 
 
 		  VIM REFERENCE MANUAL    by Thomas Leonard

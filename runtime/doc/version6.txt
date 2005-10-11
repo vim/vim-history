@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.4a.  Last change: 2005 Oct 09
+*version6.txt*  For Vim version 6.4b.  Last change: 2005 Oct 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -13865,17 +13865,36 @@ The big MS-Windows version now uses:
 Changed							*changed-6.4*
 -------
 
-Nothing relevant.
+Removed runtime/tools/tcltags, Exuberant ctags does it better.
 
 
 Added							*added-6.4*
 -----
 
-Netrc syntax file. (Nikolai Weibull)
-Sudoers syntax file. (Nikolai Weibull)
-SMTPrc syntax file. (Kornel Kielczewski)
-Esterel syntax file. (Maurizio Tranchero)
+Alsaconf syntax file (Nikolai Weibull)
+Eruby syntax, indent, compiler and ftplugin file (Doug Kearns)
+Esterel syntax file (Maurizio Tranchero)
+Mathematica indent file (Steve Layland)
+Netrc syntax file (Nikolai Weibull)
+PHP compiler file (Doug Kearns)
+Pascal indent file (Neil Carter)
+Prescribe syntax file (Klaus Muth)
+Rubyunit conpiler file (Doug Kearns)
+SMTPrc syntax file (Kornel Kielczewski)
+Sudoers syntax file (Nikolai Weibull)
+TPP syntax file (Gerfried Fuchs)
+VHDL ftplugin file (R. Shankar)
+Verilog-AMS syntax file (S. Myles Prather)
 
+Bulgarian keymap (Alberto Mardegan)
+Canadian keymap (Eric Joanis)
+
+Hungarian menu translations in UTF-8 (Kantra Gergely)
+Ukrainian menu translations (Bohdan Vlasyuk)
+
+Irish message translations (Kevin Patrick Scannell)
+
+Configure also checks for tclsh8.4.
 
 Fixed							*fixed-6.4*
 -----
@@ -13889,6 +13908,10 @@ GUI has started up.
 
 Gcc would warn "dereferencing type-punned pointer will break strict -aliasing
 rules".  Avoid using typecasts for variable pointers.
+
+Gcc 3.x interprets the -MM argument differently.  Change "-I /path" to
+"-isystem /path" for "make depend".
+
 
 Patch 6.3.001
 Problem:    ":browse split" gives the file selection dialog twice. (Gordon
@@ -14472,6 +14495,13 @@ Patch 6.3.090
 Problem:    A very big value for 'columns' or 'lines' may cause a crash.
 Solution:   Limit the values to 10000 and 1000.
 Files:	    src/option.c
+
+Patch 6.4a.001
+Problem:    The Unix Makefile contained too many dependencies and a few
+	    uncommented lines.
+Solution:   Run "make depend" with manual changes to avoid a gcc
+	    incompatibility.  Comment a few lines.
+Files:	    src/Makefile
 
 
  vim:tw=78:ts=8:ft=help:norl:

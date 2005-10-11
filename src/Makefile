@@ -432,7 +432,7 @@ CClink = $(CC)
 #CONF_OPT_FEAT = --with-features=small
 #CONF_OPT_FEAT = --with-features=normal
 #CONF_OPT_FEAT = --with-features=big
-#CONF_OPT_FEAT = --with-features=huge
+CONF_OPT_FEAT = --with-features=huge
 
 # COMPILED BY - For including a specific e-mail address for ":version".
 #CONF_OPT_COMPBY = "--with-compiledby=John Doe <JohnDoe@yahoo.com>"
@@ -846,7 +846,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim64a
+VIMRTDIR = /vim64b
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -1181,7 +1181,9 @@ ALL_GUI_PRO  = gui.pro gui_gtk.pro gui_motif.pro gui_athena.pro gui_gtk_x11.pro 
 ### headers #include <...> are ignored if we use the -MM option, as
 ### e.g. provided by gcc-cpp.
 ### Include FEAT_GUI to get gependency on gui.h
-CPP_DEPEND = $(CC) -I$(srcdir) -M$(CPP_MM) $(DEPEND_CFLAGS)
+### Need to change "-I /<path>" to "-isystem /<path>" for GCC 3.x.
+CPP_DEPEND = $(CC) -I$(srcdir) -M$(CPP_MM) \
+		`echo "$(DEPEND_CFLAGS)" $(DEPEND_CFLAGS_FILTER)`
 
 # flags for cproto
 #     This is for cproto 3 patchlevel 8 or below
@@ -2349,7 +2351,7 @@ APPDIR = $(VIMNAME).app
 RESDIR = $(APPDIR)/Contents/Resources
 # FIXME: i'm sure someone else can do something clever with grep
 # sed and version.h here
-VERSION = 6.4a
+VERSION = 6.4b
 
 ### Common flags
 M4FLAGSX = $(M4FLAGS) -DAPP_EXE=$(VIMNAME) -DAPP_NAME=$(VIMNAME) \
@@ -2659,6 +2661,10 @@ objects/if_python.o: if_python.c vim.h auto/config.h feature.h os_unix.h \
   auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h \
   gui_beval.h proto/gui_beval.pro option.h ex_cmds.h proto.h globals.h \
   farsi.h arabic.h
+objects/if_tcl.o: if_tcl.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
+  ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h gui_beval.h \
+  proto/gui_beval.pro option.h ex_cmds.h proto.h globals.h farsi.h \
+  arabic.h
 objects/if_ruby.o: if_ruby.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
   ascii.h keymap.h term.h macros.h structs.h regexp.h gui.h gui_beval.h \
   proto/gui_beval.pro option.h ex_cmds.h proto.h globals.h farsi.h \

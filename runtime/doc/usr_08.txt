@@ -1,4 +1,4 @@
-*usr_08.txt*	For Vim version 6.4a.  Last change: 2004 Jun 04
+*usr_08.txt*	For Vim version 6.4b.  Last change: 2004 Jun 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 

@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.4a.  Last change: 2004 Dec 21
+*insert.txt*    For Vim version 6.4b.  Last change: 2004 Dec 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
