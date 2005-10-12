@@ -37,4 +37,4 @@
 #define VIM_VERSION_SHORT	"6.4b"
 #define VIM_VERSION_MEDIUM	"6.4b BETA"
 #define VIM_VERSION_LONG	"VIM - Vi IMproved 6.4b BETA (2005 Oct 10)"
-#define VIM_VERSION_LONG_DATE	"VIM - Vi IMproved 6.4a BETA (2005 Oct 10, compiled "
+#define VIM_VERSION_LONG_DATE	"VIM - Vi IMproved 6.4b BETA (2005 Oct 10, compiled "
