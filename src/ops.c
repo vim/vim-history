@@ -3619,9 +3619,7 @@ end:
 	    && curwin->w_cursor.col > 0
 	    && !(restart_edit || (State & INSERT)))
     {
-#ifdef FEAT_VIRTUALEDIT
-	col = curwin->w_cursor.col;
-#endif
+	/* Put the cursor on the last character in the line. */
 	--curwin->w_cursor.col;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
@@ -3629,7 +3627,13 @@ end:
 #endif
 #ifdef FEAT_VIRTUALEDIT
 	if (ve_flags == VE_ALL)
-	    curwin->w_cursor.coladd = col - curwin->w_cursor.col;
+	{
+	    colnr_T	    scol, ecol;
+
+	    /* Coladd is set to the width of the last character. */
+	    getvcol(curwin, &curwin->w_cursor, &scol, NULL, &ecol);
+	    curwin->w_cursor.coladd = ecol - scol + 1;
+	}
 #endif
     }
 }
