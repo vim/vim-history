@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 4b
+MINOR = 4
 
 # Uncomment this line if the Win32s version is to be included.
 #DOSBIN_S =  dosbin_s
@@ -80,8 +80,8 @@ MINOR = 4b
 #
 # - Update Vim version number.  For a test version in: src/version.h, Contents,
 #   MAJOR/MINOR above, VIMRTDIR and VERSION in src/Makefile, README*.txt,
-#   runtime/doc/*.txt and nsis/gvim.nsi.  For a minor/major version:
-#   src/GvimExt/GvimExt.reg, src/vim16.def.
+#   runtime/doc/*.txt and nsis/gvim.nsi.  More in README_os2.txt.  For a
+#   minor/major version: src/GvimExt/GvimExt.reg, src/vim.def, src/vim16.def.
 # - Correct included_patches[] in src/version.c.
 # - Compile Vim with GTK, Perl, Python, TCL, Ruby, Cscope and "huge" features.
 # - With these features: "make proto" (requires cproto and Motif installed;

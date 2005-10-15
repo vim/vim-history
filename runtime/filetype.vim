@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2005 Sep 25
+" Last Change:	2005 Oct 13
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -1260,6 +1260,9 @@ au BufNewFile,BufRead *.rtf			setf rtf
 
 " Ruby
 au BufNewFile,BufRead *.rb,*.rbw,*.gem,*.gemspec	setf ruby
+
+" Rantfile is like Ruby
+au BufNewFile,BufRead [rR]antfile,*.rant	setf ruby
 
 " S-lang (or shader language!)
 au BufNewFile,BufRead *.sl			setf slang

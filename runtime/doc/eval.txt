@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.4b.  Last change: 2005 Jan 10
+*eval.txt*      For Vim version 6.4.  Last change: 2005 Oct 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -3137,7 +3137,7 @@ This would call the function "my_func_whizz(parameter)".
 			the type of the option.
 			For an option local to a window or buffer the effect
 			is just like using the |:set| command: both the local
-			value and the global value is changed.
+			value and the global value are changed.
 
 :let &l:{option-name} = {expr1}
 			Like above, but only set the local value of an option

@@ -1037,12 +1037,15 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 +osfiletype	various.txt	/*+osfiletype*
 +path_extra	various.txt	/*+path_extra*
 +perl	various.txt	/*+perl*
++perl/dyn	various.txt	/*+perl\/dyn*
 +postscript	various.txt	/*+postscript*
 +printer	various.txt	/*+printer*
 +python	various.txt	/*+python*
++python/dyn	various.txt	/*+python\/dyn*
 +quickfix	various.txt	/*+quickfix*
 +rightleft	various.txt	/*+rightleft*
 +ruby	various.txt	/*+ruby*
++ruby/dyn	various.txt	/*+ruby\/dyn*
 +scrollbind	various.txt	/*+scrollbind*
 +signs	various.txt	/*+signs*
 +smartindent	various.txt	/*+smartindent*
@@ -1055,6 +1058,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 +tag_binary	various.txt	/*+tag_binary*
 +tag_old_static	various.txt	/*+tag_old_static*
 +tcl	various.txt	/*+tcl*
++tcl/dyn	various.txt	/*+tcl\/dyn*
 +terminfo	various.txt	/*+terminfo*
 +termresponse	various.txt	/*+termresponse*
 +textobjects	various.txt	/*+textobjects*
@@ -4645,6 +4649,7 @@ fortran-syntax	syntax.txt	/*fortran-syntax*
 fortran.vim	syntax.txt	/*fortran.vim*
 french-maillist	intro.txt	/*french-maillist*
 frombook	usr_01.txt	/*frombook*
+ft-lisp-syntax	syntax.txt	/*ft-lisp-syntax*
 ftp	pi_netrw.txt	/*ftp*
 ftplugin	usr_41.txt	/*ftplugin*
 ftplugin-docs	filetype.txt	/*ftplugin-docs*
@@ -5176,6 +5181,7 @@ linefeed	intro.txt	/*linefeed*
 linewise	motion.txt	/*linewise*
 linewise-register	change.txt	/*linewise-register*
 linewise-visual	visual.txt	/*linewise-visual*
+lisp.vim	syntax.txt	/*lisp.vim*
 lispindent()	eval.txt	/*lispindent()*
 list-repeat	windows.txt	/*list-repeat*
 lite-syntax	syntax.txt	/*lite-syntax*
@@ -5532,6 +5538,7 @@ perl-SetHeight	if_perl.txt	/*perl-SetHeight*
 perl-SetOption	if_perl.txt	/*perl-SetOption*
 perl-Windows	if_perl.txt	/*perl-Windows*
 perl-compiling	if_perl.txt	/*perl-compiling*
+perl-dynamic	if_perl.txt	/*perl-dynamic*
 perl-editing	if_perl.txt	/*perl-editing*
 perl-overview	if_perl.txt	/*perl-overview*
 perl-patterns	pattern.txt	/*perl-patterns*
@@ -5588,6 +5595,7 @@ python-buffers	if_pyth.txt	/*python-buffers*
 python-command	if_pyth.txt	/*python-command*
 python-commands	if_pyth.txt	/*python-commands*
 python-current	if_pyth.txt	/*python-current*
+python-dynamic	if_pyth.txt	/*python-dynamic*
 python-error	if_pyth.txt	/*python-error*
 python-eval	if_pyth.txt	/*python-eval*
 python-examples	if_pyth.txt	/*python-examples*
@@ -5721,6 +5729,7 @@ ruby	if_ruby.txt	/*ruby*
 ruby-buffer	if_ruby.txt	/*ruby-buffer*
 ruby-command	if_ruby.txt	/*ruby-command*
 ruby-commands	if_ruby.txt	/*ruby-commands*
+ruby-dynamic	if_ruby.txt	/*ruby-dynamic*
 ruby-evaluate	if_ruby.txt	/*ruby-evaluate*
 ruby-globals	if_ruby.txt	/*ruby-globals*
 ruby-message	if_ruby.txt	/*ruby-message*
@@ -6106,6 +6115,7 @@ tcl-buffer-windows	if_tcl.txt	/*tcl-buffer-windows*
 tcl-bugs	if_tcl.txt	/*tcl-bugs*
 tcl-command	if_tcl.txt	/*tcl-command*
 tcl-commands	if_tcl.txt	/*tcl-commands*
+tcl-dynamic	if_tcl.txt	/*tcl-dynamic*
 tcl-ex-commands	if_tcl.txt	/*tcl-ex-commands*
 tcl-examples	if_tcl.txt	/*tcl-examples*
 tcl-expr	if_tcl.txt	/*tcl-expr*
