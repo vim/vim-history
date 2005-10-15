@@ -1,4 +1,4 @@
-*russian.txt*   For Vim version 6.4b.  Last change: 2004 Jun 09
+*russian.txt*   For Vim version 6.4.  Last change: 2004 Jun 09
 
 
 		  VIM REFERENCE MANUAL    by Vassily Ragosin

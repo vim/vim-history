@@ -1,4 +1,4 @@
-*usr_27.txt*	For Vim version 6.4b.  Last change: 2003 Oct 28
+*usr_27.txt*	For Vim version 6.4.  Last change: 2003 Oct 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
 

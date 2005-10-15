@@ -1,4 +1,4 @@
-*usr_25.txt*	For Vim version 6.4b.  Last change: 2003 Jun 21
+*usr_25.txt*	For Vim version 6.4.  Last change: 2003 Jun 21
 
 		     VIM USER MANUAL - by Bram Moolenaar
 

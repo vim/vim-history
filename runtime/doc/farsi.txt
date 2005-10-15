@@ -1,4 +1,4 @@
-*farsi.txt*     For Vim version 6.4b.  Last change: 2004 Jun 16
+*farsi.txt*     For Vim version 6.4.  Last change: 2004 Jun 16
 
 
 		  VIM REFERENCE MANUAL    by Mortaza Ghassab Shiran

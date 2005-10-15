@@ -146,7 +146,7 @@
 #		make -n uninstall
 # }}}
 #
-### This Makefile has been succesfully tested on many systems. {{{
+### This Makefile has been successfully tested on many systems. {{{
 ### Only the ones that require special options are mentioned here.
 ### Check the (*) column for remarks, listed below.
 ### Later code changes may cause small problems, otherwise Vim is supposed to
@@ -293,7 +293,7 @@ CClink = $(CC)
 # below. As shipped, this file contains a target that causes to run
 # configure. Once configure was run, this file contains a list of
 # make variables with predefined values instead. Thus any second invocation
-# of make, will buid Vim.
+# of make, will build Vim.
 
 # CONFIGURE - configure arguments {{{1
 # You can give a lot of options to configure.
@@ -366,6 +366,7 @@ CClink = $(CC)
 
 # PYTHON - For creating Vim with Python interface
 # Uncomment this when you want to include the Python interface.
+# NOTE: Using this together with Perl may cause a crash in initialization.
 #CONF_OPT_PYTHON = --enable-pythoninterp
 
 # TCL - For creating Vim with Tcl interface
@@ -403,10 +404,10 @@ CClink = $(CC)
 # though configure can find support for it.
 #CONF_OPT_NLS = --disable-nls
 
-# XIM - X Input Method.  Special character input support for X11 (chinese,
-# japanese, special symbols, etc).  Also needed for dead-key support.
+# XIM - X Input Method.  Special character input support for X11 (Chinese,
+# Japanese, special symbols, etc).  Also needed for dead-key support.
 # When omitted it's automatically enabled for the X-windows GUI.
-# HANGUL - Input Hangul (korean) language using internal routines.
+# HANGUL - Input Hangul (Korean) language using internal routines.
 # Uncomment one of these when you want to input a multibyte language.
 #CONF_OPT_INPUT = --enable-xim
 #CONF_OPT_INPUT = --disable-xim
@@ -432,7 +433,7 @@ CClink = $(CC)
 #CONF_OPT_FEAT = --with-features=small
 #CONF_OPT_FEAT = --with-features=normal
 #CONF_OPT_FEAT = --with-features=big
-CONF_OPT_FEAT = --with-features=huge
+#CONF_OPT_FEAT = --with-features=huge
 
 # COMPILED BY - For including a specific e-mail address for ":version".
 #CONF_OPT_COMPBY = "--with-compiledby=John Doe <JohnDoe@yahoo.com>"
@@ -445,7 +446,7 @@ CONF_OPT_FEAT = --with-features=huge
 #CONF_OPT_X = --without-x
 
 # X WINDOWS DIRECTORY - specify X directories
-# If configure can't find you X stuff, or if you have multiple X11 derivates
+# If configure can't find you X stuff, or if you have multiple X11 derivatives
 # installed, you may wish to specify which one to use.
 # Select nothing to let configure choose.
 # This here selects openwin (as found on sun).
@@ -846,7 +847,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim64b
+VIMRTDIR = /vim64
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -2351,7 +2352,7 @@ APPDIR = $(VIMNAME).app
 RESDIR = $(APPDIR)/Contents/Resources
 # FIXME: i'm sure someone else can do something clever with grep
 # sed and version.h here
-VERSION = 6.4b
+VERSION = 6.4
 
 ### Common flags
 M4FLAGSX = $(M4FLAGS) -DAPP_EXE=$(VIMNAME) -DAPP_NAME=$(VIMNAME) \
