@@ -3087,7 +3087,12 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    if (st_old.st_nlink > 1
 		    || mch_lstat((char *)fname, &st) < 0
 		    || st.st_dev != st_old.st_dev
-		    || st.st_ino != st_old.st_ino)
+		    || st.st_ino != st_old.st_ino
+#  ifndef HAVE_FCHOWN
+		    || st.st_uid != st_old.st_uid
+		    || st.st_gid != st_old.st_gid
+#  endif
+		    )
 		backup_copy = TRUE;
 	    else
 # endif
@@ -3102,24 +3107,27 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		for (i = 4913; ; i += 123)
 		{
 		    sprintf((char *)gettail(IObuff), "%d", i);
-		    if (mch_stat((char *)IObuff, &st) < 0)
+		    if (mch_lstat((char *)IObuff, &st) < 0)
 			break;
 		}
 		fd = mch_open((char *)IObuff, O_CREAT|O_WRONLY|O_EXCL, perm);
-		close(fd);
 		if (fd < 0)	/* can't write in directory */
 		    backup_copy = TRUE;
 		else
 		{
 # ifdef UNIX
-		    chown((char *)IObuff, st_old.st_uid, st_old.st_gid);
-		    (void)mch_setperm(IObuff, perm);
+#  ifdef HAVE_FCHOWN
+		    fchown(fd, st_old.st_uid, st_old.st_gid);
+#  endif
 		    if (mch_stat((char *)IObuff, &st) < 0
 			    || st.st_uid != st_old.st_uid
 			    || st.st_gid != st_old.st_gid
 			    || st.st_mode != perm)
 			backup_copy = TRUE;
 # endif
+		    /* Close the file before removing it, on MS-Windows we
+		     * can't delete an open file. */
+		    close(fd);
 		    mch_remove(IObuff);
 		}
 	    }
@@ -3333,11 +3341,9 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 			 * bits for the group same as the protection bits for
 			 * others.
 			 */
-			if (st_new.st_gid != st_old.st_gid &&
+			if (st_new.st_gid != st_old.st_gid
 # ifdef HAVE_FCHOWN  /* sequent-ptx lacks fchown() */
-				    fchown(bfd, (uid_t)-1, st_old.st_gid) != 0
-# else
-			  chown((char *)backup, (uid_t)-1, st_old.st_gid) != 0
+				&& fchown(bfd, (uid_t)-1, st_old.st_gid) != 0
 # endif
 						)
 			    mch_setperm(backup,
@@ -3999,6 +4005,29 @@ restore_backup:
     }
 #endif
 
+#ifdef UNIX
+    /* When creating a new file, set its owner/group to that of the original
+     * file.  Get the new device and inode number. */
+    if (backup != NULL && !backup_copy)
+    {
+# ifdef HAVE_FCHOWN
+	struct stat	st;
+
+	/* don't change the owner when it's already OK, some systems remove
+	 * permission or ACL stuff */
+	if (mch_stat((char *)wfname, &st) < 0
+		|| st.st_uid != st_old.st_uid
+		|| st.st_gid != st_old.st_gid)
+	{
+	    fchown(fd, st_old.st_uid, st_old.st_gid);
+	    if (perm >= 0)	/* set permission again, may have changed */
+		(void)mch_setperm(wfname, perm);
+	}
+# endif
+	buf_setino(buf);
+    }
+#endif
+
     if (close(fd) != 0)
     {
 	errmsg = (char_u *)_("E512: Close failed");
@@ -4021,27 +4050,6 @@ restore_backup:
      * ACL on a file the user doesn't own). */
     if (!backup_copy)
 	mch_set_acl(wfname, acl);
-#endif
-
-#ifdef UNIX
-    /* When creating a new file, set its owner/group to that of the original
-     * file.  Get the new device and inode number. */
-    if (backup != NULL && !backup_copy)
-    {
-	struct stat	st;
-
-	/* don't change the owner when it's already OK, some systems remove
-	 * permission or ACL stuff */
-	if (mch_stat((char *)wfname, &st) < 0
-		|| st.st_uid != st_old.st_uid
-		|| st.st_gid != st_old.st_gid)
-	{
-	    chown((char *)wfname, st_old.st_uid, st_old.st_gid);
-	    if (perm >= 0)	/* set permission again, may have changed */
-		(void)mch_setperm(wfname, perm);
-	}
-	buf_setino(buf);
-    }
 #endif
 
 
