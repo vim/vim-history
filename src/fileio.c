@@ -3107,7 +3107,11 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		for (i = 4913; ; i += 123)
 		{
 		    sprintf((char *)gettail(IObuff), "%d", i);
+#ifdef HAVE_LSTAT
 		    if (mch_lstat((char *)IObuff, &st) < 0)
+#else
+		    if (mch_stat((char *)IObuff, &st) < 0)
+#endif
 			break;
 		}
 		fd = mch_open((char *)IObuff, O_CREAT|O_WRONLY|O_EXCL, perm);
