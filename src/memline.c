@@ -4368,6 +4368,9 @@ goto_byte(cnt)
     {
 	curwin->w_cursor.lnum = lnum;
 	curwin->w_cursor.col = (colnr_T)boff;
+# ifdef FEAT_VIRTUALEDIT
+	curwin->w_cursor.coladd = 0;
+# endif
 	curwin->w_set_curswant = TRUE;
     }
     check_cursor();
