@@ -5051,7 +5051,8 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 	/* Space or NL separates */
 	if (shell_style == STYLE_ECHO || shell_style == STYLE_BT)
 	{
-	    while (!(shell_style == STYLE_ECHO && *p == ' ') && *p != '\n')
+	    while (!(shell_style == STYLE_ECHO && *p == ' ')
+						   && *p != '\n' && *p != NUL)
 		++p;
 	    if (p == buffer + len)		/* last entry */
 		*p = NUL;
