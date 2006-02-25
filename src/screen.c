@@ -5803,12 +5803,22 @@ next_search_hl(win, shl, lnum, mincol)
 		|| (shl->rm.endpos[0].lnum == 0
 		    && shl->rm.endpos[0].col == shl->rm.startpos[0].col))
 	{
-	    matchcol = shl->rm.startpos[0].col + 1;
-	    if (ml_get_buf(shl->buf, lnum, FALSE)[matchcol - 1] == NUL)
+	    char_u	*ml;
+
+	    matchcol = shl->rm.startpos[0].col;
+	    ml = ml_get_buf(shl->buf, lnum, FALSE) + matchcol;
+	    if (*ml == NUL)
 	    {
+		++matchcol;
 		shl->lnum = 0;
 		break;
 	    }
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		matchcol += mb_ptr2len_check(ml);
+	    else
+#endif
+		++matchcol;
 	}
 	else
 	    matchcol = shl->rm.endpos[0].col;
