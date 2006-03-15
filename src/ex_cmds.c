@@ -1514,23 +1514,30 @@ write_viminfo(file, forceit)
 
 	if (tempname != NULL)
 	{
+#ifdef VMS
+	    /* fdopen() fails for some reason */
+	    umask_save = umask(077);
+	    fp_out = mch_fopen((char *)tempname, WRITEBIN);
+	    (void)umask(umask_save);
+#else
 	    int fd;
 
 	    /* Use mch_open() to be able to use O_EXCL and set file
 	     * protection same as original file, but strip s-bit. */
-#ifdef UNIX
+# ifdef UNIX
 	    fd = mch_open((char *)tempname,
 		    O_CREAT|O_EXTRA|O_EXCL|O_WRONLY,
 				       (int)((st_old.st_mode & 0777) | 0600));
-#else
+# else
 	    fd = mch_open((char *)tempname,
 		    O_CREAT|O_EXTRA|O_EXCL|O_WRONLY,
 				       0600);	/* r&w for user only */
-#endif
+# endif
 	    if (fd < 0)
 		fp_out = NULL;
 	    else
 		fp_out = fdopen(fd, WRITEBIN);
+#endif /* VMS */
 
 	    /*
 	     * If we can't create in the same directory, try creating a
