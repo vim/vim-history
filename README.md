@@ -3,8 +3,8 @@ Vim-history
 
 This repository contains the old source code of Vim. It basically consists of two parts:
 
-* Source Commits from the old [CVS repository][1] at the [sourceforge project page][3]  
-  This contains the history for the releases 5.5 to 6.4 and have been created by using `git cvsimport` (see [documentation][4]).
+* Source Commits from the old [CVS repository][1] at the [sourceforge project page][2]  
+  This contains the history for the releases 5.5 to 6.4 and have been created by using `git cvsimport` (see [documentation][3]).
 
 * Commits for the even older releases from releases 1.14 until 5.5  
   Those commits have been created from the tarballs at the Vim FTP site:
@@ -20,6 +20,7 @@ This repository contains the old source code of Vim. It basically consists of tw
 Initially those two parts were two separate repositories. However they have been merged into a single repository using
 ```bash
 git replace --graft 686757e4d2a46c8ab55c08c7a0ccd 8f6182bf9f905bfac0fee
+git filter-branch 8f6182bf9f905bfac0fee..HEAD
 ```
 
 Release History
@@ -29,15 +30,15 @@ The following table summarizes the previous release dates according to several s
 
 Data has been taken from the
 
- * [Vim FAQ][8]  
- * a youtube video of [Brams presentation on Vim][1] (1:37)  
- * Wikipedia article on [Vim][2]
- * Date of the release tags in the CVS repository (now available in the [vim-ancient repository][4])  
- * Date of the release tag in the current [Vim repository][3]
- * Announcements in the mailinglist [vim-announce][5]
+ * [Vim FAQ][4]
+ * a youtube video of [Brams presentation on Vim][5] (1:37)
+ * Wikipedia article on [Vim][6]
+ * Date of the release tags in the CVS repository (now available in the [vim-ancient repository][7])
+ * Date of the release tag in the current [Vim repository][8]
+ * Announcements in the mailinglist [vim-announce][9]
 
 
-Version  | [vim-faq][7]  | [video][1]  | [Wikipedia][2] | [Tags current][3], [Tags old][4] | [Announcements][5]
+Version  | [vim-faq][10]  | [video][5]  | [Wikipedia][6] | [Tags current][8], [Tags old][7] | [Announcements][9]
 |--------|----------|-----------|--------------|------------|-----------------
 8.1  | 17th May, 2018  | | May 18 | May 17 | May 17
 8.0  | 12th September, 2016  | Sept 12  | Sept 12 | Sept 12 | Sept 12
@@ -72,26 +73,24 @@ Version  | [vim-faq][7]  | [video][1]  | [Wikipedia][2] | [Tags current][3], [Ta
 
 \[1\]: I think it is an error in the wikipedia page and very unlikely, that Vim 5.2 was released just 20 days after 5.1
 
-[1]: https://www.youtube.com/watch?v=ayc_qpB-93o
-[2]: https://en.wikipedia.org/wiki/Vim_(text_editor)#History
-[3]: https://github.com/vim/vim
-[4]: https://bitbucket.org/vim-mirror/vim-ancient
-[5]: https://groups.yahoo.com/neo/groups/vimannounce/info
-[7]: http://vimhelp.appspot.com/vim_faq.txt.html#faq-3.1
-[8]: https://github.com/chrisbra/vim_faq
 
 Other repositories
 ------------------
 
-* [vim-ancient][2]  
+* [vim-ancient][7]  
   This includes the history from v5.5 to v6.4.  
   This was converted from the old [CVS][1] repository at sourceforge.
 
-* [official repository][5]  
+* [official repository][8]  
   This includes the history from v7.0 to the latest release.
 
 [1]: https://sourceforge.net/p/vim/cvs/
-[2]: https://bitbucket.org/vim-mirror/vim-ancient
-[3]: https://sourceforge.net/p/vim/
-[4]: https://sourceforge.net/p/forge/documentation/CVS/
-[5]: https://github.com/vim/vim
+[2]: https://sourceforge.net/p/vim/
+[3]: https://sourceforge.net/p/forge/documentation/CVS/
+[4]: https://github.com/chrisbra/vim_faq
+[5]: https://www.youtube.com/watch?v=ayc_qpB-93o
+[6]: https://en.wikipedia.org/wiki/Vim_(text_editor)#History
+[7]: https://bitbucket.org/vim-mirror/vim-ancient
+[8]: https://github.com/vim/vim
+[9]: https://groups.yahoo.com/neo/groups/vimannounce/info
+[10]: http://vimhelp.appspot.com/vim_faq.txt.html#faq-3.1
