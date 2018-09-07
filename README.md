@@ -74,6 +74,19 @@ Version  | [vim-faq][10]  | [video][5]  | [Wikipedia][6] | [Tags current][8], [T
 \[1\]: I think it is an error in the wikipedia page and very unlikely, that Vim 5.2 was released just 20 days after 5.1
 
 
+Merge the whole history
+-----------------------
+
+If you want to see the whole history of Vim in your one local repository, try this:
+
+```bash
+git clone https://github.com/vim/vim.git
+cd vim
+git fetch https://github.com/vim/vim-history.git --tags
+git replace --graft 071d4279d6ab81b7187b48f3a0fc61e587b6db6c 6336d50dfb7ddf71d44d55f57e9d5e3e35a2bf52
+```
+
+
 Other repositories
 ------------------
 
