@@ -90,7 +90,8 @@ If you want to see the whole history of Vim in your one local repository, try th
 ```bash
 git clone https://github.com/vim/vim.git
 cd vim
-git fetch https://github.com/vim/vim-history.git --tags
+git remote add vim-history https://github.com/vim/vim-history.git
+git fetch vim-history --tags
 git replace --graft 071d4279d6ab81b7187b48f3a0fc61e587b6db6c 6336d50dfb7ddf71d44d55f57e9d5e3e35a2bf52
 ```
 
