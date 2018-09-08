@@ -36,48 +36,48 @@ Data has been taken from the
  * [Vim FAQ][4]
  * a youtube video of [Brams presentation on Vim][5] (1:37)
  * Wikipedia article on [Vim][6]
+ * Announcements in the mailinglist [vim-announce][9]
  * Date of the release tags in the CVS repository (now available in the [vim-ancient repository][7])
  * Date of the release tag in the current [Vim repository][8]
- * Announcements in the mailinglist [vim-announce][9]
  * Source code (the date written in `src/version.h` or `src/version.c`)  E.g.
    ```
    $ git show v8.1.0000:src/version.h | grep '#define VIM_VERSION_LONG\>'
    $ git show v4.6:src/version.c | grep '\*longVersion'
    ```
 
-Version  | [vim-faq][10]  | [video][5]  | [Wikipedia][6] | [Tags current][8], [Tags old][7] | [Announcements][9] | Source code
-|--------|----------|-----------|--------------|------------|-----------------|-------
-8.1  | 17th May, 2018  | | May 18 | May 17 | May 17 | 2018 May 17
-8.0  | 12th September, 2016  | Sep 12  | Sep 12 | Sep 12 | Sep 12 | 2016 Sep 12
-7.4  | 10th August, 2013  | | Aug 10 | Aug 10 | Aug 10 | 2013 Aug 10
-7.3  | 15th August, 2010  | | Aug 15 | Aug 15 | Aug 15 | 2010 Aug 15
-7.2  | 9th August, 2008  | | Aug 9 | Aug 9 | Aug 9 | 2008 Aug 9
-7.1  | 12th May, 2007  | | May 12 | May 12 | May 12 | 2007 May 12
-7.0  | 8th May, 2006  | May 8  | May 7 | May 7 | May 8 | 2006 May 7
-6.4  | 15th October, 2005  | | Oct 15 | Oct 15 | Oct 15 | 2005 Oct 15
-6.3  | 8th June 2004  | | June 7 | June 8 | June 8 | 2004 June 7
-6.2  | 1st June 2003  | | June 1 | June 2 | June 1 | 2003 Jun 1
-6.1  | 24th March 2002  | | Mar 24 | Mar 25 | Mar 24 | 2002 Mar 24
-6.0  | 27th September, 2001  | Sep 27  | Sep 26 | Sep 27 | Sep 27 | 2001 Sep 26
-5.8  | 31st May, 2001  | | May 31 | June 5 | May 31 | 2001 May 31
-5.7  | 24th June, 2000  | | June 24 | June 24 | June 24 | 2000 Jun 24
-5.6  | 16th January, 2000  | | Jan 16 | Jan 17 | Jan 16 | 2000 Jan 16
-5.5  | 21st September, 1999  | | Sep 19 | | Sep 21 | 1999 Sep 19
-5.4  | 26th July, 1999  | | July 25 | | July 26 | 1999 Jul 25
-5.3  | 31st August, 1998  | | Aug 31 | | Aug 31 | 1998 Aug 30
-5.2  | 24th August, 1998  | | **Apr 27** \[1\] | | Aug 24 | 1998 Aug 23
-5.1  | 7th April, 1998  | | Apr 06 | | Apr 7 | 1998 Apr 7
-5.0  | 19th February, 1998  | Feb 28  | Feb 19 | | Feb 19 | 1998 Feb 19
-4.6  | 13th March, 1997  | | | | Mar 13 | 1997 Mar 13
-4.5  | 17th October, 1996  | | | | | 1996 Oct 12
-4.2  | 5th July, 1996  | | | | | 1996 June 17
-4.0  | 21st May, 1996  | May 29  | May 29 | | | 1996 May 29
-3.0  | 16th August, 1994  | Aug 12 | Aug 12 | | | 1994 Aug 12
-2.0  | 21st December, 1993  | Dec 21  | Dec 14 | | | 1993 Dec 14
-1.27 | 23rd April, 1993  | Apr 23  | | | | 1993 April 6
-1.24 | | | | | | 5 Jan 1993
-1.17 | 21st April, 1992  | | | | | 
-1.14 | 2nd November, 1991  | Nov 2 | | | | 
+Version | [vim-faq][10] | [video][5] | [Wikipedia][6] | [Announcements][9] | [Tags current][8],<br/>[Tags old][7] | Source code
+|----|----------------------|--------|------------------|---------|---------|-------------
+8.1  | 17th May, 2018       |        | May 18           | May 17  | May 17  | 2018 May 17
+8.0  | 12th September, 2016 | Sep 12 | Sep 12           | Sep 12  | Sep 12  | 2016 Sep 12
+7.4  | 10th August, 2013    |        | Aug 10           | Aug 10  | Aug 10  | 2013 Aug 10
+7.3  | 15th August, 2010    |        | Aug 15           | Aug 15  | Aug 15  | 2010 Aug 15
+7.2  | 9th August, 2008     |        | Aug 9            | Aug 9   | Aug 9   | 2008 Aug 9
+7.1  | 12th May, 2007       |        | May 12           | May 12  | May 12  | 2007 May 12
+7.0  | 8th May, 2006        | May 8  | May 7            | May 8   | May 7   | 2006 May 7
+6.4  | 15th October, 2005   |        | Oct 15           | Oct 15  | Oct 15  | 2005 Oct 15
+6.3  | 8th June 2004        |        | June 7           | June 8  | June 8  | 2004 June 7
+6.2  | 1st June 2003        |        | June 1           | June 1  | June 2  | 2003 Jun 1
+6.1  | 24th March 2002      |        | Mar 24           | Mar 24  | Mar 25  | 2002 Mar 24
+6.0  | 27th September, 2001 | Sep 27 | Sep 26           | Sep 27  | Sep 27  | 2001 Sep 26
+5.8  | 31st May, 2001       |        | May 31           | May 31  | June 5  | 2001 May 31
+5.7  | 24th June, 2000      |        | June 24          | June 24 | June 24 | 2000 Jun 24
+5.6  | 16th January, 2000   |        | Jan 16           | Jan 16  | Jan 17  | 2000 Jan 16
+5.5  | 21st September, 1999 |        | Sep 19           | Sep 21  |         | 1999 Sep 19
+5.4  | 26th July, 1999      |        | July 25          | July 26 |         | 1999 Jul 25
+5.3  | 31st August, 1998    |        | Aug 31           | Aug 31  |         | 1998 Aug 30
+5.2  | 24th August, 1998    |        | **Apr 27** \[1\] | Aug 24  |         | 1998 Aug 23
+5.1  | 7th April, 1998      |        | Apr 06           | Apr 7   |         | 1998 Apr 7
+5.0  | 19th February, 1998  | Feb 28 | Feb 19           | Feb 19  |         | 1998 Feb 19
+4.6  | 13th March, 1997     |        |                  | Mar 13  |         | 1997 Mar 13
+4.5  | 17th October, 1996   |        |                  |         |         | 1996 Oct 12
+4.2  | 5th July, 1996       |        |                  |         |         | 1996 June 17
+4.0  | 21st May, 1996       | May 29 | May 29           |         |         | 1996 May 29
+3.0  | 16th August, 1994    | Aug 12 | Aug 12           |         |         | 1994 Aug 12
+2.0  | 21st December, 1993  | Dec 21 | Dec 14           |         |         | 1993 Dec 14
+1.27 | 23rd April, 1993     | Apr 23 |                  |         |         | 1993 April 6
+1.24 |                      |        |                  |         |         | 5 Jan 1993
+1.17 | 21st April, 1992     |        |                  |         |         | 
+1.14 | 2nd November, 1991   | Nov 2  |                  |         |         | 
 
 \[1\]: I think it is an error in the wikipedia page and very unlikely, that Vim 5.2 was released just 20 days after 5.1
 
