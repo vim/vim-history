@@ -48,28 +48,28 @@ Data has been taken from the
 
 Version | [vim-faq][10] | [video][5] | [Wikipedia][6] | [Announcements][9],<br/>[comp.editors][12] | [Tags current][8],<br/>[Tags old][7] | Source code
 |----|----------------------|--------|------------------|--------------------|---------|-------------
-8.1  | 17th May, 2018       |        | May 18           | May 17             | May 17  | 2018 May 17
-8.0  | 12th September, 2016 | Sep 12 | Sep 12           | Sep 12             | Sep 12  | 2016 Sep 12
-7.4  | 10th August, 2013    |        | Aug 10           | Aug 10             | Aug 10  | 2013 Aug 10
-7.3  | 15th August, 2010    |        | Aug 15           | Aug 15             | Aug 15  | 2010 Aug 15
-7.2  | 9th August, 2008     |        | Aug 9            | Aug 9              | Aug 9   | 2008 Aug 9
-7.1  | 12th May, 2007       |        | May 12           | May 12             | May 12  | 2007 May 12
-7.0  | 8th May, 2006        | May 8  | May 7            | May 8              | May 7   | 2006 May 7
-6.4  | 15th October, 2005   |        | Oct 15           | Oct 15             | Oct 15  | 2005 Oct 15
-6.3  | 8th June 2004        |        | June 7           | June 8             | June 8  | 2004 June 7
-6.2  | 1st June 2003        |        | June 1           | June 1             | June 2  | 2003 Jun 1
-6.1  | 24th March 2002      |        | Mar 24           | Mar 24             | Mar 25  | 2002 Mar 24
-6.0  | 27th September, 2001 | Sep 27 | Sep 26           | Sep 27             | Sep 27  | 2001 Sep 26
-5.8  | 31st May, 2001       |        | May 31           | May 31             | June 5  | 2001 May 31
-5.7  | 24th June, 2000      |        | June 24          | June 24            | June 24 | 2000 Jun 24
-5.6  | 16th January, 2000   |        | Jan 16           | Jan 16             | Jan 17  | 2000 Jan 16
-5.5  | 21st September, 1999 |        | Sep 19           | Sep 21             |         | 1999 Sep 19
-5.4  | 26th July, 1999      |        | July 25          | July 26            |         | 1999 Jul 25
-5.3  | 31st August, 1998    |        | Aug 31           | Aug 31             |         | 1998 Aug 30
-5.2  | 24th August, 1998    |        | **Apr 27** \[1\] | Aug 24             |         | 1998 Aug 23
-5.1  | 7th April, 1998      |        | Apr 06           | Apr 7              |         | 1998 Apr 7
-5.0  | 19th February, 1998  | Feb 28 | Feb 19           | Feb 19             |         | 1998 Feb 19
-4.6  | 13th March, 1997     |        |                  | Mar 13             |         | 1997 Mar 13
+8.1  | 17th May, 2018       |        | May 18           | [May 17][38]       | May 17  | 2018 May 17
+8.0  | 12th September, 2016 | Sep 12 | Sep 12           | [Sep 12][37]       | Sep 12  | 2016 Sep 12
+7.4  | 10th August, 2013    |        | Aug 10           | [Aug 10][36]       | Aug 10  | 2013 Aug 10
+7.3  | 15th August, 2010    |        | Aug 15           | [Aug 15][35]       | Aug 15  | 2010 Aug 15
+7.2  | 9th August, 2008     |        | Aug 9            | [Aug 9][34]        | Aug 9   | 2008 Aug 9
+7.1  | 12th May, 2007       |        | May 12           | [May 12][33]       | May 12  | 2007 May 12
+7.0  | 8th May, 2006        | May 8  | May 7            | [May 8][32]        | May 7   | 2006 May 7
+6.4  | 15th October, 2005   |        | Oct 15           | [Oct 15][31]       | Oct 15  | 2005 Oct 15
+6.3  | 8th June 2004        |        | June 7           | [June 8][30]       | June 8  | 2004 June 7
+6.2  | 1st June 2003        |        | June 1           | [June 1][29]       | June 2  | 2003 Jun 1
+6.1  | 24th March 2002      |        | Mar 24           | [Mar 24][28]       | Mar 25  | 2002 Mar 24
+6.0  | 27th September, 2001 | Sep 27 | Sep 26           | [Sep 27][27]       | Sep 27  | 2001 Sep 26
+5.8  | 31st May, 2001       |        | May 31           | [May 31][26]       | June 5  | 2001 May 31
+5.7  | 24th June, 2000      |        | June 24          | [June 24][25]      | June 24 | 2000 Jun 24
+5.6  | 16th January, 2000   |        | Jan 16           | [Jan 16][24]       | Jan 17  | 2000 Jan 16
+5.5  | 21st September, 1999 |        | Sep 19           | [Sep 21][23]       |         | 1999 Sep 19
+5.4  | 26th July, 1999      |        | July 25          | [July 26][22]      |         | 1999 Jul 25
+5.3  | 31st August, 1998    |        | Aug 31           | [Aug 31][21]       |         | 1998 Aug 30
+5.2  | 24th August, 1998    |        | **Apr 27** \[1\] | [Aug 24][20]       |         | 1998 Aug 23
+5.1  | 7th April, 1998      |        | Apr 06           | [Apr 7][19]        |         | 1998 Apr 7
+5.0  | 19th February, 1998  | Feb 28 | Feb 19           | [Feb 19][18]       |         | 1998 Feb 19
+4.6  | 13th March, 1997     |        |                  | [Mar 13][17]       |         | 1997 Mar 13
 4.5  | 17th October, 1996   |        |                  | [Oct 17][13]       |         | 1996 Oct 12
 4.2  | 5th July, 1996       |        |                  | [Jun 21][14]       |         | 1996 June 17
 4.0  | 21st May, 1996       | May 29 | May 29           |                    |         | 1996 May 29
@@ -126,3 +126,25 @@ Other repositories
 [14]: https://groups.google.com/d/msg/comp.editors/GjdHci-xBSw/Iq3kSrDJ36QJ
 [15]: https://groups.google.com/d/msg/comp.editors/iSbQgMlWweU/bbPMSBcCkUsJ
 [16]: https://groups.google.com/d/msg/comp.editors/9snlhebqQiA/KOi0VsDXUzYJ
+[17]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/10
+[18]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/26
+[19]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/30
+[20]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/34
+[21]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/35
+[22]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/49
+[23]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/53
+[24]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/59
+[25]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/69
+[26]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/78
+[27]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/88
+[28]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/97
+[29]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/115
+[30]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/130
+[31]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/144
+[32]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/161
+[33]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/178
+[34]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/190
+[35]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/204
+[36]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/221
+[37]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/242
+[38]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/257
