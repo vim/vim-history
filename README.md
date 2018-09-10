@@ -92,10 +92,10 @@ git clone https://github.com/vim/vim.git
 cd vim
 git remote add vim-history https://github.com/vim/vim-history.git
 git fetch vim-history --tags
-git replace --graft 071d4279d6ab81b7187b48f3a0fc61e587b6db6c 6336d50dfb7ddf71d44d55f57e9d5e3e35a2bf52
+git replace --graft v7.0001 vim-6-3-004
 ```
 
-This virtually connects the tag `v7.0001` on top of the tag `vim-6-4-010`.
+This virtually connects the tag `v7.0001` on top of the tag `vim-6-3-004`. The development of Vim 7.0 was branched from around Vim 6.3.
 
 
 Other repositories
