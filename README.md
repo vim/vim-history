@@ -50,35 +50,35 @@ Data has been taken from the
 
 Version | [vim-faq][10] | [video][5] | [Wikipedia][6] | [Announcements][9],<br/>[comp.editors][12] | [Tags current][8],<br/>[Tags old][7] | Source code
 |----|----------------------|--------|------------------|--------------------|---------|-------------
-8.1  | 17th May, 2018       |        | May 18           | [May 17][38]       | May 17  | May 17
-8.0  | 12th September, 2016 | Sep 12 | Sep 12           | [Sep 12][37]       | Sep 12  | Sep 12
-7.4  | 10th August, 2013    |        | Aug 10           | [Aug 10][36]       | Aug 10  | Aug 10
-7.3  | 15th August, 2010    |        | Aug 15           | [Aug 15][35]       | Aug 15  | Aug 15
-7.2  | 9th August, 2008     |        | Aug 9            | [Aug 9][34]        | Aug 9   | Aug 9
-7.1  | 12th May, 2007       |        | May 12           | [May 12][33]       | May 12  | May 12
-7.0  | 8th May, 2006        | May 8  | May 7            | [May 8][32]        | May 7   | May 7
-6.4  | 15th October, 2005   |        | Oct 15           | [Oct 15][31]       | Oct 15  | Oct 15
-6.3  | 8th June 2004        |        | June 7           | [June 8][30]       | June 8  | June 7
-6.2  | 1st June 2003        |        | June 1           | [June 1][29]       | June 2  | Jun 1
-6.1  | 24th March 2002      |        | Mar 24           | [Mar 24][28]       | Mar 25  | Mar 24
-6.0  | 27th September, 2001 | Sep 27 | Sep 26           | [Sep 27][27]       | Sep 27  | Sep 26
-5.8  | 31st May, 2001       |        | May 31           | [May 31][26]       | June 5  | May 31
-5.7  | 24th June, 2000      |        | June 24          | [June 24][25]      | June 24 | Jun 24
-5.6  | 16th January, 2000   |        | Jan 16           | [Jan 16][24]       | Jan 17  | Jan 16
-5.5  | 21st September, 1999 |        | Sep 19           | [Sep 21][23]       |         | Sep 19
-5.4  | 26th July, 1999      |        | July 25          | [July 26][22]      |         | Jul 25
-5.3  | 31st August, 1998    |        | Aug 31           | [Aug 31][21]       |         | Aug 30
-5.2  | 24th August, 1998    |        | **Apr 27** \[1\] | [Aug 24][20]       |         | Aug 23
-5.1  | 7th April, 1998      |        | Apr 6            | [Apr 7][19]        |         | Apr 7
-5.0  | 19th February, 1998  | Feb 28 | Feb 19           | [Feb 19][18]       |         | Feb 19
-4.6  | 13th March, 1997     |        |                  | [Mar 13][17]       |         | Mar 13
-4.5  | 17th October, 1996   |        |                  | [Oct 17][13]       |         | Oct 12
-4.2  | 5th July, 1996       |        |                  | [Jun 21][14]       |         | June 17
-4.0  | 21st May, 1996       | May 29 | May 29           |                    |         | May 29
-3.0  | 16th August, 1994    | Aug 12 | Aug 12           | [Sep 7][15] \[2\]  |         | Aug 12
-2.0  | 21st December, 1993  | Dec 21 | Dec 14           | [Dec 31][16] \[2\] |         | Dec 14
-1.27 | 23rd April, 1993     | Apr 23 |                  |                    |         | April 6
-1.24 |                      |        |                  |                    |         | 5 Jan 1993
+8.1  | 17th May, 2018       |        | May 18           | [May 17][38]       | May 17  | [May 17][39]
+8.0  | 12th September, 2016 | Sep 12 | Sep 12           | [Sep 12][37]       | Sep 12  | [Sep 12][40]
+7.4  | 10th August, 2013    |        | Aug 10           | [Aug 10][36]       | Aug 10  | [Aug 10][41]
+7.3  | 15th August, 2010    |        | Aug 15           | [Aug 15][35]       | Aug 15  | [Aug 15][42]
+7.2  | 9th August, 2008     |        | Aug 9            | [Aug 9][34]        | Aug 9   | [Aug 9][43]
+7.1  | 12th May, 2007       |        | May 12           | [May 12][33]       | May 12  | [May 12][44]
+7.0  | 8th May, 2006        | May 8  | May 7            | [May 8][32]        | May 7   | [May 7][45]
+6.4  | 15th October, 2005   |        | Oct 15           | [Oct 15][31]       | Oct 15  | [Oct 15][46]
+6.3  | 8th June 2004        |        | June 7           | [June 8][30]       | June 8  | [June 7][47]
+6.2  | 1st June 2003        |        | June 1           | [June 1][29]       | June 2  | [Jun 1][48]
+6.1  | 24th March 2002      |        | Mar 24           | [Mar 24][28]       | Mar 25  | [Mar 24][49]
+6.0  | 27th September, 2001 | Sep 27 | Sep 26           | [Sep 27][27]       | Sep 27  | [Sep 26][50]
+5.8  | 31st May, 2001       |        | May 31           | [May 31][26]       | June 5  | [May 31][51]
+5.7  | 24th June, 2000      |        | June 24          | [June 24][25]      | June 24 | [Jun 24][52]
+5.6  | 16th January, 2000   |        | Jan 16           | [Jan 16][24]       | Jan 17  | [Jan 16][53]
+5.5  | 21st September, 1999 |        | Sep 19           | [Sep 21][23]       |         | [Sep 19][54]
+5.4  | 26th July, 1999      |        | July 25          | [July 26][22]      |         | [Jul 25][55]
+5.3  | 31st August, 1998    |        | Aug 31           | [Aug 31][21]       |         | [Aug 30][56]
+5.2  | 24th August, 1998    |        | **Apr 27** \[1\] | [Aug 24][20]       |         | [Aug 23][57]
+5.1  | 7th April, 1998      |        | Apr 6            | [Apr 7][19]        |         | [Apr 7][58]
+5.0  | 19th February, 1998  | Feb 28 | Feb 19           | [Feb 19][18]       |         | [Feb 19][59]
+4.6  | 13th March, 1997     |        |                  | [Mar 13][17]       |         | [Mar 13][60]
+4.5  | 17th October, 1996   |        |                  | [Oct 17][13]       |         | [Oct 12][61]
+4.2  | 5th July, 1996       |        |                  | [Jun 21][14]       |         | [June 17][62]
+4.0  | 21st May, 1996       | May 29 | May 29           |                    |         | [May 29][63]
+3.0  | 16th August, 1994    | Aug 12 | Aug 12           | [Sep 7][15] \[2\]  |         | [Aug 12][64]
+2.0  | 21st December, 1993  | Dec 21 | Dec 14           | [Dec 31][16] \[2\] |         | [Dec 14][65]
+1.27 | 23rd April, 1993     | Apr 23 |                  |                    |         | [April 6][66]
+1.24 |                      |        |                  |                    |         | [5 Jan 1993][67]
 1.17 | 21st April, 1992     |        |                  |                    |         | 
 1.14 | 2nd November, 1991   | Nov 2  |                  |                    |         | 
 
@@ -150,3 +150,32 @@ Other repositories
 [36]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/221
 [37]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/242
 [38]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/257
+[39]: https://github.com/vim/vim/blob/v8.1.0000/src/version.h#L39
+[40]: https://github.com/vim/vim/blob/v8.0.0000/src/version.h#L39
+[41]: https://github.com/vim/vim/blob/v7.4/src/version.h#L39
+[42]: https://github.com/vim/vim/blob/v7.3/src/version.h#L39
+[43]: https://github.com/vim/vim/blob/v7.2/src/version.h#L39
+[44]: https://github.com/vim/vim/blob/v7.1/src/version.h#L39
+[45]: https://github.com/vim/vim/blob/v7.0/src/version.h#L39
+[46]: https://github.com/vim/vim-history/blob/vim-6-4/src/version.h#L39
+[47]: https://github.com/vim/vim-history/blob/vim-6-3/src/version.h#L39
+[48]: https://github.com/vim/vim-history/blob/vim-6-2/src/version.h#L39
+[49]: https://github.com/vim/vim-history/blob/vim-6-1/src/version.h#L39
+[50]: https://github.com/vim/vim-history/blob/vim-6-0/src/version.h#L39
+[51]: https://github.com/vim/vim-history/blob/vim-5-8-000/src/version.h#L37
+[52]: https://github.com/vim/vim-history/blob/vim-5-7/src/version.h#L37
+[53]: https://github.com/vim/vim-history/blob/vim-5-6/src/version.h#L34
+[54]: https://github.com/vim/vim-history/blob/v5.5/src/version.h#L34
+[55]: https://github.com/vim/vim-history/blob/v5.4/src/version.h#L34
+[56]: https://github.com/vim/vim-history/blob/v5.3/src/version.h#L31
+[57]: https://github.com/vim/vim-history/blob/v5.2/src/version.h#L31
+[58]: https://github.com/vim/vim-history/blob/v5.1/src/version.h#L31
+[59]: https://github.com/vim/vim-history/blob/v5.0/src/version.h#L31
+[60]: https://github.com/vim/vim-history/blob/v4.6/src/version.c#L527
+[61]: https://github.com/vim/vim-history/blob/v4.5/src/version.c#L342
+[62]: https://github.com/vim/vim-history/blob/v4.2/src/version.c#L140
+[63]: https://github.com/vim/vim-history/blob/v4.0/src/version.c#L28
+[64]: https://github.com/vim/vim-history/blob/v3.0/src/version.c#L277
+[65]: https://github.com/vim/vim-history/blob/v2.0/src/version.c#L277
+[66]: https://github.com/vim/vim-history/blob/v1.27/src/version.c#L253
+[67]: https://github.com/vim/vim-history/blob/v1.24/src/version.c#L200
