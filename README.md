@@ -50,6 +50,7 @@ Data has been taken from the
 
 Version | [vim-faq][10] | [video][5] | [Wikipedia][6] | [Announcements][9],<br/>[comp.editors][12] | [Tags current][8],<br/>[Tags old][7] | Source code
 |----|----------------------|--------|------------------|--------------------|---------|-------------
+8.2  | 12th, December, 2019 |        |                  | [Dec 12][68]       | Dec 12  | [Dec 12][69]
 8.1  | 17th May, 2018       |        | May 18           | [May 17][38]       | May 17  | [May 17][39]
 8.0  | 12th September, 2016 | Sep 12 | Sep 12           | [Sep 12][37]       | Sep 12  | [Sep 12][40]
 7.4  | 10th August, 2013    |        | Aug 10           | [Aug 10][36]       | Aug 10  | [Aug 10][41]
@@ -179,3 +180,5 @@ Other repositories
 [65]: https://github.com/vim/vim-history/blob/v2.0/src/version.c#L277
 [66]: https://github.com/vim/vim-history/blob/v1.27/src/version.c#L253
 [67]: https://github.com/vim/vim-history/blob/v1.24/src/version.c#L200
+[68]: https://groups.google.com/d/msg/vim_announce/KPqcD9MYiMk/T11rMwO1AAAJ
+[69]: https://github.com/vim/vim/blob/v8.2.0/src/version.h#L39
