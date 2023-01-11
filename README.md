@@ -38,7 +38,7 @@ Data has been taken from the
  * [Vim FAQ][4]
  * a youtube video of [Brams presentation on Vim][5] (1:37)
  * Wikipedia article on [Vim][6]
- * Announcements in the mailinglist [vim-announce][9]
+ * Announcements in the mailinglist [vim-announce][9](Note: Yahoo decided to shut down the Yahoo Groups archive on December 15th, 2020. But, the list may still contain (now some) invalid deep-links, that are not available in other archives :( ) 
  * Announcements in the [comp.editors][12] news group
  * Date of the release tags in the CVS repository (now available in the [vim-ancient repository][7])
  * Date of the release tag in the current [Vim repository][8]
@@ -122,7 +122,7 @@ Other repositories
 [6]: https://en.wikipedia.org/wiki/Vim_(text_editor)#History
 [7]: https://bitbucket.org/vim-mirror/vim-ancient
 [8]: https://github.com/vim/vim
-[9]: https://groups.yahoo.com/neo/groups/vimannounce/info
+[9]: https://groups.google.com/g/vim_announce
 [10]: http://vimhelp.appspot.com/vim_faq.txt.html#faq-3.1
 [11]: https://github.com/chrisbra/vim_faq/issues/8#issuecomment-419605586
 [12]: https://groups.google.com/forum/#!forum/comp.editors
@@ -140,18 +140,18 @@ Other repositories
 [24]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/59
 [25]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/69
 [26]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/78
-[27]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/88
-[28]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/97
-[29]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/115
-[30]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/130
-[31]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/144
-[32]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/161
-[33]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/178
-[34]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/190
-[35]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/204
-[36]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/221
-[37]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/242
-[38]: https://groups.yahoo.com/neo/groups/vimannounce/conversations/messages/257
+[27]: https://marc.info/?l=vim-announce&m=100162358817820
+[28]: https://marc.info/?l=vim-announce&m=101698978011550
+[29]: https://marc.info/?l=vim-announce&m=105448853109795
+[30]: https://marc.info/?l=vim-announce&m=108667819706438
+[31]: https://marc.info/?l=vim-announce&m=112939369421105
+[32]: https://marc.info/?l=vim-announce&m=114708043011893
+[33]: https://marc.info/?l=vim-announce&m=117898675109914
+[34]: https://groups.google.com/g/vim_announce/c/LIlnHdkogS8/m/NskH0S8-8NEJ
+[35]: https://groups.google.com/g/vim_announce/c/ZsAu_RUjVUs/m/wrLPfs0dJeIJ
+[36]: https://groups.google.com/g/vim_announce/c/knOQ_t_H5to/m/STMi8d25ii8J
+[37]: https://groups.google.com/g/vim_announce/c/EKTuhjF3ET0/m/cP1JQcZ4AwAJ
+[38]: https://groups.google.com/g/vim_announce/c/K1lBxTJb73Y/m/xVnQDQSsAgAJ
 [39]: https://github.com/vim/vim/blob/v8.1.0000/src/version.h#L39
 [40]: https://github.com/vim/vim/blob/v8.0.0000/src/version.h#L39
 [41]: https://github.com/vim/vim/blob/v7.4/src/version.h#L39
