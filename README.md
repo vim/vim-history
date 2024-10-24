@@ -50,8 +50,9 @@ Data has been taken from the
 
 Version | [vim-faq][10] | [video][5] | [Wikipedia][6] | [Announcements][9],<br/>[comp.editors][12] | [Tags current][8],<br/>[Tags old][7] | Source code
 |----|----------------------|--------|------------------|--------------------|---------|-------------
-9.0  | 28th, June, 2022     |        | Jun 28           | [Jun 28][70]       | Jun 28  | [Jun 28][71]
-8.2  | 12th, December, 2019 |        | Dec 13           | [Dec 12][68]       | Dec 12  | [Dec 12][69]
+9.1  | 2nd January, 2024    |        | Jan 02           | [Jan 02][72]       | Jan 02  | [Jan 02][73]
+9.0  | 28th June, 2022      |        | Jun 28           | [Jun 28][70]       | Jun 28  | [Jun 28][71]
+8.2  | 12th December, 2019  |        | Dec 13           | [Dec 12][68]       | Dec 12  | [Dec 12][69]
 8.1  | 17th May, 2018       |        | May 18           | [May 17][38]       | May 17  | [May 17][39]
 8.0  | 12th September, 2016 | Sep 12 | Sep 12           | [Sep 12][37]       | Sep 12  | [Sep 12][40]
 7.4  | 10th August, 2013    |        | Aug 10           | [Aug 10][36]       | Aug 10  | [Aug 10][41]
@@ -185,3 +186,5 @@ Other repositories
 [69]: https://github.com/vim/vim/blob/v8.2.0/src/version.h#L39
 [70]: https://groups.google.com/g/vim_announce/c/f_-N3hYxK20
 [71]: https://github.com/vim/vim/blob/v9.0.0000/src/version.h#L23
+[72]: https://groups.google.com/g/vim_announce/c/l8rDdV6lTXs
+[73]: https://github.com/vim/vim/blob/v9.1.0000/src/version.h#L23
